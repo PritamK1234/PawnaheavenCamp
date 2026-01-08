@@ -18,13 +18,15 @@ const Index = () => {
     const loaderTimer = setTimeout(() => {
       setIsInitialLoading(false);
       
-      // Restore scroll immediately after loader disappears
+      // Use requestAnimationFrame to ensure the DOM is painted before scrolling
       if (savedPosition) {
-        window.scrollTo({
-          top: parseInt(savedPosition),
-          behavior: "instant"
+        requestAnimationFrame(() => {
+          window.scrollTo({
+            top: parseInt(savedPosition),
+            behavior: "instant"
+          });
+          sessionStorage.removeItem("homeScrollPosition");
         });
-        sessionStorage.removeItem("homeScrollPosition");
       }
     }, 500);
 

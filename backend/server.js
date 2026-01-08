@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const propertyRoutes = require('./routes/properties');
+const eticketRoutes = require('./routes/etickets');
 const { pool } = require('./db');
 
 const app = express();
@@ -53,6 +54,7 @@ app.use(express.static(frontendPath));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
+app.use('/api/etickets', eticketRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

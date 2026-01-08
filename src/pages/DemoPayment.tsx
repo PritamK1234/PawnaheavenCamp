@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ETicket } from "@/components/ETicket";
 
 const DemoPayment = () => {
   const location = useLocation();
@@ -11,6 +12,7 @@ const DemoPayment = () => {
   const { toast } = useToast();
   const [step, setStep] = useState<"options" | "processing" | "success">("options");
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [paymentInfo, setPaymentInfo] = useState<any>(null);
   
   const bookingData = location.state?.bookingData;
   const amount = location.state?.amount || "2,000";
@@ -29,10 +31,19 @@ const DemoPayment = () => {
 
   const handlePay = () => {
     setStep("processing");
-    // Play mock sound if available (optional)
-    // const audio = new Audio('/success-sound.mp3'); 
+    
+    // Generate mock Paytm transaction details
+    const orderId = "ORD-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+    const transactionId = "TXN" + Math.random().toString(10).substring(2, 14);
+    const now = new Date();
     
     setTimeout(() => {
+      setPaymentInfo({
+        orderId,
+        transactionId,
+        status: "SUCCESS",
+        date: now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+      });
       setStep("success");
       toast({
         title: "Payment Successful",
@@ -43,33 +54,27 @@ const DemoPayment = () => {
 
   if (step === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-        <Card className="w-full max-w-md text-center border-none shadow-2xl animate-in zoom-in duration-500">
-          <CardContent className="pt-10 pb-10">
-            <div className="flex justify-center mb-6">
-              <div className="rounded-full bg-green-100 p-3">
-                <CheckCircle2 className="w-16 h-16 text-green-600 animate-bounce" />
-              </div>
+      <div className="min-h-screen bg-secondary/30 py-12 px-4">
+        <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
-            <h2 className="text-3xl font-bold mb-2">Payment Successful!</h2>
-            <p className="text-muted-foreground mb-8">
-              Thank you for your booking at {bookingData?.propertyTitle || "LoonCamp"}.
-              Your e-ticket has been generated and sent.
-            </p>
-            <div className="bg-secondary/30 rounded-xl p-4 mb-8 text-left">
-              <p className="text-sm font-semibold mb-1">E-Ticket Summary</p>
-              <div className="text-xs space-y-1 text-muted-foreground">
-                <p>Booking ID: #LC-{Math.floor(Math.random() * 90000) + 10000}</p>
-                <p>Guest: {bookingData?.name}</p>
-                <p>Check-in: {bookingData?.checkIn}</p>
-                <p>Total Paid: ₹{amount}</p>
-              </div>
-            </div>
-            <Button onClick={() => navigate("/")} className="w-full rounded-xl py-6 text-lg">
+            <h1 className="text-3xl font-display font-bold">Booking Confirmed!</h1>
+            <p className="text-muted-foreground">Your e-ticket has been generated below.</p>
+          </div>
+          
+          <ETicket 
+            bookingData={bookingData} 
+            paymentInfo={paymentInfo}
+          />
+          
+          <div className="text-center">
+            <Button variant="link" onClick={() => navigate("/")} className="text-muted-foreground">
               Return to Home
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }

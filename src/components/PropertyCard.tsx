@@ -116,13 +116,15 @@ const PropertyCard = ({
           <div 
             className={`absolute top-4 right-4 z-20 px-3 py-1 rounded-full text-[10px] font-black tracking-tighter uppercase shadow-[0_4px_12px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.2)] bg-gradient-to-b from-neutral-800 to-neutral-950 border border-white/10 backdrop-blur-md transform-gpu hover:scale-105 transition-transform duration-300 ${
               isAvailable 
-                ? "text-[#00FF00] drop-shadow-[0_0_8px_rgba(0,255,0,0.8)]" 
-                : "text-[#FF8C00] drop-shadow-[0_0_8px_rgba(255,140,0,0.8)]"
+                ? "text-[#00FF00]" 
+                : "text-[#FF8C00]"
             }`}
           >
             <div className="flex items-center gap-1.5">
               <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isAvailable ? "bg-[#00FF00] shadow-[0_0_6px_#00FF00]" : "bg-[#FF8C00] shadow-[0_0_6px_#FF8C00]"}`} />
-              {isAvailable ? "Available" : "Booked"}
+              <span className={isAvailable ? "drop-shadow-[0_0_8px_rgba(0,255,0,0.8)]" : "drop-shadow-[0_0_8px_rgba(255,140,0,0.8)]"}>
+                {isAvailable ? "Available" : "Booked"}
+              </span>
             </div>
           </div>
 

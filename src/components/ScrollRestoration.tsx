@@ -1,17 +1,18 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigationType } from "react-router-dom";
 
 export default function ScrollRestoration() {
   const { pathname } = useLocation();
+  const navType = useNavigationType();
 
   useEffect(() => {
-    // If we're on the index page, we don't want to scroll to top automatically
-    // because we want to preserve the scroll position.
-    // However, if we're navigating TO a specific property page, we SHOULD scroll to top.
-    if (pathname.startsWith("/property/")) {
+    // Scroll to top only on "PUSH" navigation (going to a new page)
+    // On "POP" navigation (back button), the browser/React Router will handle 
+    // restoration naturally if we don't interfere.
+    if (navType === "PUSH") {
       window.scrollTo(0, 0);
     }
-  }, [pathname]);
+  }, [pathname, navType]);
 
   return null;
 }

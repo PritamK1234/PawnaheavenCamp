@@ -101,7 +101,7 @@ const PropertyCard = ({
       <div className="bg-card rounded-[40px] overflow-hidden border border-border/10 hover:border-primary/30 transition-all duration-300 shadow-sm">
         {/* Image Container */}
         <div 
-          className="relative h-72 overflow-hidden"
+          className="relative h-72 overflow-hidden touch-pan-x"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}

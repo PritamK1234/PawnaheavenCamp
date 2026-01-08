@@ -31,6 +31,11 @@ const createETicket = async (req, res) => {
     const propResult = await query('SELECT title FROM properties WHERE id = $1', [property_id]);
     const propertyName = propResult.rows[0]?.title || 'Property';
 
+    // Simulate sending SMS/Text Message for testing
+    console.log(`\n--- SMS SENT TO 8669505727 ---`);
+    console.log(`LoonCamp E-Ticket for ${guest_name}: ${process.env.FRONTEND_URL || 'http://localhost:5000'}/ticket/${ticket_id}`);
+    console.log(`------------------------------\n`);
+
     return res.status(201).json({
       success: true,
       message: 'E-ticket created successfully.',

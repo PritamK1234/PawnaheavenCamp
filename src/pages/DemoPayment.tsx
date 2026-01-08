@@ -74,11 +74,11 @@ const DemoPayment = () => {
 
           const guestMsg = `${commonHeader}👤 *Guest:* ${bookingData.name}\n📅 *Check-in:* ${bookingData.checkIn}\n💰 *Paid:* ₹${bookingData.advanceAmount}\n🔴 *DUE:* ₹${dueAmount}${commonFooter}`;
           
+          // Redirect to ticket page immediately
+          navigate(`/ticket/${ticketId}`, { replace: true });
+          
           // Use a more reliable way to open WhatsApp
           const whatsappUrl = `https://api.whatsapp.com/send?phone=${TEST_NUMBER}&text=${encodeURIComponent(guestMsg)}`;
-          
-          // Store the URL to show a button if auto-open is blocked
-          setWhatsappLink(whatsappUrl);
           
           // Try to open automatically
           window.open(whatsappUrl, "_blank");

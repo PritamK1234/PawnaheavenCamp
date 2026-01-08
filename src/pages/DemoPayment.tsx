@@ -54,14 +54,15 @@ const DemoPayment = () => {
       const mapLink = "https://maps.app.goo.gl/PawnaLake";
 
       try {
+        console.log("Booking Data in DemoPayment:", bookingData);
         // Create e-ticket in database
         const ticketResponse = await axios.post("/api/etickets", {
           ticket_id: ticketId,
-          property_id: bookingData.propertyId || 1, // Fallback to 1 if missing
-          guest_name: bookingData.name,
-          check_in_date: bookingData.checkIn,
-          check_out_date: bookingData.checkOut,
-          paid_amount: `₹${bookingData.advanceAmount}`,
+          property_id: bookingData?.propertyId || 1,
+          guest_name: bookingData?.name,
+          check_in_date: bookingData?.checkIn,
+          check_out_date: bookingData?.checkOut,
+          paid_amount: `₹${bookingData?.advanceAmount}`,
           due_amount: `₹${dueAmount}`
         });
 

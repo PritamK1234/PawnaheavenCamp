@@ -100,7 +100,7 @@ const AdminLogin = () => {
 
       <div className="w-full max-w-md px-4 relative z-10">
         {/* Logo and branding */}
-        <div className="text-center mb-8 animate-fade-up">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-gold-dark mb-6 shadow-gold-lg animate-pulse-glow">
             <Shield className="w-10 h-10 text-primary-foreground" />
           </div>
@@ -115,7 +115,7 @@ const AdminLogin = () => {
         </div>
 
         {/* Login Card */}
-        <div className="glass rounded-3xl p-8 border border-border/50 shadow-card animate-fade-up delay-100">
+        <div className="glass rounded-3xl p-8 border border-border/50 shadow-card">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-foreground mb-1">Welcome back</h2>
             <p className="text-sm text-muted-foreground">
@@ -195,7 +195,7 @@ const AdminLogin = () => {
         </div>
 
         {/* Back to site link */}
-        <div className="text-center mt-6 animate-fade-up delay-200">
+        <div className="text-center mt-6">
           <button
             onClick={() => navigate('/')}
             className="text-sm text-muted-foreground hover:text-primary transition-colors elegant-underline"

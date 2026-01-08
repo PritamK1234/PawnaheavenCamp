@@ -44,6 +44,33 @@ const DemoPayment = () => {
         status: "SUCCESS",
         date: now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
       });
+
+      // Automated Triple WhatsApp Notification System (Guest, Property Owner, Host)
+      const TEST_NUMBER = "918669505727";
+      const ticketId = `LC-${orderId.split('-')[1]}`;
+      const dueAmount = bookingData.totalPrice - bookingData.advanceAmount;
+      const mapLink = "https://maps.app.goo.gl/PawnaLake";
+
+      const commonHeader = `*🏡 LOONCAMP E-TICKET*\n📍 *Property:* ${bookingData.propertyTitle}\n🔖 *Booking ID:* ${ticketId}\n\n`;
+      const commonFooter = `\n🔗 *Location:* ${mapLink}\nHost: LoonCamp.shop | +${TEST_NUMBER}`;
+
+      const messages = [
+        // 1. Guest Notification
+        `${commonHeader}👤 *Guest:* ${bookingData.name}\n📅 *Check-in:* ${bookingData.checkIn}\n💰 *Paid:* ₹${bookingData.advanceAmount}\n🔴 *DUE:* ₹${dueAmount}${commonFooter}`,
+        // 2. Property Owner Notification
+        `*NEW BOOKING ALERT (OWNER)*\n${commonHeader}👤 *Guest:* ${bookingData.name}\n📅 *Check-in:* ${bookingData.checkIn}\n💰 *Adv Received:* ₹${bookingData.advanceAmount}\n🚩 *Action:* Prepare property for guest Arrival.`,
+        // 3. Admin/Host Notification
+        `*BOOKING CONFIRMATION (ADMIN)*\n${commonHeader}👤 *Guest:* ${bookingData.name}\n💰 *Total:* ₹${bookingData.totalPrice}\n✅ *Payment:* SUCCESS (Paytm)\n🆔 *Order ID:* ${orderId}`
+      ];
+
+      // Execute triple notification sequence
+      messages.forEach((msg, index) => {
+        setTimeout(() => {
+          const whatsappUrl = `https://api.whatsapp.com/send?phone=${TEST_NUMBER}&text=${encodeURIComponent(msg)}`;
+          window.open(whatsappUrl, "_blank");
+        }, index * 2000); // 2s delay between messages to avoid browser pop-up blocking
+      });
+
       setStep("success");
       toast({
         title: "Payment Successful",

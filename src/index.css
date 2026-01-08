@@ -115,9 +115,9 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
+    @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
-    touch-action: pan-y;
+    overflow-x: hidden;
   }
 }
 

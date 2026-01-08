@@ -116,13 +116,13 @@ const Footer = () => {
             <p className="text-muted-foreground text-sm mb-4">
               Subscribe for exclusive offers and travel inspiration.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="email"
                 placeholder="Your email"
-                className="flex-1 px-4 py-2.5 rounded-lg bg-card border border-border/50 text-foreground text-sm focus:outline-none focus:border-primary transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-card border border-border/50 text-foreground text-sm focus:outline-none focus:border-primary transition-colors min-w-0"
               />
-              <Button className="bg-gradient-to-r from-primary to-gold-light text-primary-foreground hover:opacity-90 px-4">
+              <Button className="bg-gradient-to-r from-primary to-gold-light text-primary-foreground hover:opacity-90 px-4 whitespace-nowrap">
                 Subscribe
               </Button>
             </div>

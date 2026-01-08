@@ -61,8 +61,8 @@ const Properties = () => {
 
           {/* Category Tabs - Restored to original simpler style */}
         </div>
-        <div className="sticky top-[80px] z-40 flex justify-center w-full px-2 mb-8 pointer-events-none">
-          <div className="inline-flex p-1 bg-secondary/90 rounded-2xl backdrop-blur-md border border-border/30 shadow-xl max-w-full pointer-events-auto overflow-hidden">
+        <div className="sticky top-[80px] z-40 flex justify-center w-full px-4 mb-8 pointer-events-none">
+          <div className="flex w-full max-w-md p-1 bg-secondary/90 rounded-2xl backdrop-blur-md border border-border/30 shadow-xl pointer-events-auto">
             {categories.map((category) => (
               <button
                 key={category}
@@ -71,7 +71,7 @@ const Properties = () => {
                   e.stopPropagation();
                   setSelectedCategory(category);
                 }}
-                className={`px-3 sm:px-6 py-2 rounded-xl text-[12px] sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+                className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                   selectedCategory === category
                     ? "bg-primary text-primary-foreground shadow-lg"
                     : "text-muted-foreground hover:text-foreground"

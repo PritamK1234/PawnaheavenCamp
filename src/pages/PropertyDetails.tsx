@@ -186,6 +186,7 @@ const PropertyDetails = () => {
                 propertyName={propertyData.title} 
                 propertyId={propertyData.id}
                 pricePerPerson={parseInt(propertyData.price.replace(/[^\d]/g, "")) || 0}
+                propertyCategory={propertyData.category}
               />
             </DialogContent>
           </Dialog>

@@ -193,6 +193,13 @@ export function BookingForm({ propertyName, propertyId, pricePerPerson, onClose 
           </div>
         </div>
 
+        <div className="grid gap-2">
+          <Label>Total Persons</Label>
+          <div className="h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground flex items-center">
+            {formData.persons} Persons
+          </div>
+        </div>
+
         <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
           <p className="text-xs text-primary font-medium flex items-center gap-2">
             <Users className="w-3.5 h-3.5" />

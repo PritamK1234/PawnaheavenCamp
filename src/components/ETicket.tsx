@@ -75,16 +75,16 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
           {/* Guest Info - Compact */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-0.5">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1">
-                <User className="w-2.5 h-2.5" /> Guest
+              <span className="text-[9px] uppercase tracking-widest text-gold font-bold flex items-center gap-1">
+                <User className="w-2.5 h-2.5" /> Guest Name
               </span>
-              <p className="font-bold text-sm truncate">{bookingData.name}</p>
+              <p className="font-bold text-sm truncate text-gold drop-shadow-[0_0_1px_rgba(184,134,11,0.5)]">{bookingData.name}</p>
             </div>
             <div className="space-y-0.5 text-right">
-              <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold flex items-center justify-end gap-1">
-                <Phone className="w-2.5 h-2.5" /> Contact
+              <span className="text-[9px] uppercase tracking-widest text-gold font-bold flex items-center justify-end gap-1">
+                <Phone className="w-2.5 h-2.5" /> Contact Number
               </span>
-              <p className="font-bold text-sm">{bookingData.mobile}</p>
+              <p className="font-bold text-sm text-gold drop-shadow-[0_0_1px_rgba(184,134,11,0.5)]">{bookingData.mobile}</p>
             </div>
           </div>
 
@@ -93,19 +93,19 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
           {/* Dates Section - More Compact */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-primary">
+              <div className="flex items-center gap-1.5 text-gold">
                 <Calendar className="w-3.5 h-3.5" />
                 <span className="text-[9px] uppercase tracking-widest font-black">Check-In</span>
               </div>
-              <p className="font-bold text-sm leading-tight">{bookingData.checkIn}</p>
+              <p className="font-bold text-sm leading-tight text-gold drop-shadow-[0_0_1px_rgba(184,134,11,0.5)]">{bookingData.checkIn}</p>
               <p className="text-[10px] text-muted-foreground font-medium">11:00 AM</p>
             </div>
             <div className="space-y-1 text-right">
-              <div className="flex items-center gap-1.5 text-primary justify-end">
+              <div className="flex items-center gap-1.5 text-gold justify-end">
                 <span className="text-[9px] uppercase tracking-widest font-black">Check-Out</span>
                 <Calendar className="w-3.5 h-3.5" />
               </div>
-              <p className="font-bold text-sm leading-tight">{bookingData.checkOut}</p>
+              <p className="font-bold text-sm leading-tight text-gold drop-shadow-[0_0_1px_rgba(184,134,11,0.5)]">{bookingData.checkOut}</p>
               <p className="text-[10px] text-muted-foreground font-medium">10:00 AM</p>
             </div>
           </div>
@@ -127,11 +127,11 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
             </div>
 
             <div className="pt-3 border-t border-border/30 flex items-center justify-between font-bold text-[10px]">
-              <span className="flex items-center gap-1.5 opacity-70">
-                <ExternalLink className="w-2.5 h-2.5 text-primary" /> PHC.com
+              <span className="flex items-center gap-1.5 text-gold">
+                <ExternalLink className="w-2.5 h-2.5" /> PawnaHavenCamp.com
               </span>
-              <span className="flex items-center gap-1.5 opacity-70">
-                <Phone className="w-2.5 h-2.5 text-primary" /> 8806092609
+              <span className="flex items-center gap-1.5 text-gold">
+                <Phone className="w-2.5 h-2.5" /> 8806092609
               </span>
             </div>
           </div>
@@ -144,12 +144,12 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
             
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[9px]">
               <div>
-                <span className="text-muted-foreground font-bold uppercase tracking-tighter block">Order ID</span>
-                <span className="font-mono font-medium truncate block">{paymentInfo.orderId}</span>
+                <span className="text-gold font-bold uppercase tracking-tighter block">Order ID</span>
+                <span className="font-mono font-medium truncate block text-gold drop-shadow-[0_0_1px_rgba(184,134,11,0.5)]">{paymentInfo.orderId}</span>
               </div>
               <div className="text-right">
-                <span className="text-muted-foreground font-bold uppercase tracking-tighter block">Trans. ID</span>
-                <span className="font-mono font-medium truncate block">{paymentInfo.transactionId}</span>
+                <span className="text-gold font-bold uppercase tracking-tighter block">Transaction ID</span>
+                <span className="font-mono font-medium truncate block text-gold drop-shadow-[0_0_1px_rgba(184,134,11,0.5)]">{paymentInfo.transactionId}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-muted-foreground font-bold uppercase tracking-tighter">Status:</span>

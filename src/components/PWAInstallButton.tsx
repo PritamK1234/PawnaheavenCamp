@@ -39,13 +39,19 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
   }, []);
 
   const handleInstallClick = async () => {
+    // Check if app is already installed/running in standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      alert("App is already installed and running!");
+      return;
+    }
+
     if (!deferredPrompt) {
-      // If we don't have the prompt, check if it's already installed or if it's iOS
+      // Show manual instructions for all devices when automatic prompt isn't ready
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
       if (isIOS) {
         alert("To install: Tap the Share button (square with arrow) and select 'Add to Home Screen'.");
       } else {
-        alert("Installation prompt not available. Please try refreshing or using a supported browser (Chrome, Edge).");
+        alert("To install on Android/Chrome: \n1. Tap the three dots (⋮) in the top right.\n2. Select 'Install app' or 'Add to Home screen'.");
       }
       return;
     }
@@ -61,6 +67,7 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
       }
     } catch (error) {
       console.error('PWA install error:', error);
+      alert("Something went wrong during installation. Please try the manual method via your browser menu.");
     }
   };
 

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { PWAInstallButton } from "./components/PWAInstallButton";
 import Index from "./pages/Index";
 import PropertyDetails from "./pages/PropertyDetails";
 import VideoGallery from "./pages/VideoGallery";
@@ -23,6 +24,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <PWAInstallButton />
         <BrowserRouter>
           <ScrollRestoration />
           <Routes>

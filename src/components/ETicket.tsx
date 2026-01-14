@@ -200,5 +200,3 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
     </div>
   );
 }
-  );
-}

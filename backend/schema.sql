@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS properties (
   price VARCHAR(50) NOT NULL,
   price_note VARCHAR(255) NOT NULL,
   capacity INTEGER NOT NULL,
+  max_capacity INTEGER,
   check_in_time VARCHAR(50) DEFAULT '2:00 PM',
   check_out_time VARCHAR(50) DEFAULT '11:00 AM',
   status VARCHAR(50) DEFAULT 'Verified',

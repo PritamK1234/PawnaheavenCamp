@@ -8,6 +8,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface BookingFormProps {
   propertyName: string;
@@ -230,17 +236,28 @@ export function BookingForm({
         </div>
         
         {isVilla && (
-          <div className="p-4 bg-secondary/30 rounded-2xl border border-border/50">
-            <Label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-2 block">Villa Availability Quick View</Label>
-            <Calendar
-              mode="single"
-              className="rounded-md border shadow-sm bg-background pointer-events-none h-[280px]"
-              disabled={(date) => {
-                const day = date.getDate();
-                return day === 15 || day === 16 || day === 20 || date < new Date();
-              }}
-            />
-          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="availability" className="border-none bg-secondary/30 rounded-2xl overflow-hidden border border-border/50">
+              <AccordionTrigger className="px-4 hover:no-underline py-4">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                  <CalendarIcon className="w-4 h-4 text-primary" />
+                  Villa Availability Quick View
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="flex justify-center overflow-x-auto">
+                  <Calendar
+                    mode="single"
+                    className="rounded-md border shadow-sm bg-background pointer-events-none h-auto max-w-full"
+                    disabled={(date) => {
+                      const day = date.getDate();
+                      return day === 15 || day === 16 || day === 20 || date < new Date();
+                    }}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         )}
         
         {isVilla ? (

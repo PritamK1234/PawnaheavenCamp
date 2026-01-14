@@ -39,6 +39,12 @@ import { BookingForm } from "@/components/BookingForm";
 import { propertyAPI } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Helper for mapping icons
 const getIcon = (amenity: string) => {
@@ -158,23 +164,32 @@ const PropertyDetails = () => {
       
       <div className="relative">
         {isVilla && (
-          <div className="mb-8 p-4 bg-secondary/30 rounded-3xl border border-border/50">
-            <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-primary" />
-              Villa Availability
-            </h4>
-            <Calendar
-              mode="single"
-              className="rounded-md border shadow-sm bg-background pointer-events-none"
-              disabled={(date) => {
-                // Mock some booked dates for the villa
-                const day = date.getDate();
-                return day === 15 || day === 16 || day === 20 || date < new Date();
-              }}
-            />
-            <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
-              * Red dates are already booked
-            </p>
+          <div className="mb-8">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="availability" className="border-none bg-secondary/30 rounded-3xl overflow-hidden border border-border/50">
+                <AccordionTrigger className="px-4 hover:no-underline py-4">
+                  <div className="flex items-center gap-2 text-sm font-bold">
+                    <CalendarIcon className="w-4 h-4 text-primary" />
+                    Villa Availability Calendar
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <div className="flex justify-center overflow-x-auto">
+                    <Calendar
+                      mode="single"
+                      className="rounded-md border shadow-sm bg-background pointer-events-none max-w-full"
+                      disabled={(date) => {
+                        const day = date.getDate();
+                        return day === 15 || day === 16 || day === 20 || date < new Date();
+                      }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                    * Red dates are already booked
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
         <div className="mb-8">

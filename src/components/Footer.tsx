@@ -154,13 +154,13 @@ const Footer = () => {
             © 2024 PawnaHavenCamp. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-6">
-            <Link to="/privacy-policy" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+            <Link to="/info/privacy-policy" className="text-muted-foreground text-sm hover:text-primary transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+            <Link to="/info/terms" className="text-muted-foreground text-sm hover:text-primary transition-colors">
               Terms & Conditions
             </Link>
-            <Link to="/refund-policy" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+            <Link to="/info/refund-policy" className="text-muted-foreground text-sm hover:text-primary transition-colors">
               Refund Policy
             </Link>
           </div>

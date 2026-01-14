@@ -2,7 +2,19 @@ import { useParams, Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-const policyContent = {
+interface Section {
+  heading: string;
+  content: string;
+}
+
+interface ContentType {
+  title: string;
+  intro?: string;
+  sections?: Section[];
+  grid?: Section[];
+}
+
+const policyContent: Record<string, ContentType> = {
   "terms": {
     title: "Terms & Conditions",
     sections: [

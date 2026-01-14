@@ -72,7 +72,7 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
       onClick={handleInstallClick}
       className={cn(
         variant === 'hero' 
-          ? "inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-primary to-gold-light hover:scale-105 active:scale-95 transition-all duration-300 group shadow-gold h-auto mb-4 border-2 border-white/20"
+          ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary to-gold-light hover:scale-105 active:scale-95 transition-all duration-300 group shadow-gold h-auto mb-4 border-2 border-white/20 sm:px-6 sm:py-3"
           : variant === 'menu'
           ? "w-full justify-start gap-3 h-12 px-4 rounded-xl font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-all border border-primary/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]"
           : "fixed bottom-6 right-6 z-[9999] rounded-full shadow-[0_0_30px_rgba(212,175,55,0.5)] bg-gradient-to-r from-primary to-gold-light hover:scale-110 active:scale-95 transition-all duration-300 flex items-center gap-2 px-6 py-8 border-2 border-white/40 animate-pulse",
@@ -80,12 +80,12 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
       )}
     >
       <Download className={cn(
-        variant === 'hero' ? "w-5 h-5 text-white" : "w-6 h-6 text-primary", 
+        variant === 'hero' ? "w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" : "w-6 h-6 text-primary", 
         "animate-bounce group-hover:animate-none"
       )} />
       <span className={cn(
         "font-bold uppercase tracking-wider",
-        variant === 'hero' ? "text-base text-white" : "text-lg bg-gradient-to-r from-primary to-gold-light bg-clip-text text-transparent"
+        variant === 'hero' ? "text-xs sm:text-base text-white" : "text-lg bg-gradient-to-r from-primary to-gold-light bg-clip-text text-transparent"
       )}>
         Install App
       </span>

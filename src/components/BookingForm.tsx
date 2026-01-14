@@ -165,7 +165,15 @@ export function BookingForm({
                   selected={formData.checkIn}
                   onSelect={handleCheckInSelect}
                   initialFocus
-                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  disabled={(date) => {
+                    const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+                    if (isVilla) {
+                      const day = date.getDate();
+                      const isBooked = day === 15 || day === 16 || day === 20;
+                      return isPast || isBooked;
+                    }
+                    return isPast;
+                  }}
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
@@ -201,7 +209,11 @@ export function BookingForm({
                       minDate.setDate(formData.checkIn.getDate() + 1);
                       const maxDate = new Date(formData.checkIn);
                       maxDate.setDate(formData.checkIn.getDate() + 7);
-                      return date < minDate || date > maxDate;
+                      
+                      const day = date.getDate();
+                      const isBooked = day === 15 || day === 16 || day === 20;
+                      
+                      return date < minDate || date > maxDate || isBooked;
                     }}
                     initialFocus
                     className="p-3 pointer-events-auto"
@@ -216,6 +228,20 @@ export function BookingForm({
             )}
           </div>
         </div>
+        
+        {isVilla && (
+          <div className="p-4 bg-secondary/30 rounded-2xl border border-border/50">
+            <Label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-2 block">Villa Availability Quick View</Label>
+            <Calendar
+              mode="single"
+              className="rounded-md border shadow-sm bg-background pointer-events-none h-[280px]"
+              disabled={(date) => {
+                const day = date.getDate();
+                return day === 15 || day === 16 || day === 20 || date < new Date();
+              }}
+            />
+          </div>
+        )}
         
         {isVilla ? (
           <div className="grid grid-cols-2 gap-4">

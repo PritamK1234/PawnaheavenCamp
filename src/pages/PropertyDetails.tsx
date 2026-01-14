@@ -12,7 +12,7 @@ import {
   Wind, 
   Coffee, 
   ChevronLeft, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Phone, 
   Share2, 
   MessageCircle,
@@ -38,6 +38,7 @@ import ImageSlider from "@/components/ImageSlider";
 import { BookingForm } from "@/components/BookingForm";
 import { propertyAPI } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
 
 // Helper for mapping icons
 const getIcon = (amenity: string) => {
@@ -156,6 +157,26 @@ const PropertyDetails = () => {
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       
       <div className="relative">
+        {isVilla && (
+          <div className="mb-8 p-4 bg-secondary/30 rounded-3xl border border-border/50">
+            <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-primary" />
+              Villa Availability
+            </h4>
+            <Calendar
+              mode="single"
+              className="rounded-md border shadow-sm bg-background pointer-events-none"
+              disabled={(date) => {
+                // Mock some booked dates for the villa
+                const day = date.getDate();
+                return day === 15 || day === 16 || day === 20 || date < new Date();
+              }}
+            />
+            <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+              * Red dates are already booked
+            </p>
+          </div>
+        )}
         <div className="mb-8">
           <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground block mb-2">Total Starting At</span>
           <div className="flex items-baseline gap-2">

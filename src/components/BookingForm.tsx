@@ -51,7 +51,7 @@ export function BookingForm({
       if (days < 1) days = 1;
     }
 
-    const total = formData.persons * pricePerPerson * (isVilla ? days : 1);
+    const total = isVilla ? pricePerPerson * days : formData.persons * pricePerPerson;
     setTotalPrice(total);
     setAdvanceAmount(Math.round(total * 0.3)); // 30% advance
   }, [formData.persons, formData.checkIn, formData.checkOut, pricePerPerson, isVilla]);

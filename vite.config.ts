@@ -23,11 +23,19 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "icons/*.png"],
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
       manifest: {
         name: "PawnaHavenCamp",
         short_name: "PawnaHaven",
         description: "Luxury resort and camping booking platform",
+        display: "standalone",
+        orientation: "portrait",
+        start_url: "/",
         theme_color: "#1e3a8a",
+        background_color: "#1e3a8a",
         icons: [
           {
             src: "icons/icon-192x192.png",

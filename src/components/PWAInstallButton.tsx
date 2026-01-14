@@ -46,13 +46,8 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
     }
 
     if (!deferredPrompt) {
-      // Show manual instructions for all devices when automatic prompt isn't ready
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      if (isIOS) {
-        alert("To install: Tap the Share button (square with arrow) and select 'Add to Home Screen'.");
-      } else {
-        alert("To install on Android/Chrome: \n1. Tap the three dots (⋮) in the top right.\n2. Select 'Install app' or 'Add to Home screen'.");
-      }
+      // Manual trigger for Chrome/Edge if possible
+      console.log("No deferredPrompt, PWA might not be meet criteria yet");
       return;
     }
 

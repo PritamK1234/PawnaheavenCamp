@@ -126,13 +126,16 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-border/30 flex items-center justify-between font-bold text-[10px]">
-              <span className="flex items-center gap-1.5 text-gold">
-                <ExternalLink className="w-2.5 h-2.5" /> PawnaHavenCamp.com
-              </span>
-              <span className="flex items-center gap-1.5 text-gold">
-                <Phone className="w-2.5 h-2.5" /> 8806092609
-              </span>
+            <div className="pt-4 border-t border-border/40 space-y-3">
+              <div className="flex flex-col items-center justify-center text-center gap-1">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-1">Official Website & Support</span>
+                <span className="flex items-center gap-2 text-gold font-black text-xl drop-shadow-[0_0_2px_rgba(184,134,11,0.6)]">
+                  <ExternalLink className="w-5 h-5" /> PawnaHavenCamp.com
+                </span>
+                <span className="flex items-center gap-2 text-gold font-black text-2xl drop-shadow-[0_0_2px_rgba(184,134,11,0.6)] mt-1">
+                  <Phone className="w-6 h-6" /> 8806092609
+                </span>
+              </div>
             </div>
           </div>
 

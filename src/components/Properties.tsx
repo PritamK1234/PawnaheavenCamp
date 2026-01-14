@@ -112,19 +112,28 @@ const Properties = () => {
               ))}
             </div>
 
-            {/* Price Filter Dropdown - Only visible on mobile when sticky */}
-            <div className={`w-full transition-all duration-300 pointer-events-auto ${isSticky ? "opacity-100 translate-y-0 h-auto" : "opacity-0 -translate-y-2 h-0 overflow-hidden md:opacity-100 md:translate-y-0 md:h-auto"}`}>
-              <select
-                value={selectedPriceFilter}
-                onChange={(e) => setSelectedPriceFilter(e.target.value)}
-                className="w-full bg-secondary/90 backdrop-blur-md border border-border/30 rounded-xl px-4 py-2.5 text-xs font-semibold text-foreground focus:outline-none shadow-lg appearance-none text-center"
-              >
+            {/* Price Filter - Redesigned as horizontal buttons */}
+            <div className={`w-full transition-all duration-300 pointer-events-auto mt-2 ${isSticky ? "opacity-100 translate-y-0 h-auto" : "opacity-0 -translate-y-2 h-0 overflow-hidden md:opacity-100 md:translate-y-0 md:h-auto"}`}>
+              <div className="flex w-full p-1 bg-background/40 backdrop-blur-md rounded-xl border border-border/20 gap-1 shadow-inner">
                 {priceFilters.map((filter) => (
-                  <option key={filter} value={filter}>
-                    {priceFilterLabels[filter]}
-                  </option>
+                  <button
+                    key={filter}
+                    onClick={() => setSelectedPriceFilter(filter)}
+                    className={`flex-1 py-1.5 rounded-lg text-[9px] xs:text-[10px] font-bold transition-all duration-300 uppercase tracking-wider ${
+                      selectedPriceFilter === filter
+                        ? "bg-gold text-white shadow-sm scale-[1.02]"
+                        : "text-muted-foreground/70 hover:text-primary hover:bg-secondary/50"
+                    }`}
+                  >
+                    {priceFilterLabels[filter].replace("All Price Range", "All")}
+                  </button>
                 ))}
-              </select>
+              </div>
+              
+              {/* Association Indicator */}
+              <div className="flex justify-center mt-1">
+                <div className="w-1 h-1 rounded-full bg-primary/20 animate-pulse" />
+              </div>
             </div>
           </div>
         </div>

@@ -322,7 +322,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="capacity">Capacity *</Label>
+                <Label htmlFor="capacity">{formData.category === 'villa' ? 'Capacity *' : 'Capacity *'}</Label>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input

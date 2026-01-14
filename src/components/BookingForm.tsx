@@ -31,6 +31,8 @@ export function BookingForm({
     name: "",
     mobile: "",
     persons: 1,
+    vegPersons: 1,
+    nonVegPersons: 0,
     checkIn: undefined as Date | undefined,
     checkOut: undefined as Date | undefined,
   });
@@ -51,10 +53,21 @@ export function BookingForm({
       if (days < 1) days = 1;
     }
 
-    const total = isVilla ? pricePerPerson * days : formData.persons * pricePerPerson;
+    let total = 0;
+    if (isVilla) {
+      total = pricePerPerson * days;
+    } else {
+      const totalPersons = (formData.vegPersons || 0) + (formData.nonVegPersons || 0);
+      total = totalPersons * pricePerPerson;
+      // Keep persons count in sync for other logic if needed
+      if (formData.persons !== totalPersons) {
+        setFormData(prev => ({ ...prev, persons: totalPersons }));
+      }
+    }
+    
     setTotalPrice(total);
     setAdvanceAmount(Math.round(total * 0.3)); // 30% advance
-  }, [formData.persons, formData.checkIn, formData.checkOut, pricePerPerson, isVilla]);
+  }, [formData.persons, formData.vegPersons, formData.nonVegPersons, formData.checkIn, formData.checkOut, pricePerPerson, isVilla]);
 
   const handleCheckInSelect = (date: Date | undefined) => {
     if (!date) return;
@@ -76,9 +89,16 @@ export function BookingForm({
       return;
     }
 
-    if (formData.persons === 0) {
-      alert("Please enter number of persons");
-      return;
+    if (isVilla) {
+      if (formData.persons === 0) {
+        alert("Please enter number of persons");
+        return;
+      }
+    } else {
+      if ((formData.vegPersons || 0) + (formData.nonVegPersons || 0) === 0) {
+        alert("Please enter number of persons");
+        return;
+      }
     }
 
     if (onClose) onClose();
@@ -197,32 +217,78 @@ export function BookingForm({
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="persons">Number of Persons</Label>
-            <Input 
-              id="persons" 
-              type="number" 
-              min="1"
-              max={maxCapacity}
-              value={formData.persons}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                if (!isNaN(val) && val <= maxCapacity) {
-                  setFormData({ ...formData, persons: val });
-                } else if (e.target.value === "") {
-                  setFormData({ ...formData, persons: 0 });
-                }
-              }}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Max Capacity</Label>
-            <div className="h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground flex items-center">
-              {maxCapacity} Persons
+        {isVilla ? (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="persons">Number of Persons</Label>
+              <Input 
+                id="persons" 
+                type="number" 
+                min="1"
+                max={maxCapacity}
+                value={formData.persons}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val) && val <= maxCapacity) {
+                    setFormData({ ...formData, persons: val });
+                  } else if (e.target.value === "") {
+                    setFormData({ ...formData, persons: 0 });
+                  }
+                }}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Max Capacity</Label>
+              <div className="h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground flex items-center">
+                {maxCapacity} Persons
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="vegPersons">Veg Persons</Label>
+                <Input 
+                  id="vegPersons" 
+                  type="text" 
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={formData.vegPersons === 0 ? "" : formData.vegPersons}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || /^[0-9]+$/.test(val)) {
+                      setFormData({ ...formData, vegPersons: val === "" ? 0 : parseInt(val) });
+                    }
+                  }}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nonVegPersons">Non-Veg Persons</Label>
+                <Input 
+                  id="nonVegPersons" 
+                  type="text" 
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={formData.nonVegPersons === 0 ? "" : formData.nonVegPersons}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || /^[0-9]+$/.test(val)) {
+                      setFormData({ ...formData, nonVegPersons: val === "" ? 0 : parseInt(val) });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Total Persons</Label>
+              <div className="h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground flex items-center">
+                {formData.persons} Persons
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
           <p className="text-xs text-primary font-medium flex items-center gap-2">

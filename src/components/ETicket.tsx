@@ -56,117 +56,107 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
   };
 
   return (
-    <div className="space-y-6 max-w-xl mx-auto p-4">
-      <div id="e-ticket" ref={ticketRef} className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl border border-border/40 relative">
-        {/* Top Header */}
-        <div className="bg-primary p-8 text-primary-foreground text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <CheckCircle2 className="w-32 h-32 -mr-16 -mt-16" />
+    <div className="space-y-4 max-w-md mx-auto p-2 sm:p-4">
+      <div id="e-ticket" ref={ticketRef} className="bg-white rounded-[1.5rem] overflow-hidden shadow-xl border border-border/40 relative">
+        {/* Top Header - More Compact */}
+        <div className="bg-primary p-4 sm:p-6 text-primary-foreground text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-2 opacity-10">
+            <CheckCircle2 className="w-16 h-16 -mr-8 -mt-8" />
           </div>
-          <h1 className="text-3xl font-display font-bold mb-1 tracking-tight">{bookingData.propertyTitle}</h1>
-          <p className="text-sm opacity-80 uppercase tracking-[0.3em] font-medium">PawnaHavenCamp Luxury Stays</p>
-          <div className="mt-4 inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full text-xs font-bold border border-white/20">
-            <Hash className="w-3 h-3" />
-            Booking ID: PHC-{paymentInfo.orderId.split('-')[1]}
+          <h1 className="text-xl sm:text-2xl font-display font-bold mb-0.5 tracking-tight truncate px-4">{bookingData.propertyTitle}</h1>
+          <p className="text-[10px] opacity-80 uppercase tracking-widest font-medium">PawnaHavenCamp Luxury Stays</p>
+          <div className="mt-2 inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold border border-white/20">
+            <Hash className="w-2.5 h-2.5" />
+            ID: PHC-{paymentInfo.orderId.split('-')[1]}
           </div>
         </div>
 
-        <CardContent className="p-8 space-y-8">
-          {/* Guest Info */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1.5">
-                <User className="w-3 h-3" /> Guest Name
+        <CardContent className="p-4 sm:p-6 space-y-4">
+          {/* Guest Info - Compact */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-0.5">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1">
+                <User className="w-2.5 h-2.5" /> Guest
               </span>
-              <p className="font-bold text-lg">{bookingData.name}</p>
+              <p className="font-bold text-sm truncate">{bookingData.name}</p>
+            </div>
+            <div className="space-y-0.5 text-right">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold flex items-center justify-end gap-1">
+                <Phone className="w-2.5 h-2.5" /> Contact
+              </span>
+              <p className="font-bold text-sm">{bookingData.mobile}</p>
+            </div>
+          </div>
+
+          <div className="h-px bg-border/40" />
+
+          {/* Dates Section - More Compact */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-primary">
+                <Calendar className="w-3.5 h-3.5" />
+                <span className="text-[9px] uppercase tracking-widest font-black">Check-In</span>
+              </div>
+              <p className="font-bold text-sm leading-tight">{bookingData.checkIn}</p>
+              <p className="text-[10px] text-muted-foreground font-medium">11:00 AM</p>
             </div>
             <div className="space-y-1 text-right">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold flex items-center justify-end gap-1.5">
-                <Phone className="w-3 h-3" /> Guest Contact
-              </span>
-              <p className="font-bold text-lg">{bookingData.mobile}</p>
+              <div className="flex items-center gap-1.5 text-primary justify-end">
+                <span className="text-[9px] uppercase tracking-widest font-black">Check-Out</span>
+                <Calendar className="w-3.5 h-3.5" />
+              </div>
+              <p className="font-bold text-sm leading-tight">{bookingData.checkOut}</p>
+              <p className="text-[10px] text-muted-foreground font-medium">10:00 AM</p>
             </div>
           </div>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-          {/* Dates Section */}
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-primary">
-                <Calendar className="w-4 h-4" />
-                <span className="text-[10px] uppercase tracking-widest font-black">Check-In</span>
-              </div>
-              <p className="font-bold text-base leading-tight">{bookingData.checkIn}</p>
-              <p className="text-xs text-muted-foreground font-medium">11:00 AM onwards</p>
-            </div>
-            <div className="space-y-2 text-right">
-              <div className="flex items-center gap-2 text-primary justify-end">
-                <span className="text-[10px] uppercase tracking-widest font-black">Check-Out</span>
-                <Calendar className="w-4 h-4" />
-              </div>
-              <p className="font-bold text-base leading-tight">{bookingData.checkOut}</p>
-              <p className="text-xs text-muted-foreground font-medium">By 10:00 AM</p>
-            </div>
-          </div>
-
-          {/* Financials */}
-          <div className="bg-secondary/30 rounded-3xl p-6 border border-border/50">
-            <div className="flex justify-between items-center mb-6">
-              <div className="space-y-1">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Advance Paid</span>
-                <div className="flex items-center gap-1 text-green-600 font-bold">
-                  <CheckCircle2 className="w-4 h-4" />
+          {/* Financials - Extremely Compact but Clear */}
+          <div className="bg-secondary/20 rounded-2xl p-4 border border-border/30">
+            <div className="flex justify-between items-center mb-4">
+              <div className="space-y-0.5">
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Paid</span>
+                <div className="flex items-center gap-1 text-green-600 font-bold text-sm">
+                  <CheckCircle2 className="w-3 h-3" />
                   <span>₹{bookingData.advanceAmount}</span>
                 </div>
               </div>
-              <div className="text-right space-y-1">
-                <span className="text-[10px] uppercase tracking-widest text-primary font-black">Due Amount</span>
-                <p className="text-3xl font-black text-primary leading-none">₹{bookingData.totalPrice - bookingData.advanceAmount}</p>
+              <div className="text-right space-y-0.5">
+                <span className="text-[9px] uppercase tracking-widest text-primary font-black">Due At Site</span>
+                <p className="text-2xl font-black text-primary leading-none">₹{bookingData.totalPrice - bookingData.advanceAmount}</p>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border/40 space-y-2">
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                <span>Host</span>
-                <span>Support</span>
-              </div>
-              <div className="flex items-center justify-between font-bold text-sm">
-                <span className="flex items-center gap-2">
-                  <ExternalLink className="w-3 h-3 text-primary" /> PawnaHavenCamp.com
-                </span>
-                <span className="flex items-center gap-2">
-                  <Phone className="w-3 h-3 text-primary" /> 8806092609
-                </span>
-              </div>
+            <div className="pt-3 border-t border-border/30 flex items-center justify-between font-bold text-[10px]">
+              <span className="flex items-center gap-1.5 opacity-70">
+                <ExternalLink className="w-2.5 h-2.5 text-primary" /> PHC.com
+              </span>
+              <span className="flex items-center gap-1.5 opacity-70">
+                <Phone className="w-2.5 h-2.5 text-primary" /> 8806092609
+              </span>
             </div>
           </div>
 
-          {/* Paytm Details */}
-          <div className="space-y-4 pt-4">
-            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-[#002970]/5 rounded-xl border border-[#002970]/10">
-              <div className="w-12 h-4 bg-contain bg-no-repeat bg-center" style={{ backgroundImage: 'url("https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo.split.png")' }} />
-              <span className="text-[10px] font-black uppercase text-[#002970] tracking-tighter">All-in-One Gateway</span>
+          {/* Paytm Details - Compact Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#002970]/5 rounded-lg border border-[#002970]/10">
+              <span className="text-[9px] font-black uppercase text-[#002970] tracking-wider">Paytm Secure Payment</span>
             </div>
             
-            <div className="grid grid-cols-2 gap-y-4 text-[10px]">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[9px]">
               <div>
-                <span className="block text-muted-foreground uppercase font-bold tracking-widest mb-1">Paytm Order ID</span>
-                <span className="font-mono font-bold text-foreground">{paymentInfo.orderId}</span>
+                <span className="text-muted-foreground font-bold uppercase tracking-tighter block">Order ID</span>
+                <span className="font-mono font-medium truncate block">{paymentInfo.orderId}</span>
               </div>
               <div className="text-right">
-                <span className="block text-muted-foreground uppercase font-bold tracking-widest mb-1">Transaction ID</span>
-                <span className="font-mono font-bold text-foreground">{paymentInfo.transactionId}</span>
+                <span className="text-muted-foreground font-bold uppercase tracking-tighter block">Trans. ID</span>
+                <span className="font-mono font-medium truncate block">{paymentInfo.transactionId}</span>
               </div>
-              <div>
-                <span className="block text-muted-foreground uppercase font-bold tracking-widest mb-1">Status</span>
-                <span className="inline-flex items-center gap-1 font-black text-green-600">
-                  <CheckCircle2 className="w-2.5 h-2.5" /> {paymentInfo.status}
-                </span>
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground font-bold uppercase tracking-tighter">Status:</span>
+                <span className="font-black text-green-600 uppercase">Paid</span>
               </div>
               <div className="text-right">
-                <span className="block text-muted-foreground uppercase font-bold tracking-widest mb-1">Payment Date</span>
-                <span className="font-bold text-foreground">{paymentInfo.date}</span>
+                <span className="text-muted-foreground font-bold uppercase tracking-tighter">{paymentInfo.date}</span>
               </div>
             </div>
           </div>
@@ -174,39 +164,41 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
           {/* Map Link */}
           <Button 
             variant="outline" 
-            className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary font-bold gap-2 hover:bg-primary/5"
+            className="w-full h-10 rounded-xl border-dashed border-primary/30 text-primary font-bold text-xs gap-2 hover:bg-primary/5"
             onClick={() => window.open('https://maps.app.goo.gl/PawnaLake', '_blank')}
           >
-            <MapPin className="w-4 h-4" />
+            <MapPin className="w-3.5 h-3.5" />
             Get Map Location
           </Button>
         </CardContent>
 
-        {/* Bottom Decorative Edge */}
-        <div className="h-4 bg-primary flex gap-2 overflow-hidden px-4">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="w-4 h-4 rounded-full bg-white -mb-2 flex-shrink-0" />
+        {/* Bottom Decorative Edge - Smaller */}
+        <div className="h-3 bg-primary flex gap-1.5 overflow-hidden px-3">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <div key={i} className="w-3 h-3 rounded-full bg-white -mb-1.5 flex-shrink-0" />
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Button 
           onClick={handleShare}
-          className="rounded-2xl py-6 font-bold flex items-center gap-2 bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200"
+          className="rounded-xl py-5 font-bold flex items-center gap-2 bg-green-600 hover:bg-green-700 shadow-md text-sm"
         >
-          <Share2 className="w-5 h-5" />
-          Share on WhatsApp
+          <Share2 className="w-4 h-4" />
+          WhatsApp
         </Button>
         <Button 
           onClick={() => window.print()}
           variant="outline"
-          className="rounded-2xl py-6 font-bold flex items-center gap-2 border-primary/20 text-primary"
+          className="rounded-xl py-5 font-bold flex items-center gap-2 border-primary/20 text-primary text-sm"
         >
-          <Download className="w-5 h-5" />
-          Save Ticket
+          <Download className="w-4 h-4" />
+          Save
         </Button>
       </div>
     </div>
+  );
+}
   );
 }

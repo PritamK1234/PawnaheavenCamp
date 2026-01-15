@@ -19,7 +19,9 @@ import {
   IndianRupee,
   Users,
   Clock,
-  Phone
+  Phone,
+  Upload,
+  ImageIcon
 } from 'lucide-react';
 
 interface AdminPropertyFormProps {
@@ -55,7 +57,48 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
     policies: [''],
     images: [''],
   });
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const token = localStorage.getItem('adminToken');
+    const formDataUpload = new FormData();
+    formDataUpload.append('image', file);
+
+    try {
+      const response = await fetch('/api/properties/upload-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataUpload,
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Find first empty image slot or add new
+        const emptyIndex = formData.images.findIndex(img => !img.trim());
+        if (emptyIndex !== -1) {
+          const newImages = [...formData.images];
+          newImages[emptyIndex] = result.url;
+          setFormData({ ...formData, images: newImages });
+        } else {
+          setFormData({ ...formData, images: [...formData.images, result.url] });
+        }
+        toast({ title: 'Image uploaded successfully' });
+      } else {
+        toast({ title: 'Upload failed', description: result.message, variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Upload error', variant: 'destructive' });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (property) {
@@ -321,22 +364,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="capacity">{formData.category === 'villa' ? 'Capacity *' : 'Capacity *'}</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="capacity"
-                    type="number"
-                    value={formData.capacity}
-                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                    className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                    required
-                  />
-                </div>
-              </div>
-
-              {formData.category === 'villa' && (
+              {formData.category === 'villa' ? (
                 <div className="space-y-2">
                   <Label htmlFor="max_capacity">Max Capacity *</Label>
                   <div className="relative">
@@ -345,13 +373,13 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
                       id="max_capacity"
                       type="number"
                       value={formData.max_capacity}
-                      onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value, capacity: e.target.value })}
                       className="h-12 pl-10 bg-secondary/50 rounded-xl"
                       required
                     />
                   </div>
                 </div>
-              )}
+              ) : null}
 
               <div className="space-y-2">
                 <Label htmlFor="rating">Rating (0-5) *</Label>
@@ -412,7 +440,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="contact">Contact Phone (WhatsApp) *</Label>
+                <Label htmlFor="contact">Admin Mobile Number *</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -474,10 +502,37 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
 
           {/* Images */}
           <div className="glass rounded-2xl border border-border/50 p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-              <Star className="w-5 h-5 text-primary" />
-              Property Images *
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Star className="w-5 h-5 text-primary" />
+                Property Images *
+              </h2>
+              <div className="relative">
+                <input
+                  type="file"
+                  id="image-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl gap-2"
+                  disabled={isUploading}
+                  onClick={() => document.getElementById('image-upload')?.click()}
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )}
+                  Upload Image
+                </Button>
+              </div>
+            </div>
             <div className="space-y-3">
               {formData.images.map((image, index) => (
                 <div key={index} className="flex items-center gap-3 group">

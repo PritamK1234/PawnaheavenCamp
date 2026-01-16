@@ -25,19 +25,19 @@ const queryClient = new QueryClient();
 // Page wrapper to handle loading state on route changes
 const PageWrapper = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const [loading, setLoading] = useState(false);
+  const [showChildren, setShowChildren] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 800);
+    setShowChildren(false);
+    const timer = setTimeout(() => setShowChildren(true), 10);
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
   return (
     <>
-      {loading && <LogoLoader />}
+      {!showChildren && <LogoLoader />}
       <Suspense fallback={<LogoLoader />}>
-        {children}
+        {showChildren && children}
       </Suspense>
     </>
   );

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PWAInstallButton } from "./PWAInstallButton";
 import logoImage from "/assets/logo.png";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -27,7 +28,7 @@ const Header = () => {
   const scrollToSection = (href: string, isExternal?: boolean) => {
     setIsMenuOpen(false);
     if (isExternal) {
-      window.location.href = href;
+      navigate(href);
       return;
     }
     const element = document.querySelector(href);

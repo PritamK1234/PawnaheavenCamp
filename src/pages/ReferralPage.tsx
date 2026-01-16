@@ -53,7 +53,7 @@ const ReferralPage = () => {
               </div>
               <div>
                 <h3 className="font-bold text-lg">Already have code?</h3>
-                <p className="text-sm text-muted-foreground">Apply and start earning</p>
+                <p className="text-sm text-muted-foreground">Check our earning</p>
               </div>
             </div>
           </Card>

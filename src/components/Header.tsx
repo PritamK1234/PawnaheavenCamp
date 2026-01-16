@@ -19,9 +19,9 @@ const Header = () => {
   }, []);
 
   const navLinks = [
+    { name: "Referral Earning", href: "/referral", isExternal: true },
     { name: "Properties", href: "#properties" },
     { name: "Destinations", href: "#destinations" },
-    { name: "Referral Earning", href: "/referral", isExternal: true },
     { name: "About", href: "#about" },
   ];
 

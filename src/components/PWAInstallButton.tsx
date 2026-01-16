@@ -49,19 +49,18 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
       return;
     }
 
-    if (isIOS) {
-      toast.info(
-        "To install: Tap the 'Share' button in Safari and select 'Add to Home Screen' 📲",
-        { duration: 6000 }
-      );
-      return;
-    }
-
     if (!deferredPrompt) {
-      toast.info(
-        "To install: Open your browser menu (⋮) and select 'Install app' or 'Add to Home screen'",
-        { duration: 5000 }
-      );
+      if (isIOS) {
+        toast.info(
+          "To install: Tap the 'Share' button in Safari and select 'Add to Home Screen' 📲",
+          { duration: 6000 }
+        );
+      } else {
+        toast.info(
+          "Installation prompt is not ready. Please try again in a few seconds or use your browser menu.",
+          { duration: 3000 }
+        );
+      }
       return;
     }
 
@@ -79,8 +78,9 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
     }
   };
 
-  if (isInstalled && variant !== 'menu') return null;
-
+  // One-click behavior: always show the button if not installed
+  // We want it to be as "one-click" as possible, so we don't hide it
+  // until we are absolutely sure it's installed or prompt is accepted.
   return (
     <Button 
       onClick={handleInstallClick}

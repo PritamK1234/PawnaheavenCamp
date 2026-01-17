@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin, Star, Play } from "lucide-react";
+import { propertyAPI } from "@/lib/api";
 import heroImage from "@/assets/hero-resort.jpg";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,9 +14,9 @@ const Hero = () => {
   };
 
   const { data: properties } = useQuery({
-    queryKey: ['/api/properties'],
+    queryKey: ['/api/properties/public-list'],
     queryFn: async () => {
-      const response = await axios.get(`${window.location.origin.replace('5000', '5001')}/api/properties`);
+      const response = await propertyAPI.getPublicList();
       return response.data;
     }
   });

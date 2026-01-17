@@ -1,0 +1,189 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+react-router-dom.js?v=dcf54711:4393 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+warnOnce @ react-router-dom.js?v=dcf54711:4393
+logDeprecation @ react-router-dom.js?v=dcf54711:4396
+logV6DeprecationWarnings @ react-router-dom.js?v=dcf54711:4399
+(anonymous) @ react-router-dom.js?v=dcf54711:5271
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=dcf54711:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=dcf54711:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=dcf54711:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=dcf54711:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=dcf54711:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=dcf54711:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=dcf54711:19447
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=dcf54711:18868
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=dcf54711:9119
+commitRootImpl @ chunk-T2SWDQEL.js?v=dcf54711:19432
+commitRoot @ chunk-T2SWDQEL.js?v=dcf54711:19277
+finishConcurrentRender @ chunk-T2SWDQEL.js?v=dcf54711:18805
+performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=dcf54711:18718
+workLoop @ chunk-T2SWDQEL.js?v=dcf54711:197
+flushWork @ chunk-T2SWDQEL.js?v=dcf54711:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=dcf54711:384Understand this warning
+react-router-dom.js?v=dcf54711:4393 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+warnOnce @ react-router-dom.js?v=dcf54711:4393
+logDeprecation @ react-router-dom.js?v=dcf54711:4396
+logV6DeprecationWarnings @ react-router-dom.js?v=dcf54711:4402
+(anonymous) @ react-router-dom.js?v=dcf54711:5271
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=dcf54711:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=dcf54711:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=dcf54711:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=dcf54711:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=dcf54711:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=dcf54711:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=dcf54711:19447
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=dcf54711:18868
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=dcf54711:9119
+commitRootImpl @ chunk-T2SWDQEL.js?v=dcf54711:19432
+commitRoot @ chunk-T2SWDQEL.js?v=dcf54711:19277
+finishConcurrentRender @ chunk-T2SWDQEL.js?v=dcf54711:18805
+performConcurrentWorkOnRoot @ chunk-T2SWDQEL.js?v=dcf54711:18718
+workLoop @ chunk-T2SWDQEL.js?v=dcf54711:197
+flushWork @ chunk-T2SWDQEL.js?v=dcf54711:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=dcf54711:384Understand this warning
+Hero.tsx:18  GET https://a271be16-2e8b-478a-a2ab-8a354472d4c3-00-23zwu6ozstm4x.kirk.replit.dev/api/properties 404 (Not Found)
+dispatchXhrRequest @ axios.js?v=dcf54711:1696
+xhr @ axios.js?v=dcf54711:1573
+dispatchRequest @ axios.js?v=dcf54711:2107
+_request @ axios.js?v=dcf54711:2327
+request @ axios.js?v=dcf54711:2219
+Axios.<computed> @ axios.js?v=dcf54711:2346
+wrap @ axios.js?v=dcf54711:8
+queryFn @ Hero.tsx:18
+fetchFn @ @tanstack_react-query.js?v=dcf54711:881
+run @ @tanstack_react-query.js?v=dcf54711:513
+start @ @tanstack_react-query.js?v=dcf54711:555
+fetch @ @tanstack_react-query.js?v=dcf54711:969
+executeFetch_fn @ @tanstack_react-query.js?v=dcf54711:2280
+onSubscribe @ @tanstack_react-query.js?v=dcf54711:1983
+subscribe @ @tanstack_react-query.js?v=dcf54711:24
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:3147
+subscribeToStore @ chunk-T2SWDQEL.js?v=dcf54711:11984
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=dcf54711:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=dcf54711:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=dcf54711:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=dcf54711:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=dcf54711:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=dcf54711:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=dcf54711:19447
+(anonymous) @ chunk-T2SWDQEL.js?v=dcf54711:19328
+workLoop @ chunk-T2SWDQEL.js?v=dcf54711:197
+flushWork @ chunk-T2SWDQEL.js?v=dcf54711:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=dcf54711:384Understand this error
+Hero.tsx:18  GET https://a271be16-2e8b-478a-a2ab-8a354472d4c3-00-23zwu6ozstm4x.kirk.replit.dev/api/properties 404 (Not Found)
+dispatchXhrRequest @ axios.js?v=dcf54711:1696
+xhr @ axios.js?v=dcf54711:1573
+dispatchRequest @ axios.js?v=dcf54711:2107
+_request @ axios.js?v=dcf54711:2327
+request @ axios.js?v=dcf54711:2219
+Axios.<computed> @ axios.js?v=dcf54711:2346
+wrap @ axios.js?v=dcf54711:8
+queryFn @ Hero.tsx:18
+fetchFn @ @tanstack_react-query.js?v=dcf54711:881
+run @ @tanstack_react-query.js?v=dcf54711:513
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:538
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:534
+Promise.catch
+run @ @tanstack_react-query.js?v=dcf54711:517
+start @ @tanstack_react-query.js?v=dcf54711:555
+fetch @ @tanstack_react-query.js?v=dcf54711:969
+executeFetch_fn @ @tanstack_react-query.js?v=dcf54711:2280
+onSubscribe @ @tanstack_react-query.js?v=dcf54711:1983
+subscribe @ @tanstack_react-query.js?v=dcf54711:24
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:3147
+subscribeToStore @ chunk-T2SWDQEL.js?v=dcf54711:11984
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=dcf54711:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=dcf54711:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=dcf54711:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=dcf54711:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=dcf54711:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=dcf54711:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=dcf54711:19447
+(anonymous) @ chunk-T2SWDQEL.js?v=dcf54711:19328
+workLoop @ chunk-T2SWDQEL.js?v=dcf54711:197
+flushWork @ chunk-T2SWDQEL.js?v=dcf54711:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=dcf54711:384Understand this error
+Hero.tsx:18  GET https://a271be16-2e8b-478a-a2ab-8a354472d4c3-00-23zwu6ozstm4x.kirk.replit.dev/api/properties 404 (Not Found)
+dispatchXhrRequest @ axios.js?v=dcf54711:1696
+xhr @ axios.js?v=dcf54711:1573
+dispatchRequest @ axios.js?v=dcf54711:2107
+_request @ axios.js?v=dcf54711:2327
+request @ axios.js?v=dcf54711:2219
+Axios.<computed> @ axios.js?v=dcf54711:2346
+wrap @ axios.js?v=dcf54711:8
+queryFn @ Hero.tsx:18
+fetchFn @ @tanstack_react-query.js?v=dcf54711:881
+run @ @tanstack_react-query.js?v=dcf54711:513
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:538
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:534
+Promise.catch
+run @ @tanstack_react-query.js?v=dcf54711:517
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:538
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:534
+Promise.catch
+run @ @tanstack_react-query.js?v=dcf54711:517
+start @ @tanstack_react-query.js?v=dcf54711:555
+fetch @ @tanstack_react-query.js?v=dcf54711:969
+executeFetch_fn @ @tanstack_react-query.js?v=dcf54711:2280
+onSubscribe @ @tanstack_react-query.js?v=dcf54711:1983
+subscribe @ @tanstack_react-query.js?v=dcf54711:24
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:3147
+subscribeToStore @ chunk-T2SWDQEL.js?v=dcf54711:11984
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=dcf54711:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=dcf54711:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=dcf54711:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=dcf54711:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=dcf54711:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=dcf54711:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=dcf54711:19447
+(anonymous) @ chunk-T2SWDQEL.js?v=dcf54711:19328
+workLoop @ chunk-T2SWDQEL.js?v=dcf54711:197
+flushWork @ chunk-T2SWDQEL.js?v=dcf54711:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=dcf54711:384Understand this error
+Hero.tsx:18  GET https://a271be16-2e8b-478a-a2ab-8a354472d4c3-00-23zwu6ozstm4x.kirk.replit.dev/api/properties 404 (Not Found)
+dispatchXhrRequest @ axios.js?v=dcf54711:1696
+xhr @ axios.js?v=dcf54711:1573
+dispatchRequest @ axios.js?v=dcf54711:2107
+_request @ axios.js?v=dcf54711:2327
+request @ axios.js?v=dcf54711:2219
+Axios.<computed> @ axios.js?v=dcf54711:2346
+wrap @ axios.js?v=dcf54711:8
+queryFn @ Hero.tsx:18
+fetchFn @ @tanstack_react-query.js?v=dcf54711:881
+run @ @tanstack_react-query.js?v=dcf54711:513
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:538
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:534
+Promise.catch
+run @ @tanstack_react-query.js?v=dcf54711:517
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:538
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:534
+Promise.catch
+run @ @tanstack_react-query.js?v=dcf54711:517
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:538
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:534
+Promise.catch
+run @ @tanstack_react-query.js?v=dcf54711:517
+start @ @tanstack_react-query.js?v=dcf54711:555
+fetch @ @tanstack_react-query.js?v=dcf54711:969
+executeFetch_fn @ @tanstack_react-query.js?v=dcf54711:2280
+onSubscribe @ @tanstack_react-query.js?v=dcf54711:1983
+subscribe @ @tanstack_react-query.js?v=dcf54711:24
+(anonymous) @ @tanstack_react-query.js?v=dcf54711:3147
+subscribeToStore @ chunk-T2SWDQEL.js?v=dcf54711:11984
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=dcf54711:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=dcf54711:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=dcf54711:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=dcf54711:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=dcf54711:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=dcf54711:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=dcf54711:19447
+(anonymous) @ chunk-T2SWDQEL.js?v=dcf54711:19328
+workLoop @ chunk-T2SWDQEL.js?v=dcf54711:197
+flushWork @ chunk-T2SWDQEL.js?v=dcf54711:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=dcf54711:384Understand this error

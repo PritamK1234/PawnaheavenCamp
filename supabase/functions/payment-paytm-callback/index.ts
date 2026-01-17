@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { PaytmChecksum } from "../_shared/paytmChecksum.ts";
+import { WhatsAppService } from "../_shared/whatsappService.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -158,6 +159,55 @@ Deno.serve(async (req: Request) => {
       payment_status: updateData.payment_status,
       booking_status: updateData.booking_status || booking.booking_status,
     });
+
+    if (status === "TXN_SUCCESS") {
+      const whatsapp = new WhatsAppService();
+
+      await whatsapp.sendTextMessage(
+        booking.guest_phone,
+        `Payment successful ✅\n\nWe are processing your booking.\nYou will receive your e-ticket after owner confirmation.`
+      );
+
+      const checkinDate = new Date(booking.checkin_datetime).toLocaleString("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+      const checkoutDate = new Date(booking.checkout_datetime).toLocaleString("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+
+      const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
+
+      const ownerMessage = `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name}\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || 0}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel:`;
+
+      await whatsapp.sendInteractiveButtons(
+        booking.owner_phone,
+        ownerMessage,
+        [
+          {
+            id: JSON.stringify({ bookingId: booking.booking_id, action: "CONFIRM" }),
+            title: "✅ Confirm",
+          },
+          {
+            id: JSON.stringify({ bookingId: booking.booking_id, action: "CANCEL" }),
+            title: "❌ Cancel",
+          },
+        ]
+      );
+
+      await whatsapp.sendTextMessage(
+        booking.admin_phone,
+        `📋 New Booking Alert\n\nProperty: ${booking.property_name}\nOwner: ${booking.owner_phone}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation`
+      );
+
+      await supabaseClient
+        .from("bookings")
+        .update({ booking_status: "BOOKING_REQUEST_SENT_TO_OWNER" })
+        .eq("booking_id", booking.booking_id);
+
+      console.log("WhatsApp notifications sent for booking:", booking.booking_id);
+    }
 
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
     const redirectUrl = status === "TXN_SUCCESS"

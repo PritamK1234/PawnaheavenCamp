@@ -43,7 +43,7 @@ export class PaytmPaymentService {
 
     const form = document.createElement("form");
     form.method = "POST";
-    form.action = gatewayUrl;
+    form.action = gatewayUrl.startsWith('http') ? gatewayUrl : `${window.location.protocol}//${gatewayUrl}`;
     form.enctype = "application/x-www-form-urlencoded";
     form.style.display = "none";
 

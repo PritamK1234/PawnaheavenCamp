@@ -123,26 +123,34 @@ export function BookingForm({
       const checkOutDateTime = new Date(formData.checkOut);
       checkOutDateTime.setHours(11, 0, 0, 0);
 
+      const bookingPayload: any = {
+        property_id: propertyId,
+        property_name: propertyName,
+        property_type: isVilla ? "VILLA" : "CAMPING",
+        guest_name: formData.name,
+        guest_phone: formData.mobile,
+        owner_phone: "+918806092609",
+        admin_phone: "+918806092609",
+        checkin_datetime: checkInDateTime.toISOString(),
+        checkout_datetime: checkOutDateTime.toISOString(),
+        advance_amount: advanceAmount,
+      };
+
+      if (isVilla) {
+        bookingPayload.persons = formData.persons;
+        bookingPayload.max_capacity = 6;
+      } else {
+        bookingPayload.veg_guest_count = formData.vegPersons || 0;
+        bookingPayload.nonveg_guest_count = formData.nonVegPersons || 0;
+      }
+
       const bookingResponse = await fetch(`${supabaseUrl}/functions/v1/booking-initiate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${supabaseAnonKey}`,
         },
-        body: JSON.stringify({
-          property_id: propertyId,
-          property_name: propertyName,
-          property_type: isVilla ? "VILLA" : "CAMPING",
-          guest_name: formData.name,
-          guest_phone: formData.mobile,
-          owner_phone: "+918806092609",
-          admin_phone: "+918806092609",
-          checkin_datetime: checkInDateTime.toISOString(),
-          checkout_datetime: checkOutDateTime.toISOString(),
-          advance_amount: advanceAmount,
-          persons: formData.persons || (formData.vegPersons + formData.nonVegPersons),
-          max_capacity: 6,
-        }),
+        body: JSON.stringify(bookingPayload),
       });
 
       if (!bookingResponse.ok) {

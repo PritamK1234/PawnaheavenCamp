@@ -95,20 +95,37 @@ Deno.serve(async (req: Request) => {
     const paytmOrderId = generatePaytmOrderId();
     const channelId = requestData.channel_id || Deno.env.get("PAYTM_CHANNEL_ID") || "WEB";
 
+    const mid = Deno.env.get("PAYTM_MID") || "SpwYpD36833569776448";
+    const website = Deno.env.get("PAYTM_WEBSITE") || "WEBSTAGING";
+    const industryType = Deno.env.get("PAYTM_INDUSTRY_TYPE") || "Retail";
+    const merchantKey = Deno.env.get("PAYTM_MERCHANT_KEY") || "j@D7fI3pAMAl7nQC";
+    const callbackUrl = Deno.env.get("PAYTM_CALLBACK_URL") || "https://rgcnuvfbntpgcurstnpb.supabase.co/functions/v1/payment-paytm-callback";
+    const gatewayUrl = Deno.env.get("PAYTM_GATEWAY_URL") || "https://securegw-stage.paytm.in/order/process";
+
+    if (!mid || !website || !industryType || !merchantKey) {
+      console.error("Missing Paytm configuration");
+      return new Response(
+        JSON.stringify({ error: "Payment gateway not configured" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const paytmParams: Record<string, string> = {
-      MID: Deno.env.get("PAYTM_MID") ?? "",
-      WEBSITE: Deno.env.get("PAYTM_WEBSITE") ?? "",
-      INDUSTRY_TYPE_ID: Deno.env.get("PAYTM_INDUSTRY_TYPE") ?? "",
+      MID: mid,
+      WEBSITE: website,
+      INDUSTRY_TYPE_ID: industryType,
       CHANNEL_ID: channelId,
       ORDER_ID: paytmOrderId,
       CUST_ID: booking.guest_phone,
       MOBILE_NO: booking.guest_phone,
       EMAIL: `${booking.guest_phone}@guest.com`,
       TXN_AMOUNT: booking.advance_amount.toString(),
-      CALLBACK_URL: Deno.env.get("PAYTM_CALLBACK_URL") ?? "",
+      CALLBACK_URL: callbackUrl,
     };
 
-    const merchantKey = Deno.env.get("PAYTM_MERCHANT_KEY") ?? "";
     const checksum = await PaytmChecksum.generateChecksum(paytmParams, merchantKey);
 
     const { error: updateError } = await supabaseClient
@@ -133,7 +150,7 @@ Deno.serve(async (req: Request) => {
         ...paytmParams,
         CHECKSUMHASH: checksum,
       },
-      gateway_url: Deno.env.get("PAYTM_GATEWAY_URL") ?? "",
+      gateway_url: gatewayUrl,
       order_id: paytmOrderId,
       booking_id: requestData.booking_id,
       amount: booking.advance_amount,

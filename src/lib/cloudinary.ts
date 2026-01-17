@@ -26,6 +26,11 @@ export const uploadImage = async (file: File): Promise<string> => {
 
 export const getOptimizedImageUrl = (url: string, width: number = 800) => {
   if (!url || !url.includes('cloudinary.com')) return url;
-  // Insert optimization flags after /upload/
-  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+
+  const quality = width <= 50 ? 50 : width <= 400 ? 70 : 80;
+
+  return url.replace(
+    '/upload/',
+    `/upload/f_auto,q_${quality},w_${width},c_limit,dpr_auto/`
+  );
 };

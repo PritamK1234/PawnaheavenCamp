@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Star, MapPin, Share2, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useState, useRef } from "react";
 
 interface PropertyCardProps {
@@ -124,17 +124,13 @@ const PropertyCard = ({
             }}
           >
             {displayImages.map((img, index) => (
-              <div key={index} className="flex-shrink-0 w-full h-full relative">
-                <img
-                  src={getOptimizedImageUrl(img, 400)}
-                  alt={title}
-                  loading={index === 0 ? "eager" : "lazy"}
-                  className="w-full h-full object-cover transition-opacity duration-300 opacity-0"
-                  onLoad={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.classList.remove('opacity-0');
-                    target.classList.add('opacity-100');
-                  }}
+              <div key={index} className="flex-shrink-0 w-full h-full">
+                <OptimizedImage
+                  src={img}
+                  alt={`${title} - ${index + 1}`}
+                  width={400}
+                  priority={index === 0}
+                  className="w-full h-full"
                 />
               </div>
             ))}

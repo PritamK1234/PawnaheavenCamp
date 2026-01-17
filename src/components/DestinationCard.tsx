@@ -35,6 +35,8 @@ const DestinationCard = ({
         src={image}
         alt={title}
         className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+        loading="lazy"
+        decoding="async"
       />
 
       {/* Gradient Overlay */}

@@ -1,5 +1,5 @@
-import { getOptimizedImageUrl } from "@/lib/cloudinary";
-import { useState, useRef, useEffect } from "react";
+import OptimizedImage from "@/components/OptimizedImage";
+import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -66,12 +66,13 @@ const ImageSlider = ({ images, title }: ImageSliderProps) => {
         }}
       >
         {images.map((img, index) => (
-          <div key={index} className="flex-shrink-0 w-full h-full relative">
-            <img
-              src={getOptimizedImageUrl(img, 1200)}
+          <div key={index} className="flex-shrink-0 w-full h-full">
+            <OptimizedImage
+              src={img}
               alt={`${title} - Image ${index + 1}`}
-              className="w-full h-full object-cover"
-              loading="lazy"
+              width={1200}
+              priority={index === 0}
+              className="w-full h-full"
             />
           </div>
         ))}

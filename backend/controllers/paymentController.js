@@ -66,11 +66,11 @@ const initiatePaytmPayment = async (req, res) => {
       INDUSTRY_TYPE_ID: industryType,
       CHANNEL_ID: channelId,
       ORDER_ID: paytmOrderId,
-      CUST_ID: booking.guest_phone,
-      MOBILE_NO: booking.guest_phone,
-      EMAIL: `${booking.guest_phone}@guest.com`,
-      TXN_AMOUNT: parseFloat(booking.advance_amount).toFixed(2),
-      CALLBACK_URL: callbackUrl,
+      CUST_ID: String(booking.guest_phone || 'GUEST'),
+      MOBILE_NO: String(booking.guest_phone || '0000000000'),
+      EMAIL: String(`${booking.guest_phone || 'guest'}@guest.com`),
+      TXN_AMOUNT: String(parseFloat(booking.advance_amount).toFixed(2)),
+      CALLBACK_URL: String(callbackUrl),
     };
 
     const checksum = await PaytmChecksum.generateChecksum(paytmParams, merchantKey);

@@ -61,11 +61,11 @@ const initiatePaytmPayment = async (req, res) => {
     }
 
     const paytmParams = {
-      MID: mid,
-      WEBSITE: website,
-      INDUSTRY_TYPE_ID: industryType,
-      CHANNEL_ID: channelId,
-      ORDER_ID: paytmOrderId,
+      MID: String(mid),
+      WEBSITE: String(website),
+      INDUSTRY_TYPE_ID: String(industryType),
+      CHANNEL_ID: String(channelId),
+      ORDER_ID: String(paytmOrderId),
       CUST_ID: String(booking.guest_phone || 'GUEST'),
       MOBILE_NO: String(booking.guest_phone || '0000000000'),
       EMAIL: String(`${booking.guest_phone || 'guest'}@guest.com`),

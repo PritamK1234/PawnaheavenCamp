@@ -59,14 +59,21 @@ export class PaytmPaymentService {
     });
 
     document.body.appendChild(form);
-    console.log("Submitting payment form to:", gatewayUrl);
-    console.log("Paytm Parameters:", Object.keys(paytmParams));
+    console.log("Submitting payment form to:", targetUrl);
+    console.log("Paytm Parameters:", paytmParams);
 
     try {
-      form.submit();
+      // Small delay to ensure DOM is ready
       setTimeout(() => {
-        document.body.removeChild(form);
-      }, 1000);
+        form.submit();
+      }, 100);
+      
+      // Cleanup after some time
+      setTimeout(() => {
+        if (form.parentNode) {
+          document.body.removeChild(form);
+        }
+      }, 5000);
     } catch (error) {
       console.error("Form submission error:", error);
       if (form.parentNode) {

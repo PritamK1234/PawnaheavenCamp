@@ -7,6 +7,7 @@ import bookingRoutes from './routes/booking.routes';
 import paymentRoutes from './routes/payment.routes';
 import eticketRoutes from './routes/eticket.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
+import propertyRoutes from './routes/property.routes';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use('/api/properties', propertyRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/eticket', eticketRoutes);

@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 const parseJsonField = (field: any) => {
   if (typeof field === 'string') {
@@ -24,26 +24,22 @@ const transformProperty = (property: any) => {
 export const propertyAPI = {
   getPublicList: async () => {
     try {
-      const { data: properties, error } = await supabase
-        .from('properties')
-        .select(`
-          *,
-          images:property_images(
-            id,
-            image_url,
-            display_order
-          )
-        `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      const response = await fetch(`${API_BASE_URL}/api/properties`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
+      }
 
-      const transformedProperties = (properties || []).map(transformProperty);
+      const result = await response.json();
 
       return {
-        success: true,
-        data: transformedProperties
+        success: result.success || true,
+        data: (result.data || []).map(transformProperty)
       };
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -55,26 +51,23 @@ export const propertyAPI = {
   },
   getPublicBySlug: async (slug: string) => {
     try {
-      const { data: property, error } = await supabase
-        .from('properties')
-        .select(`
-          *,
-          images:property_images(
-            id,
-            image_url,
-            display_order
-          )
-        `)
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single();
+      const response = await fetch(`${API_BASE_URL}/api/properties/${slug}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to fetch property');
+      }
 
-      const transformedProperty = property ? transformProperty(property) : null;
+      const result = await response.json();
+
+      const transformedProperty = result.data ? transformProperty(result.data) : null;
 
       return {
-        success: true,
+        success: result.success || true,
         data: transformedProperty
       };
     } catch (error) {

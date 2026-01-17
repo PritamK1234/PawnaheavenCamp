@@ -48,12 +48,12 @@ const initiatePaytmPayment = async (req, res) => {
     const paytmOrderId = generatePaytmOrderId();
     const channelId = channel_id || process.env.PAYTM_CHANNEL_ID || 'WEB';
 
-    const mid = process.env.PAYTM_MID || 'YOUR_PRODUCTION_MID';
-    const website = process.env.PAYTM_WEBSITE || 'DEFAULT';
+    const mid = process.env.PAYTM_MID || 'SpwYpD36833569776448';
+    const website = process.env.PAYTM_WEBSITE || 'WEBSTAGING';
     const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
-    const merchantKey = process.env.PAYTM_MERCHANT_KEY || 'YOUR_PRODUCTION_KEY';
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY || 'j@D7fI3pAMAl7nQC';
     const callbackUrl = process.env.PAYTM_CALLBACK_URL || `${req.protocol}://${req.get('host')}/api/payments/paytm/callback`;
-    const gatewayUrl = process.env.PAYTM_GATEWAY_URL || 'https://securegw.paytm.in/order/process';
+    const gatewayUrl = process.env.PAYTM_GATEWAY_URL || 'https://securegw-stage.paytm.in/order/process';
 
     if (!mid || !website || !industryType || !merchantKey) {
       console.error('Missing Paytm configuration');

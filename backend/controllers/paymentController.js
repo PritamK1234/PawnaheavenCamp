@@ -53,8 +53,9 @@ const initiatePaytmPayment = async (req, res) => {
     const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
     const merchantKey = process.env.PAYTM_MERCHANT_KEY || 'j@D7fI3pAMAl7nQC';
     const host = req.get('x-forwarded-host') || req.get('host');
+    // Force HTTPS for replit.dev domains as Paytm requires secure callbacks
     const protocol = host.includes('replit.dev') ? 'https' : 'http';
-    const callbackUrl = process.env.PAYTM_CALLBACK_URL || `${protocol}://${host}/api/payments/paytm/callback`;
+    const callbackUrl = `https://${host}/api/payments/paytm/callback`;
     const gatewayUrl = process.env.PAYTM_GATEWAY_URL || 'https://securegw-stage.paytm.in/order/process';
     
     // Completely open security headers for the payment initiation response

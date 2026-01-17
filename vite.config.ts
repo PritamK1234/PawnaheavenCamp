@@ -22,34 +22,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      injectRegister: 'auto',
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "icons/*.png", "offline.html"],
-      devOptions: {
-        enabled: true,
-        type: 'module',
-        navigateFallback: 'index.html',
-      },
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        navigateFallback: 'index.html',
-        runtimeCaching: [
-          {
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkOnly',
-            options: {
-              plugins: [{
-                handlerDidError: async () => {
-                  // Fallback for offline navigation
-                  return (self as any).caches.match('offline.html');
-                },
-              }],
-            },
-          },
-        ],
-      },
+      injectRegister: 'inline',
       manifest: {
         name: "Pawna Haven Camp",
         short_name: "PawnaHaven",
@@ -62,25 +35,36 @@ export default defineConfig(({ mode }) => ({
         background_color: "#000000",
         icons: [
           {
-            src: "icons/icon-192x192.png",
+            src: "/icons/icon-192x192.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any"
           },
           {
-            src: "icons/icon-512x512.png",
+            src: "/icons/icon-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any"
           },
           {
-            src: "icons/icon-512x512.png",
+            src: "/icons/icon-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable"
-          },
-        ],
+          }
+        ]
       },
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        navigateFallback: '/index.html',
+      }
     }),
   ].filter(Boolean),
   resolve: {

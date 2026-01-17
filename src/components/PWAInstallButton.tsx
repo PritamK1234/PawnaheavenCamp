@@ -32,7 +32,7 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
       
       // Auto-trigger if clicked recently
       const lastClick = localStorage.getItem('pwa_install_click_pending');
-      if (lastClick && Date.now() - parseInt(lastClick) < 30000) {
+      if (lastClick && Date.now() - parseInt(lastClick) < 60000) {
         localStorage.removeItem('pwa_install_click_pending');
         e.prompt();
       }
@@ -64,10 +64,7 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
         );
       } else {
         localStorage.setItem('pwa_install_click_pending', Date.now().toString());
-        toast.info("Readying the install option... Please wait 2-3 seconds for your browser to show the prompt. 🚀");
-        
-        // Sometimes the event needs a nudge or user gesture to fire
-        // We've set the flag, now we wait for the browser.
+        toast.info("Preparing installation... Please wait 5-10 seconds for your browser to authorize the app. If no prompt appears, please refresh and try once more. 🚀", { duration: 8000 });
       }
       return;
     }

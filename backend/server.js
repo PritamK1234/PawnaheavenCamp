@@ -123,7 +123,7 @@ process.on('SIGINT', async () => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n=================================`);
   console.log(`LoonCamp API Server`);
   console.log(`=================================`);
@@ -134,5 +134,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Admin Panel: http://localhost:${PORT}/admin`);
   console.log(`=================================\n`);
 });
+
+// For Replit to handle proxying
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
 
 module.exports = app;

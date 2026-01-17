@@ -29,9 +29,10 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
       console.log('beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e);
-      // Automatically trigger the prompt once it's ready if the user recently clicked
+      
+      // Auto-trigger if clicked recently
       const lastClick = localStorage.getItem('pwa_install_click_pending');
-      if (lastClick && Date.now() - parseInt(lastClick) < 10000) {
+      if (lastClick && Date.now() - parseInt(lastClick) < 30000) {
         localStorage.removeItem('pwa_install_click_pending');
         e.prompt();
       }
@@ -62,9 +63,11 @@ export function PWAInstallButton({ variant = 'floating', className }: PWAInstall
           { duration: 6000 }
         );
       } else {
-        // Set a flag to trigger the prompt as soon as it's ready
         localStorage.setItem('pwa_install_click_pending', Date.now().toString());
-        toast.info("Preparing installation... If a prompt doesn't appear, please click again in a few seconds or use 'Add to Home Screen' from your browser menu.");
+        toast.info("Readying the install option... Please wait 2-3 seconds for your browser to show the prompt. 🚀");
+        
+        // Sometimes the event needs a nudge or user gesture to fire
+        // We've set the flag, now we wait for the browser.
       }
       return;
     }

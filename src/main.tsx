@@ -3,16 +3,17 @@ import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from 'virtual:pwa-register';
 
-// Register service worker
-if (typeof window !== 'undefined') {
-  registerSW({
-    onNeedRefresh() {
-      console.log('New content available, please refresh.');
-    },
-    onOfflineReady() {
-      console.log('App ready to work offline');
-    },
-  });
-}
+// Register service worker with immediate updates
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm('New content available. Reload?')) {
+      updateSW(true);
+    }
+  },
+  onOfflineReady() {
+    console.log('App ready to work offline');
+  },
+  immediate: true,
+});
 
 createRoot(document.getElementById("root")!).render(<App />);

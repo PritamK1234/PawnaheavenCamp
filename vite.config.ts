@@ -25,12 +25,12 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       injectRegister: 'inline',
       manifest: {
-        name: "Pawna Haven Camp",
-        short_name: "PawnaHaven",
+        name: "pawnaCalender",
+        short_name: "pawnaCalender",
         description: "Luxury resort and camping booking platform",
         display: "standalone",
         orientation: "portrait",
-        start_url: "/",
+        start_url: "/owner",
         scope: "/",
         theme_color: "#000000",
         background_color: "#000000",
@@ -42,20 +42,8 @@ export default defineConfig(({ mode }) => ({
             purpose: "any"
           },
           {
-            src: "/icons/icon-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any"
-          },
-          {
-            src: "/icons/icon-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any"
-          },
-          {
-            src: "/icons/icon-512x512.png",
-            sizes: "512x512",
+            src: "/owner-icon.png",
+            sizes: "1024x1024",
             type: "image/png",
             purpose: "maskable"
           }

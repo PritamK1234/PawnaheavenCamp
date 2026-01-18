@@ -1,77 +1,109 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Users, CalendarDays, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 
 const OwnerDashboard = () => {
-  const [emergencyBlock, setEmergencyBlock] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  
+  // Mock data for availability: true = Available, false = Booked
+  const [availability, setAvailability] = useState<Record<string, boolean>>({
+    '2026-01-18': false,
+    '2026-01-19': false,
+  });
 
-  const stats = [
-    { label: 'Today Arrivals', value: '4', icon: Users, color: 'text-blue-600' },
-    { label: 'Current Guests', value: '12', icon: TrendingUp, color: 'text-green-600' },
-    { label: 'Pending Bookings', value: '3', icon: CalendarDays, color: 'text-orange-600' },
-  ];
+  const days = eachDayOfInterval({
+    start: startOfMonth(currentDate),
+    end: endOfMonth(currentDate),
+  });
+
+  const getDayStatus = (date: Date) => {
+    const key = format(date, 'yyyy-MM-dd');
+    return availability[key] !== false; // Default true (Available)
+  };
+
+  const toggleAvailability = () => {
+    const key = format(selectedDate, 'yyyy-MM-dd');
+    setAvailability({
+      ...availability,
+      [key]: !getDayStatus(selectedDate)
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Owner Dashboard</h1>
-        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Live</Badge>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xl font-bold">Availability</h2>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="font-semibold text-sm">
+            {format(currentDate, 'MMMM yyyy')}
+          </span>
+          <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <Card className="border-red-100 bg-red-50/50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="text-red-500 w-5 h-5" />
-              <div>
-                <Label htmlFor="emergency" className="font-semibold text-red-700">Emergency Block</Label>
-                <p className="text-xs text-red-600">Instantly stop all new bookings</p>
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-7 gap-2">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+              <div key={day} className="text-center text-xs font-medium text-gray-400">{day}</div>
+            ))}
+            {days.map((day) => (
+              <div
+                key={day.toString()}
+                onClick={() => setSelectedDate(day)}
+                className={`
+                  aspect-square flex items-center justify-center rounded-md cursor-pointer text-sm font-medium transition-all
+                  ${!isSameMonth(day, currentDate) ? 'opacity-10' : ''}
+                  ${isSameDay(day, selectedDate) ? 'ring-2 ring-blue-600' : ''}
+                  ${getDayStatus(day) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}
+                `}
+              >
+                {format(day, 'd')}
               </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex justify-center space-x-6 text-xs">
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 bg-green-100 border border-green-200 rounded" />
+              <span>Available</span>
             </div>
-            <Switch
-              id="emergency"
-              checked={emergencyBlock}
-              onCheckedChange={setEmergencyBlock}
-            />
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 bg-red-100 border border-red-200 rounded" />
+              <span>Booked</span>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="pt-6 flex items-center justify-between">
+      <Card className="bg-white">
+        <CardContent className="p-4">
+          <div className="flex flex-col space-y-4">
+            <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
+                <p className="text-xs text-gray-500">Selected Date</p>
+                <p className="font-bold">{format(selectedDate, 'EEEE, MMM do')}</p>
               </div>
-              <stat.icon className={cn("w-8 h-8 opacity-20", stat.color)} />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Property Status Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-sm">Glamping Domes</span>
-              <Badge>3/5 Available</Badge>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-sm">Luxury Cottages</span>
-              <Badge>1/2 Available</Badge>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-sm">Private Villa</span>
-              <Badge variant="destructive">Booked</Badge>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="status" className="text-sm font-medium">
+                  {getDayStatus(selectedDate) ? 'Available' : 'Booked'}
+                </Label>
+                <Switch 
+                  id="status" 
+                  checked={getDayStatus(selectedDate)} 
+                  onCheckedChange={toggleAvailability}
+                />
+              </div>
             </div>
           </div>
         </CardContent>

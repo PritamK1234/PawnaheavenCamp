@@ -23,11 +23,13 @@ const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Owner Dashboard Pages
-const OwnerLogin = lazy(() => import("./pages/owner/Login"));
+const OwnerEntry = lazy(() => import("./pages/owner/Entry"));
+const OwnerRegister = lazy(() => import("./pages/owner/register/Register"));
+const OwnerRegisterOTP = lazy(() => import("./pages/owner/register/OTP"));
+const OwnerLogin = lazy(() => import("./pages/owner/login/Login"));
 const OwnerLayout = lazy(() => import("./components/owner/layout/OwnerLayout"));
 const OwnerMain = lazy(() => import("./pages/owner/dashboard/Main"));
-const OwnerCalendar = lazy(() => import("./pages/owner/dashboard/Calendar"));
-const OwnerBookings = lazy(() => import("./pages/owner/dashboard/Bookings"));
+const OwnerRates = lazy(() => import("./pages/owner/dashboard/Rates"));
 const OwnerProfile = lazy(() => import("./pages/owner/dashboard/Profile"));
 
 const queryClient = new QueryClient();
@@ -75,12 +77,15 @@ const App = () => (
             <Route path="/referral/check" element={<PageWrapper><CheckEarningPage /></PageWrapper>} />
             
             {/* Owner Routes */}
-            <Route path="/owner" element={<PageWrapper><OwnerLogin /></PageWrapper>} />
-            <Route path="/owner" element={<OwnerLayout />}>
-              <Route path="dashboard" element={<PageWrapper><OwnerMain /></PageWrapper>} />
-              <Route path="calendar" element={<PageWrapper><OwnerCalendar /></PageWrapper>} />
-              <Route path="bookings" element={<PageWrapper><OwnerBookings /></PageWrapper>} />
-              <Route path="profile" element={<PageWrapper><OwnerProfile /></PageWrapper>} />
+            <Route path="/owner" element={<PageWrapper><OwnerEntry /></PageWrapper>} />
+            <Route path="/owner/register" element={<PageWrapper><OwnerRegister /></PageWrapper>} />
+            <Route path="/owner/register/otp" element={<PageWrapper><OwnerRegisterOTP /></PageWrapper>} />
+            <Route path="/owner/login" element={<PageWrapper><OwnerLogin /></PageWrapper>} />
+            
+            <Route element={<OwnerLayout />}>
+              <Route path="/owner/dashboard" element={<PageWrapper><OwnerMain /></PageWrapper>} />
+              <Route path="/owner/rates" element={<PageWrapper><OwnerRates /></PageWrapper>} />
+              <Route path="/owner/profile" element={<PageWrapper><OwnerProfile /></PageWrapper>} />
             </Route>
 
             <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />

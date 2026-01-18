@@ -1,0 +1,179 @@
+You are building a FRONTEND-ONLY React application.
+This is a MOBILE-FIRST UI.
+
+STRICT RULES (DO NOT BREAK):
+- Do NOT create backend
+- Do NOT create APIs
+- Do NOT use Supabase, Firebase, or Auth services
+- Do NOT create database or server
+- Use ONLY React, React Router, and client-side state
+- This is a UI prototype only
+
+--------------------------------------------------
+
+## ROUTES
+
+Use React Router with these routes:
+
+/owner              → Register / Login selection
+/owner/register     → Owner + Property registration
+/owner/register/otp → OTP verification (demo)
+/owner/login        → Login with mobile + OTP
+/owner/dashboard    → Owner Dashboard (protected)
+
+If user is not logged in, redirect to /owner
+
+--------------------------------------------------
+
+## AUTH LOGIC (DEMO ONLY)
+
+Demo OTP: 000000
+
+- OTP is always valid ONLY if == "000000"
+- Login + registration state stored in localStorage
+- Example keys:
+  - ownerLoggedIn = true
+  - ownerData = { propertyName, propertyType, ownerName, ownerNumber }
+
+--------------------------------------------------
+
+## /OWNER — ENTRY SCREEN
+
+Show two large mobile buttons:
+- Register Property
+- Login
+
+Simple, clean, mobile-first layout.
+
+--------------------------------------------------
+
+## REGISTER FLOW
+
+### /owner/register
+
+Form fields:
+- Property Name
+- Property ID
+- Property Type (Dropdown: Villa, Cottage, Camping)
+- Owner Name
+- Owner Mobile Number
+
+Button:
+- Verify Mobile Number
+
+On click → navigate to `/owner/register/otp`
+
+--------------------------------------------------
+
+### /owner/register/otp
+
+- Show "Enter OTP"
+- 6-digit OTP input
+- Demo OTP = 000000
+
+If correct:
+- Show "Registration Successful" message
+- Show green tick animation (simple check icon or CSS animation)
+- Save owner + property data in localStorage
+- After 2 seconds → redirect to `/owner`
+
+--------------------------------------------------
+
+## LOGIN FLOW
+
+### /owner/login
+
+- Mobile Number input
+- Button → Send OTP
+
+After submit:
+- Show OTP input
+- Demo OTP = 000000
+
+If correct:
+- Set ownerLoggedIn = true
+- Redirect to `/owner/dashboard`
+
+--------------------------------------------------
+
+## OWNER DASHBOARD (MOBILE ONLY)
+
+### Layout
+- Header: "Owner Dashboard"
+- Show below header:
+  - Property Name
+  - Property Type (Villa / Cottage / Camping)
+
+Bottom Navigation (ONLY 3 TABS):
+1. Calendar
+2. Prices / Rates
+3. Profile
+
+--------------------------------------------------
+
+## TAB 1: CALENDAR (DEFAULT)
+
+- Monthly calendar view
+- Date colors:
+  - Green → Available
+  - Red → Booked
+- NO blocked state
+
+Below calendar:
+- Today’s Date
+- Toggle switch:
+  - Available / Booked
+- Toggle only updates local UI state
+
+--------------------------------------------------
+
+## TAB 2: PRICES / RATES
+
+Show editable inputs:
+- Weekday Rate (Mon–Thu)
+- Weekend Rate (Fri–Sun)
+
+Custom Date Prices:
+- List of dates selected from calendar
+- Price input per date
+
+All pricing stored in React state / localStorage only
+
+--------------------------------------------------
+
+## TAB 3: PROFILE
+
+Top right:
+- Logout button (clears localStorage, redirects to /owner)
+
+Show details:
+- Property Name
+- Owner Name
+- Owner Mobile Number
+
+Editable sections (text areas):
+- Amenities
+- Activities
+- Policy
+
+Save button → saves to localStorage
+
+--------------------------------------------------
+
+## UI REQUIREMENTS
+
+- Mobile screen first
+- Clean admin style
+- No animations except success tick
+- No unnecessary features
+- No bookings list
+- No emergency block
+- No notifications
+- No backend references
+
+--------------------------------------------------
+
+## FINAL REMINDER
+
+This is a FRONTEND-ONLY OWNER DASHBOARD UI.
+Do NOT build backend, API, or database.

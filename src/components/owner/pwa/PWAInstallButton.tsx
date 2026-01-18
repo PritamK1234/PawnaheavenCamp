@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Info } from 'lucide-react';
+import { toast } from 'sonner';
 
 const PWAInstallButton = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
     // 1. Check if already installed
@@ -14,18 +14,13 @@ const PWAInstallButton = () => {
     
     if (isStandalone) {
       setIsInstalled(true);
-      return;
     }
 
     // 2. Listen for the beforeinstallprompt event
     const handler = (e: any) => {
       console.log('PWA: beforeinstallprompt event fired');
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
-      // Update UI notify the user they can install the PWA
-      setShowButton(true);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -34,15 +29,10 @@ const PWAInstallButton = () => {
     const appInstalledHandler = () => {
       console.log('PWA: appinstalled event fired');
       setIsInstalled(true);
-      setShowButton(false);
       setDeferredPrompt(null);
     };
 
     window.addEventListener('appinstalled', appInstalledHandler);
-
-    // 4. Fallback for testing: show button if not standalone (Optional - but helps if event is missed)
-    // However, the prompt() method ONLY works if we have the event.
-    // So we must rely on the event.
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
@@ -51,26 +41,33 @@ const PWAInstallButton = () => {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      console.log('PWA: No install prompt available');
-      return;
-    }
-    
-    // Show the install prompt
-    deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`PWA: User response to install prompt: ${outcome}`);
-    
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setShowButton(false);
+    if (deferredPrompt) {
+      // Show the official install prompt
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`PWA: User response to install prompt: ${outcome}`);
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      // Fallback: Instructions for manual installation if the prompt event hasn't fired
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        toast.info("To install: Tap the 'Share' icon and then select 'Add to Home Screen'.", {
+          duration: 6000,
+          icon: <Info className="w-4 h-4" />
+        });
+      } else {
+        toast.info("To install: Click your browser's menu (three dots) and look for 'Install App' or 'Add to Home Screen'.", {
+          duration: 6000,
+          icon: <Info className="w-4 h-4" />
+        });
+      }
     }
   };
 
-  // Only show if not installed AND we have the prompt event
-  if (isInstalled || !showButton) return null;
+  // Only hide if we are 100% sure it's already installed in standalone mode
+  if (isInstalled) return null;
 
   return (
     <Button

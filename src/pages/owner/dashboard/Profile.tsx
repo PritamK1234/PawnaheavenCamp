@@ -89,7 +89,6 @@ const OwnerProfile = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-[#D4AF37]">Profile</h2>
         <div className="flex items-center space-x-2">
-          <PWAInstallButton />
           <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-500 hover:bg-red-500/10">
             <LogOut className="w-4 h-4 mr-1" /> Logout
           </Button>

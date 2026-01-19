@@ -219,22 +219,22 @@ const AdminDashboard = () => {
       {/* Header */}
       <header className="glass-dark border-b border-border/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-gold-dark flex items-center justify-center shadow-gold">
-              <LayoutDashboard className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-gold-dark flex items-center justify-center shadow-gold shrink-0">
+              <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </div>
-            <h1 className="font-display text-xl font-semibold text-foreground">PawnaHavenCamp Admin</h1>
+            <h1 className="font-display text-sm sm:text-xl font-semibold text-foreground truncate max-w-[120px] sm:max-w-none">PawnaHaven Admin</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => window.open('tel:+918806092609')}>
-              <Phone className="w-5 h-5" />
+          <div className="flex items-center gap-1 sm:gap-4">
+            <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-10 sm:h-10" onClick={() => window.open('tel:+918806092609')}>
+              <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => window.open('https://wa.me/918806092609')}>
-              <MessageSquare className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-10 sm:h-10" onClick={() => window.open('https://wa.me/918806092609')}>
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-xl">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+            <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-xl h-8 sm:h-10 text-[10px] sm:text-sm px-2 sm:px-4">
+              <LogOut className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden xs:inline">Logout</span>
             </Button>
           </div>
         </div>
@@ -292,12 +292,12 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-6">
-            <TabsList className="bg-secondary/30 p-1 rounded-xl">
-              <TabsTrigger value="all" className="rounded-lg px-6">All</TabsTrigger>
-              <TabsTrigger value="camping" className="rounded-lg px-6">Camping</TabsTrigger>
-              <TabsTrigger value="cottage" className="rounded-lg px-6">Cottage</TabsTrigger>
-              <TabsTrigger value="villa" className="rounded-lg px-6">Villa</TabsTrigger>
+          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-6 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-none">
+            <TabsList className="bg-secondary/30 p-1 rounded-xl w-full sm:w-auto flex">
+              <TabsTrigger value="all" className="rounded-lg flex-1 sm:px-8">All</TabsTrigger>
+              <TabsTrigger value="camping" className="rounded-lg flex-1 sm:px-8">Camping</TabsTrigger>
+              <TabsTrigger value="cottage" className="rounded-lg flex-1 sm:px-8">Cottage</TabsTrigger>
+              <TabsTrigger value="villa" className="rounded-lg flex-1 sm:px-8">Villa</TabsTrigger>
             </TabsList>
           </Tabs>
 

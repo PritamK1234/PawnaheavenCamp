@@ -231,14 +231,14 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="glass rounded-2xl border border-border/50 p-6 animate-fade-up">
-            <div className="flex flex-wrap gap-6 mb-8">
-              <div className="flex items-center gap-4 p-3 rounded-xl bg-secondary/30 border border-border/30">
-                <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 mb-8 bg-secondary/20 p-4 rounded-xl border border-border/30">
+              <div className="flex items-center gap-4 flex-1 min-w-[200px]">
+                <Label htmlFor="status" className="text-sm font-medium shrink-0">Status</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(value) => setFormData({ ...formData, status: value })}
                 >
-                  <SelectTrigger className="w-[140px] h-9 bg-background">
+                  <SelectTrigger className="flex-1 h-10 bg-background">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -249,31 +249,33 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
                 </Select>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label htmlFor="is_active">Active</Label>
-              </div>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                  <Label htmlFor="is_active" className="text-xs sm:text-sm">Active</Label>
+                </div>
 
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="is_available"
-                  checked={formData.is_available}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
-                />
-                <Label htmlFor="is_available">Available</Label>
-              </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="is_available"
+                    checked={formData.is_available}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
+                  />
+                  <Label htmlFor="is_available" className="text-xs sm:text-sm">Available</Label>
+                </div>
 
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="is_top_selling"
-                  checked={formData.is_top_selling}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_top_selling: checked })}
-                />
-                <Label htmlFor="is_top_selling">Top Selling</Label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="is_top_selling"
+                    checked={formData.is_top_selling}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_top_selling: checked })}
+                  />
+                  <Label htmlFor="is_top_selling" className="text-xs sm:text-sm">Top Selling</Label>
+                </div>
               </div>
             </div>
 

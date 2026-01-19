@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWeekend, startOfToday, isBefore } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWeekend, startOfToday, isBefore, getDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 const OwnerDashboard = () => {
@@ -19,18 +19,32 @@ const OwnerDashboard = () => {
     '2026-01-19': false,
   });
 
-  useEffect(() => {
+  const loadRates = () => {
     const savedRates = localStorage.getItem('propertyRates');
     if (savedRates) {
       const parsed = JSON.parse(savedRates);
       if (parsed.rates) setRates(parsed.rates);
       if (parsed.customRates) setCustomRates(parsed.customRates);
     }
+  };
+
+  useEffect(() => {
+    loadRates();
+    // Also listen for storage changes in case the user updates rates in another tab
+    window.addEventListener('storage', loadRates);
+    return () => window.removeEventListener('storage', loadRates);
   }, []);
 
+  const firstDayOfMonth = startOfMonth(currentDate);
+  const lastDayOfMonth = endOfMonth(currentDate);
+  
+  // To ensure the calendar starts on the correct day of the week, 
+  // we need to know what day the 1st of the month is.
+  const startDay = getDay(firstDayOfMonth); // 0 (Sun) to 6 (Sat)
+  
   const days = eachDayOfInterval({
-    start: startOfMonth(currentDate),
-    end: endOfMonth(currentDate),
+    start: firstDayOfMonth,
+    end: lastDayOfMonth,
   });
 
   const getDayStatus = (date: Date) => {
@@ -42,7 +56,9 @@ const OwnerDashboard = () => {
     const dateKey = format(date, 'yyyy-MM-dd');
     const custom = customRates.find(r => r.date === dateKey);
     if (custom) return custom.price;
-    return isWeekend(date) ? rates.weekend : rates.weekday;
+    // Sat (6) and Sun (0) are weekends
+    const dayOfWeek = getDay(date);
+    return (dayOfWeek === 0 || dayOfWeek === 6) ? rates.weekend : rates.weekday;
   };
 
   const today = startOfToday();
@@ -57,8 +73,7 @@ const OwnerDashboard = () => {
     });
   };
 
-  // Weekend logic: Sat-Sun are weekends, Mon-Fri are weekdays
-  const isSelectedWeekend = isWeekend(selectedDate);
+  const isSelectedWeekend = getDay(selectedDate) === 0 || getDay(selectedDate) === 6;
 
   return (
     <div className="space-y-4">
@@ -83,6 +98,12 @@ const OwnerDashboard = () => {
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
               <div key={day} className="text-center text-xs font-medium text-gray-500">{day}</div>
             ))}
+            
+            {/* Empty slots for days before the 1st of the month */}
+            {Array.from({ length: startDay }).map((_, i) => (
+              <div key={`empty-${i}`} className="aspect-square" />
+            ))}
+
             {days.map((day) => {
               const past = isPast(day);
               return (

@@ -42,7 +42,9 @@ const PropertyCard = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
   
-  const displayImages = images.length > 0 ? images : [image];
+  const displayImages = images && images.length > 0 
+    ? images.map(img => typeof img === 'string' ? img : (img as any).image_url) 
+    : [image];
   const navigationId = slug || id;
 
   const handleTouchStart = (e: React.TouchEvent) => {

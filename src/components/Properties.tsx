@@ -156,12 +156,12 @@ const Properties = () => {
                   title={property.title}
                   location={property.location}
                   price={property.price}
-                  priceNote={property.priceNote}
+                  priceNote={property.price_note || property.priceNote}
                   rating={property.rating}
                   amenities={property.amenities || []}
                   category={property.category}
                   isTopSelling={property.is_top_selling}
-                  isAvailable={property.isAvailable}
+                  isAvailable={property.is_available}
                 />
               </div>
             ))}

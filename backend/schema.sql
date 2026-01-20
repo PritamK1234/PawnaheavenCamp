@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS properties (
   id SERIAL PRIMARY KEY,
   title VARCHAR(500) NOT NULL,
   slug VARCHAR(500) UNIQUE NOT NULL,
+  property_id VARCHAR(50) UNIQUE,
   description TEXT NOT NULL,
   category VARCHAR(50) NOT NULL CHECK (category IN ('camping', 'cottage', 'villa')),
   location VARCHAR(255) NOT NULL,

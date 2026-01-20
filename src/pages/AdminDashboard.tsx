@@ -542,8 +542,8 @@ const AdminDashboard = () => {
                         <User className="w-6 h-6" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white truncate text-base">{ownerProp?.owner_name || `Owner ${idx + 1}`}</h4>
-                        <p className="text-[11px] text-muted-foreground font-medium">{mobile || '+91 ---'}</p>
+                        <h4 className="font-bold text-white truncate text-sm">{ownerProp?.owner_name || `Owner ${idx + 1}`}</h4>
+                        <p className="text-[10px] text-muted-foreground font-medium">{mobile || '+91 ---'}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" className="text-emerald-500 rounded-full h-10 w-10 hover:bg-emerald-500/10 shadow-lg shadow-emerald-500/5" onClick={() => window.open(`https://wa.me/${mobile?.replace(/\D/g, '')}`)}>
@@ -557,9 +557,9 @@ const AdminDashboard = () => {
                     
                     <div className="space-y-1.5 pt-3 border-t border-white/5">
                       {ownerProperties.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between gap-3 bg-white/5 px-3 py-2 rounded-xl border border-white/5 group hover:border-gold/30 transition-colors">
-                          <span className="text-sm text-white font-medium truncate flex-1">{p.title}</span>
-                          <Badge variant="outline" className="text-[9px] h-5 px-2 border-gold/20 text-gold bg-gold/5 uppercase font-bold shrink-0">
+                        <div key={p.id} className="flex items-center justify-between gap-3 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 group hover:border-gold/30 transition-colors">
+                          <span className="text-xs text-white font-medium truncate flex-1">{p.title}</span>
+                          <Badge variant="outline" className="text-[8px] h-4 px-1.5 border-gold/20 text-gold bg-gold/5 uppercase font-bold shrink-0">
                             {p.category}
                           </Badge>
                         </div>

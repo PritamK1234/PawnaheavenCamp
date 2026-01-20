@@ -1,0 +1,132 @@
+I want to REDESIGN my existing ADMIN DASHBOARD UI.
+IMPORTANT:
+- This is ONLY a FRONTEND UI / UX redesign
+- DO NOT change, remove, or rewrite any existing logic, APIs, data flow, or features
+- Keep all functionality exactly the same
+- Only refactor JSX / UI layout / styles if needed
+
+Primary Goal:
+Make the admin dashboard MOBILE-FIRST, modern, and premium-looking
+using our existing CHARCOAL BLACK + GOLDEN theme.
+
+------------------------------------------------
+GENERAL DESIGN RULES
+------------------------------------------------
+- Mobile screen optimized first (desktop secondary)
+- Clean, premium, modern admin UI
+- Compact but readable
+- Smooth spacing, rounded cards, subtle shadows
+- Use charcoal black background with golden highlights
+- Buttons and active tabs should use gold accent
+- Do NOT introduce new features or logic
+
+------------------------------------------------
+HEADER (KEEP AS IS)
+------------------------------------------------
+- Keep the HEADER exactly as it is
+- Keep header buttons, actions, and logic unchanged
+- Only minor spacing or responsiveness fixes allowed if needed
+
+------------------------------------------------
+TOP SUMMARY BOXES (STATS)
+------------------------------------------------
+Currently there are 4 boxes:
+- Total Properties
+- Camping
+- Cottage
+- Villa
+
+REDESIGN REQUIREMENTS:
+- Make these boxes COMPACT and MOBILE-FRIENDLY
+- Still show all existing information
+- ADD total property count inside each:
+  - Camping: show camping count
+  - Cottage: show cottage count
+  - Villa: show villa count
+- Use premium card design
+- Icon + number + label layout
+- Cards should align nicely in mobile grid (2x2)
+
+------------------------------------------------
+BOTTOM TAB NAVIGATION (VERY IMPORTANT)
+------------------------------------------------
+Add a FIXED bottom tab bar (mobile-first) with 4 tabs:
+1. Properties
+2. Owners
+3. Referrals
+4. Transactions
+
+- Gold highlight for active tab
+- Icon + label
+- Smooth transitions
+- Desktop can show this as horizontal tabs if needed
+
+------------------------------------------------
+TAB CONTENT DETAILS
+------------------------------------------------
+
+1️⃣ PROPERTIES TAB
+- Move the existing “Properties Management” section here
+- SAME features, SAME logic, SAME data
+- Only redesign layout to be mobile-friendly
+- Use cards instead of heavy tables where possible (UI only)
+
+------------------------------------------------
+
+2️⃣ OWNERS TAB
+- Show list of all property owners
+- On top, add toggle filters:
+  - All
+  - Camping
+  - Cottage
+  - Villa
+- Toggle affects UI filtering only (do not change logic)
+- Owner cards should be clean, compact, premium
+
+------------------------------------------------
+
+3️⃣ REFERRALS TAB
+At the top, add segmented controls / tabs:
+- All Referrals (with search bar)
+- Withdraw Requests
+- Withdraw History
+
+Each section:
+- Uses same existing data & logic
+- Just reorganized visually
+- Search bar should be clean and mobile-optimized
+
+------------------------------------------------
+
+4️⃣ TRANSACTIONS TAB
+At the top, add segmented controls:
+- All
+- Bookings
+- Refunds
+- Referral Withdrawals
+
+Below:
+- Transaction list styled as modern cards
+- Highlight amounts clearly
+- Status badges with subtle colors (gold / grey / muted red if needed)
+
+------------------------------------------------
+TECH REQUIREMENTS
+------------------------------------------------
+- React
+- Existing component structure preferred
+- Tailwind CSS (or existing CSS system)
+- No backend changes
+- No API changes
+- No renaming of variables unless required for UI
+
+------------------------------------------------
+FINAL NOTE
+------------------------------------------------
+This redesign should feel like:
+- A premium fintech / travel admin app
+- Very clean on mobile
+- Easy to operate with thumb
+- No feature loss
+
+Please focus ONLY on UI/UX improvements.

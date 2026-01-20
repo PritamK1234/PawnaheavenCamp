@@ -45,10 +45,32 @@ const OwnerProfile = () => {
             if (!data) return [];
             if (Array.isArray(data)) return data;
             if (typeof data === 'string') {
+              let trimmed = data.trim();
+              
+              // Handle PostgreSQL double-quoted JSON string format: "[\"item\"]" or "[\"\"item\"\"]"
+              if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+                trimmed = trimmed.substring(1, trimmed.length - 1).replace(/""/g, '"').replace(/\\"/g, '"');
+              }
+
+              // Handle PostgreSQL array format: {item1,item2}
+              if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                return trimmed.substring(1, trimmed.length - 1)
+                  .split(',')
+                  .map((s: string) => s.trim().replace(/^"(.*)"$/, '$1'))
+                  .filter(Boolean);
+              }
+
+              // Try standard JSON parsing
               try {
-                return JSON.parse(data);
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) return parsed;
+                return parsed ? [parsed] : [];
               } catch (e) {
-                return data.split(',').map((s: string) => s.trim());
+                // Last resort: comma separated or single item
+                if (trimmed.includes(',')) {
+                  return trimmed.split(',').map((s: string) => s.trim()).filter(Boolean);
+                }
+                return trimmed ? [trimmed] : [];
               }
             }
             return [];
@@ -59,7 +81,34 @@ const OwnerProfile = () => {
             activities: parseData(prop.activities),
             highlights: parseData(prop.highlights),
             policies: parseData(prop.policies),
-            schedule: parseData(prop.schedule),
+            schedule: parseData(prop.schedule).map((item: any) => {
+              if (typeof item === 'string') {
+                const trimmedItem = item.trim();
+                if (trimmedItem.startsWith('{') && trimmedItem.endsWith('}')) {
+                  try {
+                    // Try to handle potential nested JSON in string
+                    const cleaned = trimmedItem.replace(/\\"/g, '"');
+                    const parsed = JSON.parse(cleaned);
+                    return { time: parsed.time || '', title: parsed.title || parsed.event || '' };
+                  } catch (e) {
+                    return { time: '', title: trimmedItem };
+                  }
+                }
+                try {
+                  const parsedItem = JSON.parse(trimmedItem);
+                  return typeof parsedItem === 'object' ? parsedItem : { time: '', title: parsedItem };
+                } catch (e) {
+                  return { time: '', title: trimmedItem };
+                }
+              }
+              if (item && typeof item === 'object') {
+                return {
+                  time: item.time || '',
+                  title: item.title || item.event || ''
+                };
+              }
+              return { time: '', title: String(item) };
+            }),
             description: prop.description || ''
           });
         }

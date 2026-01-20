@@ -11,14 +11,29 @@ const generateSlug = (title) => {
 const parsePostgresArray = (field) => {
   if (!field) return [];
   if (Array.isArray(field)) return field;
-  if (typeof field === 'string' && field.startsWith('{')) {
-    return field.substring(1, field.length - 1).split(',').map(item => item.trim().replace(/^"(.*)"$/, '$1'));
+  if (typeof field === 'string') {
+    let trimmed = field.trim();
+    
+    // Handle double-quoted JSON strings from Postgres
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      trimmed = trimmed.substring(1, trimmed.length - 1).replace(/""/g, '"').replace(/\\"/g, '"');
+    }
+
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      return trimmed.substring(1, trimmed.length - 1).split(',').map(item => item.trim().replace(/^"(.*)"$/, '$1'));
+    }
+    
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch (e) {
+      if (trimmed.includes(',')) {
+        return trimmed.split(',').map(s => s.trim());
+      }
+      return [trimmed];
+    }
   }
-  try {
-    return JSON.parse(field);
-  } catch (e) {
-    return [];
-  }
+  return [];
 };
 
 // Get all properties (Admin)
@@ -222,6 +237,13 @@ const getPropertyById = async (req, res) => {
       images: result.rows[0].images || [],
     };
 
+    console.log('Sending property data to owner dashboard:', { 
+      id: property.id, 
+      property_id: property.property_id,
+      amenitiesCount: property.amenities.length,
+      activitiesCount: property.activities.length
+    });
+
     return res.status(200).json({
       success: true,
       data: property,
@@ -255,13 +277,13 @@ const updateProperty = async (req, res) => {
       WHERE property_id = $8 OR id::text = $8
       RETURNING *
     `, [
-      typeof amenities === 'string' ? amenities : JSON.stringify(amenities || []), 
-      typeof activities === 'string' ? activities : JSON.stringify(activities || []), 
-      typeof highlights === 'string' ? highlights : JSON.stringify(highlights || []), 
-      typeof policies === 'string' ? policies : JSON.stringify(policies || []), 
-      typeof schedule === 'string' ? schedule : JSON.stringify(schedule || []), 
+      Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || '[]'), 
+      Array.isArray(activities) ? JSON.stringify(activities) : (activities || '[]'), 
+      Array.isArray(highlights) ? JSON.stringify(highlights) : (highlights || '[]'), 
+      Array.isArray(policies) ? JSON.stringify(policies) : (policies || '[]'), 
+      Array.isArray(schedule) ? JSON.stringify(schedule) : (schedule || '[]'), 
       description,
-      typeof availability === 'string' ? availability : JSON.stringify(availability || []),
+      Array.isArray(availability) ? JSON.stringify(availability) : (availability || '[]'),
       id
     ]);
 

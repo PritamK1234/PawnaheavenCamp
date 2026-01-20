@@ -164,18 +164,18 @@ const PropertyCard = ({
 
           {/* Image Navigation Arrows */}
           {displayImages.length > 1 && (
-            <div className="flex justify-between items-center absolute inset-x-0 top-1/2 -translate-y-1/2 px-3 z-30 pointer-events-none">
+            <div className="flex justify-between items-center absolute inset-x-0 top-1/2 -translate-y-1/2 px-2 z-30 pointer-events-none opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
               <button 
                 onClick={prevImage}
-                className="pointer-events-auto p-2 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-md border border-white/30 transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center"
+                className="pointer-events-auto p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
               <button 
                 onClick={nextImage}
-                className="pointer-events-auto p-2 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-md border border-white/30 transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center"
+                className="pointer-events-auto p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg flex items-center justify-center"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           )}

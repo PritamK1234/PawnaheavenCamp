@@ -375,7 +375,7 @@ const PropertyDetails = () => {
           <div className="md:hidden">
             <div className="h-[75vh] w-full relative">
               <ImageSlider 
-                images={propertyData.images && propertyData.images.length >= 3 ? propertyData.images : [
+                images={propertyData.images && propertyData.images.length > 0 ? propertyData.images : [
                   propertyData.image,
                   "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1200",
                   "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=1200"

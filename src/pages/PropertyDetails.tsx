@@ -2,6 +2,8 @@ import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { 
   Star, 
   MapPin, 
@@ -128,12 +130,15 @@ const PropertyDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] p-6 space-y-8">
-        <Skeleton className="h-[60vh] w-full rounded-3xl" />
-        <div className="space-y-6 max-w-2xl mx-auto">
-          <Skeleton className="h-12 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
+      <div className="container mx-auto px-6 py-12 space-y-8">
+        <Skeleton className="h-[400px] w-full rounded-3xl" />
+        <div className="grid lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-6">
+            <Skeleton className="h-12 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
         </div>
       </div>
     );
@@ -141,11 +146,11 @@ const PropertyDetails = () => {
 
   if (!propertyData) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-[#0A0A0A] text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <h2 className="text-3xl font-display font-bold mb-4">Property Not Found</h2>
-        <p className="text-gray-400 mb-8">The property you're looking for might have been moved or is no longer active.</p>
+        <p className="text-muted-foreground mb-8">The property you're looking for might have been moved or is no longer active.</p>
         <Link to="/">
-          <Button size="lg" className="bg-[#D4AF37] text-black">Return Home</Button>
+          <Button size="lg">Return Home</Button>
         </Link>
       </div>
     );
@@ -153,11 +158,184 @@ const PropertyDetails = () => {
 
   const isVilla = propertyData.category === "villa";
 
+  const BookingSection = () => (
+    <Card className="rounded-[2.5rem] p-8 md:p-10 bg-card shadow-2xl-soft border border-border/50 overflow-hidden relative">
+      {/* Decorative glow */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      
+      <div className="relative">
+        {isVilla && (
+          <div className="mb-8">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="availability" className="border-none bg-secondary/30 rounded-3xl overflow-hidden border border-border/50">
+                <AccordionTrigger className="px-4 hover:no-underline py-4">
+                  <div className="flex items-center gap-2 text-sm font-bold">
+                    <CalendarIcon className="w-4 h-4 text-primary" />
+                    Villa Availability Calendar
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-0 pb-4">
+                  <div className="flex justify-center w-full px-0">
+                    <div className="w-full bg-background rounded-2xl border shadow-sm p-1 sm:p-2">
+                      <Calendar
+                        mode="single"
+                        className="w-full"
+                        classNames={{
+                          months: "w-full flex flex-col space-y-4",
+                          month: "w-full space-y-4",
+                          caption: "flex justify-center pt-1 relative items-center mb-2",
+                          caption_label: "text-sm font-semibold",
+                          nav: "space-x-1 flex items-center",
+                          nav_button: cn(
+                            buttonVariants({ variant: "outline" }),
+                            "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+                          ),
+                          nav_button_previous: "absolute left-1",
+                          nav_button_next: "absolute right-1",
+                          table: "w-full border-collapse",
+                          head_row: "flex w-full justify-between mb-1",
+                          head_cell: "text-muted-foreground rounded-md w-[14%] font-normal text-[0.7rem] sm:text-[0.75rem] uppercase text-center",
+                          row: "flex w-full mt-2 justify-between",
+                          cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent w-[14%]",
+                          day: cn(
+                            buttonVariants({ variant: "ghost" }),
+                            "h-10 w-full sm:h-10 sm:w-10 md:h-12 md:w-12 p-0 font-normal aria-selected:opacity-100 hover:bg-primary/10 transition-colors"
+                          ),
+                          day_today: "bg-accent text-accent-foreground",
+                          day_outside: "text-muted-foreground opacity-50",
+                          day_disabled: "text-destructive opacity-100 line-through font-bold cursor-not-allowed bg-destructive/5",
+                          day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                          day_hidden: "invisible",
+                        }}
+                        disabled={(date) => {
+                          const day = date.getDate();
+                          return day === 15 || day === 16 || day === 20 || date < new Date();
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-4 mt-4 text-[10px] font-bold uppercase tracking-widest">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-destructive/20 border border-destructive/30" />
+                      <span className="text-destructive">Booked</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-background border border-border" />
+                      <span className="text-muted-foreground">Available</span>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        )}
+        <div className="mb-8">
+          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground block mb-2">Total Starting At</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-display font-bold text-primary tracking-tight">₹{propertyData.price}</span>
+            <span className="text-muted-foreground font-medium text-lg">/ {isVilla ? 'villa' : 'person'}</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-3 font-medium flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-green-500" />
+            {propertyData.priceNote}
+          </p>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                disabled={!propertyData.is_available}
+                className="w-full bg-primary text-primary-foreground hover:bg-gold-light h-16 rounded-2xl text-lg font-bold shadow-gold hover:shadow-gold-lg transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <MessageCircle className="w-6 h-6" />
+                {propertyData.is_available ? "Book Your Stay" : "Currently Booked"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] rounded-[2rem] overflow-hidden">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-display">Book Your Stay</DialogTitle>
+              </DialogHeader>
+              <BookingForm 
+                propertyName={propertyData.title} 
+                propertyId={propertyData.id}
+                pricePerPerson={parseInt(propertyData.price.replace(/[^\d]/g, "")) || 0}
+                propertyCategory={propertyData.category}
+                maxCapacity={propertyData.max_capacity || propertyData.capacity}
+              />
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full h-16 rounded-2xl text-lg font-bold border-border/50 hover:bg-secondary transition-all flex items-center justify-center gap-3"
+              >
+                <Phone className="w-5 h-5 text-primary" />
+                Contact Host
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md rounded-[2rem]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-display text-center">How would you like to connect?</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-4 py-6">
+                <Button
+                  variant="outline"
+                  className="flex flex-col items-center gap-3 h-32 rounded-3xl border-green-500/30 hover:bg-green-50 hover:border-green-500 text-green-600 transition-all group"
+                  onClick={() => window.open(`https://api.whatsapp.com/send?phone=919356874010`, '_blank')}
+                >
+                  <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <MessageCircle className="w-6 h-6" />
+                  </div>
+                  <span className="font-bold">WhatsApp</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex flex-col items-center gap-3 h-32 rounded-3xl border-primary/30 hover:bg-primary/5 hover:border-primary text-primary transition-all group"
+                  onClick={() => window.open(`tel:+919356874010`, '_self')}
+                >
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Phone className="w-6 h-6" />
+                  </div>
+                  <span className="font-bold">Direct Call</span>
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Button
+            variant="secondary"
+            className="w-full h-16 rounded-2xl text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all flex items-center justify-center gap-3 mt-4"
+            onClick={() => window.open(propertyData.map_link || 'https://www.google.com/maps', '_blank')}
+          >
+            <MapPin className="w-5 h-5" />
+            Find us on Map
+          </Button>
+        </div>
+
+        <div className="pt-8 border-t border-border/50">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-primary border border-border/50">
+              <Phone className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Inquiry Support</p>
+              <p className="font-bold text-foreground">{propertyData.contact || "+91 9356874010"}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+
   return (
     <>
       <Helmet>
         <title>{propertyData.title} - Luxury {propertyData.category === 'camping' ? 'Pawna Camping' : 'Lonavala Booking'} | PawnaHavenCamp</title>
         <meta name="description" content={`Book ${propertyData.title} at ${propertyData.location}. Luxury ${propertyData.category} with ${propertyData.amenities.slice(0, 5).join(', ')}. ${propertyData.description.substring(0, 100)}...`} />
+        {/* Open Graph / WhatsApp Preview */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={`${propertyData.title} - ${propertyData.category} in ${propertyData.location}`} />
         <meta property="og:description" content={`Stay at ${propertyData.title} for ${propertyData.price}. Perfect ${propertyData.category} experience near Pawna Lake & Lonavala.`} />
@@ -165,248 +343,202 @@ const PropertyDetails = () => {
         <meta property="og:url" content={window.location.href} />
       </Helmet>
 
-      <div className="min-h-screen bg-[#0A0A0A] text-white font-sans">
-        {/* Hero Section */}
-        <div className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden">
-          <ImageSlider images={propertyData.images || [propertyData.image]} title={propertyData.title} />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent pointer-events-none" />
-          
-          <Link to="/" className="absolute top-6 left-6 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white z-50 hover:bg-black/60 transition-all">
-            <ChevronLeft className="w-6 h-6" />
-          </Link>
-          
-          <button 
-            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white z-50 hover:bg-black/60 transition-all"
-            onClick={() => {
-              const shareUrl = window.location.href;
-              const text = `🏡 *${propertyData.title}*\n📍 ${propertyData.location}\n💰 *${propertyData.price}* ${propertyData.priceNote}\n\nCheck out this beautiful property on PawnaHavenCamp:\n${shareUrl}`;
-              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-            }}
-          >
-            <Share2 className="w-5 h-5" />
-          </button>
-
-          <div className="absolute bottom-8 left-6 right-6 z-20">
-            <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400 mb-1">Total Starting At</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-[#D4AF37]">₹{propertyData.price}</span>
-                <span className="text-gray-400 text-sm">/person</span>
+      <div className="min-h-screen bg-secondary/30">
+        {/* Floating Header */}
+        <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2 text-foreground/70 hover:text-primary transition-all group">
+              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <ChevronLeft className="w-5 h-5" />
               </div>
-              <div className="flex items-center gap-2 bg-[#1A1A1A]/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/5">
-                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                <span className="text-xs font-medium">with meals</span>
-              </div>
+              <span className="font-medium">Back</span>
+            </Link>
+            <div className="hidden md:block">
+              <h2 className="font-display text-lg font-semibold truncate max-w-[200px] lg:max-w-md">
+                {propertyData.title}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full border-border/50 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+                onClick={() => {
+                  const shareUrl = window.location.href;
+                  const text = `🏡 *${propertyData.title}*\n📍 ${propertyData.location}\n💰 *${propertyData.price}* ${propertyData.priceNote}\n\nCheck out this beautiful property on PawnaHavenCamp:\n${shareUrl}`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+                }}
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+              {propertyData.is_top_selling && (
+                <Badge className="bg-primary text-primary-foreground border-none px-4 py-1.5 shadow-gold hidden sm:flex">
+                  <Star className="w-3.5 h-3.5 mr-1.5 fill-current" />
+                  Top Selling
+                </Badge>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-6 space-y-8 max-w-2xl mx-auto pb-24">
-          {/* Quick Badges */}
-          <div className="flex items-center gap-3">
-            <div className="px-5 py-2 rounded-xl bg-[#1A1A1A] border border-white/5 text-xs font-bold capitalize text-gray-300">
-              {propertyData.category}
+        {/* Hero Section with Slider */}
+        <div className="container mx-auto px-6 py-12">
+          {/* Gallery Column */}
+          <div className="space-y-8">
+            <div className="rounded-3xl overflow-hidden shadow-2xl-soft ring-1 ring-border/50">
+              <ImageSlider images={propertyData.images || [propertyData.image]} title={propertyData.title} />
             </div>
-            <div className={cn(
-              "px-5 py-2 rounded-xl border text-xs font-bold",
-              propertyData.is_available 
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
-                : "bg-red-500/10 border-red-500/20 text-red-500"
-            )}>
-              {propertyData.is_available ? "Available" : "Booked"}
-            </div>
-            <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1A1A1A] border border-white/5">
-              <Star className="w-3.5 h-3.5 text-[#D4AF37] fill-[#D4AF37]" />
-              <span className="text-xs font-bold">{propertyData.rating}</span>
-              <span className="text-[10px] text-gray-500 font-medium">(86)</span>
+
+            {/* Mobile Booking Section */}
+            <div className="lg:hidden">
+              <BookingSection />
             </div>
           </div>
 
-          {/* Action Grid */}
-          <div className="grid grid-cols-4 gap-3">
-            <Dialog>
-              <DialogTrigger asChild>
-                <button className="flex flex-col items-center justify-center gap-2 bg-[#1A1A1A] border border-white/5 aspect-square rounded-2xl group active:scale-95 transition-all">
-                  <CalendarIcon className="w-6 h-6 text-gray-400 group-hover:text-[#D4AF37]" />
-                  <span className="text-[9px] uppercase font-bold tracking-widest text-gray-500">Book Stay</span>
-                </button>
-              </DialogTrigger>
-              <DialogContent className="bg-[#1A1A1A] border-[#D4AF37]/30 text-white rounded-[2rem]">
-                <DialogHeader><DialogTitle className="text-[#D4AF37]">Book Your Stay</DialogTitle></DialogHeader>
-                <BookingForm 
-                  propertyName={propertyData.title} 
-                  propertyId={propertyData.id}
-                  pricePerPerson={parseInt(propertyData.price.replace(/[^\d]/g, "")) || 0}
-                  propertyCategory={propertyData.category}
-                  maxCapacity={propertyData.max_capacity || propertyData.capacity}
-                />
-              </DialogContent>
-            </Dialog>
-
-            <button 
-              className="col-span-2 bg-gradient-to-r from-[#00C853] to-[#00B0FF] rounded-2xl flex items-center justify-center gap-2 text-white font-bold text-sm active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
-              onClick={() => window.open(`https://api.whatsapp.com/send?phone=919356874010`, '_blank')}
-            >
-              <MessageCircle className="w-5 h-5" />
-              Call / WhatsApp
-            </button>
-
-            <button 
-              className="bg-[#7B1FA2] rounded-2xl flex items-center justify-center active:scale-95 transition-all shadow-lg shadow-purple-500/20"
-              onClick={() => window.open(propertyData.map_link || 'https://www.google.com/maps', '_blank')}
-            >
-              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-white" />
-              </div>
-            </button>
-          </div>
-
-          {/* Support Section */}
-          <div className="bg-[#1A1A1A] border border-white/5 rounded-3xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center">
-                <Phone className="w-5 h-5 text-[#D4AF37]" />
-              </div>
-              <div>
-                <p className="text-[9px] uppercase tracking-widest font-bold text-gray-500">24/7 Support</p>
-                <p className="text-sm font-bold text-white">+91 8806092609</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => document.getElementById('availability-trigger')?.click()}
-              className="px-4 py-2.5 rounded-xl border border-white/10 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:bg-white/5 transition-all"
-            >
-              Check Availability
-            </button>
-          </div>
-
-          {/* Title & Description */}
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight text-white">{propertyData.title}</h1>
-            <p className="text-gray-400 text-lg leading-relaxed font-medium">
-              {propertyData.description}
-            </p>
-          </div>
-
-          {/* Info Cards */}
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { label: 'Capacity', value: `${propertyData.capacity} Guests`, icon: Users },
-              { label: 'Check-in', value: propertyData.check_in_time, icon: Clock },
-              { label: 'Check-out', value: propertyData.check_out_time, icon: Clock },
-              { label: 'Status', value: 'Verified', icon: ShieldCheck, color: 'text-emerald-500' },
-            ].map((item, i) => (
-              <div key={i} className="bg-[#1A1A1A] border border-white/5 rounded-2xl p-3 flex flex-col items-center gap-1.5">
-                <item.icon className="w-4 h-4 text-[#D4AF37]" />
-                <span className="text-[8px] uppercase font-bold tracking-widest text-gray-500">{item.label}</span>
-                <span className={cn("text-[10px] font-bold text-center", item.color || "text-white")}>{item.value}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Amenities Grid */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <Wifi className="w-5 h-5 text-[#D4AF37]" />
-              <h3 className="text-lg font-bold">Amenities</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {propertyData.amenities.map((amenity, i) => (
-                <div key={i} className="bg-[#1A1A1A] border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 group hover:border-[#D4AF37]/30 transition-all">
-                  <div className="text-[#D4AF37]">{getIcon(amenity)}</div>
-                  <span className="text-[9px] font-bold text-center text-gray-300 group-hover:text-white">{amenity}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Activities Grid */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <Star className="w-5 h-5 text-[#D4AF37]" />
-              <h3 className="text-lg font-bold">Activities</h3>
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              {propertyData.activities.map((activity, i) => (
-                <div key={i} className="bg-[#1A1A1A] border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 group hover:border-[#D4AF37]/30 transition-all">
-                  <div className="text-[#D4AF37]">{getIcon(activity)}</div>
-                  <span className="text-[8px] font-bold text-center text-gray-300 group-hover:text-white">{activity}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Accordion Sections */}
-          <div className="space-y-3">
-            <Accordion type="single" collapsible className="space-y-3">
-              <AccordionItem value="highlights" className="border-none bg-[#1A1A1A] rounded-2xl px-6 border border-white/5">
-                <AccordionTrigger className="hover:no-underline py-5">
-                  <div className="flex items-center gap-3">
-                    <Star className="w-5 h-5 text-[#D4AF37]" />
-                    <span className="text-sm font-bold">What You'll Love</span>
+          <div className="grid lg:grid-cols-12 gap-8 items-start mt-8">
+            <div className="lg:col-span-8 space-y-8">
+              {/* Main Info */}
+              <div className="bg-card rounded-3xl p-8 md:p-10 shadow-sm border border-border/50">
+                  <div className="flex flex-wrap items-center gap-3 mb-6">
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] uppercase tracking-[0.2em] font-bold px-3 py-1">
+                      {propertyData.category}
+                    </Badge>
+                    <Badge 
+                      className={`border-none shadow-sm font-semibold uppercase tracking-wider text-[10px] px-3 py-1 ${
+                        propertyData.is_available 
+                          ? "bg-[#00FF41]/20 text-[#00FF41]" 
+                          : "bg-[#FF4500]/20 text-[#FF4500]"
+                      }`}
+                    >
+                      {propertyData.is_available ? "Available" : "Booked"}
+                    </Badge>
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary rounded-full text-xs font-medium text-muted-foreground">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {propertyData.location}
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="pb-5">
-                  <ul className="space-y-3">
-                    {propertyData.highlights.map((h, i) => (
-                      <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 shrink-0" />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="policies" className="border-none bg-[#1A1A1A] rounded-2xl px-6 border border-white/5">
-                <AccordionTrigger className="hover:no-underline py-5">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck className="w-5 h-5 text-[#D4AF37]" />
-                    <span className="text-sm font-bold">Policies</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-gold/10 rounded-full text-xs font-bold text-gold">
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    {propertyData.rating} Review Score
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="pb-5">
-                  <ul className="space-y-3">
-                    {propertyData.policies?.map((p, i) => (
-                      <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 shrink-0" />
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
+                </div>
 
-              {isVilla && (
-                <AccordionItem value="availability" className="border-none bg-[#1A1A1A] rounded-2xl px-6 border border-white/5">
-                  <AccordionTrigger id="availability-trigger" className="hover:no-underline py-5">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="w-5 h-5 text-[#D4AF37]" />
-                      <span className="text-sm font-bold">Availability Calendar</span>
+                <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground mb-8 leading-tight">
+                  {propertyData.title}
+                </h1>
+
+                <div className="prose prose-slate max-w-none mb-12">
+                  <p className="text-muted-foreground text-lg md:text-xl leading-relaxed font-light italic">
+                    {propertyData.description}
+                  </p>
+                </div>
+
+                {/* Property Feature Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-secondary/50 rounded-2xl border border-border/50">
+                  <div className="flex flex-col gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm border border-border/30">
+                      <Users className="w-5 h-5" />
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-5">
-                    <div className="bg-black/40 rounded-2xl border border-white/5 p-2">
-                      <Calendar
-                        mode="single"
-                        className="w-full text-white"
-                        classNames={{
-                          head_cell: "text-gray-500 w-full font-bold text-[10px] uppercase",
-                          cell: "text-center text-sm p-0 relative focus-within:relative focus-within:z-20 w-full",
-                          day: cn(
-                            buttonVariants({ variant: "ghost" }),
-                            "h-10 w-full p-0 font-medium aria-selected:opacity-100 hover:bg-[#D4AF37]/10 transition-colors text-white"
-                          ),
-                          day_today: "bg-[#D4AF37]/20 text-[#D4AF37]",
-                          day_disabled: "text-red-500 opacity-50 line-through font-bold cursor-not-allowed",
-                        }}
-                        disabled={(date) => date < new Date()}
-                      />
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Capacity</span>
+                    <span className="text-sm font-semibold">{propertyData.capacity} Guests</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm border border-border/30">
+                      <Clock className="w-5 h-5" />
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Check-in</span>
+                    <span className="text-sm font-semibold">{propertyData.check_in_time}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm border border-border/30">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Check-out</span>
+                    <span className="text-sm font-semibold">{propertyData.check_out_time}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm border border-border/30">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Status</span>
+                    <span className="text-sm font-semibold text-green-600">Verified</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Amenities & Activities Sections */}
+              <div className="grid md:grid-cols-2 gap-8">
+                <Card className="rounded-3xl p-8 shadow-sm border-border/50 bg-card overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+                  <h3 className="text-2xl font-display font-semibold mb-8 flex items-center gap-3">
+                    <Wifi className="w-6 h-6 text-primary" />
+                    Amenities
+                  </h3>
+                  <div className="grid gap-5">
+                    {propertyData.amenities.map((amenity, index) => (
+                      <div key={index} className="flex items-center gap-4 group">
+                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                          {getIcon(amenity)}
+                        </div>
+                        <span className="text-sm font-medium text-foreground/80">{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                <Card className="rounded-3xl p-8 shadow-sm border-border/50 bg-card overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+                  <h3 className="text-2xl font-display font-semibold mb-8 flex items-center gap-3">
+                    <Water className="w-6 h-6 text-primary" />
+                    Activities
+                  </h3>
+                  <div className="grid gap-5">
+                    {propertyData.activities.map((activity, index) => (
+                      <div key={index} className="flex items-center gap-4 group">
+                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                          {getIcon(activity)}
+                        </div>
+                        <span className="text-sm font-medium text-foreground/80">{activity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+
+              {/* Highlights */}
+              <Card className="rounded-3xl p-8 md:p-10 shadow-sm border-border/50 bg-card">
+                <h3 className="text-2xl font-display font-semibold mb-8">What You'll Love</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {propertyData.highlights.map((highlight, index) => (
+                    <div key={index} className="flex items-start gap-4 p-4 rounded-2xl bg-secondary/30 border border-border/30 hover:border-primary/30 transition-all">
+                      <div className="mt-1 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      </div>
+                      <span className="text-sm md:text-base leading-relaxed">{highlight}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Policies */}
+              {propertyData.policies && propertyData.policies.length > 0 && (
+                <Card className="rounded-3xl p-8 md:p-10 shadow-sm border-border/50 bg-background/50 border-dashed">
+                  <h3 className="text-2xl font-display font-semibold mb-8">Good to Know</h3>
+                  <div className="space-y-4">
+                    {propertyData.policies.map((policy, index) => (
+                      <div key={index} className="flex items-center gap-4 text-muted-foreground">
+                        <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0" />
+                        <span className="text-sm">{policy}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
               )}
-            </Accordion>
+            </div>
+
+            {/* Desktop Booking Column */}
+            <div className="hidden lg:block lg:col-span-4 sticky top-28">
+              <BookingSection />
+            </div>
           </div>
         </div>
       </div>

@@ -53,7 +53,7 @@ const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
 
   return (
     <div 
-      className={cn("relative w-full aspect-[3/4] bg-black rounded-2xl overflow-hidden group", className)}
+      className={cn("relative w-full aspect-[3/4] bg-neutral-900 rounded-2xl overflow-hidden group", className)}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -68,13 +68,16 @@ const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
         }}
       >
         {images && images.length > 0 ? images.map((img, index) => (
-          <div key={index} className="flex-shrink-0 w-full h-full">
-            <OptimizedImage
+          <div key={index} className="flex-shrink-0 w-full h-full relative">
+            <img
               src={img}
               alt={`${title} - Image ${index + 1}`}
-              width={1200}
-              priority={index === 0}
               className="w-full h-full object-cover"
+              loading={index === 0 ? "eager" : "lazy"}
+              onError={(e) => {
+                console.error("Image load error:", img);
+                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200";
+              }}
             />
           </div>
         )) : (

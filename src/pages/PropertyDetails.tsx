@@ -109,13 +109,33 @@ const PropertyDetails = () => {
         const response = await propertyAPI.getPublicBySlug(propertyId);
         if (response.success) {
           const p = response.data;
+          console.log("Property Raw Data:", JSON.stringify(p, null, 2));
+          let mappedImages: string[] = [];
+          
+          if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+            mappedImages = p.images.map((img: any) => {
+              if (typeof img === 'string') return img;
+              return img.image_url || img.url || "";
+            }).filter(Boolean);
+          }
+          
+          if (mappedImages.length === 0 && p.image) {
+            mappedImages = [p.image];
+          }
+          
+          if (mappedImages.length === 0) {
+            mappedImages = ["https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200"];
+          }
+          
+          console.log("Mapped Images for Slider:", mappedImages);
+
           setPropertyData({
             ...p,
-            images: p.images && p.images.length > 0 ? p.images.map((img: any) => img.image_url) : [p.image || "https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200"],
+            images: mappedImages,
             priceNote: p.price_note,
             is_available: p.is_available,
             map_link: p.map_link,
-            image: p.images && p.images.length > 0 ? p.images[0].image_url : (p.image || "https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200")
+            image: mappedImages[0]
           });
         }
       } catch (error) {

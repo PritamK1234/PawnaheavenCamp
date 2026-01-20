@@ -497,7 +497,7 @@ const AdminDashboard = () => {
                       <User className="w-6 h-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-white truncate">Owner {idx + 1}</h4>
+                      <h4 className="font-bold text-white truncate">{ownerProp?.owner_name || `Owner ${idx + 1}`}</h4>
                       <p className="text-xs text-muted-foreground mb-2">{mobile || '+91 ---'}</p>
                       <div className="flex gap-2">
                          <Badge variant="outline" className="text-[8px] h-4 border-gold/10 text-gold/60">{ownerProp?.category}</Badge>

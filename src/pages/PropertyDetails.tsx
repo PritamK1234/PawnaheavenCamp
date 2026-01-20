@@ -603,6 +603,41 @@ const PropertyDetails = () => {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
+
+                {/* Schedule Section */}
+                {propertyData.schedule && propertyData.schedule.length > 0 && (
+                  <section className="relative mt-4">
+                    <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-[#C5A021]" />
+                      Property Schedule
+                    </h3>
+                    
+                    <div className="relative space-y-0 pb-8 px-4">
+                      {/* Vertical Line */}
+                      <div className="absolute left-[29px] top-2 bottom-0 w-0.5 bg-gradient-to-b from-[#C5A021] via-[#C5A021]/50 to-transparent" />
+                      
+                      {propertyData.schedule.map((item, idx) => (
+                        <div key={idx} className="relative flex items-start gap-4 pb-8 group last:pb-0">
+                          {/* Dot on line */}
+                          <div className="absolute left-[2px] top-2 w-2 h-2 rounded-full bg-[#C5A021] border-2 border-[#0A0A0A] z-10 shadow-[0_0_8px_rgba(197,160,33,0.5)] group-hover:scale-125 transition-transform" />
+                          
+                          {/* Icon Box */}
+                          <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] border border-[#C5A021]/20 flex items-center justify-center shrink-0 shadow-lg group-hover:border-[#C5A021]/50 transition-all ml-4">
+                            <div className="text-[#C5A021] scale-75">
+                              {getIcon(item.title || item.icon || "")}
+                            </div>
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="pt-0.5 flex flex-col gap-0.5 min-w-0">
+                            <span className="text-[10px] font-bold text-[#C5A021] uppercase tracking-wider">{item.time}</span>
+                            <h4 className="text-sm font-bold text-white group-hover:text-[#D4AF37] transition-colors truncate">{item.title}</h4>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             </div>
 

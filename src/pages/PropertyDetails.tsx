@@ -188,7 +188,7 @@ const PropertyDetails = () => {
               <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-1">Total Starting At</span>
               <div className="flex items-center justify-between">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-[#D4AF37]">{propertyData.price}</span>
+                  <span className="text-3xl font-bold text-[#D4AF37]">₹{propertyData.price}</span>
                   <span className="text-gray-400 text-sm">/{isVilla ? 'villa' : 'person'}</span>
                 </div>
                 <Badge variant="secondary" className="bg-[#D4AF37]/10 text-[#D4AF37] border-none text-[10px] flex items-center gap-1.5 px-3 py-1.5 rounded-full">
@@ -297,7 +297,7 @@ const PropertyDetails = () => {
           <div className="mb-8">
             <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground block mb-2">Total Starting At</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-display font-bold text-primary tracking-tight">{propertyData.price}</span>
+              <span className="text-5xl font-display font-bold text-primary tracking-tight">₹{propertyData.price}</span>
               <span className="text-muted-foreground font-medium text-lg">/ {isVilla ? 'villa' : 'person'}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-3 font-medium flex items-center gap-2">

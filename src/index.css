@@ -16,7 +16,7 @@
     --popover: 20 14% 7%;
     --popover-foreground: 40 33% 92%;
     
-    --primary: 38 62% 53%;
+    --primary: 38 92% 50%;
     --primary-foreground: 20 14% 4%;
     
     --secondary: 20 14% 12%;
@@ -25,7 +25,7 @@
     --muted: 20 14% 18%;
     --muted-foreground: 40 10% 55%;
     
-    --accent: 38 62% 53%;
+    --accent: 38 70% 45%;
     --accent-foreground: 20 14% 4%;
     
     --destructive: 0 84% 60%;
@@ -33,12 +33,12 @@
     
     --border: 40 20% 18%;
     --input: 20 14% 12%;
-    --ring: 38 62% 53%;
+    --ring: 38 92% 50%;
     
     /* Brand Colors */
-    --gold: 38 62% 53%;
-    --gold-light: 40 60% 63%;
-    --gold-dark: 35 65% 43%;
+    --gold: 38 92% 50%;
+    --gold-light: 40 90% 60%;
+    --gold-dark: 35 95% 40%;
     
     --charcoal: 20 14% 4%;
     --charcoal-light: 20 14% 12%;
@@ -57,7 +57,7 @@
     --shadow-gold-lg: 0 8px 40px rgba(212, 160, 48, 0.35);
     
     /* Gradients */
-    --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #E5C76B 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(40, 90%, 60%) 100%);
     --gradient-dark: linear-gradient(180deg, hsl(20, 14%, 4%) 0%, hsl(20, 14%, 8%) 100%);
     --gradient-overlay: linear-gradient(180deg, transparent 0%, hsl(20, 14%, 4%, 0.9) 100%);
     
@@ -124,7 +124,7 @@
 @layer components {
   /* Gold Gradient Text */
   .text-gradient-gold {
-    background: linear-gradient(135deg, #D4AF37 0%, #F1D47E 50%, #D4AF37 100%);
+    background: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(40, 90%, 65%) 50%, hsl(38, 92%, 50%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

@@ -228,7 +228,7 @@ const PropertyCard = ({
 
           <div className="flex items-center justify-between pt-3 border-t border-border/20">
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-gradient-gold">{price}</span>
+              <span className="text-xl font-bold text-gradient-gold">₹{price}</span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">/ {priceNote}</span>
             </div>
             <Badge variant="outline" className="text-[9px] border-primary/30 text-primary capitalize font-normal">

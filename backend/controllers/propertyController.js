@@ -184,13 +184,25 @@ const getPropertyById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await query(`
+    // First try by alphanumeric property_id
+    let result = await query(`
       SELECT p.*,
         (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
          FROM property_images pi WHERE pi.property_id = p.id) as images
       FROM properties p
-      WHERE p.id = $1
+      WHERE p.property_id = $1
     `, [id]);
+
+    // If not found, try by numeric auto-increment id
+    if (result.rows.length === 0) {
+      result = await query(`
+        SELECT p.*,
+          (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
+           FROM property_images pi WHERE pi.property_id = p.id) as images
+        FROM properties p
+        WHERE p.id = $1
+      `, [id]);
+    }
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -219,6 +231,57 @@ const getPropertyById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch property.',
+    });
+  }
+};
+
+// Update property by ID
+const updateProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amenities, activities, highlights, policies, schedule, description, availability } = req.body;
+
+    const result = await query(`
+      UPDATE properties 
+      SET 
+        amenities = $1, 
+        activities = $2, 
+        highlights = $3, 
+        policies = $4, 
+        schedule = $5, 
+        description = $6,
+        availability = $7,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE property_id = $8 OR id::text = $8
+      RETURNING *
+    `, [
+      JSON.stringify(amenities), 
+      JSON.stringify(activities), 
+      JSON.stringify(highlights), 
+      JSON.stringify(policies), 
+      JSON.stringify(schedule), 
+      description,
+      JSON.stringify(availability),
+      id
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Property not found.',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Property updated successfully.',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update property error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update property.',
     });
   }
 };

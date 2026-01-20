@@ -12,30 +12,41 @@ import { propertyAPI } from '@/lib/api';
 
 const OwnerProfile = () => {
   const navigate = useNavigate();
-  const ownerDataString = localStorage.getItem('ownerData');
-  const ownerData = ownerDataString ? JSON.parse(ownerDataString) : { propertyName: 'My Property', ownerName: 'Owner', ownerNumber: '8806092609', id: '1' };
-
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState({
-    amenities: ['Lake View', 'Private Washroom', 'BBQ Facility'],
-    activities: ['Boating', 'Swimming', 'Bonfire'],
-    highlights: ['Lakeside Camping', 'Sunset View', 'Premium Domes'],
-    policies: ['No Smoking in tents', 'Check-in: 4 PM', 'Check-out: 11 AM'],
-    schedule: [
-      { time: '04:00 PM', title: 'Grab Tents' },
-      { time: '05:30 PM', title: 'Snacks' },
-      { time: '08:30 AM', title: 'Breakfast' }
-    ],
-    description: 'Beautiful luxury resort with glamping domes and cottages near Pawna Lake.'
+    amenities: [] as string[],
+    activities: [] as string[],
+    highlights: [] as string[],
+    policies: [] as string[],
+    schedule: [] as {time: string, title: string}[],
+    description: ''
   });
 
-  const [newItem, setNewItem] = useState({ type: '', value: '', time: '' });
+  const ownerDataString = localStorage.getItem('ownerData');
+  const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const saved = localStorage.getItem('ownerProfileDetails');
-      if (saved) {
-        setDetails(JSON.parse(saved));
+      if (!ownerData?.property_id) return;
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/properties/${ownerData.property_id}`);
+        const result = await response.json();
+        if (result.success) {
+          const prop = result.data;
+          setDetails({
+            amenities: prop.amenities || [],
+            activities: prop.activities || [],
+            highlights: prop.highlights || [],
+            policies: prop.policies || [],
+            schedule: prop.schedule || [],
+            description: prop.description || ''
+          });
+        }
+      } catch (error) {
+        console.error('Fetch profile error:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfile();
@@ -49,16 +60,18 @@ const OwnerProfile = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      localStorage.setItem('ownerProfileDetails', JSON.stringify(details));
-      if (ownerData.id) {
-        const response = await propertyAPI.update(ownerData.id, details);
-        if (response.success) {
-          toast.success('Profile and schedule updated successfully');
+      if (ownerData?.property_id) {
+        const response = await fetch(`/api/properties/update/${ownerData.property_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(details)
+        });
+        const result = await response.json();
+        if (result.success) {
+          toast.success('Profile updated successfully');
         } else {
-          toast.info('Saved locally, but backend update failed');
+          toast.error(result.message || 'Update failed');
         }
-      } else {
-        toast.success('Profile details saved locally');
       }
     } catch (error) {
       console.error('Save error:', error);

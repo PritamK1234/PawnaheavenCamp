@@ -10,29 +10,47 @@ import { cn } from '@/lib/utils';
 const OwnerDashboard = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [property, setProperty] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [rates, setRates] = useState({ weekday: '1499', weekend: '3999' });
   const [customRates, setCustomRates] = useState<{id: string, date: string, price: string}[]>([]);
   
-  // Mock data for availability: true = Available, false = Booked
-  const [availability, setAvailability] = useState<Record<string, boolean>>({
-    '2026-01-18': false,
-    '2026-01-19': false,
-  });
-
-  const loadRates = () => {
-    const savedRates = localStorage.getItem('propertyRates');
-    if (savedRates) {
-      const parsed = JSON.parse(savedRates);
-      if (parsed.rates) setRates(parsed.rates);
-      if (parsed.customRates) setCustomRates(parsed.customRates);
-    }
-  };
+  const [availability, setAvailability] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    loadRates();
-    // Also listen for storage changes in case the user updates rates in another tab
-    window.addEventListener('storage', loadRates);
-    return () => window.removeEventListener('storage', loadRates);
+    const fetchData = async () => {
+      const ownerDataString = localStorage.getItem('ownerData');
+      if (!ownerDataString) return;
+      
+      const ownerData = JSON.parse(ownerDataString);
+      try {
+        const response = await fetch(`/api/properties/${ownerData.property_id}`);
+        const result = await response.json();
+        if (result.success) {
+          const prop = result.data;
+          setProperty(prop);
+          setRates({ 
+            weekday: prop.price?.toString() || '1499', 
+            weekend: (Math.round(prop.price * 1.5))?.toString() || '3999' 
+          });
+          
+          // Convert availability array to record
+          if (Array.isArray(prop.availability)) {
+            const availMap: Record<string, boolean> = {};
+            prop.availability.forEach((date: string) => {
+              availMap[date] = false; // Booked
+            });
+            setAvailability(availMap);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching property:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const firstDayOfMonth = startOfMonth(currentDate);
@@ -75,8 +93,14 @@ const OwnerDashboard = () => {
 
   const isSelectedWeekend = getDay(selectedDate) === 0 || getDay(selectedDate) === 6;
 
+  if (loading) return <div className="flex items-center justify-center min-h-[400px] text-[#D4AF37]">Loading property data...</div>;
+
   return (
     <div className="space-y-4">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-white font-display">{property?.title || 'Property Dashboard'}</h1>
+        <p className="text-xs text-[#D4AF37] uppercase tracking-widest">{property?.category} • {property?.location}</p>
+      </div>
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-bold text-[#D4AF37]">Availability</h2>
         <div className="flex items-center space-x-2">

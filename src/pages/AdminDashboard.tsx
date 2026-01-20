@@ -504,9 +504,14 @@ const AdminDashboard = () => {
                          <Badge variant="outline" className="text-[8px] h-4 border-white/10 text-white/40">{ownerProp?.location}</Badge>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-gold rounded-full h-10 w-10 hover:bg-gold/10" onClick={() => window.open(`tel:${mobile}`)}>
-                      <Phone className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Button variant="ghost" size="icon" className="text-emerald-500 rounded-full h-9 w-9 hover:bg-emerald-500/10 shadow-lg shadow-emerald-500/5" onClick={() => window.open(`https://wa.me/${mobile?.replace(/\D/g, '')}`)}>
+                        <MessageSquare className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-blue-500 rounded-full h-9 w-9 hover:bg-blue-500/10 shadow-lg shadow-blue-500/5" onClick={() => window.open(`tel:${mobile}`)}>
+                        <Phone className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })}

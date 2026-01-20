@@ -354,7 +354,7 @@ async function populateProperties() {
         policies: ["Free cancellation up to 7 days", "No refund within 3 days"],
         contact: "+91 8669505727",
         images: [
-          "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
+          "/attached_assets/stock_images/lightweight_camping__9fb62dad.jpg",
           "https://images.unsplash.com/photo-1532339142463-fd0a8979791a",
           "https://images.unsplash.com/photo-1510312305653-8ed496efbe75"
         ]
@@ -376,7 +376,7 @@ async function populateProperties() {
         policies: ["Free cancellation up to 7 days", "50% refund 3-7 days"],
         contact: "+91 8669505727",
         images: [
-          "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7",
+          "/attached_assets/stock_images/lightweight_camping__48226005.jpg",
           "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d",
           "https://images.unsplash.com/photo-1517824806704-9040b037703b"
         ]
@@ -398,7 +398,7 @@ async function populateProperties() {
         policies: ["Free cancellation up to 7 days"],
         contact: "+91 8669505727",
         images: [
-          "https://images.unsplash.com/photo-1496080174650-637e3f22fa03",
+          "/attached_assets/stock_images/lightweight_camping__71483685.jpg",
           "https://images.unsplash.com/photo-1537905569824-f89f14cceb68",
           "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd"
         ]
@@ -420,7 +420,7 @@ async function populateProperties() {
         policies: ["Free cancellation up to 7 days"],
         contact: "+91 8669505727",
         images: [
-          "https://images.unsplash.com/photo-1486915307544-b1ac7d338f37",
+          "/attached_assets/stock_images/lightweight_camping__9416fbe1.jpg",
           "https://images.unsplash.com/photo-1464207687429-7507184927a0",
           "https://images.unsplash.com/photo-1455763933444-24d96696924a"
         ]
@@ -442,7 +442,7 @@ async function populateProperties() {
         policies: ["Free cancellation up to 7 days"],
         contact: "+91 8669505727",
         images: [
-          "https://images.unsplash.com/photo-1516939884455-1445c8652f83",
+          "/attached_assets/stock_images/lightweight_camping__47e70fa4.jpg",
           "https://images.unsplash.com/photo-1520095972714-909e91b038e5",
           "https://images.unsplash.com/photo-1445308306294-bfc3f79a2456"
         ]

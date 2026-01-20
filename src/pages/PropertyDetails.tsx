@@ -297,7 +297,7 @@ const PropertyDetails = () => {
           <div className="mb-8">
             <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground block mb-2">Total Starting At</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-display font-bold text-primary tracking-tight">₹{propertyData.price}</span>
+              <span className="text-5xl font-display font-bold text-[#C5A021] tracking-tight">₹{propertyData.price}</span>
               <span className="text-muted-foreground font-medium text-lg">/ {isVilla ? 'villa' : 'person'}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-3 font-medium flex items-center gap-2">
@@ -311,7 +311,7 @@ const PropertyDetails = () => {
               <DialogTrigger asChild>
                 <Button
                   disabled={!propertyData.is_available}
-                  className="w-full bg-primary text-primary-foreground hover:bg-gold-light h-16 rounded-2xl text-lg font-bold shadow-gold hover:shadow-gold-lg transition-all active:scale-95 flex items-center justify-center gap-3"
+                  className="w-full bg-[#C5A021] text-primary-foreground hover:bg-[#A6861A] h-16 rounded-2xl text-lg font-bold shadow-gold hover:shadow-gold-lg transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
                   <MessageCircle className="w-6 h-6" />
                   {propertyData.is_available ? "Book Your Stay" : "Currently Booked"}

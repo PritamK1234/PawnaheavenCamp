@@ -16,7 +16,7 @@
     --popover: 20 14% 7%;
     --popover-foreground: 40 33% 92%;
     
-    --primary: 38 92% 50%;
+    --primary: 38 65% 45%;
     --primary-foreground: 20 14% 4%;
     
     --secondary: 20 14% 12%;
@@ -33,12 +33,12 @@
     
     --border: 40 20% 18%;
     --input: 20 14% 12%;
-    --ring: 38 92% 50%;
+    --ring: 38 65% 45%;
     
     /* Brand Colors */
-    --gold: 38 60% 45%;
-    --gold-light: 40 70% 55%;
-    --gold-dark: 35 75% 35%;
+    --gold: 38 65% 45%;
+    --gold-light: 40 75% 55%;
+    --gold-dark: 35 80% 35%;
     
     --charcoal: 20 14% 4%;
     --charcoal-light: 20 14% 12%;

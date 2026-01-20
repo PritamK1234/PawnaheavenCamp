@@ -39,6 +39,7 @@ import { BookingForm } from "@/components/BookingForm";
 import { propertyAPI } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import {
   Accordion,
   AccordionContent,

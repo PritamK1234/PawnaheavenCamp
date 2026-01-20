@@ -478,14 +478,14 @@ const PropertyDetails = () => {
               </div>
 
               {/* Feature Grid */}
-              <div className="flex flex-wrap md:grid md:grid-cols-4 gap-2 md:gap-4">
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
                 {[
                   { label: 'Capacity', value: `${propertyData.capacity} Guests`, icon: Users },
                   { label: 'Check-in', value: propertyData.check_in_time || '2:00 PM', icon: Clock },
                   { label: 'Check-out', value: propertyData.check_out_time || '11:00 AM', icon: Clock },
                   { label: 'Status', value: 'Verified', icon: ShieldCheck, accent: 'text-[#00FF41]' }
                 ].map((stat, i) => (
-                  <div key={i} className="flex-1 min-w-[140px] bg-[#1A1A1A] rounded-2xl md:rounded-3xl p-3 md:p-4 border border-gray-800/50 flex flex-col items-center text-center gap-1 md:gap-2 group hover:border-[#C5A021]/30 transition-all">
+                  <div key={i} className="bg-[#1A1A1A] rounded-xl md:rounded-3xl p-3 md:p-4 border border-gray-800/50 flex flex-col items-center text-center gap-1 md:gap-2 group hover:border-[#C5A021]/30 transition-all overflow-hidden">
                     <stat.icon className="w-4 h-4 md:w-5 md:h-5 text-[#C5A021] shrink-0" />
                     <span className="text-[8px] md:text-[10px] uppercase font-bold text-gray-500 tracking-widest leading-tight">{stat.label}</span>
                     <span className={cn("text-xs md:text-sm font-bold truncate w-full px-1", stat.accent || "text-white")}>{stat.value}</span>

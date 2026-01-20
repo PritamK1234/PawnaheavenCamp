@@ -480,9 +480,9 @@ const PropertyDetails = () => {
               {/* Feature Grid */}
               <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
                 {[
-                  { label: 'Capacity', value: `${propertyData.capacity} Guests`, icon: Users },
                   { label: 'Check-in', value: propertyData.check_in_time || '2:00 PM', icon: Clock },
                   { label: 'Check-out', value: propertyData.check_out_time || '11:00 AM', icon: Clock },
+                  { label: 'Capacity', value: `${propertyData.capacity} Guests`, icon: Users },
                   { label: 'Status', value: 'Verified', icon: ShieldCheck, accent: 'text-[#00FF41]' }
                 ].map((stat, i) => (
                   <div key={i} className="bg-[#1A1A1A] rounded-xl md:rounded-3xl p-3 md:p-4 border border-gray-800/50 flex flex-col items-center text-center gap-1 md:gap-2 group hover:border-[#C5A021]/30 transition-all overflow-hidden">

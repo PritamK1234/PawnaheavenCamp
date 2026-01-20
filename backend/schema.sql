@@ -52,6 +52,17 @@ CREATE TABLE IF NOT EXISTS property_images (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create owners table
+CREATE TABLE IF NOT EXISTS owners (
+  id SERIAL PRIMARY KEY,
+  property_id VARCHAR(50) UNIQUE NOT NULL,
+  property_name VARCHAR(255) NOT NULL,
+  property_type VARCHAR(50) NOT NULL,
+  owner_name VARCHAR(255) NOT NULL,
+  mobile_number VARCHAR(20) UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create category_settings table
 CREATE TABLE IF NOT EXISTS category_settings (
   id SERIAL PRIMARY KEY,

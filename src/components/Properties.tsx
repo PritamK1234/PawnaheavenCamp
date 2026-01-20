@@ -53,6 +53,9 @@ const Properties = () => {
   }, []);
 
   const filteredProperties = properties.filter((p) => {
+    // Only show active properties on the index page
+    if (!p.is_active && !p.isActive) return false;
+    
     const categoryMatch = selectedCategory === "all" || p.category === selectedCategory;
     const priceMatch = selectedPriceFilter === "all" || p.propertyCategory === selectedPriceFilter;
     return categoryMatch && priceMatch;

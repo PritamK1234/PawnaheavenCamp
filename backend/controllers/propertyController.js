@@ -200,7 +200,7 @@ const getPropertyById = async (req, res) => {
           (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
            FROM property_images pi WHERE pi.property_id = p.id) as images
         FROM properties p
-        WHERE p.id = $1
+        WHERE p.id::text = $1
       `, [id]);
     }
 

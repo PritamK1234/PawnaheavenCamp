@@ -118,8 +118,7 @@ const PropertyDetails = () => {
               if (typeof img === 'string') return img;
               let url = img.image_url || img.url || "";
               if (url && url.startsWith('attached_assets/')) {
-                // Ensure double leading slash is not created
-                url = '/' + url.replace(/^\//, '');
+                url = window.location.origin + '/' + url.replace(/^\//, '');
               }
               return url;
             }).filter(Boolean);
@@ -128,7 +127,7 @@ const PropertyDetails = () => {
           if (mappedImages.length === 0 && p.image) {
             let url = p.image;
             if (url && url.startsWith('attached_assets/')) {
-              url = '/' + url.replace(/^\//, '');
+              url = window.location.origin + '/' + url.replace(/^\//, '');
             }
             mappedImages = [url];
           }

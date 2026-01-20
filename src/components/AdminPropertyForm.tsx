@@ -56,6 +56,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
     activities: [''],
     highlights: [''],
     policies: [''],
+    schedule: [{ time: '', title: '' }],
     images: [] as string[],
   });
   const { toast } = useToast();
@@ -118,6 +119,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
         activities: property.activities?.length ? property.activities : [''],
         highlights: property.highlights?.length ? property.highlights : [''],
         policies: property.policies?.length ? property.policies : [''],
+        schedule: property.schedule?.length ? property.schedule : [{ time: '', title: '' }],
         images: property.images?.length ? property.images.map((img: any) => typeof img === 'string' ? img : img.image_url) : [],
       });
     }
@@ -142,6 +144,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
       activities: formData.activities.filter(a => a.trim()),
       highlights: formData.highlights.filter(h => h.trim()),
       policies: formData.policies.filter(p => p.trim()),
+      schedule: formData.schedule.filter(s => s.time.trim() || s.title.trim()),
       images: formData.images.filter(i => i.trim()),
     };
 
@@ -181,19 +184,21 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
     }
   };
 
-  const handleArrayChange = (field: 'amenities' | 'activities' | 'highlights' | 'policies' | 'images', index: number, value: string) => {
+  const handleArrayChange = (field: 'amenities' | 'activities' | 'highlights' | 'policies' | 'images' | 'schedule', index: number, value: any) => {
     const newArray = [...formData[field]];
     newArray[index] = value;
     setFormData({ ...formData, [field]: newArray });
   };
 
-  const addArrayItem = (field: 'amenities' | 'activities' | 'highlights' | 'policies' | 'images') => {
-    setFormData({ ...formData, [field]: [...formData[field], ''] });
+  const addArrayItem = (field: 'amenities' | 'activities' | 'highlights' | 'policies' | 'images' | 'schedule') => {
+    const newItem = field === 'schedule' ? { time: '', title: '' } : '';
+    setFormData({ ...formData, [field]: [...formData[field], newItem] });
   };
 
-  const removeArrayItem = (field: 'amenities' | 'activities' | 'highlights' | 'policies' | 'images', index: number) => {
+  const removeArrayItem = (field: 'amenities' | 'activities' | 'highlights' | 'policies' | 'images' | 'schedule', index: number) => {
     const newArray = formData[field].filter((_, i) => i !== index);
-    setFormData({ ...formData, [field]: newArray.length ? newArray : [''] });
+    const defaultValue = field === 'schedule' ? { time: '', title: '' } : '';
+    setFormData({ ...formData, [field]: newArray.length ? newArray : [defaultValue] });
   };
 
   return (
@@ -494,6 +499,52 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
               </Button>
             </div>
           ))}
+
+          {/* Schedule */}
+          <div className="glass rounded-2xl border border-border/50 p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              Property Schedule
+            </h2>
+            <div className="space-y-4">
+              {formData.schedule.map((item: any, index: number) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                    <Input
+                      value={item.time}
+                      onChange={(e) => handleArrayChange('schedule', index, { ...item, time: e.target.value })}
+                      placeholder="Time (e.g. 4:30 PM)"
+                      className="h-12 bg-secondary/50 rounded-xl"
+                    />
+                    <Input
+                      value={item.title}
+                      onChange={(e) => handleArrayChange('schedule', index, { ...item, title: e.target.value })}
+                      placeholder="Activity (e.g. Tea & Snacks)"
+                      className="h-12 bg-secondary/50 rounded-xl"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeArrayItem('schedule', index)}
+                    className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl flex-shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => addArrayItem('schedule')}
+              className="mt-4 h-10 rounded-xl border-dashed hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Schedule Item
+            </Button>
+          </div>
 
           {/* Images */}
           <div className="glass rounded-2xl border border-border/50 p-6">

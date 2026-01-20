@@ -4,29 +4,75 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Sparkles, Shield } from 'lucide-react';
+import { Sparkles, Shield, Loader2 } from 'lucide-react';
 
 const OwnerLogin = () => {
   const navigate = useNavigate();
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [showOTP, setShowOTP] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSendOTP = (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mobile.length >= 10) {
-      setShowOTP(true);
-      toast.success('OTP sent: 000000');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/owners/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mobileNumber: mobile }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowOTP(true);
+        toast.success('OTP sent successfully! (Demo: 123456)');
+      } else {
+        toast.error(data.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      toast.error('Error connecting to server');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp === '000000') {
-      localStorage.setItem('ownerLoggedIn', 'true');
-      navigate('/owner/dashboard');
-    } else {
-      toast.error('Invalid OTP (Demo: 000000)');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/owners/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          mobileNumber: mobile,
+          otp: otp 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem('ownerLoggedIn', 'true');
+        localStorage.setItem('ownerData', JSON.stringify(data.data));
+        toast.success('Login successful!');
+        navigate('/owner/dashboard');
+      } else {
+        toast.error(data.message || 'Invalid OTP');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Error connecting to server');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,8 +119,12 @@ const OwnerLogin = () => {
                 className="h-12 bg-secondary/50 border-border/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                 required
               />
-              <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-gold-dark hover:from-gold-dark hover:to-primary transition-all duration-500 shadow-gold hover:shadow-gold-lg transform hover:-translate-y-0.5">
-                Send OTP
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-gold-dark hover:from-gold-dark hover:to-primary transition-all duration-500 shadow-gold hover:shadow-gold-lg transform hover:-translate-y-0.5"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Send OTP'}
               </Button>
             </form>
           ) : (
@@ -91,8 +141,12 @@ const OwnerLogin = () => {
                 onChange={e => setOtp(e.target.value)}
                 placeholder="000000"
               />
-              <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-gold-dark hover:from-gold-dark hover:to-primary transition-all duration-500 shadow-gold hover:shadow-gold-lg transform hover:-translate-y-0.5">
-                Verify & Login
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-gold-dark hover:from-gold-dark hover:to-primary transition-all duration-500 shadow-gold hover:shadow-gold-lg transform hover:-translate-y-0.5"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Verify & Login'}
               </Button>
               <Button variant="ghost" onClick={() => setShowOTP(false)} className="text-muted-foreground hover:text-primary">Change Number</Button>
             </form>

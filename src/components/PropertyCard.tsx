@@ -156,9 +156,9 @@ const PropertyCard = ({
 
           {/* Top Rated Badge */}
           {isTopSelling && (
-            <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground border-none text-[10px] px-2 py-1 z-20 shadow-lg">
+            <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground border-none text-[10px] px-2 py-1 z-20 shadow-lg animate-pulse">
               <Star className="w-2.5 h-2.5 mr-1 fill-current" />
-              TOP RATED
+              TOP SELLING
             </Badge>
           )}
 

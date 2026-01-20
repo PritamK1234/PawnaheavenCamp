@@ -494,34 +494,34 @@ const PropertyDetails = () => {
               </div>
 
               {/* Amenities */}
-              <section>
+              <section className="overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-2xl font-bold flex items-center gap-3">
                     <Wifi className="w-6 h-6 text-[#C5A021]" />
                     Amenities
                   </h3>
                 </div>
-                <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 overflow-x-auto md:overflow-visible gap-3 pb-4 md:pb-0 scrollbar-none -mx-2 px-2 md:mx-0 md:px-0">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {propertyData.amenities.map((amenity, index) => (
-                    <div key={index} className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all min-w-[100px] md:min-w-0">
+                    <div key={index} className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all">
                       <div className="text-[#C5A021] scale-90 md:scale-100">{getIcon(amenity)}</div>
-                      <span className="text-[10px] md:text-sm font-bold text-white tracking-tight">{amenity}</span>
+                      <span className="text-[10px] md:text-sm font-bold text-white tracking-tight break-words w-full">{amenity}</span>
                     </div>
                   ))}
                 </div>
               </section>
 
               {/* Activities */}
-              <section>
+              <section className="overflow-hidden">
                 <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
                   <Star className="w-6 h-6 text-[#C5A021]" />
                   Activities
                 </h3>
-                <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 overflow-x-auto md:overflow-visible gap-3 pb-4 md:pb-0 scrollbar-none -mx-2 px-2 md:mx-0 md:px-0">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {propertyData.activities?.map((activity, index) => (
-                    <div key={index} className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all min-w-[100px] md:min-w-0">
+                    <div key={index} className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all">
                       <div className="text-[#C5A021] opacity-80 scale-90 md:scale-100">{getIcon(activity)}</div>
-                      <span className="text-[10px] md:text-sm font-bold text-gray-300 uppercase tracking-widest">{activity}</span>
+                      <span className="text-[10px] md:text-sm font-bold text-gray-300 uppercase tracking-widest break-words w-full">{activity}</span>
                     </div>
                   ))}
                 </div>

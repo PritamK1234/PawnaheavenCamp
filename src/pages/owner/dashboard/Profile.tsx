@@ -40,12 +40,26 @@ const OwnerProfile = () => {
         const result = await response.json();
         if (result.success) {
           const prop = result.data;
+          
+          const parseData = (data: any) => {
+            if (!data) return [];
+            if (Array.isArray(data)) return data;
+            if (typeof data === 'string') {
+              try {
+                return JSON.parse(data);
+              } catch (e) {
+                return data.split(',').map((s: string) => s.trim());
+              }
+            }
+            return [];
+          };
+
           setDetails({
-            amenities: Array.isArray(prop.amenities) ? prop.amenities : [],
-            activities: Array.isArray(prop.activities) ? prop.activities : [],
-            highlights: Array.isArray(prop.highlights) ? prop.highlights : [],
-            policies: Array.isArray(prop.policies) ? prop.policies : [],
-            schedule: Array.isArray(prop.schedule) ? prop.schedule : [],
+            amenities: parseData(prop.amenities),
+            activities: parseData(prop.activities),
+            highlights: parseData(prop.highlights),
+            policies: parseData(prop.policies),
+            schedule: parseData(prop.schedule),
             description: prop.description || ''
           });
         }
@@ -184,17 +198,17 @@ const OwnerProfile = () => {
 
       <div className="space-y-6">
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Amenities</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">AMENITIES</Label>
           <TagList type="amenities" items={details.amenities} />
         </div>
 
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Activities</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">ACTIVITIES</Label>
           <TagList type="activities" items={details.activities} />
         </div>
 
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Highlights</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">HIGHLIGHTS</Label>
           <TagList type="highlights" items={details.highlights} />
         </div>
 
@@ -202,7 +216,7 @@ const OwnerProfile = () => {
         <div className="space-y-3">
           <Label className="text-sm font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
             <Clock className="w-4 h-4" />
-            Check-in/Check-out Schedule
+            PROPERTY SCHEDULE
           </Label>
           <div className="space-y-3">
             {(details.schedule || []).map((item, idx) => (
@@ -252,12 +266,12 @@ const OwnerProfile = () => {
         </div>
 
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Policies</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">POLICIES</Label>
           <TagList type="policies" items={details.policies} />
         </div>
 
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Description</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">DESCRIPTION</Label>
           <Textarea 
             className="bg-[#1A1A1A] border-[#D4AF37]/20 text-gray-200 focus:border-[#D4AF37] min-h-[100px]"
             value={details.description} 

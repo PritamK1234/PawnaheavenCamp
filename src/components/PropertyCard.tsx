@@ -123,14 +123,14 @@ const PropertyCard = ({
               transition: touchStartX.current !== null ? 'none' : 'transform 0.3s ease-out'
             }}
           >
-            {displayImages.map((img, index) => (
+            {(displayImages && displayImages.length > 0 ? displayImages : [image]).map((img, index) => (
               <div key={index} className="flex-shrink-0 w-full h-full">
                 <OptimizedImage
-                  src={img}
+                  src={typeof img === 'string' ? img : (img as any).image_url}
                   alt={`${title} - ${index + 1}`}
                   width={400}
                   priority={index === 0}
-                  className="w-full h-full"
+                  className="w-full h-full object-cover"
                 />
               </div>
             ))}

@@ -26,8 +26,14 @@ const OwnerDashboard = () => {
       }
       
       const ownerData = JSON.parse(ownerDataString);
+      const propId = ownerData.property_id || ownerData.id;
+      if (!propId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await fetch(`/api/properties/${ownerData.property_id}`);
+        const response = await fetch(`/api/properties/${propId}`);
         const result = await response.json();
         if (result.success) {
           const prop = result.data;

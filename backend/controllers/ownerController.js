@@ -48,14 +48,18 @@ exports.registerOwner = async (req, res) => {
       `INSERT INTO owners 
        (property_id, property_name, property_type, owner_name, mobile_number) 
        VALUES ($1, $2, $3, $4, $5) 
-       RETURNING id, property_id, owner_name, mobile_number`,
+       RETURNING id, property_id, property_name, owner_name, mobile_number`,
       [propertyId, propertyName, propertyType, ownerName, ownerMobile]
     );
 
     return res.status(201).json({
       success: true,
       message: 'Owner registered successfully!',
-      data: result.rows[0]
+      data: {
+        ...result.rows[0],
+        ownerNumber: result.rows[0].mobile_number,
+        propertyName: result.rows[0].property_name
+      }
     });
 
   } catch (error) {
@@ -129,7 +133,11 @@ exports.verifyOTP = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Login successful!',
-      data: result.rows[0]
+      data: {
+        ...result.rows[0],
+        ownerNumber: result.rows[0].mobile_number,
+        propertyName: result.rows[0].property_name
+      }
     });
   } catch (error) {
     console.error('Verify OTP error:', error);

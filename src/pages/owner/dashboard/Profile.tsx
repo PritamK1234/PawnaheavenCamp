@@ -28,10 +28,15 @@ const OwnerProfile = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!ownerData?.property_id) return;
+      const ownerDataString = localStorage.getItem('ownerData');
+      if (!ownerDataString) return;
+      const ownerDataObj = JSON.parse(ownerDataString);
+      const propId = ownerDataObj.property_id || ownerDataObj.id;
+      if (!propId) return;
+      
       setLoading(true);
       try {
-        const response = await fetch(`/api/properties/${ownerData.property_id}`);
+        const response = await fetch(`/api/properties/${propId}`);
         const result = await response.json();
         if (result.success) {
           const prop = result.data;
@@ -97,7 +102,7 @@ const OwnerProfile = () => {
       if (!newItem.value.trim()) return;
       setDetails({
         ...details,
-        [t]: [...details[t], newItem.value.trim()]
+        [t]: [...(details[t] || []), newItem.value.trim()]
       });
     }
     setNewItem({ type: '', value: '', time: '' });
@@ -171,8 +176,8 @@ const OwnerProfile = () => {
             <User className="w-8 h-8 text-[#D4AF37]" />
           </div>
           <div>
-            <h3 className="font-bold text-xl text-[#D4AF37]">{ownerData.propertyName}</h3>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-widest">{ownerData.ownerName} • {ownerData.ownerNumber}</p>
+            <h3 className="font-bold text-xl text-[#D4AF37]">{ownerData?.propertyName || ownerData?.property_name || 'Property Name'}</h3>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-widest">{ownerData?.ownerName || ownerData?.owner_name || 'Owner'} • {ownerData?.ownerNumber || ownerData?.mobile_number || 'Contact'}</p>
           </div>
         </CardContent>
       </Card>

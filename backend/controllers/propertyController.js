@@ -255,13 +255,13 @@ const updateProperty = async (req, res) => {
       WHERE property_id = $8 OR id::text = $8
       RETURNING *
     `, [
-      JSON.stringify(amenities), 
-      JSON.stringify(activities), 
-      JSON.stringify(highlights), 
-      JSON.stringify(policies), 
-      JSON.stringify(schedule), 
+      typeof amenities === 'string' ? amenities : JSON.stringify(amenities || []), 
+      typeof activities === 'string' ? activities : JSON.stringify(activities || []), 
+      typeof highlights === 'string' ? highlights : JSON.stringify(highlights || []), 
+      typeof policies === 'string' ? policies : JSON.stringify(policies || []), 
+      typeof schedule === 'string' ? schedule : JSON.stringify(schedule || []), 
       description,
-      JSON.stringify(availability),
+      typeof availability === 'string' ? availability : JSON.stringify(availability || []),
       id
     ]);
 

@@ -2,13 +2,15 @@ import OptimizedImage from "@/components/OptimizedImage";
 import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ImageSliderProps {
   images: string[];
   title: string;
+  className?: string;
 }
 
-const ImageSlider = ({ images, title }: ImageSliderProps) => {
+const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -51,7 +53,7 @@ const ImageSlider = ({ images, title }: ImageSliderProps) => {
 
   return (
     <div 
-      className="relative w-full h-96 md:h-[500px] lg:h-[600px] bg-black rounded-2xl overflow-hidden group"
+      className={cn("relative w-full h-96 md:h-[500px] lg:h-[600px] bg-black rounded-2xl overflow-hidden group", className)}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

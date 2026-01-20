@@ -293,6 +293,7 @@ const createProperty = async (req, res) => {
       highlights,
       policies,
       schedule,
+      availability,
       images,
     } = req.body;
 
@@ -309,20 +310,32 @@ const createProperty = async (req, res) => {
     // Generate slug
     const slug = generateSlug(title);
 
+    // Generate unique 5-digit property ID (e.g., AD75C)
+    const generatePropertyId = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 5; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
+    const property_id = generatePropertyId();
+
     // Start transaction
     await client.query('BEGIN');
 
     // Insert property
     const propertyResult = await client.query(
       `INSERT INTO properties (
-        title, slug, description, category, location, rating, price, price_note,
+        title, slug, property_id, description, category, location, rating, price, price_note,
         capacity, max_capacity, check_in_time, check_out_time, status, is_top_selling, is_active, is_available,
-        contact, owner_name, owner_mobile, map_link, amenities, activities, highlights, policies, schedule, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP)
+        contact, owner_name, owner_mobile, map_link, amenities, activities, highlights, policies, schedule, availability, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, CURRENT_TIMESTAMP)
       RETURNING *`,
       [
         title,
         slug,
+        property_id,
         description,
         category,
         location,
@@ -346,6 +359,7 @@ const createProperty = async (req, res) => {
         typeof highlights === 'string' ? highlights : JSON.stringify(highlights || []),
         typeof policies === 'string' ? policies : JSON.stringify(policies || []),
         typeof schedule === 'string' ? schedule : JSON.stringify(schedule || []),
+        typeof availability === 'string' ? availability : JSON.stringify(availability || []),
       ]
     );
 
@@ -569,6 +583,11 @@ const updateProperty = async (req, res) => {
     if (req.body.schedule !== undefined) {
       updates.push(`schedule = $${paramCount}`);
       values.push(typeof req.body.schedule === 'string' ? req.body.schedule : JSON.stringify(req.body.schedule));
+      paramCount++;
+    }
+    if (req.body.availability !== undefined) {
+      updates.push(`availability = $${paramCount}`);
+      values.push(typeof req.body.availability === 'string' ? req.body.availability : JSON.stringify(req.body.availability));
       paramCount++;
     }
 

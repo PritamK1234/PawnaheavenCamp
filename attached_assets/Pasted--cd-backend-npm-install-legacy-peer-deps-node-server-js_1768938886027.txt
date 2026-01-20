@@ -1,0 +1,128 @@
+
+cd backend && npm install --legacy-peer-deps && node server.js
+40m
+ • 
+41 minutes ago
+npm run dev
+9m
+ • 
+10 minutes ago
+
+SQL console
+
+Database studio
+
+schema:
+public
+Search...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Filters
+
+
+Columns
+
+
+Add record
+
+1 row•324ms
+
+
+50
+0
+
+
+
+All statements executed successfully
+All statements executed successfully
+
+Remote Updates
+origin/main•upstream
+last fetched 9 min ago
+Commit
+There are no changes to commit.
+Adjust owner name text size to be slightly smaller
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 3 minutes
+Ready to share? Publish this App in one click.
+Static Deployment
+Free
+Primary URL
+pawna-haven-camp-messy--stefaniestamm80
+.replit.app
+when i am trying to Update property on admin panels "Edit Property" form it shows fail to update property
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 37 seconds
+add "Onwers Name" in that "add new property" form , and in edit property form , that owners name should not be visible on website similar like owners number.
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 1 minute
+when i have updated "owners name" in edit property form or in add new property form , still it updated in "Owners" tab
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 1 minute
+on that "Owners" tab , there should be whatsapp and call icon of that owner , and those icons should be linked to that owners number. so that it will make admin easy to go to their whatsapp or call
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 15 seconds
+there are two floating icons on admin panel (transaction and notification bell) , remove those two , and add notification bell on header .
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 28 seconds
+those 4 boxes (Total , camping , cottage , villa) should only show when we have selected properties tab on admin panel , when we click on other three tabs (Owners , Referrals , Transactions) then it shows those respective toggle below header . and also add search bar in owners tab to search owners name
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 1 minute
+those three boxes (camping , cottages , villa) shows prices but we want there numbers count like total box in admin panel
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 12 seconds
+in owners tab , each onwer have that location written remove that , there should be property name to which that owner belongs to , and its type like (camping , villa , cottage) this should small text so that it will fit well
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 32 seconds
+full complete name of that property should be visible owners tabs list , so make that name long line starts profile icon and end at phone icon
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 1 minute
+keep that owners name text and property name in small text , because there could be long owners name and property name in future , then that should be visible completely .
+
+Checkpoint made
+Saved progress at the end of the loop
+Worked for 19 seconds
+owner name text should be more small by 10%
+
+Checkpoint made
+Adjust owner name text size to be slightly smaller
+Worked for 16 seconds
+one more important thing , , there should be one 5 digit property ID (for example - AD75C) and availability calendar in each property in admin panel add new form and edit property form , calendar can be edit from owners dashbaord or from admin dashboard , but that Property ID is unque for each property and cannot be changed or edit ,

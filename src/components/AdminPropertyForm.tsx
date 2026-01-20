@@ -53,6 +53,8 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
     contact: '+91 8806092609',
     owner_name: '',
     owner_mobile: '',
+    property_id: '',
+    availability: [] as string[],
     amenities: [''],
     activities: [''],
     highlights: [''],
@@ -117,6 +119,8 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
         contact: property.contact || '+91 8806092609',
         owner_name: property.owner_name || '',
         owner_mobile: property.owner_mobile || '',
+        property_id: property.property_id || '',
+        availability: property.availability || [],
         amenities: property.amenities?.length ? property.amenities : [''],
         activities: property.activities?.length ? property.activities : [''],
         highlights: property.highlights?.length ? property.highlights : [''],
@@ -287,6 +291,48 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="property_id" className="text-muted-foreground">Property ID (Auto-generated)</Label>
+                <Input
+                  id="property_id"
+                  value={formData.property_id || 'Generating...'}
+                  disabled
+                  className="h-12 bg-secondary/30 rounded-xl border-dashed opacity-70 cursor-not-allowed"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label>Availability Calendar (Booked Dates)</Label>
+                <div className="bg-secondary/20 rounded-2xl p-6 border border-border/50">
+                  <p className="text-xs text-muted-foreground mb-4 italic">
+                    * Select dates below to mark them as BOOKED. These will be editable by both admin and owner.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {/* Simplified Date Selection for Fast Mode - in real app would use a DatePicker */}
+                    <Input 
+                      type="date"
+                      className="h-10 bg-background"
+                      onChange={(e) => {
+                        if (e.target.value && !formData.availability.includes(e.target.value)) {
+                          setFormData(prev => ({ ...prev, availability: [...prev.availability, e.target.value] }));
+                        }
+                      }}
+                    />
+                    <div className="flex flex-wrap gap-2 mt-2 col-span-full">
+                      {formData.availability.map(date => (
+                        <Badge key={date} variant="secondary" className="gap-1 px-2 py-1 bg-red-500/10 text-red-500 border-red-500/20">
+                          {date}
+                          <Trash2 
+                            className="w-3 h-3 cursor-pointer hover:text-red-700" 
+                            onClick={() => setFormData(prev => ({ ...prev, availability: prev.availability.filter(d => d !== date) }))}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="title">Property Title *</Label>
                 <Input

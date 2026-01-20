@@ -67,7 +67,7 @@ const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
           transition: touchStartX.current !== null ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)'
         }}
       >
-        {images.map((img, index) => (
+        {images && images.length > 0 ? images.map((img, index) => (
           <div key={index} className="flex-shrink-0 w-full h-full">
             <OptimizedImage
               src={img}
@@ -77,7 +77,11 @@ const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
               className="w-full h-full object-cover"
             />
           </div>
-        ))}
+        )) : (
+          <div className="flex-shrink-0 w-full h-full bg-secondary flex items-center justify-center">
+            <p className="text-muted-foreground">No images available</p>
+          </div>
+        )}
       </div>
 
       {/* Dark overlay gradient */}

@@ -114,7 +114,7 @@ const PropertyDetails = () => {
             priceNote: p.price_note,
             is_available: p.is_available,
             map_link: p.map_link,
-            image: p.images && p.images.length > 0 ? p.images[0].image_url : "https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200",
+            image: p.images && p.images.length > 0 ? p.images[0].image_url : (p.image || "https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200"),
             images: p.images && p.images.length > 0 ? p.images.map((img: any) => img.image_url) : [p.image || "https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200"]
           });
         }

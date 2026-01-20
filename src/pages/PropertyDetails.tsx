@@ -236,14 +236,38 @@ const PropertyDetails = () => {
                   </DialogContent>
                 </Dialog>
 
-                <Button 
-                  className="flex flex-col gap-1 h-24 rounded-3xl bg-gradient-to-br from-[#00C853] via-[#00B0FF] to-[#0091EA] border-none shadow-[0_10px_30px_rgba(0,176,255,0.3)] group overflow-hidden relative active:scale-95 transition-all"
-                  onClick={() => window.open(`https://api.whatsapp.com/send?phone=918806092609`, '_blank')}
-                >
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <MessageCircle className="w-7 h-7 text-white" />
-                  <span className="text-[10px] font-bold text-white">Call / WhatsApp</span>
-                </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="flex flex-col gap-1 h-24 rounded-3xl bg-gradient-to-br from-[#00C853] via-[#00B0FF] to-[#0091EA] border-none shadow-[0_10px_30px_rgba(0,176,255,0.3)] group overflow-hidden relative active:scale-95 transition-all"
+                  >
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <MessageCircle className="w-7 h-7 text-white" />
+                    <span className="text-[10px] font-bold text-white">Call / WhatsApp</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] bg-[#0A0A0A] border-[#D4AF37]/20 p-8">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-display text-[#D4AF37] mb-6 text-center">Contact Host</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 gap-4">
+                    <Button 
+                      className="h-16 rounded-2xl bg-[#C5A021] hover:bg-[#A6861A] text-black font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-95"
+                      onClick={() => window.open('tel:+918806092609', '_self')}
+                    >
+                      <Phone className="w-6 h-6" />
+                      Call Host
+                    </Button>
+                    <Button 
+                      className="h-16 rounded-2xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-95"
+                      onClick={() => window.open('https://api.whatsapp.com/send?phone=918806092609', '_blank')}
+                    >
+                      <MessageCircle className="w-6 h-6" />
+                      WhatsApp
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
                 <Button 
                   variant="outline" 

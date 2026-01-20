@@ -31,42 +31,40 @@ const OwnerProfile = () => {
       const ownerDataString = localStorage.getItem('ownerData');
       if (!ownerDataString) return;
       const ownerDataObj = JSON.parse(ownerDataString);
+      
+      // Use property_id if available, otherwise fallback to id
       const propId = ownerDataObj.property_id || ownerDataObj.id;
       if (!propId) return;
       
       setLoading(true);
       try {
+        // Fetch real-time property data from admin property API
         const response = await fetch(`/api/properties/${propId}`);
         const result = await response.json();
-        if (result.success) {
+        
+        if (result.success && result.data) {
           const prop = result.data;
           
+          // Helper to parse data from DB (handles PG arrays and JSON strings)
           const parseData = (data: any) => {
             if (!data) return [];
             if (Array.isArray(data)) return data;
             if (typeof data === 'string') {
               let trimmed = data.trim();
-              
-              // Handle PostgreSQL double-quoted JSON string format: "[\"item\"]" or "[\"\"item\"\"]"
               if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
                 trimmed = trimmed.substring(1, trimmed.length - 1).replace(/""/g, '"').replace(/\\"/g, '"');
               }
-
-              // Handle PostgreSQL array format: {item1,item2}
               if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
                 return trimmed.substring(1, trimmed.length - 1)
                   .split(',')
                   .map((s: string) => s.trim().replace(/^"(.*)"$/, '$1'))
                   .filter(Boolean);
               }
-
-              // Try standard JSON parsing
               try {
                 const parsed = JSON.parse(trimmed);
                 if (Array.isArray(parsed)) return parsed;
                 return parsed ? [parsed] : [];
               } catch (e) {
-                // Last resort: comma separated or single item
                 if (trimmed.includes(',')) {
                   return trimmed.split(',').map((s: string) => s.trim()).filter(Boolean);
                 }
@@ -76,6 +74,7 @@ const OwnerProfile = () => {
             return [];
           };
 
+          // Update state with the latest data from Admin panel
           setDetails({
             amenities: parseData(prop.amenities),
             activities: parseData(prop.activities),
@@ -86,7 +85,6 @@ const OwnerProfile = () => {
                 const trimmedItem = item.trim();
                 if (trimmedItem.startsWith('{') && trimmedItem.endsWith('}')) {
                   try {
-                    // Try to handle potential nested JSON in string
                     const cleaned = trimmedItem.replace(/\\"/g, '"');
                     const parsed = JSON.parse(cleaned);
                     return { time: parsed.time || '', title: parsed.title || parsed.event || '' };
@@ -111,6 +109,18 @@ const OwnerProfile = () => {
             }),
             description: prop.description || ''
           });
+
+          // Sync local ownerData if property info changed (like name or contact)
+          const updatedOwnerData = {
+            ...ownerDataObj,
+            property_name: prop.title,
+            propertyName: prop.title,
+            owner_name: prop.owner_name,
+            ownerName: prop.owner_name,
+            mobile_number: prop.owner_mobile,
+            ownerNumber: prop.owner_mobile
+          };
+          localStorage.setItem('ownerData', JSON.stringify(updatedOwnerData));
         }
       } catch (error) {
         console.error('Fetch profile error:', error);

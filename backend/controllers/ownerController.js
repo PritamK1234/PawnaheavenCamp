@@ -1,8 +1,7 @@
-const bcrypt = require('bcryptjs');
 const { pool } = require('../db');
 
 exports.registerOwner = async (req, res) => {
-  const { propertyName, propertyId, propertyType, ownerName, ownerMobile, password } = req.body;
+  const { propertyName, propertyId, propertyType, ownerName, ownerMobile } = req.body;
 
   try {
     // 1. Check if Property ID exists in properties table

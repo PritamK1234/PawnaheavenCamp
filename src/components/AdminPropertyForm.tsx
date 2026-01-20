@@ -131,8 +131,8 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
 
     const token = localStorage.getItem('adminToken');
     const url = property 
-      ? `/api/properties/${property.id}` 
-      : '/api/properties';
+      ? `/api/properties/update/${property.id}` 
+      : '/api/properties/create';
     const method = property ? 'PUT' : 'POST';
 
     const payload = {

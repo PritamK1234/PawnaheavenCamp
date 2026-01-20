@@ -53,7 +53,7 @@ const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
 
   return (
     <div 
-      className={cn("relative w-full h-96 md:h-[500px] lg:h-[600px] bg-black rounded-2xl overflow-hidden group", className)}
+      className={cn("relative w-full aspect-[3/4] md:aspect-video bg-black rounded-2xl overflow-hidden group", className)}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -74,7 +74,7 @@ const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
               alt={`${title} - Image ${index + 1}`}
               width={1200}
               priority={index === 0}
-              className="w-full h-full"
+              className="w-full h-full object-cover"
             />
           </div>
         ))}

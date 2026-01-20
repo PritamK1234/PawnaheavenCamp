@@ -542,7 +542,7 @@ const AdminDashboard = () => {
                         <User className="w-6 h-6" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white truncate text-sm">{ownerProp?.owner_name || `Owner ${idx + 1}`}</h4>
+                        <h4 className="font-bold text-white truncate text-[12px]">{ownerProp?.owner_name || `Owner ${idx + 1}`}</h4>
                         <p className="text-[10px] text-muted-foreground font-medium">{mobile || '+91 ---'}</p>
                       </div>
                       <div className="flex items-center gap-2">

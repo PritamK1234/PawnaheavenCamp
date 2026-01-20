@@ -318,7 +318,7 @@ const AdminDashboard = () => {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between mt-1">
-                    <p className="text-lg xs:text-xl font-bold text-foreground">{setting.base_price || '---'}</p>
+                    <p className="text-xl xs:text-2xl font-bold text-foreground">{count}</p>
                     <button 
                       onClick={() => handleToggleCategory(setting.category, setting.is_closed)}
                       className={cn(

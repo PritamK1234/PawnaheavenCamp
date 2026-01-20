@@ -116,12 +116,21 @@ const PropertyDetails = () => {
           if (p.images && Array.isArray(p.images) && p.images.length > 0) {
             mappedImages = p.images.map((img: any) => {
               if (typeof img === 'string') return img;
-              return img.image_url || img.url || "";
+              let url = img.image_url || img.url || "";
+              if (url && url.startsWith('attached_assets/')) {
+                // Ensure double leading slash is not created
+                url = '/' + url.replace(/^\//, '');
+              }
+              return url;
             }).filter(Boolean);
           }
           
           if (mappedImages.length === 0 && p.image) {
-            mappedImages = [p.image];
+            let url = p.image;
+            if (url && url.startsWith('attached_assets/')) {
+              url = '/' + url.replace(/^\//, '');
+            }
+            mappedImages = [url];
           }
           
           if (mappedImages.length === 0) {

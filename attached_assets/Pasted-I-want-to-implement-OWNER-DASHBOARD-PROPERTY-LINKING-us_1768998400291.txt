@@ -1,0 +1,112 @@
+I want to implement OWNER DASHBOARD ↔ PROPERTY LINKING
+using PROPERTY ID as the single source of truth.
+
+Context:
+- We have a main website where properties are listed
+- Each property has a unique Property ID
+- We also have a separate Owners Dashboard
+- An owner named "Hrushi More" is already registered
+- Owner has Property ID: 6389M
+
+Goal:
+When an owner logs into the Owners Dashboard,
+the system should automatically fetch and manage
+the property that has the SAME Property ID (6389M)
+from the main website database.
+
+------------------------------------------------
+CORE RULES (VERY IMPORTANT)
+------------------------------------------------
+- Use Property ID as the linking key
+- DO NOT duplicate property data
+- DO NOT change existing property schema
+- DO NOT break existing admin or website logic
+- This flow is for OWNER-SPECIFIC access only
+
+------------------------------------------------
+DATA LINKING LOGIC
+------------------------------------------------
+1. Owner record contains:
+   - owner_id
+   - owner_name
+   - property_id (example: 6389M)
+
+2. Property record already exists in main system:
+   - property_id (same value: 6389M)
+   - property details (name, type, price, availability, etc.)
+
+3. When owner logs in:
+   - Fetch owner profile
+   - Read property_id from owner record
+   - Query properties table using property_id
+   - Fetch that property’s data only
+
+------------------------------------------------
+ACCESS CONTROL (CRITICAL)
+------------------------------------------------
+- Owner can ONLY:
+  - View
+  - Edit
+  - Manage
+  the property that matches their Property ID
+
+- Owner must NOT:
+  - See other properties
+  - Edit other owners’ properties
+  - Access admin-only controls
+
+------------------------------------------------
+OWNER DASHBOARD FEATURES (DATA-SCOPE ONLY)
+------------------------------------------------
+Owner can manage ONLY linked property:
+- Edit property details
+- Manage pricing
+- Manage availability / calendar
+- Upload images (if already supported)
+- Update rules or descriptions (if existing)
+
+All actions must update the SAME property record
+used on the main website.
+
+------------------------------------------------
+TECHNICAL IMPLEMENTATION NOTES
+------------------------------------------------
+- Backend: use existing APIs or create scoped endpoints
+- Example flow:
+   GET /api/owner/me
+   → returns owner profile with property_id
+
+   GET /api/properties/:propertyId
+   → fetch property data
+
+- Authorization:
+   - Validate owner session
+   - Validate property_id match before allowing updates
+
+------------------------------------------------
+UI REQUIREMENTS
+------------------------------------------------
+- Owners dashboard should automatically load property
+- No property selection dropdown (single-property owner)
+- Show Property ID clearly in UI (read-only)
+- If property_id not found → show clear error message
+
+------------------------------------------------
+ERROR HANDLING
+------------------------------------------------
+- If owner has no property_id → show “Property not linked”
+- If property_id does not exist → block access + log error
+- If mismatch → deny update
+
+------------------------------------------------
+IMPORTANT FINAL NOTE
+------------------------------------------------
+This task is ONLY:
+- Property ↔ Owner linking
+- Secure data fetching
+- Scoped editing access
+
+DO NOT:
+- Redesign UI unless required
+- Change business logic
+- Modify admin permissions

@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWeekend, startOfToday, isBefore, getDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+import { toast } from 'sonner';
+
 const OwnerDashboard = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -26,21 +28,27 @@ const OwnerDashboard = () => {
       }
       
       const ownerData = JSON.parse(ownerDataString);
-      const propId = ownerData.property_id || ownerData.id;
+      const propId = ownerData.property_id;
+      
       if (!propId) {
         setLoading(false);
+        toast.error("Property not linked to this account.");
         return;
       }
 
       try {
-        const response = await fetch(`/api/properties/${propId}`);
+        const response = await fetch(`/api/owner/my-property/${propId}`);
         const result = await response.json();
+        
         if (result.success) {
           const prop = result.data;
           setProperty(prop);
+          
+          // Use base price from property if available
+          const basePrice = parseInt(prop.price?.replace(/[^0-9]/g, '') || '1499');
           setRates({ 
-            weekday: prop.price?.toString() || '1499', 
-            weekend: (Math.round(prop.price * 1.5))?.toString() || '3999' 
+            weekday: basePrice.toString(), 
+            weekend: Math.round(basePrice * 1.5).toString() 
           });
           
           if (Array.isArray(prop.availability)) {
@@ -50,9 +58,12 @@ const OwnerDashboard = () => {
             });
             setAvailability(availMap);
           }
+        } else {
+          toast.error(result.message || "Failed to load property data");
         }
       } catch (error) {
         console.error('Error fetching property:', error);
+        toast.error("Network error while loading property");
       } finally {
         setLoading(false);
       }
@@ -119,9 +130,15 @@ const OwnerDashboard = () => {
 
   return (
     <div className="space-y-4">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-white font-display">{property?.title || 'Property Dashboard'}</h1>
-        <p className="text-xs text-[#D4AF37] uppercase tracking-widest">{property?.category} • {property?.location}</p>
+      <div className="mb-4 flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-white font-display">{property?.title || 'Property Dashboard'}</h1>
+          <p className="text-xs text-[#D4AF37] uppercase tracking-widest">{property?.category} • {property?.location}</p>
+        </div>
+        <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 px-3 py-1.5 rounded-lg">
+          <p className="text-[10px] text-[#D4AF37] uppercase font-bold">Property ID</p>
+          <p className="text-sm font-mono text-white font-bold">{property?.property_id || 'N/A'}</p>
+        </div>
       </div>
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-bold text-[#D4AF37]">Availability</h2>

@@ -147,3 +147,59 @@ exports.verifyOTP = async (req, res) => {
     });
   }
 };
+
+exports.getOwnerProperty = async (req, res) => {
+  const { propertyId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT p.*,
+        (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
+         FROM property_images pi WHERE pi.property_id = p.id) as images
+      FROM properties p
+      WHERE p.property_id = $1`,
+      [propertyId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Property not linked or not found.'
+      });
+    }
+
+    const parsePostgresArray = (field) => {
+      if (!field) return [];
+      if (Array.isArray(field)) return field;
+      if (typeof field === 'string') {
+        if (field.startsWith('[') && field.endsWith(']')) {
+          try { return JSON.parse(field); } catch (e) { return []; }
+        }
+        if (field.startsWith('{') && field.endsWith('}')) {
+          return field.substring(1, field.length - 1).split(',').map(item => item.trim().replace(/^"(.*)"$/, '$1'));
+        }
+      }
+      return [];
+    };
+
+    const property = {
+      ...result.rows[0],
+      amenities: parsePostgresArray(result.rows[0].amenities),
+      activities: parsePostgresArray(result.rows[0].activities),
+      highlights: parsePostgresArray(result.rows[0].highlights),
+      policies: parsePostgresArray(result.rows[0].policies),
+      images: result.rows[0].images || [],
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: property
+    });
+  } catch (error) {
+    console.error('Get owner property error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error fetching property.'
+    });
+  }
+};

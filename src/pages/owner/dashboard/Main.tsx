@@ -28,11 +28,11 @@ const OwnerDashboard = () => {
       }
       
       const ownerData = JSON.parse(ownerDataString);
-      const propId = ownerData.property_id;
+      const propId = ownerData.property_id || ownerData.propertyId;
       
       if (!propId) {
         setLoading(false);
-        toast.error("Property not linked to this account.");
+        toast.error("Property ID not found in owner data. Please re-login.");
         return;
       }
 

@@ -6,10 +6,46 @@ import Properties from "@/components/Properties";
 import FloatingContact from "@/components/FloatingContact";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+      // Update UI notify the user they can install the PWA
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    // Show the install prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    // We've used the prompt, and can't use it again, throw it away
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+  };
+
+  const handleCloseBanner = () => {
+    setShowInstallBanner(false);
+  };
 
   useEffect(() => {
     const savedPosition = sessionStorage.getItem("homeScrollPosition");
@@ -60,6 +96,45 @@ const Index = () => {
         />
         <link rel="canonical" href="https://looncamp.com" />
       </Helmet>
+
+      {showInstallBanner && (
+        <div className="fixed bottom-24 left-4 right-4 z-[60] bg-background border border-border p-4 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 md:max-w-md md:left-auto md:right-8">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 p-2 rounded-lg">
+                <Download className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Install App</h3>
+                <p className="text-xs text-muted-foreground">Add to home screen for quick access</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleCloseBanner}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={handleCloseBanner}
+            >
+              Cancel
+            </Button>
+            <Button 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={handleInstallClick}
+            >
+              Install
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="min-h-screen">
         <Header />

@@ -27,26 +27,19 @@ const OwnerRates = () => {
       try {
         const response = await fetch(`/api/properties/${id}`);
         const result = await response.json();
-        let currentProp = null;
         if (result.success) {
-          currentProp = result.data;
+          const prop = result.data;
           setRates({
-            weekday: currentProp.weekday_price || currentProp.price || '',
-            weekend: currentProp.weekend_price || '',
+            weekday: prop.weekday_price || prop.price || '',
+            weekend: prop.weekend_price || '',
           });
-        }
-
-        // Fetch special dates from availability_calendar
-        const calResponse = await fetch(`/api/properties/${id}/calendar`);
-        const calResult = await calResponse.json();
-        if (calResult.success && currentProp) {
-          const customPrices = calResult.data
-            .filter((d: any) => d.price && d.price.toString() !== currentProp.weekday_price?.toString() && d.price.toString() !== currentProp.weekend_price?.toString())
-            .map((d: any) => ({
-              date: format(new Date(d.date), 'yyyy-MM-dd'),
-              price: d.price.toString()
-            }));
-          setSpecialDates(customPrices);
+          
+          if (prop.special_dates) {
+            const sd = Array.isArray(prop.special_dates) 
+              ? prop.special_dates 
+              : JSON.parse(prop.special_dates);
+            setSpecialDates(sd);
+          }
         }
       } catch (error) {
         console.error('Error fetching rates:', error);

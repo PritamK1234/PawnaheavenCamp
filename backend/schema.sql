@@ -77,6 +77,24 @@ CREATE TABLE IF NOT EXISTS category_settings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create calendar_sync table
+CREATE TABLE IF NOT EXISTS calendar_sync (
+  id SERIAL PRIMARY KEY,
+  property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  external_calendar_url TEXT NOT NULL,
+  calendar_type VARCHAR(50) DEFAULT 'ical',
+  last_sync_at TIMESTAMP,
+  sync_status VARCHAR(50) DEFAULT 'pending',
+  error_message TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for calendar_sync
+CREATE INDEX IF NOT EXISTS idx_calendar_sync_property_id ON calendar_sync(property_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_sync_is_active ON calendar_sync(is_active);
+
 -- Insert default category settings
 INSERT INTO category_settings (category, is_active, base_price, description)
 VALUES 

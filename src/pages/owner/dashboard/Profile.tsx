@@ -32,20 +32,17 @@ const OwnerProfile = () => {
       if (!ownerDataString) return;
       const ownerDataObj = JSON.parse(ownerDataString);
       
-      // Use property_id if available, otherwise fallback to id
-      const propId = ownerDataObj.property_id || ownerDataObj.id;
+      const propId = ownerDataObj.property_id || ownerDataObj.propertyId || ownerDataObj.id;
       if (!propId) return;
       
       setLoading(true);
       try {
-        // Fetch real-time property data from admin property API
-        const response = await fetch(`/api/properties/${propId}`);
+        const response = await fetch(`/api/owners/my-property/${propId}`);
         const result = await response.json();
         
         if (result.success && result.data) {
           const prop = result.data;
           
-          // Helper to parse data from DB (handles PG arrays and JSON strings)
           const parseData = (data: any) => {
             if (!data) return [];
             if (Array.isArray(data)) return data;
@@ -74,7 +71,6 @@ const OwnerProfile = () => {
             return [];
           };
 
-          // Update state with the latest data from Admin panel
           setDetails({
             amenities: parseData(prop.amenities),
             activities: parseData(prop.activities),
@@ -110,17 +106,7 @@ const OwnerProfile = () => {
             description: prop.description || ''
           });
 
-          // Sync local ownerData if property info changed (like name or contact)
-          const updatedOwnerData = {
-            ...ownerDataObj,
-            property_name: prop.title,
-            propertyName: prop.title,
-            owner_name: prop.owner_name,
-            ownerName: prop.owner_name,
-            mobile_number: prop.owner_mobile,
-            ownerNumber: prop.owner_mobile
-          };
-          localStorage.setItem('ownerData', JSON.stringify(updatedOwnerData));
+          localStorage.setItem('linkedProperty', JSON.stringify(prop));
         }
       } catch (error) {
         console.error('Fetch profile error:', error);
@@ -131,16 +117,12 @@ const OwnerProfile = () => {
     fetchProfile();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('ownerLoggedIn');
-    navigate('/owner');
-  };
-
   const handleSave = async () => {
     setLoading(true);
     try {
-      if (ownerData?.property_id) {
-        const response = await fetch(`/api/properties/update/${ownerData.property_id}`, {
+      const propId = ownerData?.property_id || ownerData?.propertyId;
+      if (propId) {
+        const response = await fetch(`/api/properties/update/${propId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(details)
@@ -148,6 +130,8 @@ const OwnerProfile = () => {
         const result = await response.json();
         if (result.success) {
           toast.success('Profile updated successfully');
+          // Trigger reload in other tabs
+          localStorage.setItem('propertyUpdated', Date.now().toString());
         } else {
           toast.error(result.message || 'Update failed');
         }
@@ -214,15 +198,14 @@ const OwnerProfile = () => {
               autoFocus
               className="h-8 text-xs bg-black/60 border-[#D4AF37] text-white w-32"
               value={newItem.value}
-              enterKeyHint="done"
-              onChange={e => setNewItem({ ...newItem, value: e.target.value })}
+              onChange={e => setNewItem({ ...newItem, value: e.target.value, time: newItem.time })}
               onKeyDown={e => e.key === 'Enter' && addItem(type)}
-              onBlur={() => newItem.value ? addItem(type) : setNewItem({ type: '', value: '' })}
+              onBlur={() => newItem.value ? addItem(type) : setNewItem({ type: '', value: '', time: '' })}
             />
           </div>
         ) : (
           <button 
-            onClick={() => setNewItem({ type, value: '' })}
+            onClick={() => setNewItem({ type, value: '', time: '' })}
             className="flex items-center justify-center w-8 h-8 rounded-md border border-dashed border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -267,7 +250,7 @@ const OwnerProfile = () => {
         </div>
 
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">HIGHLIGHTS</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">What You'll Love</Label>
           <TagList type="highlights" items={details.highlights} />
         </div>
 
@@ -325,7 +308,7 @@ const OwnerProfile = () => {
         </div>
 
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">POLICIES</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Rules & Policies</Label>
           <TagList type="policies" items={details.policies} />
         </div>
 

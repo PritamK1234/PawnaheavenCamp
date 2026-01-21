@@ -19,57 +19,65 @@ const OwnerDashboard = () => {
   
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const ownerDataString = localStorage.getItem('ownerData');
-      if (!ownerDataString) {
-        setLoading(false);
-        return;
-      }
-      
-      const ownerData = JSON.parse(ownerDataString);
-      const propId = ownerData.property_id || ownerData.propertyId;
-      
-      if (!propId) {
-        setLoading(false);
-        toast.error("Property ID not found in owner data. Please re-login.");
-        return;
-      }
+  const fetchPropertyData = async () => {
+    const ownerDataString = localStorage.getItem('ownerData');
+    if (!ownerDataString) {
+      setLoading(false);
+      return;
+    }
+    
+    const ownerData = JSON.parse(ownerDataString);
+    const propId = ownerData.property_id || ownerData.propertyId;
+    
+    if (!propId) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const response = await fetch(`/api/owners/my-property/${propId}`);
-        const result = await response.json();
+    try {
+      const response = await fetch(`/api/owners/my-property/${propId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        const prop = result.data;
+        setProperty(prop);
         
-        if (result.success) {
-          const prop = result.data;
-          setProperty(prop);
-          
-          // Use base price from property if available
-          const basePrice = parseInt(prop.price?.replace(/[^0-9]/g, '') || '1499');
-          setRates({ 
-            weekday: basePrice.toString(), 
-            weekend: Math.round(basePrice * 1.5).toString() 
+        // Save to localStorage for other tabs
+        localStorage.setItem('linkedProperty', JSON.stringify(prop));
+        
+        // Use base price from property if available
+        const basePrice = parseInt(prop.price?.toString().replace(/[^0-9]/g, '') || '1499');
+        setRates({ 
+          weekday: basePrice.toString(), 
+          weekend: Math.round(basePrice * 1.5).toString() 
+        });
+        
+        if (Array.isArray(prop.availability)) {
+          const availMap: Record<string, boolean> = {};
+          prop.availability.forEach((date: string) => {
+            availMap[date] = false; // Booked
           });
-          
-          if (Array.isArray(prop.availability)) {
-            const availMap: Record<string, boolean> = {};
-            prop.availability.forEach((date: string) => {
-              availMap[date] = false; // Booked
-            });
-            setAvailability(availMap);
-          }
-        } else {
-          toast.error(result.message || "Failed to load property data");
+          setAvailability(availMap);
         }
-      } catch (error) {
-        console.error('Error fetching property:', error);
-        toast.error("Network error while loading property");
-      } finally {
-        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching property:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPropertyData();
+    
+    // Listen for updates from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'propertyUpdated') {
+        fetchPropertyData();
       }
     };
-
-    fetchData();
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const firstDayOfMonth = startOfMonth(currentDate);

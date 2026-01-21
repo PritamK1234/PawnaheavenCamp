@@ -31,8 +31,6 @@ interface AdminPropertyFormProps {
   onCancel: () => void;
 }
 
-import { CalendarSync } from "@/components/CalendarSync";
-
 const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);

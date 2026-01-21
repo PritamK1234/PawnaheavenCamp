@@ -37,7 +37,7 @@ const OwnerDashboard = () => {
       }
 
       try {
-        const response = await fetch(`/api/owner/my-property/${propId}`);
+        const response = await fetch(`/api/owners/my-property/${propId}`);
         const result = await response.json();
         
         if (result.success) {

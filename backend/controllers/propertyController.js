@@ -260,6 +260,13 @@ const updateProperty = async (req, res) => {
       price_note, price, special_dates 
     } = req.body;
 
+    console.log('Update Property Request Params:', { id });
+    console.log('Update Property Request Body:', { 
+      amenities, activities, highlights, policies, schedule, 
+      description, availability, weekday_price, weekend_price, 
+      price_note, price, special_dates 
+    });
+
     const result = await query(`
       UPDATE properties 
       SET 
@@ -286,11 +293,11 @@ const updateProperty = async (req, res) => {
       Array.isArray(schedule) ? JSON.stringify(schedule) : schedule, 
       description,
       Array.isArray(availability) ? JSON.stringify(availability) : availability,
-      weekday_price ? weekday_price.toString() : null,
-      weekend_price ? weekend_price.toString() : null,
+      weekday_price !== undefined && weekday_price !== null ? weekday_price.toString() : null,
+      weekend_price !== undefined && weekend_price !== null ? weekend_price.toString() : null,
       price_note,
       price,
-      Array.isArray(special_dates) ? JSON.stringify(special_dates) : special_dates,
+      Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || '[]'),
       id
     ]);
 

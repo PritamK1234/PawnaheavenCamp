@@ -96,8 +96,11 @@ const OwnerRates = () => {
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update base rates');
+      const responseData = await response.json();
+      console.log('Update Response:', responseData);
+
+      if (!response.ok || !responseData.success) {
+        throw new Error(responseData.message || 'Failed to update base rates');
       }
 
       // 2. Update special dates in calendar for real-time sync

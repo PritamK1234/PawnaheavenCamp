@@ -51,8 +51,9 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
 
   const getPriceForDate = (date: Date) => {
     const data = getDayData(date);
-    if (data?.price) return data.price;
-    return isWeekend(date) ? propertyPrices.weekend : propertyPrices.weekday;
+    if (data?.price) return data.price.toString();
+    const price = isWeekend(date) ? propertyPrices.weekend : propertyPrices.weekday;
+    return price ? price.toString() : "";
   };
 
   const handleUpdate = async (date: Date, isBooked: boolean) => {

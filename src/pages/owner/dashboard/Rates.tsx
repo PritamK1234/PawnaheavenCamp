@@ -76,7 +76,7 @@ const OwnerRates = () => {
     try {
       const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
       
-      // 1. Update base rates
+      // 1. Update base rates and special_dates
       await fetch(`/api/properties/${propertyId}`, {
         method: 'PUT',
         headers: {
@@ -86,11 +86,12 @@ const OwnerRates = () => {
         body: JSON.stringify({
           weekday_price: rates.weekday,
           weekend_price: rates.weekend,
-          price: rates.weekday
+          price: rates.weekday,
+          special_dates: specialDates
         })
       });
 
-      // 2. Update special dates in calendar
+      // 2. Update special dates in calendar for real-time sync
       for (const sd of specialDates) {
         if (sd.date && sd.price) {
           await fetch(`/api/properties/${propertyId}/calendar`, {
@@ -102,7 +103,7 @@ const OwnerRates = () => {
             body: JSON.stringify({
               date: sd.date,
               price: sd.price,
-              is_booked: false // Assuming special price means available
+              is_booked: false
             })
           });
         }

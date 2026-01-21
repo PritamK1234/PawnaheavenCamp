@@ -260,6 +260,7 @@ const updateProperty = async (req, res) => {
       price_note, price, special_dates 
     } = req.body;
 
+    console.log('Update payload received:', req.body);
     const result = await query(`
       UPDATE properties 
       SET 
@@ -274,7 +275,7 @@ const updateProperty = async (req, res) => {
         weekend_price = $9,
         price_note = COALESCE($10, price_note),
         price = COALESCE($11, price),
-        special_dates = COALESCE($12, special_dates),
+        special_dates = $12,
         updated_at = CURRENT_TIMESTAMP
       WHERE property_id = $13 OR id::text = $13
       RETURNING *
@@ -286,13 +287,14 @@ const updateProperty = async (req, res) => {
       Array.isArray(schedule) ? JSON.stringify(schedule) : schedule, 
       description,
       Array.isArray(availability) ? JSON.stringify(availability) : availability,
-      weekday_price !== undefined ? String(weekday_price) : null,
-      weekend_price !== undefined ? String(weekend_price) : null,
+      weekday_price ? String(weekday_price) : null,
+      weekend_price ? String(weekend_price) : null,
       price_note,
       price,
       Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || '[]'),
       id
     ]);
+    console.log('Update result rows:', result.rowCount);
 
     if (result.rows.length === 0) {
       return res.status(404).json({

@@ -4,8 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useState, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { propertyAPI } from "@/lib/api";
 
 interface PropertyCardProps {
   id?: string;
@@ -39,7 +37,6 @@ const PropertyCard = ({
   isAvailable = true,
 }: PropertyCardProps) => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,18 +47,8 @@ const PropertyCard = ({
     : [image];
   const navigationId = slug || id;
 
-  const prefetchProperty = () => {
-    if (navigationId) {
-      queryClient.prefetchQuery({
-        queryKey: ['property', navigationId],
-        queryFn: () => propertyAPI.getPublicBySlug(navigationId),
-      });
-    }
-  };
-
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX;
-    prefetchProperty();
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -120,11 +107,7 @@ const PropertyCard = ({
   };
 
   return (
-    <div 
-      className="group cursor-pointer px-3 mb-6" 
-      onClick={handleNavigate}
-      onMouseEnter={prefetchProperty}
-    >
+    <div className="group cursor-pointer px-3 mb-6" onClick={handleNavigate}>
       <div className="bg-card rounded-[32px] overflow-hidden border border-border/10 hover:border-primary/30 transition-all duration-300 shadow-sm">
         {/* Image Container */}
         <div 

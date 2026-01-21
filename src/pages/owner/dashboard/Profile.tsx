@@ -251,12 +251,6 @@ const OwnerProfile = () => {
         </CardContent>
       </Card>
 
-      <div className="glass rounded-3xl p-6 border border-[#D4AF37]/30">
-        <h3 className="text-xl font-bold text-[#D4AF37] mb-4">Availability Calendar</h3>
-        <p className="text-xs text-gray-400 mb-4 italic">* Click on a date to toggle its booking status. This will update on the website and admin panel instantly.</p>
-        <CalendarSync propertyId={ownerData?.property_id || ownerData?.propertyId} isAdmin={true} />
-      </div>
-
         <div className="space-y-6">
         <div className="space-y-3">
           <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Amenities</Label>

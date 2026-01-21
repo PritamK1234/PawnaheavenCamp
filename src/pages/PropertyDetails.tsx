@@ -429,7 +429,7 @@ const PropertyDetails = () => {
     <>
       <Helmet>
         <title>{propertyData.title} - Luxury {propertyData.category === 'camping' ? 'Pawna Camping' : 'Lonavala Booking'} | PawnaHavenCamp</title>
-        <meta name="description" content={`Book ${propertyData.title} at ${propertyData.location}. Luxury ${propertyData.category} with ${propertyData.amenities.slice(0, 5).join(', ')}. ${propertyData.description.substring(0, 100)}...`} />
+        <meta name="description" content={`Book ${propertyData.title} at ${propertyData.location}. Luxury ${propertyData.category} with ${(propertyData.amenities || []).slice(0, 5).join(', ')}. ${propertyData.description.substring(0, 100)}...`} />
         {/* Open Graph / WhatsApp Preview */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={`${propertyData.title} - ${propertyData.category} in ${propertyData.location}`} />

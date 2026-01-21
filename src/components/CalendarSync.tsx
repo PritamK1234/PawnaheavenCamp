@@ -18,17 +18,20 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
   const fetchCalendar = async () => {
     try {
       if (!propertyId || propertyId === 'Generating...') return;
+      
+      // Fetch property details first to get the base price
+      const propResponse = await fetch(`/api/properties/${propertyId}`);
+      const propResult = await propResponse.json();
+      let basePrice = "";
+      if (propResult.success) {
+        basePrice = propResult.data.price;
+        setPropertyPrice(basePrice);
+      }
+
       const response = await fetch(`/api/properties/${propertyId}/calendar`);
       const result = await response.json();
       if (result.success) {
         setCalendarData(result.data);
-      }
-      
-      // Fetch property details for base price
-      const propResponse = await fetch(`/api/properties/${propertyId}`);
-      const propResult = await propResponse.json();
-      if (propResult.success) {
-        setPropertyPrice(propResult.data.price);
       }
     } catch (error) {
       console.error("Failed to fetch calendar:", error);

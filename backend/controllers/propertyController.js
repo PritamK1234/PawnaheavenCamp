@@ -270,8 +270,8 @@ const updateProperty = async (req, res) => {
         schedule = COALESCE($5, schedule), 
         description = COALESCE($6, description),
         availability = COALESCE($7, availability),
-        weekday_price = $8::text,
-        weekend_price = $9::text,
+        weekday_price = $8,
+        weekend_price = $9,
         price_note = COALESCE($10, price_note),
         price = COALESCE($11, price),
         special_dates = COALESCE($12, special_dates),
@@ -286,11 +286,11 @@ const updateProperty = async (req, res) => {
       Array.isArray(schedule) ? JSON.stringify(schedule) : schedule, 
       description,
       Array.isArray(availability) ? JSON.stringify(availability) : availability,
-      weekday_price ? weekday_price.toString() : null,
-      weekend_price ? weekend_price.toString() : null,
+      weekday_price !== undefined ? String(weekday_price) : null,
+      weekend_price !== undefined ? String(weekend_price) : null,
       price_note,
       price,
-      Array.isArray(special_dates) ? JSON.stringify(special_dates) : special_dates,
+      Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || '[]'),
       id
     ]);
 

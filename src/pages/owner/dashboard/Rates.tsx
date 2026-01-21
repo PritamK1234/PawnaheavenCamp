@@ -128,10 +128,10 @@ const OwnerRates = () => {
   if (loading) return <div className="p-8 text-center text-[#D4AF37]">Loading rates...</div>;
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto px-4 sm:px-0">
-      <h1 className="text-2xl font-bold text-[#D4AF37] font-display">Manage Prices & Rates</h1>
+    <div className="space-y-6 max-w-full sm:max-w-2xl mx-auto px-0 sm:px-4">
+      <h1 className="text-2xl font-bold text-[#D4AF37] font-display px-4 sm:px-0">Manage Prices & Rates</h1>
       
-      <Card className="glass border-[#D4AF37]/30 bg-black/40">
+      <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-none sm:rounded-xl border-x-0 sm:border-x">
         <CardContent className="pt-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">

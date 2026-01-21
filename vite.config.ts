@@ -31,24 +31,34 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'icons/*.png'],
       manifest: {
         name: 'Pawna Haven Camp',
         short_name: 'PawnaHaven',
         description: 'Luxury Resort Booking Platform',
-        theme_color: '#ffffff',
+        theme_color: '#d4af37',
+        background_color: '#000000',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module'
       }
     }),
   ].filter(Boolean),

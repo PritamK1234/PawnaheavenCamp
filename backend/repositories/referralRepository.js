@@ -38,6 +38,12 @@ const ReferralRepository = {
     }
     const res = await query(text);
     return res.rows;
+  },
+
+  async findById(id) {
+    const text = 'SELECT id, username, referral_code, status FROM referral_users WHERE id = $1';
+    const res = await query(text, [id]);
+    return res.rows[0];
   }
 };
 

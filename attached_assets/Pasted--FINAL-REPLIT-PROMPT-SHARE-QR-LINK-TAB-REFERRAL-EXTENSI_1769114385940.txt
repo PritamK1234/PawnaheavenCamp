@@ -1,0 +1,211 @@
+
+## ✅ FINAL REPLIT PROMPT — “SHARE QR & LINK” TAB (REFERRAL EXTENSION)
+
+> **IMPORTANT RULES (DO NOT BREAK):**
+>
+> * Do NOT modify existing referral logic, earnings logic, or withdrawal logic
+> * Do NOT change database schema unless explicitly required
+> * Backend + Frontend task (UI addition + API support)
+> * Keep everything backward-compatible
+> * Referral attribution must be 100% reliable
+>
+> ---
+>
+> ## 🧠 CONTEXT
+>
+> We already have a working **Referral & Earnings System** with:
+>
+> * Withdraw tab
+> * Stats tab
+> * OTP-based login
+> * Referral code generation
+>
+> Now we want to add **ONE NEW TAB** on the **Check Earning page**:
+>
+> 👉 **“Share QR & Link”**
+>
+> This tab is purely for **referral promotion & sharing**.
+>
+> ---
+>
+> ## 🎯 OBJECTIVE
+>
+> For **each referral user**, automatically generate and expose:
+>
+> 1. **Your QR Code**
+> 2. **Your Referral Link**
+> 3. **Your Referral Code**
+>
+> These must be:
+>
+> * UNIQUE per referral user
+> * Deterministic (always the same for the same referral code)
+> * Secure and tamper-proof
+>
+> ---
+>
+> ## 🔗 REFERRAL ENTRY METHODS (ALL MUST WORK)
+>
+> A referral should be applied automatically when:
+>
+> 1. Customer **scans QR code**
+> 2. Customer **opens referral link**
+> 3. Customer **manually enters referral code**
+>
+> In all cases:
+>
+> * Customer is redirected to the main website
+> * Referral code is automatically applied in the booking form
+> * Referral code must persist until booking completion
+>
+> ---
+>
+> ## 💰 COMMISSION & PAYMENT LOGIC (DO NOT CHANGE)
+>
+> Booking flow (already approved):
+>
+> * Customer pays **30% advance online**
+> * Remaining **70% paid offline to owner**
+>
+> From **30% advance**:
+>
+> * **15% → Customer discount**
+> * **35% → Referral user earning**
+> * **50% → Platform earnings**
+>
+> Your task is ONLY to ensure:
+>
+> * Referral code is correctly attached to the booking
+> * Earnings calculation continues to work as-is
+>
+> ---
+>
+> ## 🧩 BACKEND REQUIREMENTS
+>
+> ### 1️⃣ Referral Link Generation
+>
+> Referral link format:
+>
+> ```
+> https://ourdomain.com/?ref=REFERRALCODE
+> ```
+>
+> Rules:
+>
+> * Referral code must be UPPERCASE
+> * Lookup must be case-insensitive
+> * Invalid codes must be ignored silently
+>
+> ---
+>
+> ### 2️⃣ QR Code Generation
+>
+> * QR code should encode the **referral link**
+> * Generated dynamically using backend or frontend utility
+> * Must be reproducible (no random regeneration per request)
+>
+> ---
+>
+> ### 3️⃣ New API (Optional but Preferred)
+>
+> Add to referral dashboard response:
+>
+> ```
+> {
+>   referralCode,
+>   referralLink,
+>   referralQrCodeUrl
+> }
+> ```
+>
+> OR
+>
+> Provide a dedicated endpoint:
+>
+> ```
+> GET /api/referrals/share
+> ```
+>
+> (JWT protected)
+>
+> ---
+>
+> ## 🖥️ FRONTEND REQUIREMENTS
+>
+> ### New Tab: **Share QR & Link**
+>
+> Layout sections (mobile-first):
+>
+> #### Section 1: Your QR Code
+>
+> * Large, scannable QR
+> * Download / Share option
+>
+> #### Section 2: Your Referral Link
+>
+> * Clickable link
+> * Copy-to-clipboard button
+>
+> #### Section 3: Your Referral Code
+>
+> * Bold display
+> * Tap-to-copy
+>
+> ---
+>
+> ## 🧠 REFERRAL AUTO-APPLY LOGIC
+>
+> When customer lands on website with:
+>
+> * `?ref=CODE`
+>
+> Then:
+>
+> * Validate referral code
+> * Store it in:
+>
+>   * localStorage OR
+>   * sessionStorage
+> * Auto-fill referral code in booking form
+> * Lock referral code (user cannot change it)
+>
+> Referral code must persist:
+>
+> * Across page reloads
+> * Until booking is completed or expired
+>
+> ---
+>
+> ## 🔐 SECURITY & EDGE CASES
+>
+> * Blocked referral users:
+>
+>   * Cannot generate QR or link
+> * Referral codes:
+>
+>   * Stored in UPPERCASE
+>   * Queried case-insensitively
+> * No earnings unless booking is confirmed
+>
+> ---
+>
+> ## ⛔ DO NOT DO
+>
+> ❌ Change existing referral tables
+> ❌ Change commission percentages
+> ❌ Add admin logic
+> ❌ Add payout automation
+>
+> ---
+>
+> ## ✅ REQUIRED OUTPUT
+>
+> 1. API changes (if any)
+> 2. Referral link + QR generation logic
+> 3. Frontend tab implementation plan
+> 4. Referral auto-apply flow explanation
+>
+> ⚠️ Start with **design explanation first**
+> ⚠️ Do NOT write code until approved
+>
+> WAIT for my confirmation before implementation.

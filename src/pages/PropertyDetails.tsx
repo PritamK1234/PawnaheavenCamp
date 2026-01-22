@@ -32,6 +32,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import ImageSlider from "@/components/ImageSlider";
@@ -240,6 +241,9 @@ const PropertyDetails = () => {
                     <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] bg-[#0A0A0A] border-[#D4AF37]/20">
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-display text-[#D4AF37]">Book Your Stay</DialogTitle>
+                        <DialogDescription className="text-gray-400 text-xs">
+                          Fill in the details below to initiate your booking at {propertyData.title}.
+                        </DialogDescription>
                       </DialogHeader>
                       <BookingForm 
                         propertyName={propertyData.title} 
@@ -267,6 +271,9 @@ const PropertyDetails = () => {
                     <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] bg-[#0A0A0A] border-[#D4AF37]/20 p-8">
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-display text-[#D4AF37] mb-6 text-center">Contact Host</DialogTitle>
+                        <DialogDescription className="hidden">
+                          Choose your preferred method to contact the property host.
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="grid grid-cols-1 gap-4">
                         <Button 
@@ -319,6 +326,12 @@ const PropertyDetails = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[400px] rounded-[2rem] bg-[#0A0A0A] border-[#C5A021]/20">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-display text-[#D4AF37] px-4 pt-4">Availability Calendar</DialogTitle>
+                  <DialogDescription className="px-4 text-xs text-gray-400">
+                    Check available dates and seasonal pricing for {propertyData.title}.
+                  </DialogDescription>
+                </DialogHeader>
                 <div className="p-4">
                   <CalendarSync propertyId={propertyData.property_id || propertyData.id} />
                 </div>
@@ -359,6 +372,9 @@ const PropertyDetails = () => {
               <DialogContent className="sm:max-w-[500px] rounded-[2rem]">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-display">Book Your Stay</DialogTitle>
+                  <DialogDescription className="text-muted-foreground text-sm">
+                    Complete the form below to book your stay at {propertyData.title}.
+                  </DialogDescription>
                 </DialogHeader>
                 <BookingForm 
                   propertyName={propertyData.title} 

@@ -12,6 +12,15 @@ import { propertyAPI } from '@/lib/api';
 
 import { CalendarSync } from "@/components/CalendarSync";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 const OwnerProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -233,9 +242,36 @@ const OwnerProfile = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-[#D4AF37]">Profile</h2>
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-500 hover:bg-red-500/10">
-            <LogOut className="w-4 h-4 mr-1" /> Logout
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-500/10">
+                <LogOut className="w-4 h-4 mr-1" /> Logout
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[400px] bg-black border-[#D4AF37]/20 rounded-3xl">
+              <DialogHeader>
+                <DialogTitle className="text-[#D4AF37] font-display text-xl">Confirm Logout</DialogTitle>
+                <DialogDescription className="text-gray-400">
+                  Are you sure you want to log out of your dashboard?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex gap-3 mt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-white/10 text-white hover:bg-white/5"
+                  onClick={() => {}}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

@@ -39,7 +39,14 @@ import AdminPropertyForm from '@/components/AdminPropertyForm';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import {
@@ -467,6 +474,9 @@ const AdminDashboard = () => {
                             <DialogContent className="sm:max-w-[400px] rounded-[2rem] bg-[#0A0A0A] border-[#C5A021]/20">
                               <DialogHeader>
                                 <DialogTitle className="text-xl font-display text-gold">Manage Availability</DialogTitle>
+                                <DialogDescription className="text-xs text-gray-400">
+                                  Select a date to toggle its availability status for this property.
+                                </DialogDescription>
                               </DialogHeader>
                               <div className="p-4">
                                 <CalendarComponent

@@ -11,17 +11,12 @@ const UserService = {
     const existingMobile = await UserRepository.findByMobile(mobileNumber);
     if (existingMobile) throw new Error('Mobile number already registered');
 
-    // 3. Generate Unique UPPERCASE Referral Code
-    let uniqueCode;
-    let isUnique = false;
-    while (!isUnique) {
-      uniqueCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const checkCode = await UserRepository.findByReferralCode(uniqueCode);
-      if (!checkCode) isUnique = true;
-    }
+    // 3. Check if custom referral code already exists
+    const existingCode = await UserRepository.findByReferralCode(referralCode);
+    if (existingCode) throw new Error('Referral code already taken');
 
-    // 4. Create user
-    return await UserRepository.create(username, mobileNumber, uniqueCode);
+    // 4. Create user with provided code
+    return await UserRepository.create(username, mobileNumber, referralCode.toUpperCase());
   },
 
   async login(mobileNumber) {

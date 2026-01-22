@@ -22,13 +22,14 @@ const GenerateCodePage = () => {
   const [formData, setFormData] = useState({
     mobile: "",
     username: "",
+    referralCode: "",
   });
   const [step, setStep] = useState<"details" | "otp">("details");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRequestOTP = async () => {
-    if (!formData.mobile || !formData.username) {
+    if (!formData.mobile || !formData.username || !formData.referralCode) {
       toast.error("Please fill all fields");
       return;
     }
@@ -67,7 +68,10 @@ const GenerateCodePage = () => {
       const token = verifyRes.data.token;
       
       await axios.post("/api/referrals/register", 
-        { username: formData.username },
+        { 
+          username: formData.username,
+          referralCode: formData.referralCode 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -114,6 +118,20 @@ const GenerateCodePage = () => {
         <Card className="p-8 bg-card border-border/50 rounded-[2rem] shadow-2xl space-y-6">
           {step === "details" ? (
             <>
+              <div className="space-y-2">
+                <Label htmlFor="referralCode" className="text-sm font-bold flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  Enter Referral code
+                </Label>
+                <Input
+                  id="referralCode"
+                  placeholder="Create your referral code"
+                  className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg"
+                  value={formData.referralCode}
+                  onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-sm font-bold flex items-center gap-2">
                   <User className="w-4 h-4 text-primary" />

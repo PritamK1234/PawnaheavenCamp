@@ -10,10 +10,11 @@ const UserController = {
         return res.status(400).json({ error: 'Invalid token for registration' });
       }
 
-      const { username } = req.body;
+      const { username, referralCode } = req.body;
       if (!username) return res.status(400).json({ error: 'Username is required' });
+      if (!referralCode) return res.status(400).json({ error: 'Referral code is required' });
 
-      const user = await UserService.register(username, mobile);
+      const user = await UserService.register(username, mobile, referralCode);
       res.json(user);
     } catch (error) {
       res.status(400).json({ error: error.message });

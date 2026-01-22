@@ -11,7 +11,13 @@ const authenticateReferralUser = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_fallback_secret');
 
-    // Fetch user and check status (blocked check)
+    // If purpose is register, we don't expect a user to exist yet
+    if (decoded.purpose === 'register') {
+      req.user = decoded;
+      return next();
+    }
+
+    // For other purposes (login, dashboard), fetch user and check status
     const result = await query(
       'SELECT id, username, mobile_number, status FROM referral_users WHERE id = $1',
       [decoded.userId]

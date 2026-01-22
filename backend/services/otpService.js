@@ -59,7 +59,7 @@ const OtpService = {
       userId: user ? user.id : null 
     };
     
-    const token = jwt.sign(payload, process.env.JWT_SECRET || 'your_fallback_secret', { expiresIn: '24h' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'your_fallback_secret', { expiresIn: '10m' });
 
     return { token, exists: !!user };
   }

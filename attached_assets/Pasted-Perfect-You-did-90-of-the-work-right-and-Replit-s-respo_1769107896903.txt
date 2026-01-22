@@ -1,0 +1,263 @@
+Perfect. You did **90% of the work right**, and Replit’s response is **mostly correct**, but there are **some critical gaps + clarifications** you must lock **before you allow him to write code**.
+
+Below is your **FINAL, CORRECTED & AUTHORITATIVE REPLIT PROMPT**.
+This will **prevent future bugs, security holes, and logic mismatch**.
+
+You can copy-paste this **as-is**.
+
+---
+
+# ✅ FINAL APPROVAL PROMPT — REFERRAL SYSTEM (BACKEND + DB)
+
+You have reviewed my plan correctly.
+Before you start coding, **apply the following confirmations and corrections strictly**.
+
+---
+
+## 🔒 FINAL CONFIRMATIONS (MANDATORY)
+
+### 1️⃣ DESIGN IS APPROVED — WITH THESE FIXES
+
+Your proposed schema and API list are **approved**, with the **following REQUIRED adjustments**:
+
+---
+
+## 🗄️ DATABASE SCHEMA — FINAL VERSION
+
+### ✅ `referral_users` (OK with small addition)
+
+Add **status** field for safety & future control.
+
+```
+referral_users
+- id (PK)
+- username (UNIQUE, NOT NULL)
+- mobile_number (UNIQUE, NOT NULL)
+- referral_code (UNIQUE, UPPERCASE, NOT NULL)
+- balance (DECIMAL, default 0)
+- status ('active','blocked') DEFAULT 'active'
+- created_at
+```
+
+---
+
+### ⚠️ `referral_transactions` (IMPORTANT FIX)
+
+**Do NOT rely on balance alone for earnings.**
+Balance must be derived from transactions.
+
+Add:
+
+* `source` (booking / manual / adjustment)
+
+```
+referral_transactions
+- id (PK)
+- referral_user_id (FK)
+- booking_id (nullable)
+- amount (DECIMAL)
+- type ('earning','withdrawal')
+- status ('pending','completed','failed')
+- source ('booking','manual','adjustment')
+- upi_id (only for withdrawal)
+- created_at
+```
+
+---
+
+### ⚠️ `otp_verifications` (CRITICAL FIX)
+
+You MUST track **OTP purpose**, otherwise register/login logic will break later.
+
+Add:
+
+* `purpose` ('register','login')
+
+```
+otp_verifications
+- id
+- mobile_number
+- otp_code
+- purpose
+- expires_at
+- attempts
+- created_at
+```
+
+---
+
+## 🔐 OTP FLOW — FINAL RULES (STRICT)
+
+### OTP generation
+
+* Length: **6 digits**
+* Expiry: **5 minutes**
+* Max send: **4 per hour per mobile + purpose**
+
+### OTP verification
+
+* Must match:
+
+  * mobile_number
+  * otp_code
+  * purpose
+* On success:
+
+  * Mark OTP as used OR delete it
+  * Issue JWT (24h expiry)
+
+### Security
+
+* Block verification after **5 wrong attempts**
+* Do NOT allow OTP reuse
+
+---
+
+## 🔁 API FLOW — FINAL & LOCKED
+
+### Public
+
+```
+GET /api/referrals/top-earners?period=month|all
+```
+
+---
+
+### OTP
+
+```
+POST /api/referrals/request-otp
+{
+  "mobile": "9999999999",
+  "purpose": "register" | "login"
+}
+
+POST /api/referrals/verify-otp
+{
+  "mobile": "9999999999",
+  "otp": "123456",
+  "purpose": "register" | "login"
+}
+→ returns JWT
+```
+
+---
+
+### Referral User
+
+```
+POST /api/referrals/register
+Headers: Authorization: Bearer <JWT>
+{
+  "username": "...",
+  "referralCode": "ABC123"
+}
+
+POST /api/referrals/login
+Headers: Authorization: Bearer <JWT>
+
+GET /api/referrals/dashboard
+Headers: Authorization: Bearer <JWT>
+```
+
+---
+
+### Withdrawal
+
+```
+POST /api/referrals/withdraw
+Headers: Authorization: Bearer <JWT>
+{
+  "amount": 500,
+  "upi": "user@upi"
+}
+```
+
+---
+
+## 🧮 TOP EARNERS — FINAL LOGIC (IMPORTANT)
+
+### ❌ DO NOT use `balance` only
+
+### ✅ Correct logic
+
+**All time**
+
+```
+SUM(earnings) - SUM(withdrawals)
+```
+
+**This month**
+
+```
+SUM(earning transactions of current month)
+```
+
+Only include:
+
+* status = completed
+* referral_users.status = active
+
+Limit: **Top 20**
+
+---
+
+## 🧱 ARCHITECTURE — STRICT
+
+You MUST follow:
+
+```
+routes/
+controllers/
+services/
+repositories/
+db.js
+```
+
+Rules:
+
+* No SQL in controllers
+* No business logic in routes
+* JWT validation middleware
+* No external auth services
+
+---
+
+## ⛔ WHAT YOU MUST NOT DO
+
+* ❌ Do NOT add frontend logic
+* ❌ Do NOT redesign UI
+* ❌ Do NOT add wallets, Razorpay, payout APIs
+* ❌ Do NOT auto-credit withdrawals
+* ❌ Do NOT complicate schema
+
+---
+
+## ✅ NEXT STEP (WAIT MODE)
+
+**Do NOT write any code yet.**
+
+Reply only with:
+
+1. Confirmation that schema changes are accepted
+2. Confirmation that OTP purpose separation is understood
+3. Confirmation of top-earners calculation logic
+4. Confirmation that balance is derived from transactions
+
+After that, **WAIT for my explicit command:**
+
+> “START IMPLEMENTATION”
+
+---
+
+### 🧠 WHY THIS PROMPT IS IMPORTANT
+
+This prevents:
+
+* OTP reuse bugs
+* Login/register confusion
+* Incorrect earnings leaderboard
+* Balance mismatch issues
+* Future admin nightmares
+
+---

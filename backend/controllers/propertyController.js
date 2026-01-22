@@ -277,7 +277,7 @@ const updateProperty = async (req, res) => {
         weekend_price = COALESCE(NULLIF($9, ''), weekend_price),
         price_note = COALESCE($10, price_note),
         price = COALESCE(NULLIF($11, ''), price),
-        special_dates = COALESCE($12, special_dates),
+        special_dates = $12,
         updated_at = CURRENT_TIMESTAMP
       WHERE property_id = $13 OR id::text = $13
       RETURNING *

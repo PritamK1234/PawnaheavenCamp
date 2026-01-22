@@ -149,7 +149,7 @@ const OwnerRates = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-0">
         <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
           <CardContent className="pt-6">
-            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekday Rate</Label>
+            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekday Rate (Monday - Friday)</Label>
             <div className="text-2xl font-bold text-white">
               {rates.weekday ? `₹${rates.weekday}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
             </div>
@@ -157,7 +157,7 @@ const OwnerRates = () => {
         </Card>
         <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
           <CardContent className="pt-6">
-            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekend Rate</Label>
+            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekend Rate (Sat - Sunday)</Label>
             <div className="text-2xl font-bold text-white">
               {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
             </div>

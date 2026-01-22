@@ -1,0 +1,104 @@
+## ✅ FINAL APPROVAL — PROCEED TO STEP 4 (WITHDRAWAL FLOW & FINAL VALIDATION)
+
+Step 3 is **fully approved**.
+You are cleared to proceed with **STEP 4 — FINAL STEP**.
+
+---
+
+## 🔹 STEP 4 SCOPE (STRICT — FOLLOW EXACTLY)
+
+Implement **ONLY** the withdrawal flow and final validation logic.
+
+---
+
+### 1️⃣ WITHDRAW REQUEST API
+
+#### `POST /api/referrals/withdraw`
+
+**JWT required**
+
+Rules:
+
+* User must be **active**
+* Minimum withdrawal amount: **₹500**
+* Available balance must be calculated dynamically
+  (`completed earnings - completed withdrawals`)
+* Reject request if:
+
+  * Requested amount > available balance
+  * Requested amount < minimum withdrawal
+* On success:
+
+  * Create a `referral_transactions` record:
+
+    * `type`: `withdrawal`
+    * `source`: `manual`
+    * `status`: `pending`
+    * `amount`: requested amount
+
+❌ Do NOT mark withdrawals as completed
+❌ Do NOT update or trust any stored balance field
+
+---
+
+### 2️⃣ WITHDRAWAL SAFETY RULES
+
+* Only **ONE pending withdrawal** allowed per user
+* If a pending withdrawal already exists → **reject new request**
+* All validations must be enforced **server-side only**
+
+---
+
+### 3️⃣ DASHBOARD IMPACT
+
+Dashboard logic must:
+
+* Continue calculating balance **dynamically**
+* Treat:
+
+  * `pending withdrawals` → **NOT deducted**
+  * `completed withdrawals` → **deducted**
+* Expose:
+
+  * `pending_withdrawal_amount` (if any)
+
+---
+
+### 4️⃣ FINAL VALIDATION CHECKLIST
+
+Confirm and verify:
+
+* Referral codes are **stored and returned in UPPERCASE**
+* Referral lookups are **case-insensitive**
+* Blocked users:
+
+  * Cannot withdraw
+  * Cannot access dashboard
+* No protected route bypasses JWT middleware
+
+---
+
+## ⛔ DO NOT IMPLEMENT IN STEP 4
+
+* Admin approval APIs
+* Auto payout logic
+* Payment gateway integration
+* Direct balance mutations
+* Any UI changes
+
+---
+
+## ✅ STEP 4 COMPLETION REQUIREMENTS
+
+When finished, reply **ONLY** with:
+
+1. Withdrawal API behavior summary
+2. Validation rules implemented
+3. Pending withdrawal handling logic
+4. Confirmation that balance math remains fully dynamic
+
+Then **STOP**. No further implementation.
+
+---
+
+Proceed with **STEP 4** now.

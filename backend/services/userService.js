@@ -39,7 +39,6 @@ const UserService = {
   },
 
   async getDashboard(userId) {
-    const user = await UserRepository.findByMobile(null); // Just to satisfy middleware flow if needed, but we have userId
     // Get user details
     const userResult = await require('../db').query('SELECT username, referral_code, status FROM referral_users WHERE id = $1', [userId]);
     const userDetails = userResult.rows[0];
@@ -48,15 +47,21 @@ const UserService = {
       throw new Error('Unauthorized or account blocked');
     }
 
-    const stats = await UserRepository.getDashboardData(userId);
+    const WithdrawalRepository = require('../repositories/withdrawalRepository');
+    const stats = await WithdrawalRepository.getDashboardStats(userId);
     
+    const earnings = parseFloat(stats.total_earnings);
+    const withdrawals = parseFloat(stats.total_withdrawals);
+    const pending = parseFloat(stats.pending_withdrawals);
+
     return {
       username: userDetails.username,
       referral_code: userDetails.referral_code,
-      total_earnings: stats.total_earnings,
-      total_withdrawals: stats.total_withdrawals,
-      available_balance: stats.total_earnings - stats.total_withdrawals,
-      total_referrals: stats.total_referrals
+      total_earnings: earnings,
+      total_withdrawals: withdrawals,
+      available_balance: earnings - withdrawals,
+      pending_withdrawal_amount: pending,
+      total_referrals: parseInt(stats.total_referrals)
     };
   }
 };

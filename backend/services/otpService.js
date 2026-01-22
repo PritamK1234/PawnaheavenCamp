@@ -49,10 +49,11 @@ const OtpService = {
       throw new Error('Too many attempts. Request a new OTP.');
     }
 
-    // Invalidate OTP
+    const user = await ReferralRepository.findByMobile(mobile);
+    
+    // Invalidate OTP only after all checks pass
     await OtpRepository.deleteOtp(record.id);
 
-    const user = await ReferralRepository.findByMobile(mobile);
     const payload = { 
       mobile, 
       purpose, 

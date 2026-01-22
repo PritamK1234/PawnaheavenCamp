@@ -1,0 +1,257 @@
+
+
+# ✅ FINAL REPLIT PROMPT — REFERRAL SYSTEM (BACKEND + DB)
+
+> **IMPORTANT RULES (DO NOT BREAK):**
+>
+> * This is a BACKEND + DATABASE task only
+> * Frontend UI already exists (do not redesign it)
+> * Use Node.js + Express + PostgreSQL
+> * Use JavaScript (NOT TypeScript)
+> * Do NOT add Supabase, Firebase, or external auth systems
+> * Keep logic simple, secure, and production-ready
+>
+> ---
+>
+> ## 🧠 CONTEXT
+>
+> We are building a **Referral & Earnings System** with 3 core features already designed on the frontend:
+>
+> 1. **Top Earners List (Public)**
+> 2. **Generate New Referral Code**
+> 3. **Check Earnings / Withdraw**
+>
+> Your task is to design the **database schema** and **backend APIs** that fully support this flow.
+>
+> ---
+>
+> ## 🎯 FUNCTIONAL REQUIREMENTS
+>
+> ### 1️⃣ TOP EARNERS LIST (Public, No Login)
+>
+> **Purpose:**
+> Show real earning users to motivate others (social proof).
+>
+> **Requirements:**
+>
+> * Show `username` and `total earnings`
+> * Support filters:
+>
+>   * This Month
+>   * All Time
+> * Data should feel near-realtime
+> * Only top earners (example: top 10 or top 20)
+>
+> ---
+>
+> ### 2️⃣ GENERATE NEW REFERRAL CODE (Registration Flow)
+>
+> **Rules (VERY IMPORTANT):**
+>
+> * One **mobile number = one referral code**
+> * Referral code must be **UNIQUE**
+> * Referral code must be stored in **UPPERCASE**
+> * Username must be **unique**
+> * OTP verification is **MANDATORY**
+> * OTP resend limit: **max 4 times per hour**
+>
+> **Flow:**
+>
+> 1. User clicks **Generate New Code**
+> 2. Form fields:
+>
+>    * Create Referral Code
+>    * Mobile Number
+>    * Username
+> 3. On "Verify & Generate":
+>
+>    * Convert referral code to UPPERCASE
+>    * Send OTP to entered mobile number
+> 4. OTP screen:
+>
+>    * Message: *"Enter OTP sent to +91xxxxxxx"*
+>    * Verify OTP button
+>    * Resend OTP (max 4/hour)
+> 5. On successful OTP verification:
+>
+>    * Create referral user record
+>    * Redirect user to **Check Earning Dashboard**
+>    * Initial balance = 0
+>    * logout button (for logout from that device)
+> ---
+>
+> ### 3️⃣ CHECK EARNING / LOGIN FLOW
+>
+> **Purpose:**
+> Allow existing referral users to:
+>
+> * Check earnings
+> * View history
+> * Withdraw money
+>
+> **Flow:**
+>
+> 1. User clicks **Check Earning**
+> 2. Inputs:
+>
+>    * Referral Code
+> 3. Backend:
+>
+>    * Finds registered mobile number for that code
+>    * Sends OTP to that mobile
+> 4. OTP verification
+> 5. On success:
+>
+>    * Redirect to referral dashboard
+>    * Show:
+>
+>      * Username
+>      * Referral code
+>      * Available balance
+>      * Withdraw option
+>      * Earnings history
+>
+> ---
+>
+> ### 4️⃣ WITHDRAWAL FLOW
+>
+> **Rules:**
+>
+> * User must be logged in (OTP verified)
+> * User enters:
+>
+>   * Referral code
+>   * Withdrawal amount
+>   * UPI ID (preferred)
+> * Withdrawal amount ≤ available balance
+>
+> **Process:**
+>
+> * Deduct amount from balance
+> * Create withdrawal record
+> * Status starts as `pending`
+> * Admin/manual payout later OR future automation
+>
+> ---
+>
+> ## 🗄️ DATABASE DESIGN (POSTGRESQL)
+>
+> Design tables similar to (you may improve but NOT complicate):
+>
+> ### Table: `referral_users`
+>
+> * id (PK)
+> * username (UNIQUE)
+> * mobile_number (UNIQUE)
+> * referral_code (UNIQUE, stored in UPPERCASE)
+> * balance (DECIMAL, default 0)
+> * created_at
+>
+> ### Table: `referral_transactions`
+>
+> * id (PK)
+> * referral_user_id (FK)
+> * booking_id (optional)
+> * amount
+> * type (`earning` / `withdrawal`)
+> * status (`pending`, `completed`, `failed`)
+> * upi_id (only for withdrawals)
+> * created_at
+>
+> ### Table: `otp_verifications`
+>
+> * id
+> * mobile_number
+> * otp_code
+> * expires_at
+> * attempts
+> * created_at
+>
+> ---
+>
+> ## 🧩 BACKEND ARCHITECTURE (MANDATORY)
+>
+> Follow this clean structure:
+>
+> ```
+> routes → controllers → services → repositories → db.js
+> ```
+>
+> * Routes contain NO business logic
+> * Controllers handle request/response
+> * Services handle rules & validations
+> * Repositories talk to PostgreSQL
+>
+> ---
+>
+> ## 🔌 REQUIRED API ENDPOINTS
+>
+> ### Public
+>
+> * `GET /api/referrals/top-earners?period=month|all`
+>
+> ### OTP
+>
+> * `POST /api/referrals/request-otp`
+> * `POST /api/referrals/verify-otp`
+>
+> ### Referral User
+>
+> * `POST /api/referrals/register`
+> * `POST /api/referrals/login`
+> * `GET /api/referrals/dashboard` (protected)
+>
+> ### Withdrawal
+>
+> * `POST /api/referrals/withdraw`
+>
+> Use JWT or session token after OTP verification.
+>
+> ---
+>
+> ## 🔐 SECURITY & LIMITS
+>
+> * OTP expiry: 5 minutes
+> * OTP resend: max 4 per hour per mobile
+> * Referral code lookup must be case-insensitive on input
+> * Store referral code as UPPERCASE only
+>
+> ---
+>
+> ## 📤 REQUIRED OUTPUT FROM YOU
+>
+> 1. Final DB schema (SQL)
+> 2. API list with request/response examples
+> 3. Folder structure
+> 4. Explanation of OTP & rate-limit logic
+> 5. Explanation of top earners calculation
+>
+> ⚠️ Do NOT add unnecessary features
+> ⚠️ Do NOT redesign frontend
+> ⚠️ Keep implementation simple & scalable
+>
+> **Start by proposing the database schema and API flow BEFORE writing code.**
+
+---
+
+⚠️ IMPORTANT:
+THIS IS A DESIGN-ONLY TASK.
+
+DO NOT:
+- Write any code
+- Create files
+- Create folders
+- Install dependencies
+- Generate SQL migrations
+- Modify existing project files
+
+ONLY:
+- Propose database schema (tables & fields)
+- Propose API endpoints with request/response examples
+- Explain OTP flow & rate limiting logic
+- Explain top earners calculation logic
+- Confirm architecture alignment
+
+STOP after design explanation.
+WAIT for my approval before writing any code.
+

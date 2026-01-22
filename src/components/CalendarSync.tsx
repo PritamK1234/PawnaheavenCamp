@@ -128,7 +128,13 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
           <Calendar
             mode="single"
             className="w-full p-0"
-            disabled={(date) => isBefore(startOfDay(date), startOfDay(new Date()))}
+            selected={undefined}
+            disabled={(date) => {
+              const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
+              const dateStr = format(date, 'yyyy-MM-dd');
+              const data = calendarData.find(d => format(new Date(d.date), 'yyyy-MM-dd') === dateStr);
+              return isPast || data?.is_booked;
+            }}
             onSelect={(date) => {
               if (date && isAdmin) {
                 const current = getDayData(date);

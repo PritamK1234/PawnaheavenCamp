@@ -152,7 +152,7 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
                     <span className="text-[11px] sm:text-xs font-bold leading-none">{format(date, 'd')}</span>
                     {price && (
                       <span className="text-[8px] sm:text-[10px] font-black leading-none mt-0.5 sm:mt-1 scale-90 sm:scale-100 origin-center truncate w-full text-center px-0.5">
-                        {price.replace('₹', '').replace('/-', '').trim()}
+                        ₹{price.replace('₹', '').replace('/-', '').trim()}
                       </span>
                     )}
                   </div>

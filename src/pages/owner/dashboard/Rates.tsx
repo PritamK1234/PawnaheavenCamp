@@ -29,24 +29,42 @@ const OwnerRates = () => {
       const result = await response.json();
       console.log('Fetch rates response:', result);
       
-      if (result.success) {
+      if (result.success && result.data) {
         const prop = result.data;
-        const weekday = prop.weekday_price || prop.price || '';
-        const weekend = prop.weekend_price || '';
+        // Map backend fields to frontend state correctly
+        const weekdayVal = prop.weekday_price ?? prop.price ?? '';
+        const weekendVal = prop.weekend_price ?? '';
         
-        setRates({
-          weekday: String(weekday),
-          weekend: String(weekend),
+        console.log('Raw data from backend:', { 
+          weekday_price: prop.weekday_price, 
+          weekend_price: prop.weekend_price, 
+          price: prop.price 
         });
         
-        console.log('Mapped rates:', { weekday, weekend });
+        const mappedRates = {
+          weekday: weekdayVal !== null && weekdayVal !== undefined ? String(weekdayVal) : '',
+          weekend: weekendVal !== null && weekendVal !== undefined ? String(weekendVal) : '',
+        };
+        
+        console.log('Final mapped rates for state:', mappedRates);
+        setRates(mappedRates);
         
         if (prop.special_dates) {
-          const sd = Array.isArray(prop.special_dates) 
-            ? prop.special_dates 
-            : JSON.parse(prop.special_dates);
-          setSpecialDates(sd);
+          try {
+            const sd = Array.isArray(prop.special_dates) 
+              ? prop.special_dates 
+              : JSON.parse(prop.special_dates);
+            console.log('Parsed special dates:', sd);
+            setSpecialDates(sd);
+          } catch (e) {
+            console.error('Error parsing special dates:', e);
+            setSpecialDates([]);
+          }
+        } else {
+          setSpecialDates([]);
         }
+      } else {
+        console.error('Failed to fetch property data or data is missing');
       }
     } catch (error) {
       console.error('Error fetching rates:', error);
@@ -146,7 +164,7 @@ const OwnerRates = () => {
           <CardContent className="pt-6">
             <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekday Rate (Monday - Friday)</Label>
             <div className="text-2xl font-bold text-white">
-              ₹{rates.weekday || <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
+              {rates.weekday ? `₹${rates.weekday}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
             </div>
           </CardContent>
         </Card>
@@ -154,7 +172,7 @@ const OwnerRates = () => {
           <CardContent className="pt-6">
             <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekend Rate (Sat - Sunday)</Label>
             <div className="text-2xl font-bold text-white">
-              ₹{rates.weekend || <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
+              {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
             </div>
           </CardContent>
         </Card>

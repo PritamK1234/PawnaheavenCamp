@@ -301,8 +301,8 @@ const PropertyDetails = () => {
                   className="flex flex-col gap-1 h-14 rounded-2xl bg-[#1A1A1A] border-2 border-[#D4AF37] shadow-[0_4px_0_rgb(146,120,33),0_8px_15px_rgba(0,0,0,0.5)] hover:bg-[#2A2A2A] text-white transition-all active:translate-y-1 active:shadow-inner px-1 w-full group relative overflow-hidden"
                   onClick={() => window.open(propertyData.map_link || 'https://www.google.com/maps', '_blank')}
                 >
-                  <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-center bg-no-repeat bg-cover pointer-events-none" 
-                       style={{ backgroundImage: 'url("/attached_assets/map_1769078364651.png")' }} />
+                  <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity bg-center bg-no-repeat bg-cover pointer-events-none" 
+                       style={{ backgroundImage: 'url("/attached_assets/Screenshot_2026-01-22_161205_1769078572047.jpg")' }} />
                   <div className="absolute inset-0 bg-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="flex items-center gap-2 relative z-10">
                     <MapPin className="w-4 h-4 text-[#D4AF37] group-hover:scale-110 transition-transform" />
@@ -417,8 +417,8 @@ const PropertyDetails = () => {
               className="w-full h-16 rounded-2xl text-lg font-bold bg-[#1A1A1A] border-2 border-[#D4AF37] text-white hover:bg-[#2A2A2A] transition-all active:translate-y-1 active:shadow-inner shadow-[0_4px_0_rgb(146,120,33),0_8px_15px_rgba(0,0,0,0.3)] flex items-center justify-center gap-3 mt-2 group relative overflow-hidden"
               onClick={() => window.open(propertyData.map_link || 'https://www.google.com/maps', '_blank')}
             >
-              <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-center bg-no-repeat bg-cover pointer-events-none" 
-                   style={{ backgroundImage: 'url("/attached_assets/map_1769078364651.png")' }} />
+              <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity bg-center bg-no-repeat bg-cover pointer-events-none" 
+                   style={{ backgroundImage: 'url("/attached_assets/Screenshot_2026-01-22_161205_1769078572047.jpg")' }} />
               <div className="absolute inset-0 bg-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <MapPin className="w-5 h-5 text-[#D4AF37] group-hover:scale-110 transition-transform relative z-10" />
               <span className="relative z-10">Find us on Map</span>

@@ -34,11 +34,15 @@ const GenerateCodePage = () => {
     }
     setLoading(true);
     try {
-      await axios.post("/api/referrals/request-otp", {
+      const res = await axios.post("/api/referrals/request-otp", {
         mobile: formData.mobile,
         purpose: "register"
       });
-      toast.success("OTP sent to your mobile");
+      if (res.data.debug_otp) {
+        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, { duration: 10000 });
+      } else {
+        toast.success("OTP sent to your mobile");
+      }
       setStep("otp");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to send OTP");

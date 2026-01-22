@@ -96,11 +96,15 @@ const CheckEarningPage = () => {
       // I will assume for now that the user enters their mobile number instead of code for login, 
       // as per standard OTP flows. I'll update the UI to ask for mobile.
       
-      await axios.post("/api/referrals/request-otp", {
+      const res = await axios.post("/api/referrals/request-otp", {
         mobile: formData.code, // Treating the input as mobile for now
         purpose: "login"
       });
-      toast.success("OTP sent to your registered mobile");
+      if (res.data.debug_otp) {
+        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, { duration: 10000 });
+      } else {
+        toast.success("OTP sent to your registered mobile");
+      }
       setStep("otp");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to send OTP");

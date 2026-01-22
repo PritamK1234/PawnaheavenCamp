@@ -145,6 +145,42 @@ const OwnerRates = () => {
     <div className="space-y-6 max-w-full sm:max-w-2xl mx-auto px-0 sm:px-4">
       <h1 className="text-2xl font-bold text-[#D4AF37] font-display px-4 sm:px-0">Manage Prices & Rates</h1>
       
+      {/* Current Rates Display */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-0">
+        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
+          <CardContent className="pt-6">
+            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekday Rate</Label>
+            <div className="text-2xl font-bold text-white">
+              {rates.weekday ? `₹${rates.weekday}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
+          <CardContent className="pt-6">
+            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekend Rate</Label>
+            <div className="text-2xl font-bold text-white">
+              {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {specialDates.length > 0 && (
+        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl mx-4 sm:mx-0">
+          <CardContent className="pt-6">
+            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-4 block">Active Special Rates</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {specialDates.map((sd, idx) => (
+                <div key={idx} className="bg-black/40 p-2 rounded-lg border border-[#D4AF37]/10">
+                  <div className="text-[10px] text-gray-400">{format(new Date(sd.date), 'MMM dd, yyyy')}</div>
+                  <div className="text-sm font-bold text-white">₹{sd.price}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-none sm:rounded-xl border-x-0 sm:border-x">
         <CardContent className="pt-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

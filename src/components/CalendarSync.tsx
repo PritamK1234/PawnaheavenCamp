@@ -23,14 +23,19 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
   const fetchCalendar = async () => {
     try {
       if (!propertyId || propertyId === 'Generating...') return;
-      const response = await fetch(`/api/properties/${propertyId}/calendar`);
+      const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      };
+
+      const response = await fetch(`/api/properties/${propertyId}/calendar`, { headers });
       const result = await response.json();
       if (result.success) {
         setCalendarData(result.data);
       }
       
       // Fetch property details for pricing settings
-      const propResponse = await fetch(`/api/properties/${propertyId}`);
+      const propResponse = await fetch(`/api/properties/${propertyId}`, { headers });
       const propResult = await propResponse.json();
       if (propResult.success) {
         let specialDates = [];

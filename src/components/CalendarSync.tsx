@@ -16,7 +16,8 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
     base: string;
     weekday: string;
     weekend: string;
-  }>({ base: "", weekday: "", weekend: "" });
+    specialDates: any[];
+  }>({ base: "", weekday: "", weekend: "", specialDates: [] });
   const [loading, setLoading] = useState(true);
 
   const fetchCalendar = async () => {
@@ -32,10 +33,22 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
       const propResponse = await fetch(`/api/properties/${propertyId}`);
       const propResult = await propResponse.json();
       if (propResult.success) {
+        let specialDates = [];
+        if (propResult.data.special_dates) {
+          try {
+            specialDates = typeof propResult.data.special_dates === 'string' 
+              ? JSON.parse(propResult.data.special_dates) 
+              : propResult.data.special_dates;
+          } catch (e) {
+            console.error("Error parsing special dates:", e);
+          }
+        }
+
         setPropertyPrices({
           base: propResult.data.price,
           weekday: propResult.data.weekday_price || propResult.data.price,
-          weekend: propResult.data.weekend_price || propResult.data.price
+          weekend: propResult.data.weekend_price || propResult.data.price,
+          specialDates: Array.isArray(specialDates) ? specialDates : []
         });
       }
     } catch (error) {
@@ -50,10 +63,21 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
   }, [propertyId]);
 
   const getPriceForDate = (date: Date) => {
+    // 1. Check if there's an explicit calendar/booking entry with a price
     const data = getDayData(date);
     if (data?.price) return data.price.toString();
+    
+    // 2. Check for special date price overrides in property data
+    const dateStr = format(date, 'yyyy-MM-dd');
+    if (Array.isArray(propertyPrices.specialDates)) {
+      const special = propertyPrices.specialDates.find(sd => sd.date === dateStr);
+      if (special?.price) return special.price.toString();
+    }
+
+    // 3. Fallback to weekend/weekday pricing
     const price = isWeekend(date) ? propertyPrices.weekend : propertyPrices.weekday;
-    // Fallback to base price if weekday/weekend specifically aren't set but base is
+    
+    // 4. Final fallback to base price
     return (price || propertyPrices.base || "").toString();
   };
 

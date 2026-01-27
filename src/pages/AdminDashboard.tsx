@@ -85,10 +85,15 @@ const AdminDashboard = () => {
       const response = await fetch('/api/referrals/admin/all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (response.status === 401) {
+        handleLogout();
+        return;
+      }
       const result = await response.json();
-      setReferralUsers(result || []);
+      setReferralUsers(Array.isArray(result) ? result : []);
     } catch (error) {
       console.error('Fetch referrals error:', error);
+      setReferralUsers([]);
     } finally {
       setIsReferralLoading(false);
     }
@@ -105,6 +110,11 @@ const AdminDashboard = () => {
         })
       ]);
       
+      if (propRes.status === 401 || settingsRes.status === 401) {
+        handleLogout();
+        return;
+      }
+
       const propResult = await propRes.json();
       const settingsResult = await settingsRes.json();
       

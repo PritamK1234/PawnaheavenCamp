@@ -1,0 +1,140 @@
+
+AdminDashboard.tsx:100  GET https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/api/properties/list 401 (Unauthorized)
+fetchData @ AdminDashboard.tsx:100
+checkAuth @ AdminDashboard.tsx:157
+(anonymous) @ AdminDashboard.tsx:161
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=ca599b91:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=ca599b91:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=ca599b91:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=ca599b91:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=ca599b91:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=ca599b91:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=ca599b91:19447
+(anonymous) @ chunk-T2SWDQEL.js?v=ca599b91:19328
+workLoop @ chunk-T2SWDQEL.js?v=ca599b91:197
+flushWork @ chunk-T2SWDQEL.js?v=ca599b91:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=ca599b91:384Understand this error
+AdminDashboard.tsx:103  GET https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/api/properties/settings/categories 401 (Unauthorized)
+fetchData @ AdminDashboard.tsx:103
+checkAuth @ AdminDashboard.tsx:157
+(anonymous) @ AdminDashboard.tsx:161
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=ca599b91:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=ca599b91:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=ca599b91:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=ca599b91:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=ca599b91:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=ca599b91:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=ca599b91:19447
+(anonymous) @ chunk-T2SWDQEL.js?v=ca599b91:19328
+workLoop @ chunk-T2SWDQEL.js?v=ca599b91:197
+flushWork @ chunk-T2SWDQEL.js?v=ca599b91:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=ca599b91:384Understand this error
+AdminDashboard.tsx:85  GET https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/api/referrals/admin/all 401 (Unauthorized)
+fetchReferralUsers @ AdminDashboard.tsx:85
+fetchData @ AdminDashboard.tsx:119
+await in fetchData
+checkAuth @ AdminDashboard.tsx:157
+(anonymous) @ AdminDashboard.tsx:161
+commitHookEffectListMount @ chunk-T2SWDQEL.js?v=ca599b91:16915
+commitPassiveMountOnFiber @ chunk-T2SWDQEL.js?v=ca599b91:18156
+commitPassiveMountEffects_complete @ chunk-T2SWDQEL.js?v=ca599b91:18129
+commitPassiveMountEffects_begin @ chunk-T2SWDQEL.js?v=ca599b91:18119
+commitPassiveMountEffects @ chunk-T2SWDQEL.js?v=ca599b91:18109
+flushPassiveEffectsImpl @ chunk-T2SWDQEL.js?v=ca599b91:19490
+flushPassiveEffects @ chunk-T2SWDQEL.js?v=ca599b91:19447
+(anonymous) @ chunk-T2SWDQEL.js?v=ca599b91:19328
+workLoop @ chunk-T2SWDQEL.js?v=ca599b91:197
+flushWork @ chunk-T2SWDQEL.js?v=ca599b91:176
+performWorkUntilDeadline @ chunk-T2SWDQEL.js?v=ca599b91:384Understand this error
+AdminDashboard.tsx:746 Uncaught TypeError: referralUsers.filter is not a function
+    at AdminDashboard (AdminDashboard.tsx:746:37)
+    at renderWithHooks (chunk-T2SWDQEL.js?v=ca599b91:11548:26)
+    at updateFunctionComponent (chunk-T2SWDQEL.js?v=ca599b91:14582:28)
+    at beginWork (chunk-T2SWDQEL.js?v=ca599b91:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-T2SWDQEL.js?v=ca599b91:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-T2SWDQEL.js?v=ca599b91:3699:24)
+    at invokeGuardedCallback (chunk-T2SWDQEL.js?v=ca599b91:3733:39)
+    at beginWork$1 (chunk-T2SWDQEL.js?v=ca599b91:19765:15)
+    at performUnitOfWork (chunk-T2SWDQEL.js?v=ca599b91:19198:20)
+    at workLoopSync (chunk-T2SWDQEL.js?v=ca599b91:19137:13)
+AdminDashboard @ AdminDashboard.tsx:746
+renderWithHooks @ chunk-T2SWDQEL.js?v=ca599b91:11548
+updateFunctionComponent @ chunk-T2SWDQEL.js?v=ca599b91:14582
+beginWork @ chunk-T2SWDQEL.js?v=ca599b91:15924
+callCallback2 @ chunk-T2SWDQEL.js?v=ca599b91:3674
+invokeGuardedCallbackDev @ chunk-T2SWDQEL.js?v=ca599b91:3699
+invokeGuardedCallback @ chunk-T2SWDQEL.js?v=ca599b91:3733
+beginWork$1 @ chunk-T2SWDQEL.js?v=ca599b91:19765
+performUnitOfWork @ chunk-T2SWDQEL.js?v=ca599b91:19198
+workLoopSync @ chunk-T2SWDQEL.js?v=ca599b91:19137
+renderRootSync @ chunk-T2SWDQEL.js?v=ca599b91:19116
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=ca599b91:18874
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=ca599b91:9119
+(anonymous) @ chunk-T2SWDQEL.js?v=ca599b91:18627Understand this error
+AdminDashboard.tsx:746 Uncaught TypeError: referralUsers.filter is not a function
+    at AdminDashboard (AdminDashboard.tsx:746:37)
+    at renderWithHooks (chunk-T2SWDQEL.js?v=ca599b91:11548:26)
+    at updateFunctionComponent (chunk-T2SWDQEL.js?v=ca599b91:14582:28)
+    at beginWork (chunk-T2SWDQEL.js?v=ca599b91:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-T2SWDQEL.js?v=ca599b91:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-T2SWDQEL.js?v=ca599b91:3699:24)
+    at invokeGuardedCallback (chunk-T2SWDQEL.js?v=ca599b91:3733:39)
+    at beginWork$1 (chunk-T2SWDQEL.js?v=ca599b91:19765:15)
+    at performUnitOfWork (chunk-T2SWDQEL.js?v=ca599b91:19198:20)
+    at workLoopSync (chunk-T2SWDQEL.js?v=ca599b91:19137:13)
+AdminDashboard @ AdminDashboard.tsx:746
+renderWithHooks @ chunk-T2SWDQEL.js?v=ca599b91:11548
+updateFunctionComponent @ chunk-T2SWDQEL.js?v=ca599b91:14582
+beginWork @ chunk-T2SWDQEL.js?v=ca599b91:15924
+callCallback2 @ chunk-T2SWDQEL.js?v=ca599b91:3674
+invokeGuardedCallbackDev @ chunk-T2SWDQEL.js?v=ca599b91:3699
+invokeGuardedCallback @ chunk-T2SWDQEL.js?v=ca599b91:3733
+beginWork$1 @ chunk-T2SWDQEL.js?v=ca599b91:19765
+performUnitOfWork @ chunk-T2SWDQEL.js?v=ca599b91:19198
+workLoopSync @ chunk-T2SWDQEL.js?v=ca599b91:19137
+renderRootSync @ chunk-T2SWDQEL.js?v=ca599b91:19116
+recoverFromConcurrentError @ chunk-T2SWDQEL.js?v=ca599b91:18736
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=ca599b91:18879
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=ca599b91:9119
+(anonymous) @ chunk-T2SWDQEL.js?v=ca599b91:18627Understand this error
+chunk-T2SWDQEL.js?v=ca599b91:14032 The above error occurred in the <AdminDashboard> component:
+
+    at AdminDashboard (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/src/pages/AdminDashboard.tsx?t=1769537561762:38:39)
+    at Suspense
+    at PageWrapper (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/src/App.tsx?t=1769537561762:75:24)
+    at RenderedRoute (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=ca599b91:4088:5)
+    at Routes (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=ca599b91:4558:5)
+    at Router (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=ca599b91:4501:15)
+    at BrowserRouter (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=ca599b91:5247:5)
+    at Provider (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/chunk-C6R24THA.js?v=ca599b91:38:15)
+    at TooltipProvider (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=ca599b91:60:5)
+    at QueryClientProvider (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/@tanstack_react-query.js?v=ca599b91:2934:3)
+    at _a (https://ca95310f-cda2-4004-98c2-69afd15fc7cb-00-33c0rrauu1y59.spock.replit.dev/node_modules/.vite/deps/react-helmet-async.js?v=ca599b91:624:5)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-T2SWDQEL.js?v=ca599b91:14032
+update.callback @ chunk-T2SWDQEL.js?v=ca599b91:14052
+callCallback @ chunk-T2SWDQEL.js?v=ca599b91:11248
+commitUpdateQueue @ chunk-T2SWDQEL.js?v=ca599b91:11265
+commitLayoutEffectOnFiber @ chunk-T2SWDQEL.js?v=ca599b91:17093
+commitLayoutMountEffects_complete @ chunk-T2SWDQEL.js?v=ca599b91:17980
+commitLayoutEffects_begin @ chunk-T2SWDQEL.js?v=ca599b91:17969
+commitLayoutEffects @ chunk-T2SWDQEL.js?v=ca599b91:17920
+commitRootImpl @ chunk-T2SWDQEL.js?v=ca599b91:19353
+commitRoot @ chunk-T2SWDQEL.js?v=ca599b91:19277
+performSyncWorkOnRoot @ chunk-T2SWDQEL.js?v=ca599b91:18895
+flushSyncCallbacks @ chunk-T2SWDQEL.js?v=ca599b91:9119
+(anonymous) @ chunk-T2SWDQEL.js?v=ca599b91:18627Understand this error
+chunk-T2SWDQEL.js?v=ca599b91:9129 Uncaught TypeError: referralUsers.filter is not a function
+    at AdminDashboard (AdminDashboard.tsx:746:37)
+    at renderWithHooks (chunk-T2SWDQEL.js?v=ca599b91:11548:26)
+    at updateFunctionComponent (chunk-T2SWDQEL.js?v=ca599b91:14582:28)
+    at beginWork (chunk-T2SWDQEL.js?v=ca599b91:15924:22)
+    at beginWork$1 (chunk-T2SWDQEL.js?v=ca599b91:19753:22)
+    at performUnitOfWork (chunk-T2SWDQEL.js?v=ca599b91:19198:20)
+    at workLoopSync (chunk-T2SWDQEL.js?v=ca599b91:19137:13)
+    at renderRootSync (chunk-T2SWDQEL.js?v=ca599b91:19116:15)
+    at recoverFromConcurrentError (chunk-T2SWDQEL.js?v=ca599b91:18736:28)
+    at performSyncWorkOnRoot (chunk-T2SWDQEL.js?v=ca599b91:18879:28)

@@ -169,10 +169,10 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
                     <Calendar className="w-3 h-3 mr-1" /> Calendar
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[450px] bg-charcoal border-white/10 rounded-3xl" aria-describedby="calendar-desc">
+                <DialogContent className="sm:max-w-[450px] bg-charcoal border-white/10 rounded-3xl">
                   <DialogHeader>
                     <DialogTitle className="text-gold font-display">Manage Unit Calendar: {unit.name}</DialogTitle>
-                    <p id="calendar-desc" className="text-xs text-muted-foreground">Select dates to manage availability and pricing.</p>
+                    <DialogDescription className="text-xs text-muted-foreground">Select dates to manage availability and pricing for this unit.</DialogDescription>
                   </DialogHeader>
                   <CalendarSync propertyId={propertyId} unitId={unit.id} isAdmin={true} />
                 </DialogContent>

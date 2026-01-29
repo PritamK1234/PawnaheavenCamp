@@ -393,7 +393,7 @@ const PropertyDetails = () => {
                     <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] bg-[#0A0A0A] border-[#D4AF37]/20 p-8">
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-display text-[#D4AF37] mb-6 text-center">Contact Host</DialogTitle>
-                        <DialogDescription className="hidden">
+                        <DialogDescription className="text-center text-gray-400 text-sm">
                           Choose your preferred method to contact the property host.
                         </DialogDescription>
                       </DialogHeader>

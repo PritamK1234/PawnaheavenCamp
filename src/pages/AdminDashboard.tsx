@@ -489,6 +489,10 @@ const AdminDashboard = () => {
                     </div>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl w-[95vw] rounded-3xl bg-charcoal border-white/10 p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+                    <DialogHeader className="sr-only">
+                      <DialogTitle>{property.title} Details</DialogTitle>
+                      <DialogDescription>View detailed information about {property.title}</DialogDescription>
+                    </DialogHeader>
                     <div className="relative aspect-video w-full">
                       {property.images?.[0] ? (
                          <img src={property.images[0].image_url || property.images[0]} alt="" className="w-full h-full object-cover" />

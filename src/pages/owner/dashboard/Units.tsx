@@ -1,24 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Edit2, Save, X, LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Plus, Trash2, Upload, ImageIcon, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { propertyAPI } from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const OwnerUnits = () => {
   const [loading, setLoading] = useState(true);
   const [property, setProperty] = useState<any>(null);
   const [units, setUnits] = useState<any[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
   const [editingUnit, setEditingUnit] = useState<any>(null);
-  const [formData, setFormData] = useState<any>({
-    name: '',
-    available_persons: '',
-    total_persons: '',
-    amenities: '',
-    price_per_person: ''
+  const [isUploading, setIsUploading] = useState(false);
+  const [unitForm, setUnitForm] = useState({ 
+    name: '', 
+    available_persons: '0',
+    total_persons: '0',
+    price_per_person: '0',
+    amenities: [''],
+    images: [] as string[]
   });
 
   const fetchData = async () => {
@@ -56,41 +65,86 @@ const OwnerUnits = () => {
   }, []);
 
   const handleEdit = (unit: any) => {
+    const amenities = typeof unit.amenities === 'string' 
+      ? JSON.parse(unit.amenities) 
+      : (Array.isArray(unit.amenities) ? unit.amenities : []);
+    
+    const images = typeof unit.images === 'string' 
+      ? JSON.parse(unit.images) 
+      : (Array.isArray(unit.images) ? unit.images : []);
+
     setEditingUnit(unit);
-    setFormData({
+    setUnitForm({
       name: unit.name || '',
-      available_persons: unit.available_persons || '',
-      total_persons: unit.total_persons || '',
-      amenities: unit.amenities || '',
-      price_per_person: unit.price_per_person || ''
+      available_persons: (unit.available_persons || 0).toString(),
+      total_persons: (unit.total_persons || 0).toString(),
+      price_per_person: (unit.price_per_person || 0).toString(),
+      amenities: amenities.length ? amenities : [''],
+      images: images
     });
+    setIsAdding(true);
   };
 
-  const handleCancel = () => {
-    setEditingUnit(null);
-  };
-
-  const handleSave = async () => {
-    if (!editingUnit) return;
-
+  const handleSaveUnit = async () => {
     try {
-      const result = await propertyAPI.updateUnit(editingUnit.id, {
-        ...formData,
-        available_persons: parseInt(formData.available_persons),
-        total_persons: parseInt(formData.total_persons)
-      });
+      const payload = {
+        ...unitForm,
+        price_per_person: parseFloat(unitForm.price_per_person),
+        available_persons: parseInt(unitForm.available_persons),
+        total_persons: parseInt(unitForm.total_persons),
+        amenities: unitForm.amenities.filter(a => a.trim()),
+        images: unitForm.images.filter(i => i.trim()),
+      };
 
-      if (result.success) {
+      const res = await propertyAPI.updateUnit(editingUnit.id, payload);
+      
+      if (res.success) {
         toast.success('Unit updated successfully');
+        setIsAdding(false);
         setEditingUnit(null);
         fetchData();
       } else {
         toast.error('Failed to update unit');
       }
-    } catch (error) {
-      console.error('Error updating unit:', error);
-      toast.error('An error occurred while updating');
+    } catch (e) {
+      toast.error('Error saving unit');
     }
+  };
+
+  const handleUnitImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
+    const formDataUpload = new FormData();
+    formDataUpload.append('image', file);
+
+    try {
+      const response = await fetch('/api/properties/upload-image', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formDataUpload,
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setUnitForm(prev => ({ ...prev, images: [...prev.images, result.url] }));
+        toast.success('Image uploaded');
+      }
+    } catch (error) {
+      toast.error('Upload error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const parseJson = (val: any) => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      try { return JSON.parse(val); } catch (e) { return [val]; }
+    }
+    return [];
   };
 
   if (loading) return <div className="p-8 text-center text-[#D4AF37]">Loading units...</div>;
@@ -112,112 +166,140 @@ const OwnerUnits = () => {
       <div className="grid grid-cols-1 gap-4">
         {units.map((unit) => (
           <Card key={unit.id} className="glass border-[#D4AF37]/20 bg-black/40 rounded-2xl overflow-hidden shadow-xl">
-            {editingUnit?.id === unit.id ? (
-              <CardContent className="p-4 sm:p-6 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label className="text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest opacity-80">Unit Name</Label>
-                    <Input 
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="bg-black/60 border-[#D4AF37]/20 text-white h-11 focus:border-[#D4AF37]/50"
-                    />
+            <CardContent className="p-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0">
+                    {parseJson(unit.images)?.[0] ? (
+                      <img 
+                        src={parseJson(unit.images)[0]} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523755231516-e43fd2e8dca5?auto=format&fit=crop&q=80&w=400';
+                        }}
+                      />
+                    ) : <ImageIcon className="w-full h-full p-4 text-white/20" />}
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest opacity-80">Price per Person</Label>
-                    <Input 
-                      value={formData.price_per_person}
-                      onChange={(e) => setFormData({...formData, price_per_person: e.target.value})}
-                      className="bg-black/60 border-[#D4AF37]/20 text-white h-11 focus:border-[#D4AF37]/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest opacity-80">Available Persons</Label>
-                    <Input 
-                      type="number"
-                      value={formData.available_persons}
-                      onChange={(e) => setFormData({...formData, available_persons: e.target.value})}
-                      className="bg-black/60 border-[#D4AF37]/20 text-white h-11 text-green-400 font-bold focus:border-[#D4AF37]/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest opacity-80">Total Capacity</Label>
-                    <Input 
-                      type="number"
-                      value={formData.total_persons}
-                      onChange={(e) => setFormData({...formData, total_persons: e.target.value})}
-                      className="bg-black/60 border-[#D4AF37]/20 text-white h-11 text-orange-400 font-bold focus:border-[#D4AF37]/50"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest opacity-80">Amenities (comma separated)</Label>
-                  <Textarea 
-                    value={formData.amenities}
-                    onChange={(e) => setFormData({...formData, amenities: e.target.value})}
-                    className="bg-black/60 border-[#D4AF37]/20 text-white min-h-[100px] focus:border-[#D4AF37]/50"
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Button onClick={handleSave} className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white h-11 font-bold rounded-xl transition-all">
-                    <Save className="w-4 h-4 mr-2" /> Save Changes
-                  </Button>
-                  <Button onClick={handleCancel} variant="outline" className="w-full sm:flex-1 border-white/10 text-white hover:bg-white/5 h-11 font-bold rounded-xl transition-all">
-                    <X className="w-4 h-4 mr-2" /> Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            ) : (
-              <CardContent className="p-5">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-5">
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-white tracking-tight">{unit.name}</h3>
+                  <div className="space-y-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-tight">{unit.name}</h3>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[10px] font-bold text-green-400 bg-green-400/10 px-2.5 py-1 rounded-full border border-green-400/20 uppercase tracking-wider">
-                        {unit.available_persons} Available
+                      <span className="text-[9px] font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20 uppercase">
+                        {unit.available_persons} Avl
                       </span>
-                      <span className="text-[10px] font-bold text-orange-400 bg-orange-400/10 px-2.5 py-1 rounded-full border border-orange-400/20 uppercase tracking-wider">
+                      <span className="text-[9px] font-bold text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded border border-orange-400/20 uppercase">
                         {unit.total_persons} Total
                       </span>
                     </div>
                   </div>
-                  <div className="w-full sm:w-auto text-left sm:text-right bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-xl">
-                    <div className="text-2xl font-black text-[#D4AF37] leading-none">₹{unit.price_per_person}</div>
-                    <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] mt-1 font-bold">Per Person</div>
-                  </div>
                 </div>
-                
-                {unit.amenities && (
-                  <div className="mb-6">
-                    <Label className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.2em] mb-2.5 block opacity-60">Amenities</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {unit.amenities.split(',').map((am: string, i: number) => (
-                        <span key={i} className="text-[10px] bg-white/5 text-gray-300 px-3 py-1.5 rounded-lg border border-white/10 font-medium transition-colors hover:border-[#D4AF37]/20">
-                          {am.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <Button 
-                  onClick={() => handleEdit(unit)}
-                  className="w-full bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 h-11 rounded-xl font-bold transition-all shadow-lg"
-                >
-                  <Edit2 className="w-4 h-4 mr-2" /> Edit Unit Details
-                </Button>
-              </CardContent>
-            )}
+                <div className="w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-center items-center sm:items-end bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-xl">
+                  <div className="text-xl font-black text-[#D4AF37] leading-none">₹{unit.price_per_person}</div>
+                  <div className="text-[9px] text-gray-500 uppercase tracking-[0.1em] sm:mt-1 font-bold">Per Person</div>
+                </div>
+              </div>
+              
+              <Button 
+                onClick={() => handleEdit(unit)}
+                className="w-full bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 h-11 rounded-xl font-bold transition-all"
+              >
+                <Sparkles className="w-4 h-4 mr-2" /> Edit Unit
+              </Button>
+            </CardContent>
           </Card>
         ))}
 
         {units.length === 0 && (
           <div className="text-center py-16 glass border border-white/5 rounded-2xl bg-black/20">
             <LayoutGrid className="w-12 h-12 text-gray-700 mx-auto mb-4 opacity-50" />
-            <p className="text-gray-500 font-medium italic">No units found for this property.</p>
+            <p className="text-gray-500 font-medium italic">No units found.</p>
           </div>
         )}
       </div>
+
+      <Dialog open={isAdding} onOpenChange={(open) => { if(!open) { setIsAdding(false); setEditingUnit(null); } }}>
+        <DialogContent className="bg-charcoal border-white/10 rounded-3xl max-h-[90vh] overflow-y-auto sm:max-w-[600px] w-[95vw] p-0" aria-describedby="unit-form-desc">
+          <div className="p-6 sm:p-8">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-gold font-display text-xl sm:text-2xl text-center">Edit Unit</DialogTitle>
+              <p id="unit-form-desc" className="text-xs text-muted-foreground text-center">Specify the details for this accommodation unit.</p>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs uppercase font-bold">Unit Name</Label>
+                  <Input value={unitForm.name} onChange={(e) => setUnitForm({ ...unitForm, name: e.target.value })} placeholder="e.g. Deluxe Tent" className="bg-white/5 border-white/10 h-11 text-white" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs uppercase font-bold">Price Per Person</Label>
+                  <Input type="number" value={unitForm.price_per_person} onChange={(e) => setUnitForm({ ...unitForm, price_per_person: e.target.value })} className="bg-white/5 border-white/10 h-11 text-white" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase font-bold">
+                    <span className="text-[#00FF41]">Available</span> / <span className="text-[#FFA500]">Total persons capacity</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input type="number" placeholder="Available" value={unitForm.available_persons} onChange={(e) => setUnitForm({ ...unitForm, available_persons: e.target.value })} className="bg-white/5 border-white/10 text-[#00FF41] font-bold h-11" />
+                    <Input type="number" placeholder="Total" value={unitForm.total_persons} onChange={(e) => setUnitForm({ ...unitForm, total_persons: e.target.value })} className="bg-white/5 border-white/10 text-[#FFA500] font-bold h-11" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-gray-400 text-xs uppercase font-bold">Amenities</Label>
+                <div className="space-y-2">
+                  {unitForm.amenities.map((val, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <Input 
+                        value={val} 
+                        onChange={(e) => {
+                          const newArr = [...unitForm.amenities];
+                          newArr[idx] = e.target.value;
+                          setUnitForm({ ...unitForm, amenities: newArr });
+                        }} 
+                        className="bg-white/5 border-white/10 h-10 text-white" 
+                      />
+                      <Button type="button" variant="ghost" size="icon" className="h-10 w-10 text-red-500/50 hover:text-red-500 hover:bg-red-500/10" onClick={() => {
+                        const newArr = unitForm.amenities.filter((_, i) => i !== idx);
+                        setUnitForm({ ...unitForm, amenities: newArr.length ? newArr : [''] });
+                      }}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" className="w-full border-dashed border-gold/30 text-gold hover:bg-gold/10 h-10" onClick={() => setUnitForm({ ...unitForm, amenities: [...unitForm.amenities, ''] })}>
+                    <Plus className="w-4 h-4 mr-1" /> Add Amenities
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-gray-400 text-xs uppercase font-bold">Unit Gallery</Label>
+                  <input type="file" id="unit-img-owner" className="hidden" onChange={handleUnitImageUpload} />
+                  <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById('unit-img-owner')?.click()} disabled={isUploading} className="border-gold/30 text-gold h-9">
+                    {isUploading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Upload className="w-3 h-3 mr-1" />} Upload
+                  </Button>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {unitForm.images.map((img, idx) => (
+                    <div key={idx} className="aspect-square rounded-lg overflow-hidden relative group border border-white/10">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button type="button" className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity" onClick={() => setUnitForm({ ...unitForm, images: unitForm.images.filter((_, i) => i !== idx) })}>
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Button type="button" onClick={handleSaveUnit} className="w-full bg-[#D4AF37] hover:bg-[#B8962E] text-black font-bold h-12 rounded-xl mt-4 shadow-lg shadow-gold/10">
+                Update Unit
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

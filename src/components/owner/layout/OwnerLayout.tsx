@@ -47,19 +47,20 @@ const OwnerLayout = () => {
     { label: 'Calendar', icon: Calendar, path: '/owner/dashboard' },
     { label: 'Prices', icon: IndianRupee, path: '/owner/rates' },
     { label: 'Units', icon: LayoutGrid, path: '/owner/units', showIf: ownerData.propertyType !== 'Villa' },
-    { label: 'Info', icon: Info, path: '/owner/info', showIf: ownerData.propertyType !== 'Villa' },
     { label: 'Profile', icon: User, path: '/owner/profile' },
   ].filter(item => item.showIf === undefined || item.showIf);
 
   return (
-    <div className="min-h-screen bg-black pb-20">
-      <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-4 py-6 flex flex-col space-y-2 sticky top-0 z-40 shadow-2xl">
-        <h1 className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Owner Portal</h1>
-        <div className="flex justify-between items-end">
-          <span className="text-xl font-bold text-white leading-none">{ownerData.propertyName}</span>
+    <div className="min-h-screen bg-black pb-24">
+      <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-4 py-5 flex flex-col space-y-2 sticky top-0 z-40 shadow-2xl">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col">
+            <h1 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37] mb-1">Owner Portal</h1>
+            <span className="text-lg font-bold text-white leading-tight truncate max-w-[180px] sm:max-w-none">{ownerData.propertyName}</span>
+          </div>
           <div className="flex items-center space-x-2">
             <PWAInstallButton />
-            <span className="text-[10px] bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded uppercase font-bold tracking-tighter">{ownerData.propertyType}</span>
+            <span className="hidden sm:inline-flex text-[10px] bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 px-2 py-0.5 rounded uppercase font-bold tracking-tighter">{ownerData.propertyType}</span>
           </div>
         </div>
       </header>

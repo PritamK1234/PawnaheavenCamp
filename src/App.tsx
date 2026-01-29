@@ -96,7 +96,6 @@ const App = () => (
               <Route path="/owner/dashboard" element={<PageWrapper><OwnerMain /></PageWrapper>} />
               <Route path="/owner/rates" element={<PageWrapper><OwnerRates /></PageWrapper>} />
               <Route path="/owner/units" element={<PageWrapper><OwnerUnits /></PageWrapper>} />
-              <Route path="/owner/info" element={<PageWrapper><OwnerInfo /></PageWrapper>} />
               <Route path="/owner/profile" element={<PageWrapper><OwnerProfile /></PageWrapper>} />
             </Route>
 

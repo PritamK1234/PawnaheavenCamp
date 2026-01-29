@@ -668,8 +668,8 @@ const PropertyDetails = () => {
                 <Badge className={cn(
                   "border-none px-2 py-0.5 rounded-full text-[8px] uppercase font-bold tracking-widest pointer-events-auto opacity-70 whitespace-nowrap",
                   (propertyData.category === 'campings_cottages' && selectedUnit) 
-                    ? ((selectedUnit.calendar?.[0]?.available_quantity ?? 0) > 0 ? "bg-[#00FF41]/20 text-[#00FF41]" : "bg-[#FF4500]/20 text-[#FF4500]")
-                    : (propertyData.is_available ? "bg-[#00FF41]/20 text-[#00FF41]" : "bg-[#FF4500]/20 text-[#FF4500]")
+                    ? ((selectedUnit.calendar?.[0]?.available_quantity ?? 0) > 0 ? "bg-[#00FF41] text-black" : "bg-[#FF4500] text-white")
+                    : (propertyData.is_available ? "bg-[#00FF41] text-black" : "bg-[#FF4500] text-white")
                 )}>
                   {displayAvailability}
                 </Badge>

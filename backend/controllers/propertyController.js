@@ -105,7 +105,16 @@ const getPublicProperties = async (req, res) => {
     const result = await query(`
       SELECT p.*,
         (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
-         FROM property_images pi WHERE pi.property_id = p.id) as images
+         FROM property_images pi WHERE pi.property_id = p.id) as images,
+        CASE 
+          WHEN p.category = 'campings_cottages' THEN (
+            SELECT MIN(uc.price)
+            FROM property_units pu
+            JOIN unit_calendar uc ON uc.unit_id = pu.id
+            WHERE pu.property_id = p.id
+          )
+          ELSE NULL
+        END as unit_starting_price
       FROM properties p
       WHERE p.is_active = true
       ORDER BY p.is_available DESC, p.is_top_selling DESC, p.created_at DESC
@@ -126,8 +135,14 @@ const getPublicProperties = async (req, res) => {
         }
       };
 
+      // For campings_cottages, update price if unit pricing is available
+      const displayPrice = (prop.category === 'campings_cottages' && prop.unit_starting_price) 
+        ? prop.unit_starting_price 
+        : prop.price;
+
       return {
         ...prop,
+        price: displayPrice,
         amenities: parseField(prop.amenities),
         activities: parseField(prop.activities),
         highlights: parseField(prop.highlights),
@@ -226,15 +241,38 @@ const getPropertyById = async (req, res) => {
       });
     }
 
+    const propData = result.rows[0];
+    let units = [];
+
+    // If category is campings_cottages, fetch units and their calendar
+    if (propData.category === 'campings_cottages') {
+      const unitsResult = await query(`
+        SELECT pu.*,
+          (SELECT json_agg(json_build_object(
+            'date', uc.date, 
+            'price', uc.price, 
+            'is_booked', COALESCE(uc.available_quantity <= 0, false),
+            'available_quantity', uc.available_quantity,
+            'is_weekend', uc.is_weekend,
+            'is_special', uc.is_special
+          ) ORDER BY uc.date)
+           FROM unit_calendar uc WHERE uc.unit_id = pu.id) as calendar
+        FROM property_units pu
+        WHERE pu.property_id = $1
+      `, [propData.id]);
+      units = unitsResult.rows;
+    }
+
     const property = {
-      ...result.rows[0],
-      amenities: parsePostgresArray(result.rows[0].amenities),
-      activities: parsePostgresArray(result.rows[0].activities),
-      highlights: parsePostgresArray(result.rows[0].highlights),
-      policies: parsePostgresArray(result.rows[0].policies),
-      schedule: parsePostgresArray(result.rows[0].schedule),
-      availability: parsePostgresArray(result.rows[0].availability),
-      images: result.rows[0].images || [],
+      ...propData,
+      amenities: parsePostgresArray(propData.amenities),
+      activities: parsePostgresArray(propData.activities),
+      highlights: parsePostgresArray(propData.highlights),
+      policies: parsePostgresArray(propData.policies),
+      schedule: parsePostgresArray(propData.schedule),
+      availability: parsePostgresArray(propData.availability),
+      images: propData.images || [],
+      units: units
     };
 
     return res.status(200).json({
@@ -356,15 +394,38 @@ const getPublicPropertyBySlug = async (req, res) => {
       });
     }
 
+    const propData = result.rows[0];
+    let units = [];
+
+    // If category is campings_cottages, fetch units and their calendar
+    if (propData.category === 'campings_cottages') {
+      const unitsResult = await query(`
+        SELECT pu.*,
+          (SELECT json_agg(json_build_object(
+            'date', uc.date, 
+            'price', uc.price, 
+            'is_booked', COALESCE(uc.available_quantity <= 0, false),
+            'available_quantity', uc.available_quantity,
+            'is_weekend', uc.is_weekend,
+            'is_special', uc.is_special
+          ) ORDER BY uc.date)
+           FROM unit_calendar uc WHERE uc.unit_id = pu.id) as calendar
+        FROM property_units pu
+        WHERE pu.property_id = $1
+      `, [propData.id]);
+      units = unitsResult.rows;
+    }
+
     const property = {
-      ...result.rows[0],
-      amenities: parsePostgresArray(result.rows[0].amenities),
-      activities: parsePostgresArray(result.rows[0].activities),
-      highlights: parsePostgresArray(result.rows[0].highlights),
-      policies: parsePostgresArray(result.rows[0].policies),
-      schedule: parsePostgresArray(result.rows[0].schedule),
-      availability: parsePostgresArray(result.rows[0].availability),
-      images: result.rows[0].images || [],
+      ...propData,
+      amenities: parsePostgresArray(propData.amenities),
+      activities: parsePostgresArray(propData.activities),
+      highlights: parsePostgresArray(propData.highlights),
+      policies: parsePostgresArray(propData.policies),
+      schedule: parsePostgresArray(propData.schedule),
+      availability: parsePostgresArray(propData.availability),
+      images: propData.images || [],
+      units: units
     };
 
     return res.status(200).json({
@@ -600,6 +661,137 @@ const togglePropertyStatus = async (req, res) => {
   }
 };
 
+// --- Unit Management APIs ---
+
+const getPropertyUnits = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const result = await query(
+      'SELECT * FROM property_units WHERE property_id = $1 ORDER BY id ASC',
+      [propertyId]
+    );
+    return res.status(200).json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Get property units error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch units.' });
+  }
+};
+
+const createPropertyUnit = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const { name, capacity, total_quantity } = req.body;
+
+    const result = await query(
+      `INSERT INTO property_units (property_id, name, capacity, total_quantity)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [propertyId, name, capacity, total_quantity]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Unit created successfully.',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Create property unit error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to create unit.' });
+  }
+};
+
+const updatePropertyUnit = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const { name, capacity, total_quantity } = req.body;
+
+    const result = await query(
+      `UPDATE property_units 
+       SET name = $1, capacity = $2, total_quantity = $3
+       WHERE id = $4 RETURNING *`,
+      [name, capacity, total_quantity, unitId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, message: 'Unit not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Unit updated successfully.',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update property unit error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update unit.' });
+  }
+};
+
+const deletePropertyUnit = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const result = await query('DELETE FROM property_units WHERE id = $1', [unitId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, message: 'Unit not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Unit deleted successfully.'
+    });
+  } catch (error) {
+    console.error('Delete property unit error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete unit.' });
+  }
+};
+
+const getUnitCalendarData = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const result = await query(
+      'SELECT date, price, available_quantity, is_weekend, is_special FROM unit_calendar WHERE unit_id = $1',
+      [unitId]
+    );
+    return res.status(200).json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Get unit calendar error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch unit calendar.' });
+  }
+};
+
+const updateUnitCalendarData = async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const { date, price, available_quantity, is_weekend, is_special } = req.body;
+
+    await query(
+      `INSERT INTO unit_calendar (unit_id, date, price, available_quantity, is_weekend, is_special)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (unit_id, date) 
+       DO UPDATE SET 
+         price = EXCLUDED.price, 
+         available_quantity = EXCLUDED.available_quantity,
+         is_weekend = EXCLUDED.is_weekend,
+         is_special = EXCLUDED.is_special`,
+      [unitId, date, price, available_quantity, is_weekend, is_special]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Unit calendar updated successfully.'
+    });
+  } catch (error) {
+    console.error('Update unit calendar error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update unit calendar.' });
+  }
+};
+
 // Get calendar data for a property
 const getCalendarData = async (req, res) => {
   try {
@@ -654,5 +846,12 @@ module.exports = {
   getCategorySettings,
   updateCategorySettings,
   getCalendarData,
-  updateCalendarData
+  updateCalendarData,
+  // Unit Management
+  getPropertyUnits,
+  createPropertyUnit,
+  updatePropertyUnit,
+  deletePropertyUnit,
+  getUnitCalendarData,
+  updateUnitCalendarData
 };

@@ -56,7 +56,8 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
     weekend_price: '0',
     special_price: '0',
     amenities: [''],
-    images: [] as string[]
+    images: [] as string[],
+    special_dates: [] as { date: string, price: string }[]
   });
   const { toast } = useToast();
 
@@ -72,6 +73,7 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
         total_persons: parseInt(unitForm.total_persons),
         amenities: unitForm.amenities.filter(a => a.trim()),
         images: unitForm.images.filter(i => i.trim()),
+        special_dates: unitForm.special_dates
       };
 
       const res = editingUnit 
@@ -194,6 +196,7 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
                   weekday_price: (unit.weekday_price || 0).toString(),
                   weekend_price: (unit.weekend_price || 0).toString(),
                   special_price: (unit.special_price || 0).toString(),
+                  special_dates: parseJson(unit.special_dates) || [],
                   amenities: parseJson(unit.amenities).length ? parseJson(unit.amenities) : [''],
                   images: parseJson(unit.images)
                 }); 
@@ -242,6 +245,69 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
                   <Input type="number" placeholder="Available" value={unitForm.available_persons} onChange={(e) => setUnitForm({ ...unitForm, available_persons: e.target.value })} className="bg-white/5 border-white/10 text-[#00FF41] font-bold" />
                   <Input type="number" placeholder="Total" value={unitForm.total_persons} onChange={(e) => setUnitForm({ ...unitForm, total_persons: e.target.value })} className="bg-white/5 border-white/10 text-[#FFA500] font-bold" />
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between">
+                <Label className="text-gold">Special Date Prices</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setUnitForm({
+                    ...unitForm,
+                    special_dates: [...unitForm.special_dates, { date: '', price: '' }]
+                  })}
+                  className="bg-gold/10 border-gold/20 text-gold hover:bg-gold/20"
+                >
+                  + Add Date
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {unitForm.special_dates.map((sd, idx) => (
+                  <div key={idx} className="flex gap-3 items-end bg-white/5 p-3 rounded-xl">
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-xs">Date</Label>
+                      <Input 
+                        type="date" 
+                        value={sd.date} 
+                        onChange={(e) => {
+                          const newDates = [...unitForm.special_dates];
+                          newDates[idx].date = e.target.value;
+                          setUnitForm({ ...unitForm, special_dates: newDates });
+                        }}
+                        className="bg-charcoal border-white/10"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-xs">Price</Label>
+                      <Input 
+                        type="number" 
+                        value={sd.price} 
+                        onChange={(e) => {
+                          const newDates = [...unitForm.special_dates];
+                          newDates[idx].price = e.target.value;
+                          setUnitForm({ ...unitForm, special_dates: newDates });
+                        }}
+                        placeholder="₹ 2999"
+                        className="bg-charcoal border-white/10"
+                      />
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        const newDates = unitForm.special_dates.filter((_, i) => i !== idx);
+                        setUnitForm({ ...unitForm, special_dates: newDates });
+                      }}
+                      className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             </div>
 

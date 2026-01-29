@@ -716,21 +716,22 @@ const createPropertyUnit = async (req, res) => {
     const { 
       name, amenities, images,
       price_per_person, available_persons, total_persons,
-      weekday_price, weekend_price, special_price
+      weekday_price, weekend_price, special_price, special_dates
     } = req.body;
 
     const result = await query(
       `INSERT INTO property_units (
         property_id, name, available_persons, total_persons, 
         amenities, images, price_per_person,
-        weekday_price, weekend_price, special_price
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        weekday_price, weekend_price, special_price, special_dates
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *`,
       [
         propertyId, name, available_persons || 0, total_persons || 0,
         JSON.stringify(amenities || []), JSON.stringify(images || []),
         price_per_person || 0,
-        weekday_price || 0, weekend_price || 0, special_price || 0
+        weekday_price || 0, weekend_price || 0, special_price || 0,
+        JSON.stringify(special_dates || [])
       ]
     );
 
@@ -751,7 +752,7 @@ const updatePropertyUnit = async (req, res) => {
     const { 
       name, available_persons, total_persons, 
       amenities, images, price_per_person,
-      weekday_price, weekend_price, special_price
+      weekday_price, weekend_price, special_price, special_dates
     } = req.body;
 
     const result = await query(
@@ -765,8 +766,9 @@ const updatePropertyUnit = async (req, res) => {
          price_per_person = COALESCE($6, price_per_person),
          weekday_price = COALESCE($7, weekday_price),
          weekend_price = COALESCE($8, weekend_price),
-         special_price = COALESCE($9, special_price)
-       WHERE id = $10 RETURNING *`,
+         special_price = COALESCE($9, special_price),
+         special_dates = COALESCE($10, special_dates)
+       WHERE id = $11 RETURNING *`,
       [
         name, available_persons, total_persons,
         Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null),
@@ -775,6 +777,7 @@ const updatePropertyUnit = async (req, res) => {
         weekday_price,
         weekend_price,
         special_price,
+        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
         unitId
       ]
     );

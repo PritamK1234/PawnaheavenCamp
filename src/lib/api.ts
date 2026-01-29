@@ -38,10 +38,12 @@ export const propertyAPI = {
   // ... existing methods
   getUnitCalendar: async (unitId: number) => {
     try {
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('ownerToken');
       const response = await fetch(`${API_BASE_URL}/api/properties/units/${unitId}/calendar`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
       });
       if (!response.ok) throw new Error('Failed to fetch unit calendar');

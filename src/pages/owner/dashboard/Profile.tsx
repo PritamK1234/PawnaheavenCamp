@@ -289,11 +289,6 @@ const OwnerProfile = () => {
 
         <div className="space-y-6">
         <div className="space-y-3">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Amenities</Label>
-          <TagList type="amenities" items={details.amenities} />
-        </div>
-
-        <div className="space-y-3">
           <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Activities</Label>
           <TagList type="activities" items={details.activities} />
         </div>

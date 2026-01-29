@@ -1,0 +1,33 @@
+CalendarSync.tsx:43 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/1 404 (Not Found)
+
+CalendarSync.tsx:43 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/2 404 (Not Found)
+CalendarSync.tsx:43 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/3 404 (Not Found)
+api.ts:41 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/1/calendar 401 (Unauthorized)
+api.ts:50 Error fetching unit calendar: Error: Failed to fetch unit calendar
+    at Object.getUnitCalendar (api.ts:47:31)
+    at async fetchUnitRates (Rates.tsx:76:31)
+workbox-ca84f546.js:44 workbox The navigation route /admin is not being used, since the URL being navigated to doesn't match the allowlist.
+api.ts:41 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/2/calendar 401 (Unauthorized)
+api.ts:50 Error fetching unit calendar: Error: Failed to fetch unit calendar
+    at Object.getUnitCalendar (api.ts:47:31)
+    at async fetchUnitRates (Rates.tsx:76:31)
+api.ts:41 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/3/calendar 401 (Unauthorized)
+api.ts:50 Error fetching unit calendar: Error: Failed to fetch unit calendar
+    at Object.getUnitCalendar (api.ts:47:31)
+    at async fetchUnitRates (Rates.tsx:76:31)
+4
+@radix-ui_react-dialog.js?v=97818aa5:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+api.ts:41 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/1/calendar 401 (Unauthorized)
+api.ts:50 Error fetching unit calendar: Error: Failed to fetch unit calendar
+    at Object.getUnitCalendar (api.ts:47:31)
+    at async fetchUnitRates (Rates.tsx:76:31)
+CalendarSync.tsx:43 
+ GET https://24c272a2-fb04-470b-acba-7128090eaf34-00-2s9ehzztzr3ux.kirk.replit.dev/api/properties/units/1 404 (Not Found)
+﻿

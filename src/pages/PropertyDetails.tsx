@@ -73,6 +73,9 @@ interface PropertyUnit {
   name: string;
   capacity: number;
   total_quantity: number;
+  price_per_person: string;
+  available_persons: number;
+  total_persons: number;
   calendar?: {
     date: string;
     price: string;
@@ -217,10 +220,10 @@ const PropertyDetails = () => {
 
   const isVilla = propertyData.category === "villa";
   const displayPrice = (propertyData.category === 'campings_cottages' && selectedUnit)
-    ? (selectedUnit.calendar?.[0]?.price || propertyData.price)
+    ? (selectedUnit.price_per_person || propertyData.price)
     : propertyData.price;
   const displayCapacity = (propertyData.category === 'campings_cottages' && selectedUnit)
-    ? selectedUnit.capacity
+    ? `${selectedUnit.available_persons || 0} / ${selectedUnit.total_persons || 0} persons`
     : propertyData.capacity;
   const displayAvailability = (propertyData.category === 'campings_cottages' && selectedUnit)
     ? (selectedUnit.calendar?.[0]?.available_quantity !== undefined ? `${selectedUnit.calendar[0].available_quantity} of ${selectedUnit.total_quantity}` : (propertyData.is_available ? "Available" : "Booked"))
@@ -311,9 +314,9 @@ const PropertyDetails = () => {
                       <BookingForm 
                         propertyName={propertyData.title} 
                         propertyId={propertyData.id}
-                        pricePerPerson={parseInt(displayPrice.replace(/[^\d]/g, "")) || 0}
+                        pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (displayPrice || 0)}
                         propertyCategory={propertyData.category}
-                        maxCapacity={displayCapacity}
+                        maxCapacity={typeof displayCapacity === 'number' ? displayCapacity : (parseInt(String(displayCapacity).split('/')[1]) || 0)}
                         selectedUnitId={selectedUnit?.id}
                       />
                     </DialogContent>
@@ -481,9 +484,9 @@ const PropertyDetails = () => {
                 <BookingForm 
                   propertyName={propertyData.title} 
                   propertyId={propertyData.id}
-                  pricePerPerson={parseInt(displayPrice.replace(/[^\d]/g, "")) || 0}
+                  pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (displayPrice || 0)}
                   propertyCategory={propertyData.category}
-                  maxCapacity={displayCapacity}
+                  maxCapacity={typeof displayCapacity === 'number' ? displayCapacity : (parseInt(String(displayCapacity).split('/')[1]) || 0)}
                   selectedUnitId={selectedUnit?.id}
                 />
               </DialogContent>

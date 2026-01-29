@@ -48,6 +48,9 @@ const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, uni
   const [isUploading, setIsUploading] = useState(false);
   const [unitForm, setUnitForm] = useState({ 
     name: '', 
+    available_persons: '0',
+    total_persons: '0',
+    price_per_person: '0',
     capacity: '2', 
     total_quantity: '1',
     amenities: [''],
@@ -64,6 +67,9 @@ const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, uni
         ...unitForm,
         capacity: parseInt(unitForm.capacity),
         total_quantity: parseInt(unitForm.total_quantity),
+        price_per_person: parseFloat(unitForm.price_per_person),
+        available_persons: parseInt(unitForm.available_persons),
+        total_persons: parseInt(unitForm.total_persons),
         amenities: unitForm.amenities.filter(a => a.trim()),
         activities: unitForm.activities.filter(a => a.trim()),
         highlights: unitForm.highlights.filter(h => h.trim()),
@@ -80,8 +86,17 @@ const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, uni
         setIsAdding(false);
         setEditingUnit(null);
         setUnitForm({ 
-          name: '', capacity: '2', total_quantity: '1', 
-          amenities: [''], activities: [''], highlights: [''], policies: [''], images: [] 
+          name: '', 
+          available_persons: '0',
+          total_persons: '0',
+          price_per_person: '0',
+          capacity: '2', 
+          total_quantity: '1',
+          amenities: [''],
+          activities: [''],
+          highlights: [''],
+          policies: [''],
+          images: [] as string[]
         });
         onRefresh();
       }
@@ -179,8 +194,11 @@ const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, uni
                 setEditingUnit(unit); 
                 setUnitForm({ 
                   name: unit.name, 
-                  capacity: unit.capacity.toString(), 
-                  total_quantity: unit.total_quantity.toString(),
+                  capacity: (unit.capacity || 0).toString(), 
+                  total_quantity: (unit.total_quantity || 0).toString(),
+                  available_persons: (unit.available_persons || 0).toString(),
+                  total_persons: (unit.total_persons || 0).toString(),
+                  price_per_person: (unit.price_per_person || 0).toString(),
                   amenities: parseJson(unit.amenities).length ? parseJson(unit.amenities) : [''],
                   activities: parseJson(unit.activities).length ? parseJson(unit.activities) : [''],
                   highlights: parseJson(unit.highlights).length ? parseJson(unit.highlights) : [''],
@@ -211,22 +229,45 @@ const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, uni
                 <Label>Unit Name</Label>
                 <Input value={unitForm.name} onChange={(e) => setUnitForm({ ...unitForm, name: e.target.value })} placeholder="e.g. Deluxe Tent" className="bg-white/5 border-white/10" />
               </div>
-              <div className="space-y-2">
-                <Label>Capacity</Label>
-                <Input type="number" value={unitForm.capacity} onChange={(e) => setUnitForm({ ...unitForm, capacity: e.target.value })} className="bg-white/5 border-white/10" />
-              </div>
-              <div className="space-y-2">
-                <Label>Total Quantity</Label>
-                <Input type="number" value={unitForm.total_quantity} onChange={(e) => setUnitForm({ ...unitForm, total_quantity: e.target.value })} className="bg-white/5 border-white/10" />
-              </div>
+
+              {property?.category === 'campings_cottages' ? (
+                <>
+                  <div className="space-y-2">
+                    <Label>Price Per Person</Label>
+                    <Input type="number" value={unitForm.price_per_person} onChange={(e) => setUnitForm({ ...unitForm, price_per_person: e.target.value })} className="bg-white/5 border-white/10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>
+                      Capacity (<span className="text-[#00FF41]">Available</span> / <span className="text-[#FFA500]">Total</span> Persons)
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input type="number" placeholder="Available" value={unitForm.available_persons} onChange={(e) => setUnitForm({ ...unitForm, available_persons: e.target.value })} className="bg-white/5 border-white/10 text-[#00FF41] font-bold" />
+                      <Input type="number" placeholder="Total" value={unitForm.total_persons} onChange={(e) => setUnitForm({ ...unitForm, total_persons: e.target.value })} className="bg-white/5 border-white/10 text-[#FFA500] font-bold" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label>Capacity</Label>
+                    <Input type="number" value={unitForm.capacity} onChange={(e) => setUnitForm({ ...unitForm, capacity: e.target.value })} className="bg-white/5 border-white/10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Total Quantity</Label>
+                    <Input type="number" value={unitForm.total_quantity} onChange={(e) => setUnitForm({ ...unitForm, total_quantity: e.target.value })} className="bg-white/5 border-white/10" />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Unit Level Arrays */}
             {[
               { label: 'Amenities', field: 'amenities' as const },
-              { label: 'Activities', field: 'activities' as const },
-              { label: 'What You\'ll Love', field: 'highlights' as const },
-              { label: 'Privacy Policy', field: 'policies' as const },
+              ...(property?.category === 'villa' ? [
+                { label: 'Activities', field: 'activities' as const },
+                { label: 'What You\'ll Love', field: 'highlights' as const },
+                { label: 'Privacy Policy', field: 'policies' as const },
+              ] : []),
             ].map(section => (
               <div key={section.field} className="space-y-2">
                 <Label>{section.label}</Label>

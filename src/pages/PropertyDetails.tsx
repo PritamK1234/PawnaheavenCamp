@@ -71,11 +71,13 @@ const getIcon = (amenity: string) => {
 interface PropertyUnit {
   id: number;
   name: string;
-  capacity: number;
-  total_quantity: number;
   price_per_person: string;
   available_persons: number;
   total_persons: number;
+  capacity?: number;
+  total_quantity?: number;
+  amenities?: string[];
+  images?: string[];
   calendar?: {
     date: string;
     price: string;
@@ -314,7 +316,7 @@ const PropertyDetails = () => {
                       <BookingForm 
                         propertyName={propertyData.title} 
                         propertyId={propertyData.id}
-                        pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (displayPrice || 0)}
+                        pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (Number(displayPrice) || 0)}
                         propertyCategory={propertyData.category}
                         maxCapacity={typeof displayCapacity === 'number' ? displayCapacity : (parseInt(String(displayCapacity).split('/')[1]) || 0)}
                         selectedUnitId={selectedUnit?.id}
@@ -484,7 +486,7 @@ const PropertyDetails = () => {
                 <BookingForm 
                   propertyName={propertyData.title} 
                   propertyId={propertyData.id}
-                  pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (displayPrice || 0)}
+                  pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (Number(displayPrice) || 0)}
                   propertyCategory={propertyData.category}
                   maxCapacity={typeof displayCapacity === 'number' ? displayCapacity : (parseInt(String(displayCapacity).split('/')[1]) || 0)}
                   selectedUnitId={selectedUnit?.id}

@@ -42,7 +42,7 @@ interface AdminPropertyFormProps {
 
 import { CalendarSync } from "@/components/CalendarSync";
 
-const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, units: any[], onRefresh: () => void }) => {
+const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: string, category: string, units: any[], onRefresh: () => void }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingUnit, setEditingUnit] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -230,7 +230,7 @@ const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, uni
                 <Input value={unitForm.name} onChange={(e) => setUnitForm({ ...unitForm, name: e.target.value })} placeholder="e.g. Deluxe Tent" className="bg-white/5 border-white/10" />
               </div>
 
-              {property?.category === 'campings_cottages' ? (
+              {category === 'campings_cottages' ? (
                 <>
                   <div className="space-y-2">
                     <Label>Price Per Person</Label>
@@ -263,7 +263,7 @@ const UnitManager = ({ propertyId, units, onRefresh }: { propertyId: string, uni
             {/* Unit Level Arrays */}
             {[
               { label: 'Amenities', field: 'amenities' as const },
-              ...(property?.category === 'villa' ? [
+              ...(category === 'villa' ? [
                 { label: 'Activities', field: 'activities' as const },
                 { label: 'What You\'ll Love', field: 'highlights' as const },
                 { label: 'Privacy Policy', field: 'policies' as const },
@@ -1032,6 +1032,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
           <div className="mt-8 glass rounded-2xl border border-border/50 p-6 animate-fade-up">
             <UnitManager 
               propertyId={property.id} 
+              category={formData.category}
               units={propertyUnits} 
               onRefresh={fetchUnits} 
             />

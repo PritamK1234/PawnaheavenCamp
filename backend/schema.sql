@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS properties (
   slug VARCHAR(500) UNIQUE NOT NULL,
   property_id VARCHAR(50) UNIQUE,
   description TEXT NOT NULL,
-  category VARCHAR(50) NOT NULL CHECK (category IN ('camping', 'cottage', 'villa')),
+  category VARCHAR(50) NOT NULL CHECK (category IN ('campings_cottages', 'villa')),
   location VARCHAR(255) NOT NULL,
   rating DECIMAL(2,1) DEFAULT 4.5 CHECK (rating >= 0 AND rating <= 5),
   price VARCHAR(50) NOT NULL,
@@ -144,8 +144,7 @@ CREATE TABLE IF NOT EXISTS otp_verifications (
 -- Insert default category settings
 INSERT INTO category_settings (category, is_active, base_price, description)
 VALUES 
-  ('camping', true, '₹1,499', 'Outdoor tent stay experiences'),
-  ('cottage', true, '₹3,999', 'Cozy wooden cottage stays'),
+  ('campings_cottages', true, '₹1,499', 'Outdoor tent and cottage stay experiences'),
   ('villa', true, '₹8,999', 'Luxury private villa stays')
 ON CONFLICT (category) DO NOTHING;
 

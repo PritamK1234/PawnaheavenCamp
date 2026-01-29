@@ -121,13 +121,11 @@ CREATE TABLE IF NOT EXISTS property_units (
   id SERIAL PRIMARY KEY,
   property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
-  capacity INTEGER NOT NULL,
-  total_quantity INTEGER DEFAULT 1,
+  available_persons INTEGER NOT NULL,
+  total_persons INTEGER DEFAULT 0,
   amenities TEXT,
   images TEXT,
   price_per_person VARCHAR(50),
-  available_persons INTEGER,
-  total_persons INTEGER,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

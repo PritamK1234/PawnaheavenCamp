@@ -694,21 +694,20 @@ const createPropertyUnit = async (req, res) => {
   try {
     const { propertyId } = req.params;
     const { 
-      name, capacity, total_quantity, 
-      amenities, images,
+      name, amenities, images,
       price_per_person, available_persons, total_persons
     } = req.body;
 
     const result = await query(
       `INSERT INTO property_units (
-        property_id, name, capacity, total_quantity, 
-        amenities, images, price_per_person, available_persons, total_persons
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        property_id, name, available_persons, total_persons, 
+        amenities, images, price_per_person
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
       [
-        propertyId, name, capacity || 0, total_quantity || 0,
+        propertyId, name, available_persons || 0, total_persons || 0,
         JSON.stringify(amenities || []), JSON.stringify(images || []),
-        price_per_person || 0, available_persons || 0, total_persons || 0
+        price_per_person || 0
       ]
     );
 
@@ -727,31 +726,43 @@ const updatePropertyUnit = async (req, res) => {
   try {
     const { unitId } = req.params;
     const { 
-      name, capacity, total_quantity, 
-      amenities, images,
-      price_per_person, available_persons, total_persons
+      name, available_persons, total_persons, 
+      amenities, images, price_per_person
     } = req.body;
 
     const result = await query(
       `UPDATE property_units 
        SET 
          name = COALESCE($1, name),
-         capacity = COALESCE($2, capacity),
-         total_quantity = COALESCE($3, total_quantity),
+         available_persons = COALESCE($2, available_persons),
+         total_persons = COALESCE($3, total_persons),
          amenities = COALESCE($4, amenities),
          images = COALESCE($5, images),
-         price_per_person = COALESCE($6, price_per_person),
-         available_persons = COALESCE($7, available_persons),
-         total_persons = COALESCE($8, total_persons)
-       WHERE id = $9 RETURNING *`,
+         price_per_person = COALESCE($6, price_per_person)
+       WHERE id = $7 RETURNING *`,
       [
-        name, capacity, total_quantity,
+        name, available_persons, total_persons,
         Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null),
         Array.isArray(images) ? JSON.stringify(images) : (images || null),
-        price_per_person, available_persons, total_persons,
+        price_per_person,
         unitId
       ]
     );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, message: 'Unit not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Unit updated successfully.',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update property unit error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update unit.' });
+  }
+};
 
     if (result.rowCount === 0) {
       return res.status(404).json({ success: false, message: 'Unit not found.' });

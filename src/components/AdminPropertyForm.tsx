@@ -596,6 +596,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
                   <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
                     <UnitManager 
                       propertyId={property.id} 
+                      category={formData.category}
                       units={propertyUnits} 
                       onRefresh={fetchUnits} 
                     />

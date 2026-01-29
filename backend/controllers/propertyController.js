@@ -42,7 +42,9 @@ const getAllProperties = async (req, res) => {
     const result = await query(`
       SELECT p.*,
         (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
-         FROM property_images pi WHERE pi.property_id = p.id) as images
+         FROM property_images pi WHERE pi.property_id = p.id) as images,
+        (SELECT json_agg(json_build_object('id', pu.id, 'name', pu.name, 'available_persons', pu.available_persons, 'total_persons', pu.total_persons)) 
+         FROM property_units pu WHERE pu.property_id = p.id) as units
       FROM properties p
       ORDER BY p.created_at DESC
     `);
@@ -71,6 +73,7 @@ const getAllProperties = async (req, res) => {
         schedule: parseField(prop.schedule),
         availability: parseField(prop.availability),
         images: prop.images || [],
+        units: prop.units || [],
       };
     });
 
@@ -106,6 +109,8 @@ const getPublicProperties = async (req, res) => {
       SELECT p.*,
         (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
          FROM property_images pi WHERE pi.property_id = p.id) as images,
+        (SELECT json_agg(json_build_object('id', pu.id, 'name', pu.name, 'available_persons', pu.available_persons, 'total_persons', pu.total_persons)) 
+         FROM property_units pu WHERE pu.property_id = p.id) as units,
         CASE 
           WHEN p.category = 'campings_cottages' THEN (
             SELECT MIN(uc.price)

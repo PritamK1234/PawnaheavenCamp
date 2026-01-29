@@ -764,21 +764,6 @@ const updatePropertyUnit = async (req, res) => {
   }
 };
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: 'Unit not found.' });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Unit updated successfully.',
-      data: result.rows[0]
-    });
-  } catch (error) {
-    console.error('Update property unit error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to update unit.' });
-  }
-};
-
 const deletePropertyUnit = async (req, res) => {
   try {
     const { unitId } = req.params;

@@ -225,10 +225,17 @@ const PropertyDetails = () => {
     ? (selectedUnit.price_per_person || propertyData.price)
     : propertyData.price;
   const displayCapacity = (propertyData.category === 'campings_cottages' && selectedUnit)
-    ? `${selectedUnit.available_persons || 0} / ${selectedUnit.total_persons || 0} persons`
+    ? (
+        <span className="flex items-center gap-2">
+          <span className="text-[#00FF41] font-bold">{selectedUnit.available_persons || 0}</span>
+          <span className="text-gray-500">/</span>
+          <span className="text-[#FFA500] font-bold">{selectedUnit.total_persons || 0}</span>
+          <span className="ml-1 text-xs text-gray-400">persons</span>
+        </span>
+      )
     : propertyData.capacity;
   const displayAvailability = (propertyData.category === 'campings_cottages' && selectedUnit)
-    ? (selectedUnit.calendar?.[0]?.available_quantity !== undefined ? `${selectedUnit.calendar[0].available_quantity} of ${selectedUnit.total_quantity}` : (propertyData.is_available ? "Available" : "Booked"))
+    ? (selectedUnit.available_persons > 0 ? "Available" : "Booked")
     : (propertyData.is_available ? "Available" : "Booked");
 
   const BookingSection = ({ isDesktop = false }: { isDesktop?: boolean }) => (
@@ -277,6 +284,11 @@ const PropertyDetails = () => {
                 </div>
               </div>
 
+              <div className="flex items-center gap-3 mb-4">
+                 <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500">Capacity:</span>
+                 <div className="text-sm font-bold">{displayCapacity}</div>
+              </div>
+
               <div className="flex items-center gap-3 mb-8">
                 <Badge variant="outline" className="bg-black/40 border-gray-800 text-gray-400 px-4 py-2 rounded-xl text-[10px] uppercase font-bold tracking-widest">
                   {propertyData.category === 'campings_cottages' ? 'Camping & Cottages' : propertyData.category}
@@ -318,7 +330,7 @@ const PropertyDetails = () => {
                         propertyId={propertyData.id}
                         pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (Number(displayPrice) || 0)}
                         propertyCategory={propertyData.category}
-                        maxCapacity={typeof displayCapacity === 'number' ? displayCapacity : (parseInt(String(displayCapacity).split('/')[1]) || 0)}
+                        maxCapacity={propertyData.category === 'campings_cottages' ? (selectedUnit?.total_persons || 0) : (typeof displayCapacity === 'number' ? displayCapacity : (parseInt(String(displayCapacity).split('/')[1]) || 0))}
                         selectedUnitId={selectedUnit?.id}
                       />
                     </DialogContent>
@@ -454,6 +466,16 @@ const PropertyDetails = () => {
               <span className="text-5xl font-display font-bold text-[#C5A021] tracking-tight">{displayPrice.startsWith('₹') ? '' : '₹'}{displayPrice}</span>
               <span className="text-muted-foreground font-medium text-lg">/ {isVilla ? 'villa' : 'person'}</span>
             </div>
+            
+            {propertyData.category === 'campings_cottages' && (
+              <div className="mt-4 p-4 rounded-2xl bg-secondary/30 border border-border/50">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground block mb-2">Available Capacity</span>
+                <div className="text-2xl font-bold flex items-center gap-3">
+                  {displayCapacity}
+                </div>
+              </div>
+            )}
+            
             <p className="text-sm text-muted-foreground mt-3 font-medium flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-green-500" />
               {propertyData.priceNote}
@@ -589,7 +611,7 @@ const PropertyDetails = () => {
           <div className="md:hidden">
             <div className="h-[75vh] w-full relative">
               <ImageSlider 
-                images={propertyData.images} 
+                images={propertyData.category === 'campings_cottages' ? (selectedUnit?.images || propertyData.images) : propertyData.images} 
                 title={propertyData.title} 
                 className="h-full rounded-none" 
               />
@@ -599,7 +621,7 @@ const PropertyDetails = () => {
           
           <div className="hidden md:block">
             <div className="h-auto w-full relative container mx-auto px-6 py-8">
-              <ImageSlider images={propertyData.images} title={propertyData.title} className="rounded-3xl shadow-2xl" />
+              <ImageSlider images={propertyData.category === 'campings_cottages' ? (selectedUnit?.images || propertyData.images) : propertyData.images} title={propertyData.title} className="rounded-3xl shadow-2xl" />
             </div>
           </div>
           
@@ -661,11 +683,11 @@ const PropertyDetails = () => {
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-2xl font-bold flex items-center gap-3">
                     <Wifi className="w-6 h-6 text-[#C5A021]" />
-                    Amenities
+                    {propertyData.category === 'campings_cottages' ? 'Unit Amenities' : 'Amenities'}
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {propertyData.amenities.map((amenity, index) => (
+                  {(propertyData.category === 'campings_cottages' ? (selectedUnit?.amenities || []) : propertyData.amenities).map((amenity, index) => (
                     <div key={index} className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all">
                       <div className="text-[#C5A021] scale-90 md:scale-100">{getIcon(amenity)}</div>
                       <span className="text-[10px] md:text-sm font-bold text-white tracking-tight break-words w-full">{amenity}</span>

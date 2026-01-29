@@ -51,12 +51,7 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
     available_persons: '0',
     total_persons: '0',
     price_per_person: '0',
-    capacity: '2', 
-    total_quantity: '1',
     amenities: [''],
-    activities: [''],
-    highlights: [''],
-    policies: [''],
     images: [] as string[]
   });
   const { toast } = useToast();
@@ -65,15 +60,10 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
     try {
       const payload = {
         ...unitForm,
-        capacity: parseInt(unitForm.capacity),
-        total_quantity: parseInt(unitForm.total_quantity),
         price_per_person: parseFloat(unitForm.price_per_person),
         available_persons: parseInt(unitForm.available_persons),
         total_persons: parseInt(unitForm.total_persons),
         amenities: unitForm.amenities.filter(a => a.trim()),
-        activities: unitForm.activities.filter(a => a.trim()),
-        highlights: unitForm.highlights.filter(h => h.trim()),
-        policies: unitForm.policies.filter(p => p.trim()),
         images: unitForm.images.filter(i => i.trim()),
       };
 
@@ -90,12 +80,7 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
           available_persons: '0',
           total_persons: '0',
           price_per_person: '0',
-          capacity: '2', 
-          total_quantity: '1',
           amenities: [''],
-          activities: [''],
-          highlights: [''],
-          policies: [''],
           images: [] as string[]
         });
         onRefresh();
@@ -172,7 +157,7 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
               </div>
               <div>
                 <p className="font-bold text-white">{unit.name}</p>
-                <p className="text-xs text-muted-foreground">Capacity: {unit.capacity} | Total: {unit.total_quantity}</p>
+                <p className="text-xs text-muted-foreground">Persons: <span className="text-[#00FF41]">{unit.available_persons}</span> / <span className="text-[#FFA500]">{unit.total_persons}</span></p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -194,15 +179,10 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
                 setEditingUnit(unit); 
                 setUnitForm({ 
                   name: unit.name, 
-                  capacity: (unit.capacity || 0).toString(), 
-                  total_quantity: (unit.total_quantity || 0).toString(),
                   available_persons: (unit.available_persons || 0).toString(),
                   total_persons: (unit.total_persons || 0).toString(),
                   price_per_person: (unit.price_per_person || 0).toString(),
                   amenities: parseJson(unit.amenities).length ? parseJson(unit.amenities) : [''],
-                  activities: parseJson(unit.activities).length ? parseJson(unit.activities) : [''],
-                  highlights: parseJson(unit.highlights).length ? parseJson(unit.highlights) : [''],
-                  policies: parseJson(unit.policies).length ? parseJson(unit.policies) : [''],
                   images: parseJson(unit.images)
                 }); 
                 setIsAdding(true); 
@@ -263,11 +243,6 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
             {/* Unit Level Arrays */}
             {[
               { label: 'Amenities', field: 'amenities' as const },
-              ...(category === 'villa' ? [
-                { label: 'Activities', field: 'activities' as const },
-                { label: 'What You\'ll Love', field: 'highlights' as const },
-                { label: 'Privacy Policy', field: 'policies' as const },
-              ] : []),
             ].map(section => (
               <div key={section.field} className="space-y-2">
                 <Label>{section.label}</Label>
@@ -705,6 +680,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="h-12 pl-10 bg-secondary/50 rounded-xl"
                     placeholder={formData.category === 'campings_cottages' ? "Price from units will be used" : ""}
+                    disabled={formData.category === 'campings_cottages'}
                     required={formData.category === 'villa'}
                   />
                 </div>
@@ -828,11 +804,11 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
 
           {/* Arrays: Amenities, Activities, Highlights, Policies */}
           {[
-            { label: 'Amenities', field: 'amenities' as const, icon: Star },
+            { label: 'Amenities', field: 'amenities' as const, icon: Star, hide: formData.category === 'campings_cottages' },
             { label: 'Activities', field: 'activities' as const, icon: Sparkles },
             { label: 'Highlights (What You\'ll Love)', field: 'highlights' as const, icon: Star },
             { label: 'Rules & Policies', field: 'policies' as const, icon: Clock },
-          ].map((section) => (
+          ].filter(s => !s.hide).map((section) => (
             <div key={section.field} className="glass rounded-2xl border border-border/50 p-6">
               <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
                 <section.icon className="w-5 h-5 text-primary" />
@@ -918,73 +894,75 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
           </div>
 
           {/* Images */}
-          <div className="glass rounded-2xl border border-border/50 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Star className="w-5 h-5 text-primary" />
-                Property Images *
-              </h2>
-              <div className="relative">
-                <input
-                  type="file"
-                  id="image-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={isUploading}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl gap-2"
-                  disabled={isUploading}
-                  onClick={() => document.getElementById('image-upload')?.click()}
-                >
-                  {isUploading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Upload className="w-4 h-4" />
-                  )}
-                  Upload Image
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {formData.images.filter(img => img.trim()).map((image, index) => (
-                <div key={index} className="flex items-center gap-3 group">
-                  <div className="flex-1 relative">
-                    <Input
-                      value={image}
-                      readOnly
-                      className="h-12 bg-secondary/30 rounded-xl pr-12 text-muted-foreground"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg overflow-hidden bg-secondary">
-                      <img src={image} alt="" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
-                    </div>
-                  </div>
+          {formData.category !== 'campings_cottages' && (
+            <div className="glass rounded-2xl border border-border/50 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Star className="w-5 h-5 text-primary" />
+                  Property Images *
+                </h2>
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="image-upload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                  />
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      const newImages = formData.images.filter((_, i) => i !== index);
-                      setFormData(prev => ({ ...prev, images: newImages }));
-                    }}
-                    className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl gap-2"
+                    disabled={isUploading}
+                    onClick={() => document.getElementById('image-upload')?.click()}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    Upload Image
                   </Button>
                 </div>
-              ))}
-              {formData.images.filter(img => img.trim()).length === 0 && (
-                <div className="text-center py-8 border-2 border-dashed border-border/50 rounded-2xl bg-secondary/10">
-                  <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-20" />
-                  <p className="text-sm text-muted-foreground">No images uploaded yet</p>
-                </div>
-              )}
+              </div>
+              <div className="space-y-3">
+                {formData.images.filter(img => img.trim()).map((image, index) => (
+                  <div key={index} className="flex items-center gap-3 group">
+                    <div className="flex-1 relative">
+                      <Input
+                        value={image}
+                        readOnly
+                        className="h-12 bg-secondary/30 rounded-xl pr-12 text-muted-foreground"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg overflow-hidden bg-secondary">
+                        <img src={image} alt="" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newImages = formData.images.filter((_, i) => i !== index);
+                        setFormData(prev => ({ ...prev, images: newImages }));
+                      }}
+                      className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                {formData.images.filter(img => img.trim()).length === 0 && (
+                  <div className="text-center py-8 border-2 border-dashed border-border/50 rounded-2xl bg-secondary/10">
+                    <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-20" />
+                    <p className="text-sm text-muted-foreground">No images uploaded yet</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="glass rounded-2xl border border-border/50 p-6">
             <Label htmlFor="description" className="text-lg font-semibold mb-6 block">Description *</Label>
@@ -1034,7 +1012,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
               propertyId={property.id} 
               category={formData.category}
               units={propertyUnits} 
-              onRefresh={fetchUnits} 
+              onRefresh={async () => { await fetchUnits(); }} 
             />
           </div>
         )}

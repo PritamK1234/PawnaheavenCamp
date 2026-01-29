@@ -229,11 +229,11 @@ const PropertyCard = ({
           <div className="flex items-center justify-between pt-3 border-t border-border/20">
             <div className="flex items-baseline gap-1">
               <span className="text-xl font-bold text-gradient-gold">
-                {category === 'campings_cottages' ? '₹' : (price.startsWith('₹') ? '' : '₹')}
-                {category === 'campings_cottages' ? 'Price on Selection' : price}
+                {price && (price.startsWith('₹') ? '' : '₹')}
+                {price || 'N/A'}
               </span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">
-                {category === 'campings_cottages' ? '' : `/ ${priceNote}`}
+                / {priceNote}
               </span>
             </div>
             {category === 'campings_cottages' && (

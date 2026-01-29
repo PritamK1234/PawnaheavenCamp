@@ -42,6 +42,14 @@ router.post('/upload-image', authMiddleware, upload.single('image'), (req, res) 
 router.get('/settings/categories', authMiddleware, propertyController.getCategorySettings);
 router.put('/settings/categories/:category', authMiddleware, propertyController.updateCategorySettings);
 
+// Unit Management Routes
+router.get('/:propertyId/units', authMiddleware, propertyController.getPropertyUnits);
+router.post('/:propertyId/units', authMiddleware, propertyController.createPropertyUnit);
+router.put('/units/:unitId', authMiddleware, propertyController.updatePropertyUnit);
+router.delete('/units/:unitId', authMiddleware, propertyController.deletePropertyUnit);
+router.get('/units/:unitId/calendar', authMiddleware, propertyController.getUnitCalendarData);
+router.post('/units/:unitId/calendar', authMiddleware, propertyController.updateUnitCalendarData);
+
 // Calendar routes
 router.get('/:id/calendar', propertyController.getCalendarData);
 router.put('/:id/calendar', authMiddleware, propertyController.updateCalendarData);

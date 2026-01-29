@@ -75,13 +75,21 @@ exports.registerOwner = async (req, res) => {
 exports.sendOTP = async (req, res) => {
   const { mobileNumber } = req.body;
 
+  console.log('sendOTP called with mobileNumber:', mobileNumber);
+
   try {
     const ownerCheck = await pool.query(
       'SELECT * FROM owners WHERE mobile_number = $1',
       [mobileNumber]
     );
 
+    console.log('Owner check result:', ownerCheck.rows.length, 'rows found');
+
     if (ownerCheck.rows.length === 0) {
+      // Log all owners for debugging
+      const allOwners = await pool.query('SELECT mobile_number FROM owners');
+      console.log('All registered mobile numbers:', allOwners.rows.map(r => r.mobile_number));
+      
       return res.status(404).json({
         success: false,
         message: 'This number is not registered to any property.'

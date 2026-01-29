@@ -221,9 +221,9 @@ const OwnerRates = () => {
   const isCampingsCottages = property?.category === 'campings_cottages';
 
   return (
-    <div className="space-y-6 max-w-full sm:max-w-2xl mx-auto px-0 sm:px-4">
+    <div className="space-y-6 max-w-full sm:max-w-2xl mx-auto px-0 sm:px-4 pb-10">
       <div className="flex items-center justify-between px-4 sm:px-0">
-        <h1 className="text-2xl font-bold text-[#D4AF37] font-display">Manage Prices & Rates</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#D4AF37] font-display">Manage Prices & Rates</h1>
         
         {isCampingsCottages && units.length > 0 && (
           <div className="w-48">
@@ -241,27 +241,40 @@ const OwnerRates = () => {
         )}
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-0">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4 sm:px-0">
         <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
           <CardContent className="pt-6">
-            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">
-              {isCampingsCottages ? 'Base Price per Person' : 'Current Weekday Rate (Mon-Fri)'}
+            <Label className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-2 block">
+              Weekdays (Base)
             </Label>
             <div className="text-2xl font-bold text-white">
               {rates.weekday ? `₹${rates.weekday}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
             </div>
+            <p className="text-[10px] text-gray-500 mt-1 uppercase">Mon-Thu Pricing</p>
           </CardContent>
         </Card>
-        {!isCampingsCottages && (
-          <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
-            <CardContent className="pt-6">
-              <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekend Rate (Sat-Sun)</Label>
-              <div className="text-2xl font-bold text-white">
-                {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
+          <CardContent className="pt-6">
+            <Label className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-2 block">
+              Weekends
+            </Label>
+            <div className="text-2xl font-bold text-white">
+              {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1 uppercase">Fri-Sun Pricing</p>
+          </CardContent>
+        </Card>
+        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
+          <CardContent className="pt-6">
+            <Label className="text-purple-400 text-[10px] font-bold uppercase tracking-widest mb-2 block">
+              Special Days
+            </Label>
+            <div className="text-2xl font-bold text-white">
+              {specialDates.length > 0 ? `₹${specialDates[0].price}` : <span className="text-gray-500 text-sm font-normal italic">None</span>}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1 uppercase">Holidays & Events</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-none sm:rounded-xl border-x-0 sm:border-x">
@@ -269,7 +282,7 @@ const OwnerRates = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">
-                {isCampingsCottages ? 'Base Price' : 'Weekday Price'}
+                Weekday Price (Base)
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
@@ -283,21 +296,19 @@ const OwnerRates = () => {
               </div>
             </div>
 
-            {!isCampingsCottages && (
-              <div className="space-y-2">
-                <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Weekend Price</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
-                  <Input 
-                    type="text" 
-                    className="pl-7 bg-black/60 border-[#D4AF37]/20 text-white" 
-                    value={rates.weekend}
-                    onChange={(e) => setRates({...rates, weekend: e.target.value})}
-                    placeholder="e.g. 8999"
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Weekend Price</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
+                <Input 
+                  type="text" 
+                  className="pl-7 bg-black/60 border-[#D4AF37]/20 text-white" 
+                  value={rates.weekend}
+                  onChange={(e) => setRates({...rates, weekend: e.target.value})}
+                  placeholder="e.g. 1999"
+                />
               </div>
-            )}
+            </div>
           </div>
 
           <div className="pt-4 border-t border-[#D4AF37]/10">

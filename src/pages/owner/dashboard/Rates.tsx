@@ -65,24 +65,16 @@ const OwnerRates = () => {
       if (unitsRes.success) {
         const unit = unitsRes.data.find((u: any) => u.id.toString() === unitId);
         if (unit) {
-          // In unit-based mode, weekday/weekend prices are managed via unit calendar
-          // For now, let's load unit's base pricing if available or use empty
           setRates({
-            weekday: unit.price_per_person || '',
-            weekend: '',
+            weekday: unit.weekday_price || '',
+            weekend: unit.weekend_price || '',
           });
           
-          // Fetch unit calendar for special dates
-          const calendarRes = await propertyAPI.getUnitCalendar(parseInt(unitId));
-          if (calendarRes.success) {
-            const special = calendarRes.data
-              .filter((d: any) => d.is_special)
-              .map((d: any) => ({
-                date: format(new Date(d.date), 'yyyy-MM-dd'),
-                price: d.price
-              }));
-            setSpecialDates(special);
-          }
+          const specialDates = typeof unit.special_dates === 'string'
+            ? JSON.parse(unit.special_dates)
+            : (Array.isArray(unit.special_dates) ? unit.special_dates : []);
+          
+          setSpecialDates(specialDates);
         }
       }
     } catch (error) {
@@ -144,29 +136,21 @@ const OwnerRates = () => {
       const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
       
       if (property.category === 'campings_cottages' && selectedUnitId) {
-        // Update Unit Calendar for both base and special dates
-        // This mirrors Admin behavior for units
         const unitId = parseInt(selectedUnitId);
         
-        // 1. Update Special Dates
-        const calendarUpdates = specialDates
-          .filter(sd => sd.date && sd.price)
-          .map(sd => 
-            propertyAPI.updateUnitCalendar(unitId, {
-              date: sd.date,
-              price: sd.price,
-              is_booked: false,
-              is_special: true
-            })
-          );
-        
-        // 2. Also update unit's base price if needed
-        const unitUpdate = propertyAPI.updateUnit(unitId, {
-          price_per_person: rates.weekday
-        });
+        const payload = {
+          weekday_price: rates.weekday,
+          weekend_price: rates.weekend,
+          special_dates: specialDates
+        };
 
-        await Promise.all([...calendarUpdates, unitUpdate]);
-        toast.success('Unit rates updated successfully.');
+        const res = await propertyAPI.updateUnit(unitId, payload);
+        
+        if (res.success) {
+          toast.success('Unit rates updated successfully.');
+        } else {
+          throw new Error('Failed to update unit rates');
+        }
       } else {
         // Villa path - untouched logic
         const payload = {

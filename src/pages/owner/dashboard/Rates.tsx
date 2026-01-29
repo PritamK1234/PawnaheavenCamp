@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { propertyAPI } from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const OwnerRates = () => {
   const [rates, setRates] = useState({
@@ -14,56 +16,39 @@ const OwnerRates = () => {
   });
   const [specialDates, setSpecialDates] = useState<{ date: string; price: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [propertyId, setPropertyId] = useState<string | null>(null);
+  const [property, setProperty] = useState<any>(null);
+  const [units, setUnits] = useState<any[]>([]);
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
-  const fetchRates = async () => {
+  const fetchData = async () => {
     const ownerDataString = localStorage.getItem('ownerData');
     if (!ownerDataString) return;
     const ownerData = JSON.parse(ownerDataString);
     const id = ownerData.property_id || ownerData.propertyId;
-    setPropertyId(id);
 
     try {
       const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
-      console.log('Fetching rates for property:', id);
       const response = await fetch(`/api/properties/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const result = await response.json();
-      console.log('Fetch rates response:', result);
       
       if (result.success && result.data) {
-        const prop = result.data;
-        // Map backend fields to frontend state correctly
-        // IMPORTANT: Ensure we prioritize weekday_price and weekend_price columns
-        const weekdayVal = prop.weekday_price !== null && prop.weekday_price !== undefined ? prop.weekday_price : (prop.price || '');
-        const weekendVal = prop.weekend_price !== null && prop.weekend_price !== undefined ? prop.weekend_price : '';
+        setProperty(result.data);
         
-        console.log('Final resolved values:', { weekdayVal, weekendVal });
-        
-        const mappedRates = {
-          weekday: weekdayVal !== '' ? String(weekdayVal) : '',
-          weekend: weekendVal !== '' ? String(weekendVal) : '',
-        };
-        
-        console.log('Setting state with mapped rates:', mappedRates);
-        setRates(mappedRates);
-        
-        if (prop.special_dates) {
-          try {
-            const sd = Array.isArray(prop.special_dates) 
-              ? prop.special_dates 
-              : JSON.parse(prop.special_dates);
-            console.log('Setting special dates state:', sd);
-            setSpecialDates(sd);
-          } catch (e) {
-            console.error('Error parsing special dates:', e);
-            setSpecialDates([]);
+        if (result.data.category === 'campings_cottages') {
+          const unitsRes = await propertyAPI.getUnits(id);
+          if (unitsRes.success) {
+            setUnits(unitsRes.data);
+            if (unitsRes.data.length > 0 && !selectedUnitId) {
+              setSelectedUnitId(unitsRes.data[0].id.toString());
+              return; // Effect will re-run with selectedUnitId
+            }
           }
-        } else {
-          setSpecialDates([]);
+        }
+        
+        if (result.data.category === 'villa' || !selectedUnitId) {
+          applyPropertyRates(result.data);
         }
       }
     } catch (error) {
@@ -73,9 +58,70 @@ const OwnerRates = () => {
     }
   };
 
+  const fetchUnitRates = async (unitId: string) => {
+    setLoading(true);
+    try {
+      const unitsRes = await propertyAPI.getUnits(property.id);
+      if (unitsRes.success) {
+        const unit = unitsRes.data.find((u: any) => u.id.toString() === unitId);
+        if (unit) {
+          // In unit-based mode, weekday/weekend prices are managed via unit calendar
+          // For now, let's load unit's base pricing if available or use empty
+          setRates({
+            weekday: unit.price_per_person || '',
+            weekend: '',
+          });
+          
+          // Fetch unit calendar for special dates
+          const calendarRes = await propertyAPI.getUnitCalendar(parseInt(unitId));
+          if (calendarRes.success) {
+            const special = calendarRes.data
+              .filter((d: any) => d.is_special)
+              .map((d: any) => ({
+                date: format(new Date(d.date), 'yyyy-MM-dd'),
+                price: d.price
+              }));
+            setSpecialDates(special);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching unit rates:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyPropertyRates = (prop: any) => {
+    const weekdayVal = prop.weekday_price !== null && prop.weekday_price !== undefined ? prop.weekday_price : (prop.price || '');
+    const weekendVal = prop.weekend_price !== null && prop.weekend_price !== undefined ? prop.weekend_price : '';
+    
+    setRates({
+      weekday: weekdayVal !== '' ? String(weekdayVal) : '',
+      weekend: weekendVal !== '' ? String(weekendVal) : '',
+    });
+    
+    if (prop.special_dates) {
+      try {
+        const sd = Array.isArray(prop.special_dates) ? prop.special_dates : JSON.parse(prop.special_dates);
+        setSpecialDates(sd);
+      } catch (e) {
+        setSpecialDates([]);
+      }
+    } else {
+      setSpecialDates([]);
+    }
+  };
+
   useEffect(() => {
-    fetchRates();
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    if (selectedUnitId && property?.category === 'campings_cottages') {
+      fetchUnitRates(selectedUnitId);
+    }
+  }, [selectedUnitId]);
 
   const handleAddSpecialDate = () => {
     setSpecialDates([...specialDates, { date: format(new Date(), 'yyyy-MM-dd'), price: '' }]);
@@ -92,113 +138,139 @@ const OwnerRates = () => {
   };
 
   const handleSave = async () => {
-    if (!propertyId) return;
+    if (!property) return;
     
     try {
       const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
       
-      const payload = {
-        weekday_price: rates.weekday,
-        weekend_price: rates.weekend,
-        price: rates.weekday,
-        special_dates: specialDates
-      };
-      
-      console.log('Saving rates with payload:', payload);
-
-      // 1. Update base rates and special_dates
-      const response = await fetch(`/api/properties/update/${propertyId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update rates');
-      }
-
-      // 2. Update special dates in calendar for real-time sync
-      const calendarUpdates = specialDates
-        .filter(sd => sd.date && sd.price)
-        .map(sd => 
-          fetch(`/api/properties/${propertyId}/calendar`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
+      if (property.category === 'campings_cottages' && selectedUnitId) {
+        // Update Unit Calendar for both base and special dates
+        // This mirrors Admin behavior for units
+        const unitId = parseInt(selectedUnitId);
+        
+        // 1. Update Special Dates
+        const calendarUpdates = specialDates
+          .filter(sd => sd.date && sd.price)
+          .map(sd => 
+            propertyAPI.updateUnitCalendar(unitId, {
               date: sd.date,
               price: sd.price,
-              is_booked: false
+              is_booked: false,
+              is_special: true
             })
-          })
-        );
-      
-      if (calendarUpdates.length > 0) {
-        await Promise.all(calendarUpdates);
+          );
+        
+        // 2. Also update unit's base price if needed
+        const unitUpdate = propertyAPI.updateUnit(unitId, {
+          price_per_person: rates.weekday
+        });
+
+        await Promise.all([...calendarUpdates, unitUpdate]);
+        toast.success('Unit rates updated successfully.');
+      } else {
+        // Villa path - untouched logic
+        const payload = {
+          weekday_price: rates.weekday,
+          weekend_price: rates.weekend,
+          price: rates.weekday,
+          special_dates: specialDates
+        };
+        
+        const response = await fetch(`/api/properties/update/${property.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error('Failed to update rates');
+
+        // Update special dates in property calendar
+        const calendarUpdates = specialDates
+          .filter(sd => sd.date && sd.price)
+          .map(sd => 
+            fetch(`/api/properties/${property.id}/calendar`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                date: sd.date,
+                price: sd.price,
+                is_booked: false
+              })
+            })
+          );
+        
+        if (calendarUpdates.length > 0) await Promise.all(calendarUpdates);
+        toast.success('Rates updated successfully.');
       }
       
-      toast.success('Rates and Special Dates updated successfully.');
-      
-      // Re-fetch data to ensure UI is in sync with backend
-      await fetchRates();
+      await fetchData();
     } catch (error) {
-      console.error('Error in handleSave:', error);
+      console.error('Error saving rates:', error);
       toast.error('Error updating rates.');
     }
   };
 
   if (loading) return <div className="p-8 text-center text-[#D4AF37]">Loading rates...</div>;
 
+  const isCampingsCottages = property?.category === 'campings_cottages';
+
   return (
     <div className="space-y-6 max-w-full sm:max-w-2xl mx-auto px-0 sm:px-4">
-      <h1 className="text-2xl font-bold text-[#D4AF37] font-display px-4 sm:px-0">Manage Prices & Rates</h1>
+      <div className="flex items-center justify-between px-4 sm:px-0">
+        <h1 className="text-2xl font-bold text-[#D4AF37] font-display">Manage Prices & Rates</h1>
+        
+        {isCampingsCottages && units.length > 0 && (
+          <div className="w-48">
+            <Select value={selectedUnitId || ""} onValueChange={setSelectedUnitId}>
+              <SelectTrigger className="bg-[#1A1A1A] border-[#D4AF37]/30 text-white">
+                <SelectValue placeholder="Select Unit" />
+              </SelectTrigger>
+              <SelectContent className="bg-charcoal border-white/10 text-white">
+                {units.map(u => (
+                  <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
       
-      {/* Current Rates Display */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-0">
         <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
           <CardContent className="pt-6">
-            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekday Rate (Monday - Friday)</Label>
+            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">
+              {isCampingsCottages ? 'Base Price per Person' : 'Current Weekday Rate (Mon-Fri)'}
+            </Label>
             <div className="text-2xl font-bold text-white">
-              {(rates.weekday !== null && rates.weekday !== undefined && rates.weekday !== '') ? `₹${rates.weekday}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
+              {rates.weekday ? `₹${rates.weekday}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
             </div>
           </CardContent>
         </Card>
-        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
-          <CardContent className="pt-6">
-            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekend Rate (Sat - Sunday)</Label>
-            <div className="text-2xl font-bold text-white">
-              {(rates.weekend !== null && rates.weekend !== undefined && rates.weekend !== '') ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
-            </div>
-          </CardContent>
-        </Card>
+        {!isCampingsCottages && (
+          <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
+            <CardContent className="pt-6">
+              <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-2 block">Current Weekend Rate (Sat-Sun)</Label>
+              <div className="text-2xl font-bold text-white">
+                {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {specialDates.length > 0 && (
-        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl mx-4 sm:mx-0">
-          <CardContent className="pt-6">
-            <Label className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-4 block">Active Special Rates</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {specialDates.map((sd, idx) => (
-                <div key={idx} className="bg-black/40 p-2 rounded-lg border border-[#D4AF37]/10">
-                  <div className="text-[10px] text-gray-400">{format(new Date(sd.date), 'MMM dd, yyyy')}</div>
-                  <div className="text-sm font-bold text-white">₹{sd.price}</div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
       <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-none sm:rounded-xl border-x-0 sm:border-x">
         <CardContent className="pt-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Weekday Price (Mon-Fri)</Label>
+              <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">
+                {isCampingsCottages ? 'Base Price' : 'Weekday Price'}
+              </Label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
                 <Input 
@@ -206,24 +278,26 @@ const OwnerRates = () => {
                   className="pl-7 bg-black/60 border-[#D4AF37]/20 text-white" 
                   value={rates.weekday}
                   onChange={(e) => setRates({...rates, weekday: e.target.value})}
-                  placeholder="e.g. 7499"
+                  placeholder="e.g. 1499"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Weekend Price (Sat-Sun)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
-                <Input 
-                  type="text" 
-                  className="pl-7 bg-black/60 border-[#D4AF37]/20 text-white" 
-                  value={rates.weekend}
-                  onChange={(e) => setRates({...rates, weekend: e.target.value})}
-                  placeholder="e.g. 8999"
-                />
+            {!isCampingsCottages && (
+              <div className="space-y-2">
+                <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Weekend Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
+                  <Input 
+                    type="text" 
+                    className="pl-7 bg-black/60 border-[#D4AF37]/20 text-white" 
+                    value={rates.weekend}
+                    onChange={(e) => setRates({...rates, weekend: e.target.value})}
+                    placeholder="e.g. 8999"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="pt-4 border-t border-[#D4AF37]/10">

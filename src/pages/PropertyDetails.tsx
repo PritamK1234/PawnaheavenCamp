@@ -237,7 +237,7 @@ const PropertyDetails = () => {
     : (propertyData.price || 'N/A');
   const displayPriceNote = (propertyData.category === 'campings_cottages' && selectedUnit)
     ? 'per person'
-    : (propertyData.price_note || 'per night');
+    : (propertyData.priceNote || 'per night');
   const displayCapacityValue = (propertyData.category === 'campings_cottages' && selectedUnit)
     ? (selectedUnit.total_persons || 0)
     : (propertyData.capacity || 0);

@@ -258,10 +258,6 @@ const OwnerUnits = () => {
                     <Label className="text-gray-400 text-xs uppercase font-bold">Weekend Price</Label>
                     <Input type="number" value={unitForm.weekend_price} onChange={(e) => setUnitForm({ ...unitForm, weekend_price: e.target.value })} className="bg-white/5 border-white/10 h-11 text-white" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-400 text-xs uppercase font-bold">Special Price</Label>
-                    <Input type="number" value={unitForm.special_price} onChange={(e) => setUnitForm({ ...unitForm, special_price: e.target.value })} className="bg-white/5 border-white/10 h-11 text-white" />
-                  </div>
                 </div>
 
                 <div className="space-y-2">

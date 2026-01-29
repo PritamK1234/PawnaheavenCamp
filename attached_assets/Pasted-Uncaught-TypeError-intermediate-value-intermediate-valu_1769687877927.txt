@@ -1,0 +1,41 @@
+Uncaught TypeError: (intermediate value)(intermediate value)(intermediate value).map is not a function
+    at PropertyDetails (PropertyDetails.tsx:700:127)
+    at renderWithHooks (chunk-T2SWDQEL.js?v=97818aa5:11548:26)
+    at updateFunctionComponent (chunk-T2SWDQEL.js?v=97818aa5:14582:28)
+    at beginWork (chunk-T2SWDQEL.js?v=97818aa5:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-T2SWDQEL.js?v=97818aa5:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-T2SWDQEL.js?v=97818aa5:3699:24)
+    at invokeGuardedCallback (chunk-T2SWDQEL.js?v=97818aa5:3733:39)
+    at beginWork$1 (chunk-T2SWDQEL.js?v=97818aa5:19765:15)
+    at performUnitOfWork (chunk-T2SWDQEL.js?v=97818aa5:19198:20)
+    at workLoopSync (chunk-T2SWDQEL.js?v=97818aa5:19137:13)Understand this error
+chunk-T2SWDQEL.js?v=97818aa5:14032 The above error occurred in the <PropertyDetails> component:
+
+    at PropertyDetails (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/src/pages/PropertyDetails.tsx:134:28)
+    at Suspense
+    at PageWrapper (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/src/App.tsx:75:24)
+    at RenderedRoute (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=97818aa5:4088:5)
+    at Routes (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=97818aa5:4558:5)
+    at Router (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=97818aa5:4501:15)
+    at BrowserRouter (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=97818aa5:5247:5)
+    at Provider (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/chunk-C6R24THA.js?v=97818aa5:38:15)
+    at TooltipProvider (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=97818aa5:60:5)
+    at QueryClientProvider (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/@tanstack_react-query.js?v=97818aa5:2934:3)
+    at _a (https://384f1b9e-5266-4729-85c0-d4806a661488-00-2at9gpw9wnqej.riker.replit.dev/node_modules/.vite/deps/react-helmet-async.js?v=97818aa5:624:5)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-T2SWDQEL.js?v=97818aa5:14032Understand this error
+chunk-T2SWDQEL.js?v=97818aa5:19413 Uncaught TypeError: (intermediate value)(intermediate value)(intermediate value).map is not a function
+    at PropertyDetails (PropertyDetails.tsx:700:127)
+    at renderWithHooks (chunk-T2SWDQEL.js?v=97818aa5:11548:26)
+    at updateFunctionComponent (chunk-T2SWDQEL.js?v=97818aa5:14582:28)
+    at beginWork (chunk-T2SWDQEL.js?v=97818aa5:15924:22)
+    at beginWork$1 (chunk-T2SWDQEL.js?v=97818aa5:19753:22)
+    at performUnitOfWork (chunk-T2SWDQEL.js?v=97818aa5:19198:20)
+    at workLoopSync (chunk-T2SWDQEL.js?v=97818aa5:19137:13)
+    at renderRootSync (chunk-T2SWDQEL.js?v=97818aa5:19116:15)
+    at recoverFromConcurrentError (chunk-T2SWDQEL.js?v=97818aa5:18736:28)
+    at performConcurrentWorkOnRoot (chunk-T2SWDQEL.js?v=97818aa5:18684:30)Understand this error
+workbox-ca84f546.js:44 workbox The navigation route /admin is not being used, since the URL being navigated to doesn't match the allowlist.

@@ -152,19 +152,8 @@ const PropertyDetails = () => {
             }).filter(Boolean);
           }
           
-          if (mappedImages.length === 0 && p.image) {
-            let url = p.image;
-            if (url && url.startsWith('attached_assets/')) {
-              url = '/' + url;
-            }
-            mappedImages = [url];
-          }
-          
-          if (mappedImages.length === 0) {
-            mappedImages = ["https://images.unsplash.com/photo-1571508601166-972e0a1f3ced?w=1200"];
-          }
-          
-          console.log("Mapped Images for Slider:", mappedImages);
+          // Ensure arrays are actually arrays
+          const ensureArray = (val: any) => Array.isArray(val) ? val : (typeof val === 'string' ? val.split(',').map(s => s.trim()) : []);
 
           const mappedProperty = {
             ...p,
@@ -172,7 +161,11 @@ const PropertyDetails = () => {
             priceNote: p.price_note,
             is_available: p.is_available,
             map_link: p.map_link,
-            image: mappedImages[0]
+            image: mappedImages[0],
+            amenities: ensureArray(p.amenities),
+            activities: ensureArray(p.activities),
+            highlights: ensureArray(p.highlights),
+            policies: ensureArray(p.policies)
           };
 
           setPropertyData(mappedProperty);
@@ -697,7 +690,10 @@ const PropertyDetails = () => {
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {(propertyData.category === 'campings_cottages' ? (selectedUnit?.amenities || []) : propertyData.amenities).map((amenity, index) => (
+                  {(Array.isArray(propertyData.category === 'campings_cottages' ? (selectedUnit?.amenities || []) : propertyData.amenities) 
+                    ? (propertyData.category === 'campings_cottages' ? (selectedUnit?.amenities || []) : propertyData.amenities) 
+                    : []
+                  ).map((amenity, index) => (
                     <div key={index} className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all">
                       <div className="text-[#C5A021] scale-90 md:scale-100">{getIcon(amenity)}</div>
                       <span className="text-[10px] md:text-sm font-bold text-white tracking-tight break-words w-full">{amenity}</span>
@@ -713,7 +709,7 @@ const PropertyDetails = () => {
                   Activities
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {propertyData.activities?.map((activity, index) => (
+                  {Array.isArray(propertyData.activities) && propertyData.activities.map((activity, index) => (
                     <div key={index} className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all">
                       <div className="text-[#C5A021] opacity-80 scale-90 md:scale-100">{getIcon(activity)}</div>
                       <span className="text-[10px] md:text-sm font-bold text-gray-300 uppercase tracking-widest break-words w-full">{activity}</span>
@@ -769,7 +765,7 @@ const PropertyDetails = () => {
                     </AccordionTrigger>
                     <AccordionContent className="pb-6">
                       <ul className="space-y-4">
-                        {propertyData.highlights.map((h, i) => (
+                        {Array.isArray(propertyData.highlights) && propertyData.highlights.map((h, i) => (
                           <li key={i} className="text-gray-400 text-sm md:text-base flex items-start gap-3">
                             <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
                             {h}
@@ -788,7 +784,7 @@ const PropertyDetails = () => {
                     </AccordionTrigger>
                     <AccordionContent className="pb-6">
                       <ul className="space-y-4">
-                        {propertyData.policies?.map((p, i) => (
+                        {Array.isArray(propertyData.policies) && propertyData.policies.map((p, i) => (
                           <li key={i} className="text-gray-400 text-sm md:text-base flex items-start gap-3">
                             <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
                             {p}

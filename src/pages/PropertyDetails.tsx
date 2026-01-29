@@ -222,8 +222,11 @@ const PropertyDetails = () => {
 
   const isVilla = propertyData.category === "villa";
   const displayPrice = (propertyData.category === 'campings_cottages' && selectedUnit)
-    ? (selectedUnit.price_per_person || propertyData.price)
-    : propertyData.price;
+    ? (selectedUnit.price_per_person || propertyData.price || 'Price on Selection')
+    : (propertyData.price || 'N/A');
+  const displayPriceNote = (propertyData.category === 'campings_cottages' && selectedUnit)
+    ? 'per person'
+    : (propertyData.price_note || 'per night');
   const displayCapacity = (propertyData.category === 'campings_cottages' && selectedUnit)
     ? (
         <span className="flex items-center gap-2">
@@ -274,8 +277,11 @@ const PropertyDetails = () => {
                 <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-1">Total Starting At</span>
                 <div className="flex items-center justify-between">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-[#C5A021]">{displayPrice.startsWith('₹') ? '' : '₹'}{displayPrice}</span>
-                    <span className="text-gray-400 text-sm">/{isVilla ? 'villa' : 'person'}</span>
+                    <span className="text-3xl font-bold text-[#C5A021]">
+                      {typeof displayPrice === 'string' && displayPrice.startsWith('₹') ? '' : '₹'}
+                      {displayPrice}
+                    </span>
+                    <span className="text-gray-400 text-sm">/{displayPriceNote}</span>
                   </div>
                   <Badge variant="secondary" className="bg-[#C5A021]/10 text-[#C5A021] border-none text-[10px] flex items-center gap-1.5 px-3 py-1.5 rounded-full">
                     <div className="w-2 h-2 bg-[#C5A021] rotate-45" />

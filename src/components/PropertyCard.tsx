@@ -228,9 +228,19 @@ const PropertyCard = ({
 
           <div className="flex items-center justify-between pt-3 border-t border-border/20">
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-gradient-gold">{price.startsWith('₹') ? '' : '₹'}{price}</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">/ {priceNote}</span>
+              <span className="text-xl font-bold text-gradient-gold">
+                {category === 'campings_cottages' ? '₹' : (price.startsWith('₹') ? '' : '₹')}
+                {category === 'campings_cottages' ? 'Price on Selection' : price}
+              </span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">
+                {category === 'campings_cottages' ? '' : `/ ${priceNote}`}
+              </span>
             </div>
+            {category === 'campings_cottages' && (
+              <Badge variant="outline" className="text-[9px] bg-primary/5 text-primary border-primary/20 h-5 px-1.5 font-bold animate-pulse">
+                Unit Pricing
+              </Badge>
+            )}
             <Badge variant="outline" className="text-[9px] border-primary/30 text-primary capitalize font-normal">
               {category}
             </Badge>

@@ -112,7 +112,13 @@ const getPublicProperties = async (req, res) => {
         (SELECT json_agg(json_build_object('id', pu.id, 'name', pu.name, 'available_persons', pu.available_persons, 'total_persons', pu.total_persons)) 
          FROM property_units pu WHERE pu.property_id = p.id) as units,
         (
-          SELECT MIN(uc.price)
+          SELECT COALESCE(MIN(uc.price), (
+            SELECT MIN(price_per_person::numeric) 
+            FROM property_units pu2 
+            WHERE pu2.property_id = p.id 
+            AND pu2.price_per_person IS NOT NULL 
+            AND pu2.price_per_person != ''
+          ))
           FROM property_units pu
           JOIN unit_calendar uc ON uc.unit_id = pu.id
           WHERE pu.property_id = p.id

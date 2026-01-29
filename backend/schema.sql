@@ -116,6 +116,22 @@ CREATE TABLE IF NOT EXISTS referral_transactions (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create property_units table
+CREATE TABLE IF NOT EXISTS property_units (
+  id SERIAL PRIMARY KEY,
+  property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  capacity INTEGER NOT NULL,
+  total_quantity INTEGER DEFAULT 1,
+  amenities TEXT,
+  images TEXT,
+  price_per_person VARCHAR(50),
+  available_persons INTEGER,
+  total_persons INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create otp_verifications table
 CREATE TABLE IF NOT EXISTS otp_verifications (
   id SERIAL PRIMARY KEY,
@@ -134,6 +150,24 @@ VALUES
   ('cottage', true, '₹3,999', 'Cozy wooden cottage stays'),
   ('villa', true, '₹8,999', 'Luxury private villa stays')
 ON CONFLICT (category) DO NOTHING;
+
+-- Create unit_calendar table
+CREATE TABLE IF NOT EXISTS unit_calendar (
+  id SERIAL PRIMARY KEY,
+  unit_id INTEGER NOT NULL REFERENCES property_units(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  price VARCHAR(255),
+  available_quantity INTEGER NOT NULL,
+  is_weekend BOOLEAN DEFAULT false,
+  is_special BOOLEAN DEFAULT false,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(unit_id, date)
+);
+
+-- Create indexes for unit management
+CREATE INDEX IF NOT EXISTS idx_property_units_property_id ON property_units(property_id);
+CREATE INDEX IF NOT EXISTS idx_unit_calendar_unit_id ON unit_calendar(unit_id);
+CREATE INDEX IF NOT EXISTS idx_unit_calendar_date ON unit_calendar(date);
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_properties_slug ON properties(slug);

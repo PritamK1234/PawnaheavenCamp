@@ -68,6 +68,21 @@ const getIcon = (amenity: string) => {
 };
 
 // Extended property interface with full details
+interface PropertyUnit {
+  id: number;
+  name: string;
+  capacity: number;
+  total_quantity: number;
+  calendar?: {
+    date: string;
+    price: string;
+    is_booked: boolean;
+    available_quantity: number;
+    is_weekend: boolean;
+    is_special: boolean;
+  }[];
+}
+
 interface PropertyDetail {
   id: string;
   slug: string;
@@ -81,7 +96,7 @@ interface PropertyDetail {
   is_top_selling: boolean;
   location: string;
   rating: number;
-  category: "camping" | "cottage" | "villa";
+  category: "villa" | "campings_cottages";
   description: string;
   capacity: number;
   max_capacity?: number;
@@ -97,6 +112,7 @@ interface PropertyDetail {
   map_link?: string;
   is_available: boolean;
   property_id: string;
+  units?: PropertyUnit[];
 }
 
 import { CalendarSync } from "@/components/CalendarSync";
@@ -105,6 +121,7 @@ const PropertyDetails = () => {
   const { propertyId } = useParams();
   const [propertyData, setPropertyData] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -144,14 +161,21 @@ const PropertyDetails = () => {
           
           console.log("Mapped Images for Slider:", mappedImages);
 
-          setPropertyData({
+          const mappedProperty = {
             ...p,
             images: mappedImages,
             priceNote: p.price_note,
             is_available: p.is_available,
             map_link: p.map_link,
             image: mappedImages[0]
-          });
+          };
+
+          setPropertyData(mappedProperty);
+
+          // Auto-select first unit for campings_cottages
+          if (mappedProperty.category === 'campings_cottages' && mappedProperty.units?.length > 0) {
+            setSelectedUnit(mappedProperty.units[0]);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch property details:", error);
@@ -192,9 +216,43 @@ const PropertyDetails = () => {
   }
 
   const isVilla = propertyData.category === "villa";
+  const displayPrice = (propertyData.category === 'campings_cottages' && selectedUnit)
+    ? (selectedUnit.calendar?.[0]?.price || propertyData.price)
+    : propertyData.price;
+  const displayCapacity = (propertyData.category === 'campings_cottages' && selectedUnit)
+    ? selectedUnit.capacity
+    : propertyData.capacity;
+  const displayAvailability = (propertyData.category === 'campings_cottages' && selectedUnit)
+    ? (selectedUnit.calendar?.[0]?.available_quantity !== undefined ? `${selectedUnit.calendar[0].available_quantity} of ${selectedUnit.total_quantity}` : (propertyData.is_available ? "Available" : "Booked"))
+    : (propertyData.is_available ? "Available" : "Booked");
 
   const BookingSection = ({ isDesktop = false }: { isDesktop?: boolean }) => (
     <div className={cn("space-y-4", isDesktop ? "hidden lg:block" : "")}>
+      {/* Unit Selector for Campings & Cottages */}
+      {propertyData.category === 'campings_cottages' && propertyData.units && propertyData.units.length > 0 && (
+        <div className="mb-6">
+          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-3 block">Select Stay Option</span>
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {propertyData.units.map((unit) => (
+              <Button
+                key={unit.id}
+                variant={selectedUnit?.id === unit.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedUnit(unit)}
+                className={cn(
+                  "rounded-xl px-4 py-2 h-auto text-[11px] font-bold tracking-tight whitespace-nowrap transition-all",
+                  selectedUnit?.id === unit.id 
+                    ? "bg-[#C5A021] text-black border-none" 
+                    : "bg-[#1A1A1A] border-[#D4AF37]/30 text-gray-400 hover:text-white"
+                )}
+              >
+                {unit.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Mobile-only view */}
       {!isDesktop && (
         <div className="md:hidden space-y-4">
@@ -204,7 +262,7 @@ const PropertyDetails = () => {
                 <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-1">Total Starting At</span>
                 <div className="flex items-center justify-between">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-[#C5A021]">{propertyData.price.startsWith('₹') ? '' : '₹'}{propertyData.price}</span>
+                    <span className="text-3xl font-bold text-[#C5A021]">{displayPrice.startsWith('₹') ? '' : '₹'}{displayPrice}</span>
                     <span className="text-gray-400 text-sm">/{isVilla ? 'villa' : 'person'}</span>
                   </div>
                   <Badge variant="secondary" className="bg-[#C5A021]/10 text-[#C5A021] border-none text-[10px] flex items-center gap-1.5 px-3 py-1.5 rounded-full">
@@ -215,12 +273,16 @@ const PropertyDetails = () => {
               </div>
 
               <div className="flex items-center gap-3 mb-8">
-                <Badge variant="outline" className="bg-black/40 border-gray-800 text-gray-400 px-4 py-2 rounded-xl text-[10px] uppercase font-bold tracking-widest">{propertyData.category}</Badge>
+                <Badge variant="outline" className="bg-black/40 border-gray-800 text-gray-400 px-4 py-2 rounded-xl text-[10px] uppercase font-bold tracking-widest">
+                  {propertyData.category === 'campings_cottages' ? 'Camping & Cottages' : propertyData.category}
+                </Badge>
                 <Badge className={cn(
                   "border-none px-4 py-2 rounded-xl text-[10px] uppercase font-bold tracking-widest",
-                  propertyData.is_available ? "bg-[#00FF41]/10 text-[#00FF41]" : "bg-[#FF4500]/10 text-[#FF4500]"
+                  (propertyData.category === 'campings_cottages' && selectedUnit) 
+                    ? ((selectedUnit.calendar?.[0]?.available_quantity ?? 0) > 0 ? "bg-[#00FF41]/10 text-[#00FF41]" : "bg-[#FF4500]/10 text-[#FF4500]")
+                    : (propertyData.is_available ? "bg-[#00FF41]/10 text-[#00FF41]" : "bg-[#FF4500]/10 text-[#FF4500]")
                 )}>
-                  {propertyData.is_available ? "Available" : "Booked"}
+                  {displayAvailability}
                 </Badge>
                 <div className="flex items-center gap-1.5 ml-auto">
                   <Star className="w-4 h-4 text-[#C5A021] fill-[#C5A021]" />
@@ -243,15 +305,16 @@ const PropertyDetails = () => {
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-display text-[#D4AF37]">Book Your Stay</DialogTitle>
                         <DialogDescription className="text-gray-400 text-xs">
-                          Fill in the details below to initiate your booking at {propertyData.title}.
+                          Fill in the details below to initiate your booking at {propertyData.title}{selectedUnit ? ` (${selectedUnit.name})` : ''}.
                         </DialogDescription>
                       </DialogHeader>
                       <BookingForm 
                         propertyName={propertyData.title} 
                         propertyId={propertyData.id}
-                        pricePerPerson={parseInt(propertyData.price.replace(/[^\d]/g, "")) || 0}
+                        pricePerPerson={parseInt(displayPrice.replace(/[^\d]/g, "")) || 0}
                         propertyCategory={propertyData.category}
-                        maxCapacity={propertyData.max_capacity || propertyData.capacity}
+                        maxCapacity={displayCapacity}
+                        selectedUnitId={selectedUnit?.id}
                       />
                     </DialogContent>
                   </Dialog>
@@ -335,11 +398,14 @@ const PropertyDetails = () => {
                 <DialogHeader>
                   <DialogTitle className="text-xl font-display text-[#D4AF37] px-4 pt-4">Availability Calendar</DialogTitle>
                   <DialogDescription className="px-4 text-xs text-gray-400">
-                    Check available dates and seasonal pricing for {propertyData.title}.
+                    Check available dates and seasonal pricing for {propertyData.title}{selectedUnit ? ` (${selectedUnit.name})` : ''}.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="p-4">
-                  <CalendarSync propertyId={propertyData.property_id || propertyData.id} />
+                  <CalendarSync 
+                    propertyId={propertyData.property_id || propertyData.id} 
+                    unitId={selectedUnit?.id}
+                  />
                 </div>
               </DialogContent>
             </Dialog>
@@ -352,10 +418,35 @@ const PropertyDetails = () => {
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative">
+          {/* Desktop Unit Selector */}
+          {propertyData.category === 'campings_cottages' && propertyData.units && propertyData.units.length > 0 && (
+            <div className="mb-8">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground mb-4 block">Select Stay Option</span>
+              <div className="flex flex-wrap gap-2">
+                {propertyData.units.map((unit) => (
+                  <Button
+                    key={unit.id}
+                    variant={selectedUnit?.id === unit.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedUnit(unit)}
+                    className={cn(
+                      "rounded-xl px-5 py-2.5 h-auto text-xs font-bold tracking-tight transition-all",
+                      selectedUnit?.id === unit.id 
+                        ? "bg-primary text-primary-foreground shadow-gold" 
+                        : "bg-secondary/50 border-border/50 hover:bg-secondary"
+                    )}
+                  >
+                    {unit.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mb-8">
             <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground block mb-2">Total Starting At</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-display font-bold text-[#C5A021] tracking-tight">{propertyData.price.startsWith('₹') ? '' : '₹'}{propertyData.price}</span>
+              <span className="text-5xl font-display font-bold text-[#C5A021] tracking-tight">{displayPrice.startsWith('₹') ? '' : '₹'}{displayPrice}</span>
               <span className="text-muted-foreground font-medium text-lg">/ {isVilla ? 'villa' : 'person'}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-3 font-medium flex items-center gap-2">
@@ -368,28 +459,57 @@ const PropertyDetails = () => {
             <Dialog>
               <DialogTrigger asChild>
                 <Button
-                  disabled={!propertyData.is_available}
+                  disabled={propertyData.category === 'campings_cottages' ? (selectedUnit ? (selectedUnit.calendar?.[0]?.available_quantity ?? 0) <= 0 : !propertyData.is_available) : !propertyData.is_available}
                   className="w-full bg-gradient-to-b from-[#D4AF37] to-[#C5A021] text-black hover:from-[#C5A021] hover:to-[#A6861A] h-[52px] rounded-2xl text-lg font-bold transition-all active:translate-y-1 active:shadow-inner shadow-[0_6px_0_rgb(146,120,33),0_12px_25px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3 group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <MessageCircle className="w-6 h-6 relative z-10" />
-                  <span className="relative z-10">{propertyData.is_available ? "Book Your Stay" : "Currently Booked"}</span>
+                  <span className="relative z-10">
+                    {propertyData.category === 'campings_cottages' 
+                      ? ((selectedUnit ? (selectedUnit.calendar?.[0]?.available_quantity ?? 0) > 0 : propertyData.is_available) ? "Book Your Stay" : "Currently Booked")
+                      : (propertyData.is_available ? "Book Your Stay" : "Currently Booked")}
+                  </span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px] rounded-[2rem]">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-display">Book Your Stay</DialogTitle>
                   <DialogDescription className="text-muted-foreground text-sm">
-                    Complete the form below to book your stay at {propertyData.title}.
+                    Complete the form below to book your stay at {propertyData.title}{selectedUnit ? ` (${selectedUnit.name})` : ''}.
                   </DialogDescription>
                 </DialogHeader>
                 <BookingForm 
                   propertyName={propertyData.title} 
                   propertyId={propertyData.id}
-                  pricePerPerson={parseInt(propertyData.price.replace(/[^\d]/g, "")) || 0}
+                  pricePerPerson={parseInt(displayPrice.replace(/[^\d]/g, "")) || 0}
                   propertyCategory={propertyData.category}
-                  maxCapacity={propertyData.max_capacity || propertyData.capacity}
+                  maxCapacity={displayCapacity}
+                  selectedUnitId={selectedUnit?.id}
                 />
+              </DialogContent>
+            </Dialog>
+
+            {/* Desktop Calendar Trigger */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full h-[52px] rounded-2xl bg-secondary/50 border-2 border-primary/20 hover:bg-secondary text-foreground font-bold flex items-center justify-center gap-3">
+                  <CalendarIcon className="w-5 h-5 text-primary" />
+                  View Availability Calendar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] bg-card border-border/50">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-display text-primary">Availability Calendar</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Check dates for {propertyData.title}{selectedUnit ? ` (${selectedUnit.name})` : ''}.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="p-2">
+                  <CalendarSync 
+                    propertyId={propertyData.property_id || propertyData.id} 
+                    unitId={selectedUnit?.id}
+                  />
+                </div>
               </DialogContent>
             </Dialog>
             
@@ -448,7 +568,7 @@ const PropertyDetails = () => {
   return (
     <>
       <Helmet>
-        <title>{propertyData.title} - Luxury {propertyData.category === 'camping' ? 'Pawna Camping' : 'Lonavala Booking'} | PawnaHavenCamp</title>
+        <title>{propertyData.title} - Luxury {propertyData.category === 'campings_cottages' ? 'Pawna Camping & Cottage' : 'Lonavala Booking'} | PawnaHavenCamp</title>
         <meta name="description" content={`Book ${propertyData.title} at ${propertyData.location}. Luxury ${propertyData.category} with ${propertyData.amenities.slice(0, 5).join(', ')}. ${propertyData.description.substring(0, 100)}...`} />
         {/* Open Graph / WhatsApp Preview */}
         <meta property="og:type" content="website" />

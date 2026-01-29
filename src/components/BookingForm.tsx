@@ -23,6 +23,7 @@ interface BookingFormProps {
   propertyCategory?: string;
   maxCapacity?: number;
   onClose?: () => void;
+  selectedUnitId?: number;
 }
 
 export function BookingForm({ 
@@ -31,7 +32,8 @@ export function BookingForm({
   pricePerPerson, 
   propertyCategory = "camping", 
   maxCapacity = 4,
-  onClose 
+  onClose,
+  selectedUnitId
 }: BookingFormProps) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({

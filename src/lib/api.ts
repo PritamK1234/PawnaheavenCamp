@@ -29,12 +29,28 @@ const transformProperty = (property: any) => {
     policies: parseJsonField(property.policies),
     schedule: parseJsonField(property.schedule),
     image: images.length > 0 ? images[0].image_url : "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
-    images: images.map((img: any) => img.image_url)
+    images: images.map((img: any) => img.image_url),
+    units: property.units || []
   };
 };
 
 export const propertyAPI = {
   // ... existing methods
+  getUnitCalendar: async (unitId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/properties/units/${unitId}/calendar`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch unit calendar');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching unit calendar:', error);
+      return { success: false, data: [] };
+    }
+  },
   update: async (id: string, data: any) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, {

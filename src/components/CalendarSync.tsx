@@ -8,9 +8,10 @@ interface CalendarSyncProps {
   propertyId: string;
   isAdmin?: boolean;
   onDateSelect?: (date: Date) => void;
+  unitId?: number;
 }
 
-export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: CalendarSyncProps) => {
+export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId }: CalendarSyncProps) => {
   const [calendarData, setCalendarData] = useState<any[]>([]);
   const [propertyPrices, setPropertyPrices] = useState<{
     base: string;
@@ -26,16 +27,22 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
       const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      const response = await fetch(`/api/properties/${propertyId}/calendar`, { headers });
+      const response = unitId 
+        ? await fetch(`/api/properties/units/${unitId}/calendar`, { headers })
+        : await fetch(`/api/properties/${propertyId}/calendar`, { headers });
       const result = await response.json();
       if (result.success) {
         setCalendarData(result.data);
       }
       
-      // Fetch property details for pricing settings
-      // Use public endpoint if no token is available for Guest view
-      const propUrl = token ? `/api/properties/${propertyId}` : `/api/properties/public/${propertyId}`;
-      const propResponse = await fetch(propUrl, { headers: token ? headers : {} });
+      // Fetch property/unit details for pricing settings
+      const propUrl = unitId
+        ? `/api/properties/units/${unitId}` // Assuming unit details endpoint exists or is needed
+        : (token ? `/api/properties/${propertyId}` : `/api/properties/public/${propertyId}`);
+      
+      // If unitId, we might just use the unit's specific calendar price directly or fetch unit details
+      // For now, let's stick to the property details for base fallback if not unit-specific
+      const propResponse = await fetch(token ? `/api/properties/${propertyId}` : `/api/properties/public/${propertyId}`, { headers: token ? headers : {} });
       const propResult = await propResponse.json();
       
       if (propResult.success) {
@@ -70,8 +77,8 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect }: Cale
   };
 
   useEffect(() => {
-    if (propertyId) fetchCalendar();
-  }, [propertyId]);
+    if (propertyId || unitId) fetchCalendar();
+  }, [propertyId, unitId]);
 
   const getPriceForDate = (date: Date) => {
     // 1. Check if there's an explicit calendar/booking entry with a price

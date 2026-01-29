@@ -5,9 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const categoryLabels: Record<string, string> = {
   all: "All Stays",
-  camping: "Camping",
+  campings_cottages: "Campings & Cottages",
   villa: "Villa",
-  cottage: "Cottage",
 };
 
 const priceFilterLabels: Record<string, string> = {
@@ -61,7 +60,7 @@ const Properties = () => {
     return categoryMatch && priceMatch;
   });
 
-  const categories = ["all", "camping", "cottage", "villa"];
+  const categories = ["all", "campings_cottages", "villa"];
   const priceFilters = ["all", "affordable", "premium", "luxury"];
 
   return (

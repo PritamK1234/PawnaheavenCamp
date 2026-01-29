@@ -32,6 +32,7 @@ const OwnerLayout = lazy(() => import("./components/owner/layout/OwnerLayout"));
 const OwnerMain = lazy(() => import("./pages/owner/dashboard/Main"));
 const OwnerRates = lazy(() => import("./pages/owner/dashboard/Rates"));
 const OwnerProfile = lazy(() => import("./pages/owner/dashboard/Profile"));
+const OwnerUnits = lazy(() => import("./pages/owner/dashboard/Units"));
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,7 @@ const App = () => (
             <Route element={<OwnerLayout />}>
               <Route path="/owner/dashboard" element={<PageWrapper><OwnerMain /></PageWrapper>} />
               <Route path="/owner/rates" element={<PageWrapper><OwnerRates /></PageWrapper>} />
+              <Route path="/owner/units" element={<PageWrapper><OwnerUnits /></PageWrapper>} />
               <Route path="/owner/profile" element={<PageWrapper><OwnerProfile /></PageWrapper>} />
             </Route>
 

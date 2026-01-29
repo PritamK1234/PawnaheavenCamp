@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Calendar, IndianRupee, User } from 'lucide-react';
+import { Calendar, IndianRupee, User, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PWAInstallButton from '../pwa/PWAInstallButton';
 
@@ -45,9 +45,10 @@ const OwnerLayout = () => {
 
   const navItems = [
     { label: 'Calendar', icon: Calendar, path: '/owner/dashboard' },
-    { label: 'Prices / Rates', icon: IndianRupee, path: '/owner/rates' },
+    { label: 'Prices', icon: IndianRupee, path: '/owner/rates' },
+    { label: 'Units', icon: LayoutGrid, path: '/owner/units', showIf: ownerData.propertyType !== 'Villa' },
     { label: 'Profile', icon: User, path: '/owner/profile' },
-  ];
+  ].filter(item => item.showIf === undefined || item.showIf);
 
   return (
     <div className="min-h-screen bg-black pb-20">

@@ -301,6 +301,7 @@ const getPropertyById = async (req, res) => {
               SELECT generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')::date as date,
                      extract(dow from generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')) IN (0, 6) as is_weekend
             ) d
+            CROSS JOIN (SELECT p.* FROM properties p WHERE p.id = $1) p
             LEFT JOIN unit_calendar uc ON uc.unit_id = pu.id AND uc.date = d.date
           ) as calendar
         FROM property_units pu
@@ -504,6 +505,7 @@ const getPublicPropertyBySlug = async (req, res) => {
               SELECT generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')::date as date,
                      extract(dow from generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')) IN (0, 6) as is_weekend
             ) d
+            CROSS JOIN (SELECT p.* FROM properties p WHERE p.id = $1) p
             LEFT JOIN unit_calendar uc ON uc.unit_id = pu.id AND uc.date = d.date
           ) as calendar
         FROM property_units pu
@@ -840,16 +842,13 @@ const createPropertyUnit = async (req, res) => {
     const result = await query(
       `INSERT INTO property_units (
         property_id, name, available_persons, total_persons, 
-        amenities, images, price_per_person,
-        weekday_price, weekend_price, special_price, special_dates
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        amenities, images, price_per_person
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
       [
         propertyId, name, available_persons || 0, total_persons || 0,
         JSON.stringify(amenities || []), JSON.stringify(images || []),
-        price_per_person || 0,
-        weekday_price || 0, weekend_price || 0, special_price || 0,
-        JSON.stringify(special_dates || [])
+        price_per_person || 0
       ]
     );
 
@@ -881,21 +880,13 @@ const updatePropertyUnit = async (req, res) => {
          total_persons = COALESCE($3, total_persons),
          amenities = COALESCE($4, amenities),
          images = COALESCE($5, images),
-         price_per_person = COALESCE($6, price_per_person),
-         weekday_price = COALESCE($7, weekday_price),
-         weekend_price = COALESCE($8, weekend_price),
-         special_price = COALESCE($9, special_price),
-         special_dates = COALESCE($10, special_dates)
-       WHERE id = $11 RETURNING *`,
+         price_per_person = COALESCE($6, price_per_person)
+       WHERE id = $7 RETURNING *`,
       [
         name, available_persons, total_persons,
         Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null),
         Array.isArray(images) ? JSON.stringify(images) : (images || null),
         price_per_person,
-        weekday_price,
-        weekend_price,
-        special_price,
-        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
         unitId
       ]
     );

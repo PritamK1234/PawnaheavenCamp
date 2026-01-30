@@ -1,0 +1,50 @@
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-DQYRP6QP.js?v=aba9a8da:336
+commitHookEffectListMount @ chunk-TRNWTHID.js?v=aba9a8da:16915
+commitPassiveMountOnFiber @ chunk-TRNWTHID.js?v=aba9a8da:18156
+commitPassiveMountEffects_complete @ chunk-TRNWTHID.js?v=aba9a8da:18129
+commitPassiveMountEffects_begin @ chunk-TRNWTHID.js?v=aba9a8da:18119
+commitPassiveMountEffects @ chunk-TRNWTHID.js?v=aba9a8da:18109
+flushPassiveEffectsImpl @ chunk-TRNWTHID.js?v=aba9a8da:19490
+flushPassiveEffects @ chunk-TRNWTHID.js?v=aba9a8da:19447
+commitRootImpl @ chunk-TRNWTHID.js?v=aba9a8da:19416
+commitRoot @ chunk-TRNWTHID.js?v=aba9a8da:19277
+performSyncWorkOnRoot @ chunk-TRNWTHID.js?v=aba9a8da:18895
+flushSyncCallbacks @ chunk-TRNWTHID.js?v=aba9a8da:9119
+(anonymous) @ chunk-TRNWTHID.js?v=aba9a8da:18627Understand this warning
+api.ts:149  POST https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/api/properties/1/units 500 (Internal Server Error)
+createUnit @ api.ts:149
+handleSaveUnit @ AdminPropertyForm.tsx:81
+callCallback2 @ chunk-TRNWTHID.js?v=aba9a8da:3674
+invokeGuardedCallbackDev @ chunk-TRNWTHID.js?v=aba9a8da:3699
+invokeGuardedCallback @ chunk-TRNWTHID.js?v=aba9a8da:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-TRNWTHID.js?v=aba9a8da:3736
+executeDispatch @ chunk-TRNWTHID.js?v=aba9a8da:7014
+processDispatchQueueItemsInOrder @ chunk-TRNWTHID.js?v=aba9a8da:7034
+processDispatchQueue @ chunk-TRNWTHID.js?v=aba9a8da:7043
+dispatchEventsForPlugins @ chunk-TRNWTHID.js?v=aba9a8da:7051
+(anonymous) @ chunk-TRNWTHID.js?v=aba9a8da:7174
+batchedUpdates$1 @ chunk-TRNWTHID.js?v=aba9a8da:18913
+batchedUpdates @ chunk-TRNWTHID.js?v=aba9a8da:3579
+dispatchEventForPluginEventSystem @ chunk-TRNWTHID.js?v=aba9a8da:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-TRNWTHID.js?v=aba9a8da:5478
+dispatchEvent @ chunk-TRNWTHID.js?v=aba9a8da:5472
+dispatchDiscreteEvent @ chunk-TRNWTHID.js?v=aba9a8da:5449Understand this error
+api.ts:149  POST https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/api/properties/1/units 500 (Internal Server Error)
+createUnit @ api.ts:149
+handleSaveUnit @ AdminPropertyForm.tsx:81
+callCallback2 @ chunk-TRNWTHID.js?v=aba9a8da:3674
+invokeGuardedCallbackDev @ chunk-TRNWTHID.js?v=aba9a8da:3699
+invokeGuardedCallback @ chunk-TRNWTHID.js?v=aba9a8da:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-TRNWTHID.js?v=aba9a8da:3736
+executeDispatch @ chunk-TRNWTHID.js?v=aba9a8da:7014
+processDispatchQueueItemsInOrder @ chunk-TRNWTHID.js?v=aba9a8da:7034
+processDispatchQueue @ chunk-TRNWTHID.js?v=aba9a8da:7043
+dispatchEventsForPlugins @ chunk-TRNWTHID.js?v=aba9a8da:7051
+(anonymous) @ chunk-TRNWTHID.js?v=aba9a8da:7174
+batchedUpdates$1 @ chunk-TRNWTHID.js?v=aba9a8da:18913
+batchedUpdates @ chunk-TRNWTHID.js?v=aba9a8da:3579
+dispatchEventForPluginEventSystem @ chunk-TRNWTHID.js?v=aba9a8da:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-TRNWTHID.js?v=aba9a8da:5478
+dispatchEvent @ chunk-TRNWTHID.js?v=aba9a8da:5472
+dispatchDiscreteEvent @ chunk-TRNWTHID.js?v=aba9a8da:5449Understand this error

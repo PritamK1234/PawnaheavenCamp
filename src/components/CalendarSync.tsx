@@ -3,23 +3,29 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, isBefore, startOfDay, isWeekend } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { LedgerPopup } from "./LedgerPopup";
 
 interface CalendarSyncProps {
   propertyId: string;
   isAdmin?: boolean;
   onDateSelect?: (date: Date) => void;
   unitId?: number;
+  propertyName?: string;
 }
 
-export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId }: CalendarSyncProps) => {
+export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId, propertyName = "Property" }: CalendarSyncProps) => {
   const [calendarData, setCalendarData] = useState<any[]>([]);
   const [propertyPrices, setPropertyPrices] = useState<{
     base: string;
     weekday: string;
     weekend: string;
     specialDates: any[];
+    capacity?: number;
+    maxCapacity?: number;
   }>({ base: "", weekday: "", weekend: "", specialDates: [] });
   const [loading, setLoading] = useState(true);
+  const [isLedgerOpen, setIsLedgerOpen] = useState(false);
+  const [selectedLedgerDate, setSelectedLedgerDate] = useState<Date | null>(null);
 
   const fetchCalendar = async () => {
     try {
@@ -64,7 +70,9 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
           weekend: (data.weekend_price !== null && data.weekend_price !== undefined && data.weekend_price !== "") 
             ? String(data.weekend_price) 
             : (data.price ? String(data.price) : ""),
-          specialDates: Array.isArray(specialDates) ? specialDates : []
+          specialDates: Array.isArray(specialDates) ? specialDates : [],
+          capacity: data.capacity || data.available_persons,
+          maxCapacity: data.max_capacity || data.total_persons
         });
       }
     } catch (error) {
@@ -152,8 +160,8 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
             }}
             onSelect={(date) => {
               if (date && isAdmin) {
-                const current = getDayData(date);
-                handleUpdate(date, !current?.is_booked);
+                setSelectedLedgerDate(date);
+                setIsLedgerOpen(true);
               }
               if (date && onDateSelect) onDateSelect(date);
             }}
@@ -205,6 +213,15 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
           />
         </div>
       </div>
+      
+      <LedgerPopup
+        isOpen={isLedgerOpen}
+        onClose={() => setIsLedgerOpen(false)}
+        date={selectedLedgerDate}
+        propertyName={propertyName}
+        availablePersons={propertyPrices.capacity || 0}
+        totalPersons={propertyPrices.maxCapacity || 0}
+      />
     </div>
   );
 };

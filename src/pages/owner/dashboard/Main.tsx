@@ -4,6 +4,10 @@ import { propertyAPI } from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const OwnerCalendar = () => {
@@ -29,7 +33,7 @@ const OwnerCalendar = () => {
         }
       }
 
-      const token = localStorage.getItem('ownerToken');
+      const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
       const res = await fetch(`/api/properties/${propertyId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -84,7 +88,65 @@ const OwnerCalendar = () => {
         setSpecialDates(sd);
       }
     }
-  }, [selectedUnitId, units]);
+  }, [selectedUnitId, units, property]);
+
+  const handleAddSpecialDate = () => {
+    setSpecialDates([...specialDates, { date: format(new Date(), 'yyyy-MM-dd'), price: '' }]);
+  };
+
+  const handleRemoveSpecialDate = (index: number) => {
+    setSpecialDates(specialDates.filter((_, i) => i !== index));
+  };
+
+  const handleSpecialDateChange = (index: number, field: 'date' | 'price', value: string) => {
+    const newSpecialDates = [...specialDates];
+    newSpecialDates[index][field] = value;
+    setSpecialDates(newSpecialDates);
+  };
+
+  const handleSave = async () => {
+    if (!property) return;
+    
+    try {
+      const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
+      
+      if (property.category === 'campings_cottages' && selectedUnitId) {
+        const unitId = parseInt(selectedUnitId);
+        const payload = {
+          weekday_price: rates.weekday,
+          weekend_price: rates.weekend,
+          special_dates: specialDates
+        };
+        const res = await propertyAPI.updateUnit(unitId, payload);
+        if (res.success) {
+          toast.success('Rates updated successfully.');
+        } else {
+          throw new Error('Failed to update unit rates');
+        }
+      } else {
+        const payload = {
+          weekday_price: rates.weekday,
+          weekend_price: rates.weekend,
+          price: rates.weekday,
+          special_dates: specialDates
+        };
+        const response = await fetch(`/api/properties/update/${property.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error('Failed to update rates');
+        toast.success('Rates updated successfully.');
+      }
+      await fetchData();
+    } catch (error) {
+      console.error('Error saving rates:', error);
+      toast.error('Error updating rates.');
+    }
+  };
 
   const isCampingsCottages = property?.category === 'campings_cottages';
 
@@ -175,20 +237,98 @@ const OwnerCalendar = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-4 sm:px-0">
-          <div className="bg-[#1A1A1A]/80 border border-[#D4AF37]/10 p-4 rounded-xl flex items-center space-x-3">
-            <div className="w-2.5 h-2.5 bg-[#00FF00] rounded-full shadow-[0_0_8px_#00FF00]" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Available</span>
-          </div>
-          <div className="bg-[#1A1A1A]/80 border border-[#D4AF37]/10 p-4 rounded-xl flex items-center space-x-3">
-            <div className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_8px_#ef4444]" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Booked / Blocked</span>
-          </div>
-          <div className="bg-[#1A1A1A]/80 border border-[#D4AF37]/10 p-4 rounded-xl flex items-center space-x-3">
-            <div className="w-2.5 h-2.5 bg-[#D4AF37] rounded-full shadow-[0_0_8px_#D4AF37]" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Today</span>
-          </div>
-        </div>
+        <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-none sm:rounded-xl border-x-0 sm:border-x">
+          <CardContent className="pt-6 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">
+                  Weekday Price (Base)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
+                  <Input 
+                    type="text" 
+                    className="pl-7 bg-black/60 border-[#D4AF37]/20 text-white" 
+                    value={rates.weekday}
+                    onChange={(e) => setRates({...rates, weekday: e.target.value})}
+                    placeholder="e.g. 1499"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Weekend Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
+                  <Input 
+                    type="text" 
+                    className="pl-7 bg-black/60 border-[#D4AF37]/20 text-white" 
+                    value={rates.weekend}
+                    onChange={(e) => setRates({...rates, weekend: e.target.value})}
+                    placeholder="e.g. 1999"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-[#D4AF37]/10">
+              <div className="flex items-center justify-between mb-4">
+                <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">Special Date Prices</Label>
+                <Button 
+                  onClick={handleAddSpecialDate}
+                  variant="outline" 
+                  size="sm"
+                  className="h-8 border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Add Date
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {specialDates.map((sd, index) => (
+                  <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-black/20 p-3 rounded-lg border border-[#D4AF37]/10">
+                    <div className="flex-1">
+                      <Input 
+                        type="date" 
+                        className="bg-black/40 border-[#D4AF37]/20 text-white text-xs h-10 w-full" 
+                        value={sd.date}
+                        onChange={(e) => handleSpecialDateChange(index, 'date', e.target.value)}
+                      />
+                    </div>
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-3 text-gray-400 text-xs">₹</span>
+                      <Input 
+                        type="text" 
+                        className="pl-7 bg-black/40 border-[#D4AF37]/20 text-white text-xs h-10 w-full" 
+                        value={sd.price}
+                        onChange={(e) => handleSpecialDateChange(index, 'price', e.target.value)}
+                        placeholder="Price"
+                      />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-red-500 hover:text-red-400 h-10 w-10 self-end sm:self-auto"
+                      onClick={() => handleRemoveSpecialDate(index)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                {specialDates.length === 0 && (
+                  <p className="text-center text-[10px] text-gray-500 italic py-2">No special dates added.</p>
+                )}
+              </div>
+            </div>
+
+            <Button 
+              className="w-full bg-[#D4AF37] hover:bg-[#B8962E] text-black font-bold mt-4 h-12 rounded-xl"
+              onClick={handleSave}
+            >
+              Update Rates & Sync Calendars
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

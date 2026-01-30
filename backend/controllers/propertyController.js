@@ -48,10 +48,10 @@ const getAllProperties = async (req, res) => {
             'name', pu.name, 
             'available_persons', pu.available_persons, 
             'total_persons', pu.total_persons,
-            'weekday_price', pu.weekday_price,
-            'weekend_price', pu.weekend_price,
-            'special_price', pu.special_price,
-            'special_dates', pu.special_dates
+            'weekday_price', p.weekday_price,
+            'weekend_price', p.weekend_price,
+            'special_price', p.price,
+            'special_dates', p.special_dates
           )) 
          FROM property_units pu WHERE pu.property_id = p.id) as units
       FROM properties p
@@ -123,10 +123,10 @@ const getPublicProperties = async (req, res) => {
             'name', pu.name, 
             'available_persons', pu.available_persons, 
             'total_persons', pu.total_persons,
-            'weekday_price', pu.weekday_price,
-            'weekend_price', pu.weekend_price,
-            'special_price', pu.special_price,
-            'special_dates', pu.special_dates
+            'weekday_price', p.weekday_price,
+            'weekend_price', p.weekend_price,
+            'special_price', p.price,
+            'special_dates', p.special_dates
           )) 
          FROM property_units pu WHERE pu.property_id = p.id) as units,
         (

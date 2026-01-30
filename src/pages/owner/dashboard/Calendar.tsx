@@ -86,7 +86,9 @@ const OwnerCalendar = () => {
             <CalendarSync 
               propertyId={property.id.toString()} 
               unitId={selectedUnitId ? parseInt(selectedUnitId) : undefined}
+              unitName={units.find(u => u.id.toString() === selectedUnitId)?.name}
               isAdmin={true} 
+              propertyName={property.title}
             />
           </div>
         ) : (

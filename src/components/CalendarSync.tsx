@@ -206,7 +206,7 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
               head_row: "flex w-full mb-3",
               head_cell: "text-gray-400 rounded-md flex-1 font-bold text-[10px] sm:text-xs uppercase tracking-tighter text-center",
               row: "flex w-full mt-1",
-              cell: "flex-1 aspect-square h-auto relative p-0.5 text-center text-sm focus-within:relative focus-within:z-20",
+              cell: "flex-1 aspect-square h-auto relative p-0.5 text-center text-sm",
               day: "h-full w-full p-0 font-normal aria-selected:opacity-100 transition-transform",
               day_today: "ring-1 sm:ring-2 ring-yellow-400 ring-offset-1 sm:ring-offset-2 ring-offset-black rounded-md",
               day_selected: "bg-transparent text-inherit hover:bg-transparent hover:text-inherit focus:bg-transparent focus:text-inherit",

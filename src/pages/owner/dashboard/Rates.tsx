@@ -214,37 +214,6 @@ const OwnerRates = () => {
       </div>
       
       <div className="space-y-8">
-        <div className="bg-black/40 border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <h2 className="text-lg font-bold text-white uppercase tracking-wider">Availability Calendar</h2>
-            {isCampingsCottages && units.length > 0 && (
-              <div className="w-full sm:w-64">
-                <Select value={selectedUnitId || ""} onValueChange={setSelectedUnitId}>
-                  <SelectTrigger className="bg-black/60 border-[#D4AF37]/30 text-white h-11">
-                    <SelectValue placeholder="Select Unit" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-charcoal border-white/10 text-white">
-                    {units.map((u: any) => (
-                      <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-          
-          <div className="bg-white/5 rounded-2xl p-4 sm:p-6 border border-white/10">
-            {property && (
-              <CalendarSync 
-                propertyId={property.property_id} 
-                isAdmin={true} 
-                unitId={selectedUnitId ? parseInt(selectedUnitId) : undefined}
-                propertyName={isCampingsCottages && selectedUnitId ? units.find((u: any) => u.id.toString() === selectedUnitId)?.name : property.title}
-              />
-            )}
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4 sm:px-0">
           <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
             <CardContent className="pt-6">

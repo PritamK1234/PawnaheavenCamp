@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { X, Plus, User, Users, CreditCard, IndianRupee, Loader2, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { X, Plus, User, Users, CreditCard, IndianRupee, Loader2, Download, FileSpreadsheet, FileText, Pencil, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ interface LedgerPopupProps {
   propertyName: string;
   propertyId: string;
   unitId?: number;
+  unitName?: string;
   availablePersons: number;
   totalPersons: number;
 }
@@ -35,12 +36,14 @@ export const LedgerPopup = ({
   propertyName,
   propertyId,
   unitId,
+  unitName,
   availablePersons,
   totalPersons,
 }: LedgerPopupProps) => {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -174,8 +177,11 @@ export const LedgerPopup = ({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/bookings/ledger', {
-        method: 'POST',
+      const url = editingEntry ? `/api/bookings/ledger/${editingEntry.id}` : '/api/bookings/ledger';
+      const method = editingEntry ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
@@ -187,8 +193,9 @@ export const LedgerPopup = ({
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("Entry added successfully");
+        toast.success(editingEntry ? "Entry updated successfully" : "Entry added successfully");
         setShowAddForm(false);
+        setEditingEntry(null);
         fetchEntries();
         setFormData({
           customer_name: "",
@@ -200,9 +207,36 @@ export const LedgerPopup = ({
         });
       }
     } catch (error) {
-      toast.error("Failed to add entry");
+      toast.error(editingEntry ? "Failed to update entry" : "Failed to add entry");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEdit = (entry: any) => {
+    setEditingEntry(entry);
+    setFormData({
+      customer_name: entry.customer_name,
+      persons: entry.persons.toString(),
+      payment_mode: entry.payment_mode,
+      amount: entry.amount.toString(),
+      check_in: format(new Date(entry.check_in), 'yyyy-MM-dd'),
+      check_out: format(new Date(entry.check_out), 'yyyy-MM-dd')
+    });
+    setShowAddForm(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this entry?")) return;
+    try {
+      const res = await fetch(`/api/bookings/ledger/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Entry deleted");
+        fetchEntries();
+      }
+    } catch (error) {
+      toast.error("Failed to delete entry");
     }
   };
 
@@ -217,7 +251,7 @@ export const LedgerPopup = ({
           <div className="flex justify-between items-start">
             <div className="space-y-1 text-left">
               <DrawerTitle className="text-gold font-display text-2xl tracking-tight">
-                {propertyName}
+                {unitName || propertyName}
               </DrawerTitle>
               <DrawerDescription className="text-white/60 font-medium">
                 {format(date, 'dd MMM yyyy')}
@@ -376,11 +410,21 @@ export const LedgerPopup = ({
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-gold font-black">₹{entry.amount}</p>
-                        <p className="text-[8px] text-white/20 uppercase font-bold tracking-tighter mt-1">
-                          {format(new Date(entry.check_in), 'dd MMM')} - {format(new Date(entry.check_out), 'dd MMM')}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-gold font-black">₹{entry.amount}</p>
+                          <p className="text-[8px] text-white/20 uppercase font-bold tracking-tighter mt-1">
+                            {format(new Date(entry.check_in), 'dd MMM')} - {format(new Date(entry.check_out), 'dd MMM')}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 border-l border-white/10 pl-3">
+                          <button onClick={() => handleEdit(entry)} className="text-white/40 hover:text-gold transition-colors">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete(entry.id)} className="text-white/40 hover:text-red-500 transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -10,10 +10,11 @@ interface CalendarSyncProps {
   isAdmin?: boolean;
   onDateSelect?: (date: Date) => void;
   unitId?: number;
+  unitName?: string;
   propertyName?: string;
 }
 
-export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId, propertyName = "Property" }: CalendarSyncProps) => {
+export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId, unitName, propertyName = "Property" }: CalendarSyncProps) => {
   const [calendarData, setCalendarData] = useState<any[]>([]);
   const [propertyPrices, setPropertyPrices] = useState<{
     base: string;
@@ -146,6 +147,14 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
 
   return (
     <div className="w-full">
+      {unitName && (
+        <div className="mb-4">
+          <h3 className="text-gold font-display text-xl sm:text-2xl font-black uppercase tracking-tight">
+            {unitName}
+          </h3>
+          <div className="h-1 w-20 bg-gold/30 mt-1 rounded-full" />
+        </div>
+      )}
       <div className="calendar-container w-full overflow-x-visible">
         <div className="w-full">
           <Calendar
@@ -224,7 +233,8 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
         propertyName={propertyName}
         propertyId={propertyId}
         unitId={unitId}
-        availablePersons={propertyPrices.capacity || 0}
+        unitName={unitName}
+        availablePersons={getDayData(selectedLedgerDate || new Date())?.available_quantity ?? (propertyPrices.capacity || 0)}
         totalPersons={propertyPrices.maxCapacity || 0}
       />
     </div>

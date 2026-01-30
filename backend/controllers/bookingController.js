@@ -449,6 +449,26 @@ const addLedgerEntry = async (req, res) => {
   try {
     const { property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount } = req.body;
     
+    // Update availability if it's a unit-based entry
+    if (unit_id) {
+      const dates = [];
+      let current = new Date(check_in);
+      const end = new Date(check_out);
+      while (current < end) {
+        dates.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 1);
+      }
+
+      for (const date of dates) {
+        await query(
+          `UPDATE unit_calendar 
+           SET available_quantity = GREATEST(0, available_quantity - $1)
+           WHERE unit_id = $2 AND date = $3`,
+          [persons, unit_id, date]
+        );
+      }
+    }
+
     const result = await query(
       `INSERT INTO ledger_entries 
        (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount) 
@@ -459,6 +479,86 @@ const addLedgerEntry = async (req, res) => {
     res.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error('Error adding ledger entry:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+const updateLedgerEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customer_name, persons, check_in, check_out, payment_mode, amount } = req.body;
+    
+    // Get old entry to handle availability reversal
+    const oldEntry = await query('SELECT * FROM ledger_entries WHERE id = $1', [id]);
+    if (oldEntry.rows.length === 0) return res.status(404).json({ success: false, message: 'Entry not found' });
+    
+    const old = oldEntry.rows[0];
+    
+    // Reverse old availability
+    if (old.unit_id) {
+      let current = new Date(old.check_in);
+      const end = new Date(old.check_out);
+      while (current < end) {
+        await query(
+          'UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3',
+          [old.persons, old.unit_id, current.toISOString().split('T')[0]]
+        );
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    // Apply new availability
+    if (old.unit_id) {
+      let current = new Date(check_in);
+      const end = new Date(check_out);
+      while (current < end) {
+        await query(
+          'UPDATE unit_calendar SET available_quantity = GREATEST(0, available_quantity - $1) WHERE unit_id = $2 AND date = $3',
+          [persons, old.unit_id, current.toISOString().split('T')[0]]
+        );
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    const result = await query(
+      `UPDATE ledger_entries 
+       SET customer_name = $1, persons = $2, check_in = $3, check_out = $4, payment_mode = $5, amount = $6
+       WHERE id = $7 RETURNING *`,
+      [customer_name, persons, check_in, check_out, payment_mode, amount, id]
+    );
+
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating ledger entry:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+const deleteLedgerEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const entry = await query('SELECT * FROM ledger_entries WHERE id = $1', [id]);
+    if (entry.rows.length === 0) return res.status(404).json({ success: false, message: 'Entry not found' });
+    
+    const old = entry.rows[0];
+    
+    // Restore availability
+    if (old.unit_id) {
+      let current = new Date(old.check_in);
+      const end = new Date(old.check_out);
+      while (current < end) {
+        await query(
+          'UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3',
+          [old.persons, old.unit_id, current.toISOString().split('T')[0]]
+        );
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    await query('DELETE FROM ledger_entries WHERE id = $1', [id]);
+    res.json({ success: true, message: 'Entry deleted' });
+  } catch (error) {
+    console.error('Error deleting ledger entry:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
@@ -504,4 +604,6 @@ module.exports = {
   updateBookingStatus,
   processConfirmedBooking,
   processCancelledBooking,
+  updateLedgerEntry,
+  deleteLedgerEntry,
 };

@@ -87,6 +87,8 @@ const OwnerCalendar = () => {
           : (Array.isArray(unit.special_dates) ? unit.special_dates : []);
         setSpecialDates(sd);
       }
+    } else if (property?.category === 'villa') {
+      applyPropertyRates(property);
     }
   }, [selectedUnitId, units, property]);
 

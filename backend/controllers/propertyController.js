@@ -880,13 +880,20 @@ const updatePropertyUnit = async (req, res) => {
          total_persons = COALESCE($3, total_persons),
          amenities = COALESCE($4, amenities),
          images = COALESCE($5, images),
-         price_per_person = COALESCE($6, price_per_person)
-       WHERE id = $7 RETURNING *`,
+         price_per_person = COALESCE($6, price_per_person),
+         weekday_price = COALESCE(NULLIF($7, ''), weekday_price),
+         weekend_price = COALESCE(NULLIF($8, ''), weekend_price),
+         special_dates = COALESCE($9, special_dates),
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = $10 RETURNING *`,
       [
         name, available_persons, total_persons,
         Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null),
         Array.isArray(images) ? JSON.stringify(images) : (images || null),
         price_per_person,
+        weekday_price !== undefined ? String(weekday_price) : null,
+        weekend_price !== undefined ? String(weekend_price) : null,
+        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
         unitId
       ]
     );

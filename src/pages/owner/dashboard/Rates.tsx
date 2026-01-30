@@ -69,8 +69,8 @@ const OwnerRates = () => {
         const unit = unitsRes.data.find((u: any) => u.id.toString() === unitId);
         if (unit) {
           setRates({
-            weekday: unit.weekday_price || '',
-            weekend: unit.weekend_price || '',
+            weekday: unit.weekday_price !== null && unit.weekday_price !== undefined ? String(unit.weekday_price) : '',
+            weekend: unit.weekend_price !== null && unit.weekend_price !== undefined ? String(unit.weekend_price) : '',
           });
           
           const specialDates = typeof unit.special_dates === 'string'

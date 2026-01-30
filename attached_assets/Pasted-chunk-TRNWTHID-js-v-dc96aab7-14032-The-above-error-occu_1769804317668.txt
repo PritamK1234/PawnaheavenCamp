@@ -1,0 +1,31 @@
+chunk-TRNWTHID.js?v=dc96aab7:14032 The above error occurred in the <OwnerRates> component:
+
+    at OwnerRates (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/src/pages/owner/dashboard/Rates.tsx:35:31)
+    at Suspense
+    at PageWrapper (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/src/App.tsx:79:24)
+    at RenderedRoute (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=43c1544b:4088:5)
+    at Outlet (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=43c1544b:4494:26)
+    at main
+    at div
+    at OwnerLayout (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/src/components/owner/layout/OwnerLayout.tsx:29:22)
+    at RenderedRoute (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=43c1544b:4088:5)
+    at Routes (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=43c1544b:4558:5)
+    at Router (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=43c1544b:4501:15)
+    at BrowserRouter (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=43c1544b:5247:5)
+    at Provider (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/chunk-BFMU2MXH.js?v=dc96aab7:38:15)
+    at TooltipProvider (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=1b881155:60:5)
+    at QueryClientProvider (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/@tanstack_react-query.js?v=9cd7113b:2934:3)
+    at _a (https://ce54860d-bc40-4b1e-8906-cac319d4215a-00-2iz0v2uanq1oq.kirk.replit.dev/node_modules/.vite/deps/react-helmet-async.js?v=9bbdf2d5:624:5)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-TRNWTHID.js?v=dc96aab7:19413 Uncaught TypeError: Cannot read properties of null (reading 'property_id')
+    at OwnerRates (Rates.tsx:238:36)
+﻿
+
+Press ctrl i to turn on code suggestions. Press ctrl x to disable code suggestions.
+ctrl
+i
+ to turn on code suggestions. Don't show again
+

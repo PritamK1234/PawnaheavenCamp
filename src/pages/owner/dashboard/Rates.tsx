@@ -234,12 +234,14 @@ const OwnerRates = () => {
           </div>
           
           <div className="bg-white/5 rounded-2xl p-4 sm:p-6 border border-white/10">
-            <CalendarSync 
-              propertyId={property.property_id} 
-              isAdmin={true} 
-              unitId={selectedUnitId ? parseInt(selectedUnitId) : undefined}
-              propertyName={isCampingsCottages && selectedUnitId ? units.find((u: any) => u.id.toString() === selectedUnitId)?.name : property.title}
-            />
+            {property && (
+              <CalendarSync 
+                propertyId={property.property_id} 
+                isAdmin={true} 
+                unitId={selectedUnitId ? parseInt(selectedUnitId) : undefined}
+                propertyName={isCampingsCottages && selectedUnitId ? units.find((u: any) => u.id.toString() === selectedUnitId)?.name : property.title}
+              />
+            )}
           </div>
         </div>
 

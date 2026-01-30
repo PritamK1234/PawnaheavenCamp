@@ -895,6 +895,25 @@ const updatePropertyUnit = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Unit not found.' });
     }
 
+    // Since pricing is managed at property level, update the parent property's rates
+    if (weekday_price !== undefined || weekend_price !== undefined || special_dates !== undefined) {
+      const propertyId = result.rows[0].property_id;
+      await query(`
+        UPDATE properties
+        SET
+          weekday_price = COALESCE(NULLIF($1, ''), weekday_price),
+          weekend_price = COALESCE(NULLIF($2, ''), weekend_price),
+          special_dates = COALESCE($3, special_dates),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $4
+      `, [
+        weekday_price !== undefined ? String(weekday_price) : null,
+        weekend_price !== undefined ? String(weekend_price) : null,
+        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
+        propertyId
+      ]);
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Unit updated successfully.',

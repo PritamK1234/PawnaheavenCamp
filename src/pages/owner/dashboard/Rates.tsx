@@ -210,15 +210,15 @@ const OwnerRates = () => {
   return (
     <div className="space-y-6 max-w-full sm:max-w-2xl mx-auto px-0 sm:px-4 pb-10">
       <div className="flex items-center justify-between px-4 sm:px-0">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#D4AF37] font-display">Manage Prices & Rates</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#D4AF37] font-display">Manage Calendar & Prices</h1>
       </div>
       
       <div className="space-y-8">
         <div className="bg-black/40 border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <h2 className="text-lg font-bold text-white uppercase tracking-wider">Availability Calendar</h2>
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-white uppercase tracking-wider mb-4">Select Property Unit</h2>
             {isCampingsCottages && units.length > 0 && (
-              <div className="w-full sm:w-64">
+              <div className="w-full">
                 <Select value={selectedUnitId || ""} onValueChange={setSelectedUnitId}>
                   <SelectTrigger className="bg-black/60 border-[#D4AF37]/30 text-white h-11">
                     <SelectValue placeholder="Select Unit" />
@@ -234,6 +234,14 @@ const OwnerRates = () => {
           </div>
           
           <div className="bg-white/5 rounded-2xl p-4 sm:p-6 border border-white/10">
+            {isCampingsCottages && selectedUnitId && (
+              <div className="mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 bg-[#D4AF37] rounded-full" />
+                <span className="text-[#D4AF37] font-bold text-sm uppercase tracking-wider">
+                  {units.find((u: any) => u.id.toString() === selectedUnitId)?.name}
+                </span>
+              </div>
+            )}
             {property && (
               <CalendarSync 
                 propertyId={property.property_id} 

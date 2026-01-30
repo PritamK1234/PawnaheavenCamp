@@ -277,7 +277,7 @@ const getPropertyById = async (req, res) => {
           (
             SELECT json_agg(json_build_object(
               'date', d.date,
-              'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN pu.weekend_price ELSE pu.weekday_price END),
+              'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
               'is_booked', COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries 
@@ -295,7 +295,7 @@ const getPropertyById = async (req, res) => {
                 AND check_out >= d.date
               ), 0),
               'is_weekend', d.is_weekend,
-              'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(pu.special_dates) sd WHERE (sd->>'date')::date = d.date)
+              'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
             ) ORDER BY d.date)
             FROM (
               SELECT generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')::date as date,
@@ -480,7 +480,7 @@ const getPublicPropertyBySlug = async (req, res) => {
           (
             SELECT json_agg(json_build_object(
               'date', d.date,
-              'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN pu.weekend_price ELSE pu.weekday_price END),
+              'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
               'is_booked', COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries 
@@ -498,7 +498,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 AND check_out >= d.date
               ), 0),
               'is_weekend', d.is_weekend,
-              'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(pu.special_dates) sd WHERE (sd->>'date')::date = d.date)
+              'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
             ) ORDER BY d.date)
             FROM (
               SELECT generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')::date as date,

@@ -53,6 +53,12 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
       if (propResult.success) {
         let specialDates = [];
         const data = propResult.data;
+        
+        // Find specific unit data if unitId is provided
+        const selectedUnit = unitId && Array.isArray(data.units) 
+          ? data.units.find((u: any) => u.id === unitId)
+          : null;
+
         if (data.special_dates) {
           try {
             specialDates = typeof data.special_dates === 'string' 
@@ -72,8 +78,8 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
             ? String(data.weekend_price) 
             : (data.price ? String(data.price) : ""),
           specialDates: Array.isArray(specialDates) ? specialDates : [],
-          capacity: data.capacity || data.available_persons,
-          maxCapacity: data.max_capacity || data.total_persons
+          capacity: selectedUnit ? selectedUnit.available_persons : (data.capacity || data.available_persons),
+          maxCapacity: selectedUnit ? selectedUnit.total_persons : (data.max_capacity || data.total_persons)
         });
       }
     } catch (error) {

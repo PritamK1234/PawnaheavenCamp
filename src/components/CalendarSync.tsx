@@ -127,7 +127,7 @@ export const CalendarSync = ({
     const price = isWeekend(date) ? propertyPrices.weekend : propertyPrices.weekday;
     
     // 4. Final fallback to base price
-    return (price || propertyPrices.base || "").toString();
+    return (price && price !== "0" ? price : propertyPrices.base || "").toString();
   };
 
   const handleUpdate = async (date: Date, isBooked: boolean) => {

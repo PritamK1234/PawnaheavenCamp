@@ -327,7 +327,10 @@ const getPropertyById = async (req, res) => {
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
                 AND check_out > d.date
-              ), 0)
+              ), 0),
+              'weekday_price', p.weekday_price,
+              'weekend_price', p.weekend_price,
+              'special_dates', p.special_dates
             ) ORDER BY d.date) as calendar
             FROM properties p
             CROSS JOIN (
@@ -531,7 +534,10 @@ const getPublicPropertyBySlug = async (req, res) => {
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
                 AND check_out > d.date
-              ), 0)
+              ), 0),
+              'weekday_price', p.weekday_price,
+              'weekend_price', p.weekend_price,
+              'special_dates', p.special_dates
             ) ORDER BY d.date) as calendar
             FROM properties p
             CROSS JOIN (

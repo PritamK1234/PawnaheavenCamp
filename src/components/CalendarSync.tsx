@@ -12,9 +12,18 @@ interface CalendarSyncProps {
   unitId?: number;
   unitName?: string;
   propertyName?: string;
+  isVilla?: boolean;
 }
 
-export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId, unitName, propertyName = "Property" }: CalendarSyncProps) => {
+export const CalendarSync = ({ 
+  propertyId, 
+  isAdmin = false, 
+  onDateSelect, 
+  unitId, 
+  unitName, 
+  propertyName = "Property",
+  isVilla = false
+}: CalendarSyncProps) => {
   const [calendarData, setCalendarData] = useState<any[]>([]);
   const [propertyPrices, setPropertyPrices] = useState<{
     base: string;
@@ -204,7 +213,7 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
                     isPast && "opacity-60 grayscale-[0.5]"
                   )}>
                     <span className="text-[11px] sm:text-xs font-bold leading-none">{format(date, 'd')}</span>
-                    {availableQuantity !== null && !isPast && (
+                    {!isVilla && availableQuantity !== null && !isPast && (
                       <div className="flex items-center gap-0.5 mt-0.5 sm:mt-1 scale-90 sm:scale-100 font-black text-[8px] sm:text-[10px]">
                         <span className="text-[#008000]">{availableQuantity}</span>
                         <span className="text-gray-500">/</span>
@@ -251,6 +260,7 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
         unitName={unitName}
         availablePersons={getDayData(selectedLedgerDate || new Date())?.available_quantity ?? (propertyPrices.capacity || 0)}
         totalPersons={propertyPrices.maxCapacity || 0}
+        isVilla={isVilla}
       />
     </div>
   );

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { LogOut, User, Plus, X, Clock } from 'lucide-react';
+import { LogOut, User, Plus, X, Clock, Trash2, ImageIcon, Loader2, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import PWAInstallButton from '@/components/owner/pwa/PWAInstallButton';
@@ -31,8 +31,11 @@ const OwnerProfile = () => {
     highlights: [] as string[],
     policies: [] as string[],
     schedule: [] as {time: string, title: string}[],
-    description: ''
+    description: '',
+    images: [] as string[]
   });
+
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('ownerToken');
@@ -121,7 +124,8 @@ const OwnerProfile = () => {
               }
               return { time: '', title: String(item) };
             }),
-            description: prop.description || ''
+            description: prop.description || '',
+            images: parseData(prop.images)
           });
 
           localStorage.setItem('linkedProperty', JSON.stringify(prop));
@@ -163,6 +167,34 @@ const OwnerProfile = () => {
       toast.error('Failed to save changes');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
+    const formDataUpload = new FormData();
+    formDataUpload.append('image', file);
+
+    try {
+      const response = await fetch('/api/properties/upload-image', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formDataUpload,
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setDetails(prev => ({ ...prev, images: [...prev.images, result.url] }));
+        toast.success('Image uploaded');
+      }
+    } catch (error) {
+      toast.error('Upload error');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -288,6 +320,48 @@ const OwnerProfile = () => {
       </Card>
 
         <div className="space-y-6">
+        <div className="space-y-3">
+          <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Amenities</Label>
+          <TagList type="amenities" items={details.amenities} />
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Property Gallery</Label>
+            <input 
+              type="file" 
+              id="prop-img-owner" 
+              className="hidden" 
+              onChange={handleImageUpload} 
+              accept="image/*"
+            />
+            <Button 
+              type="button" 
+              size="sm" 
+              variant="outline" 
+              onClick={() => document.getElementById('prop-img-owner')?.click()} 
+              disabled={isUploading}
+              className="border-[#D4AF37]/30 text-[#D4AF37] h-9"
+            >
+              {isUploading ? 'Uploading...' : 'Upload Image'}
+            </Button>
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            {(details.images || []).map((img, idx) => (
+              <div key={idx} className="aspect-square rounded-lg overflow-hidden relative group border border-white/10">
+                <img src={img} className="w-full h-full object-cover" />
+                <button 
+                  type="button" 
+                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity" 
+                  onClick={() => setDetails({ ...details, images: details.images.filter((_, i) => i !== idx) })}
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="space-y-3">
           <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Activities</Label>
           <TagList type="activities" items={details.activities} />

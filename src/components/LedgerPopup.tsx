@@ -27,6 +27,7 @@ interface LedgerPopupProps {
   unitName?: string;
   availablePersons: number;
   totalPersons: number;
+  isVilla?: boolean;
 }
 
 export const LedgerPopup = ({
@@ -39,6 +40,7 @@ export const LedgerPopup = ({
   unitName,
   availablePersons,
   totalPersons,
+  isVilla = false,
 }: LedgerPopupProps) => {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -272,16 +274,34 @@ export const LedgerPopup = ({
         <div className="px-6 overflow-y-auto pb-10">
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex items-center justify-between mb-6">
             <div className="space-y-1">
-              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Unit Availability</p>
+              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider">
+                {isVilla ? "Status" : "Unit Availability"}
+              </p>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-black text-[#00FF41]">{availablePersons}</span>
-                <span className="text-white/20 text-xl font-light">/</span>
-                <span className="text-xl font-bold text-[#FFA500]">{totalPersons}</span>
-                <span className="text-white/60 text-xs ml-1">Persons</span>
+                {isVilla ? (
+                  entries.length > 0 ? (
+                    <span className="text-xl font-black text-[#FF0000] uppercase tracking-wider">Booked</span>
+                  ) : (
+                    <span className="text-xl font-black text-[#00FF41] uppercase tracking-wider">Available</span>
+                  )
+                ) : (
+                  <>
+                    <span className="text-2xl font-black text-[#00FF41]">{availablePersons}</span>
+                    <span className="text-white/20 text-xl font-light">/</span>
+                    <span className="text-xl font-bold text-[#FFA500]">{totalPersons}</span>
+                    <span className="text-white/60 text-xs ml-1">Persons</span>
+                  </>
+                )}
               </div>
+              {isVilla && (
+                <p className="text-[10px] text-white/40 font-bold uppercase mt-1">
+                  Max: {totalPersons} Persons
+                </p>
+              )}
             </div>
             <Button 
               onClick={() => setShowAddForm(!showAddForm)}
+              disabled={isVilla && entries.length > 0 && !showAddForm}
               className="bg-gold hover:bg-gold/80 text-black font-bold rounded-full h-10 px-4 gap-2"
             >
               <Plus className="w-4 h-4" />

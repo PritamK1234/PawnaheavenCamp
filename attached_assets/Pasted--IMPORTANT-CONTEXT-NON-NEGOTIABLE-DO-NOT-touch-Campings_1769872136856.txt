@@ -1,0 +1,142 @@
+**IMPORTANT CONTEXT (NON-NEGOTIABLE):**
+
+* DO NOT touch **Campings_Cottages Owner Dashboard**
+* DO NOT change Admin Panel or Public UI logic
+* This task is **ONLY for Villas Owner Dashboard**
+* Reuse existing components & calendar logic wherever possible
+
+---
+
+# TASK: Villas Owner Dashboard – Align with Unit-Based Flow (with Villa-Specific Rules)
+
+## OVERALL GOAL
+
+Make the **Villas Owner Dashboard** internally follow the same architecture as Campings_Cottages (calendar, ledger popup, sync), **but with villa-specific behavior differences**.
+
+Villa is treated as **a single fixed unit**, not multiple units.
+
+---
+
+## 1️⃣ Calendar & Prices Tab (Villas)
+
+### Default Selection
+
+* Villa must be **auto-selected by default**
+* NO unit selector / NO unit tabs (villa = single unit)
+
+### Calendar Cell Click → Ledger Popup (Villa-Specific Rules)
+
+Popup UI should show:
+
+**Header**
+
+* Villa name (e.g. *Sanket Villa*)
+* Selected date (e.g. *31 Jan 2026*)
+* Capacity display:
+
+  * `Booked / Available`
+  * Example:
+
+    * **Booked** → PURE RED
+    * **Available** → PURE GREEN
+  * Max capacity text shown separately (e.g. *Max: 5 persons*)
+
+---
+
+### Ledger Rules (IMPORTANT)
+
+* Only **ONE entry allowed per date**
+* After one entry is added:
+
+  * “+ Add Entry” button becomes **disabled**
+* Button becomes clickable **only if that entry is deleted**
+
+**Entry Fields**
+
+* Customer name
+* Number of persons
+* Check-in / Check-out (auto-pick selected date)
+* Payment mode (online / offline)
+* Amount
+
+---
+
+### Availability Logic (Villa)
+
+* If entry exists → status = **BOOKED**
+* If no entry → status = **AVAILABLE**
+* This status must sync instantly:
+
+  * Villas Owner Dashboard calendar
+  * Admin panel
+  * Public website availability
+
+⚠️ No per-cell prices shown on Villas calendar
+⚠️ Calendar is availability-focused only
+
+---
+
+## 2️⃣ Units Tabs (Villas)
+
+* ❌ Units tabs MUST NOT exist
+* ❌ No unit selector dropdown
+* Villa behaves as a **single implicit unit**
+
+---
+
+## 3️⃣ Profile Tab – Villas (DIFFERENT FROM Campings_Cottages)
+
+### Shared Fields (same as Campings_Cottages)
+
+* Activities
+* Highlights (What You’ll Love)
+* Property Schedule
+* Rules & Policies
+* Description
+
+### EXTRA Fields (Villas ONLY)
+
+* Amenities
+* Property Images (Upload / Update Gallery)
+
+⚠️ These **extra fields must NOT appear** in Campings_Cottages Owner Dashboard
+
+---
+
+## 4️⃣ Sync & Safety Rules
+
+* Availability status (Booked / Available) is the **single source of truth**
+* No duplicate logic for villas vs units
+* Do NOT affect:
+
+  * Campings_Cottages owners dashboard
+  * Campings_Cottages unit logic
+  * Public booking flow structure
+
+---
+
+1) Villas as Single Units: The villa will be treated as a single, auto-selected unit with no unit selectors or tabs.
+2) Availability-Focused Calendar: One entry per date, with a ledger popup for management. No per-cell prices.
+3) Real-Time Sync: Status changes will sync across the Owner Dashboard, Admin Panel, and Public Site.
+4) Profile Enhancements: Inclusion of villa-specific fields like Amenities and Property Images gallery.
+5) Strict Isolation: No changes will affect the Campings_Cottages Owner Dashboard or existing unit logic.
+
+## EXPECTED RESULT
+
+Villa owners can:
+
+* Manage availability with **one-tap daily ledger**
+* Clearly see Booked / Available states
+* Avoid overbooking
+* Have perfect sync across:
+
+  * Owner dashboard
+  * Admin panel
+  * Public site
+
+---
+
+**Proceed ONLY with Villas Owner Dashboard changes.**
+Awaiting confirmation before implementation.
+
+---

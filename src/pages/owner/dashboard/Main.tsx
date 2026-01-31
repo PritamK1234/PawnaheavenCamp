@@ -203,52 +203,40 @@ const OwnerCalendar = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4 sm:px-0">
-          <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
-            <CardContent className="pt-6">
-              <Label className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-2 block">
-                Weekdays (Base)
-              </Label>
-              <div className="text-2xl font-bold text-white">
-                {rates.weekday ? `₹${rates.weekday}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
-              </div>
-              <p className="text-[10px] text-gray-500 mt-1 uppercase">Mon-Thu Pricing</p>
-            </CardContent>
-          </Card>
-          <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
-            <CardContent className="pt-6">
-              <Label className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-2 block">
-                Weekends
-              </Label>
-              <div className="text-2xl font-bold text-white">
-                {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-sm font-normal italic">Not set</span>}
-              </div>
-              <p className="text-[10px] text-gray-500 mt-1 uppercase">Fri-Sun Pricing</p>
-            </CardContent>
-          </Card>
-          <Card className="glass border-[#D4AF37]/30 bg-black/40 rounded-xl">
-            <CardContent className="pt-6">
-              <Label className="text-purple-400 text-[10px] font-bold uppercase tracking-widest mb-2 block">
-                Special Days
-              </Label>
-              <div className="text-2xl font-bold text-white">
-                {specialDates.length > 0 ? `₹${specialDates[0].price}` : <span className="text-gray-500 text-sm font-normal italic">None</span>}
-              </div>
-              <p className="text-[10px] text-gray-500 mt-1 uppercase">Holidays & Events</p>
-            </CardContent>
-          </Card>
-        </div>
-
         <div className="bg-black/40 border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8">
           <CardContent className="pt-0 space-y-4 px-0">
             {isCampingsCottages && selectedUnitId && (
-              <div className="mb-4 flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#D4AF37] rounded-full" />
-                <span className="text-[#D4AF37] font-bold text-sm uppercase tracking-wider">
-                  {units.find((u: any) => u.id.toString() === selectedUnitId)?.name}
-                </span>
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#D4AF37] rounded-full" />
+                  <span className="text-[#D4AF37] font-bold text-sm uppercase tracking-wider">
+                    {units.find((u: any) => u.id.toString() === selectedUnitId)?.name}
+                  </span>
+                </div>
               </div>
             )}
+
+            <div className="grid grid-cols-3 gap-2 mb-6">
+              <div className="bg-black/40 border border-[#D4AF37]/20 rounded-lg p-2 text-center">
+                <p className="text-blue-400 text-[8px] font-bold uppercase tracking-widest mb-1">Weekdays</p>
+                <p className="text-xs font-bold text-white">
+                  {rates.weekday ? `₹${rates.weekday}` : <span className="text-gray-500 text-[10px] font-normal italic">Not set</span>}
+                </p>
+              </div>
+              <div className="bg-black/40 border border-[#D4AF37]/20 rounded-lg p-2 text-center">
+                <p className="text-green-400 text-[8px] font-bold uppercase tracking-widest mb-1">Weekends</p>
+                <p className="text-xs font-bold text-white">
+                  {rates.weekend ? `₹${rates.weekend}` : <span className="text-gray-500 text-[10px] font-normal italic">Not set</span>}
+                </p>
+              </div>
+              <div className="bg-black/40 border border-[#D4AF37]/20 rounded-lg p-2 text-center">
+                <p className="text-purple-400 text-[8px] font-bold uppercase tracking-widest mb-1">Special</p>
+                <p className="text-xs font-bold text-white">
+                  {specialDates.length > 0 ? `₹${specialDates[0].price}` : <span className="text-gray-500 text-[10px] font-normal italic">None</span>}
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">

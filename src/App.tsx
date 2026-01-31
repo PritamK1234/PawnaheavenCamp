@@ -28,6 +28,7 @@ const OwnerEntry = lazy(() => import("./pages/owner/Entry"));
 const OwnerRegister = lazy(() => import("./pages/owner/register/Register"));
 const OwnerRegisterOTP = lazy(() => import("./pages/owner/register/OTP"));
 const OwnerLogin = lazy(() => import("./pages/owner/login/Login"));
+const DashboardRedirect = lazy(() => import("./pages/owner/dashboard/DashboardRedirect"));
 const OwnerLayout = lazy(() => import("./components/owner/layout/OwnerLayout"));
 const OwnerMain = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Main"));
 const OwnerProfile = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Profile"));
@@ -98,6 +99,7 @@ const App = () => {
               <Route path="/owner/register" element={<PageWrapper><OwnerRegister /></PageWrapper>} />
               <Route path="/owner/register/otp" element={<PageWrapper><OwnerRegisterOTP /></PageWrapper>} />
               <Route path="/owner/login" element={<PageWrapper><OwnerLogin /></PageWrapper>} />
+              <Route path="/owner/dashboard" element={<PageWrapper><DashboardRedirect /></PageWrapper>} />
               
               <Route element={<OwnerLayout />}>
                 <Route path="/owner/dashboard/villa" element={<PageWrapper><VillaOwnerMain /></PageWrapper>} />

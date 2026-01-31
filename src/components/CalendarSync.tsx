@@ -91,6 +91,15 @@ export const CalendarSync = ({ propertyId, isAdmin = false, onDateSelect, unitId
 
   useEffect(() => {
     if (propertyId || unitId) fetchCalendar();
+    
+    // Listen for calendar updates from ledger
+    const handleCalendarUpdate = () => {
+      fetchCalendar();
+    };
+    window.addEventListener('calendarUpdate', handleCalendarUpdate);
+    return () => {
+      window.removeEventListener('calendarUpdate', handleCalendarUpdate);
+    };
   }, [propertyId, unitId]);
 
   const getPriceForDate = (date: Date) => {

@@ -449,17 +449,31 @@ const addLedgerEntry = async (req, res) => {
   try {
     const { property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount } = req.body;
     
-    // Update availability if it's a unit-based entry
-    if (unit_id) {
-      const dates = [];
-      let current = new Date(check_in);
-      const end = new Date(check_out);
-      while (current < end) {
-        dates.push(current.toISOString().split('T')[0]);
-        current.setDate(current.getDate() + 1);
-      }
+    // 1. Calculate dates in the range (excluding check-out day)
+    const dates = [];
+    let current = new Date(check_in);
+    const end = new Date(check_out);
+    while (current < end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
 
+    // 2. Ensure unit_calendar entries exist and update availability
+    if (unit_id) {
       for (const date of dates) {
+        // Check if entry exists, if not create it with total capacity first
+        const existing = await query('SELECT available_quantity FROM unit_calendar WHERE unit_id = $1 AND date = $2', [unit_id, date]);
+        
+        if (existing.rows.length === 0) {
+          const unitResult = await query('SELECT total_persons FROM property_units WHERE id = $1', [unit_id]);
+          const totalCapacity = unitResult.rows[0].total_persons;
+          await query(
+            'INSERT INTO unit_calendar (unit_id, date, available_quantity) VALUES ($1, $2, $3)',
+            [unit_id, date, totalCapacity]
+          );
+        }
+
+        // Subtract persons from availability
         await query(
           `UPDATE unit_calendar 
            SET available_quantity = GREATEST(0, available_quantity - $1)
@@ -469,6 +483,7 @@ const addLedgerEntry = async (req, res) => {
       }
     }
 
+    // 3. Insert the ledger entry
     const result = await query(
       `INSERT INTO ledger_entries 
        (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount) 

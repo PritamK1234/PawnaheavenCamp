@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { X, Plus, User, Users, CreditCard, IndianRupee, Loader2, Download, FileSpreadsheet, FileText, Pencil, Trash2 } from "lucide-react";
@@ -150,7 +150,7 @@ export const LedgerPopup = ({
       setFormData(prev => ({
         ...prev,
         check_in: format(date, 'yyyy-MM-dd'),
-        check_out: format(date, 'yyyy-MM-dd')
+        check_out: format(addDays(date, 1), 'yyyy-MM-dd')
       }));
     }
   }, [isOpen, date]);
@@ -197,13 +197,17 @@ export const LedgerPopup = ({
         setShowAddForm(false);
         setEditingEntry(null);
         fetchEntries();
+        // Notify parent component to refresh calendar
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('calendarUpdate'));
+        }
         setFormData({
           customer_name: "",
           persons: "",
           payment_mode: "offline",
           amount: "",
           check_in: format(date!, 'yyyy-MM-dd'),
-          check_out: format(date!, 'yyyy-MM-dd')
+          check_out: format(addDays(date!, 1), 'yyyy-MM-dd')
         });
       }
     } catch (error) {

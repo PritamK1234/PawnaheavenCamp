@@ -1,0 +1,24 @@
+chunk-TRNWTHID.js?v=36e9d947:14032 The above error occurred in the <OwnerCalendar> component:
+
+    at OwnerCalendar (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/src/pages/owner/dashboard/Villas-owners-dashboard/Main.tsx:34:37)
+    at Suspense
+    at PageWrapper (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/src/App.tsx:83:24)
+    at RenderedRoute (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=36e9d947:4088:5)
+    at Outlet (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=36e9d947:4494:26)
+    at main
+    at div
+    at OwnerLayout (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/src/components/owner/layout/OwnerLayout.tsx:29:22)
+    at RenderedRoute (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=36e9d947:4088:5)
+    at Routes (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=36e9d947:4558:5)
+    at Router (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=36e9d947:4501:15)
+    at BrowserRouter (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=36e9d947:5247:5)
+    at Provider (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/chunk-BFMU2MXH.js?v=36e9d947:38:15)
+    at TooltipProvider (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=36e9d947:60:5)
+    at QueryClientProvider (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/@tanstack_react-query.js?v=36e9d947:2934:3)
+    at _a (https://13a298ef-9ebc-45c0-b9ec-049b8521dbd6-00-3kzdpbd9w0utx.spock.replit.dev/node_modules/.vite/deps/react-helmet-async.js?v=36e9d947:624:5)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-TRNWTHID.js?v=36e9d947:11678 Uncaught Error: Rendered more hooks than during the previous render.
+    at OwnerCalendar (Main.tsx:44:31)

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarSync } from "@/components/CalendarSync";
-import { propertyAPI } from "@/lib/api";
 import { CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 
 const OwnerCalendar = () => {
   const ownerDataString = localStorage.getItem('ownerData');
@@ -15,6 +13,11 @@ const OwnerCalendar = () => {
   const propertyId = ownerData?.id || ownerData?.property_id;
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [prices, setPrices] = useState({
+    weekday: '',
+    weekend: '',
+    special: [] as {date: string, price: string}[]
+  });
 
   const fetchData = async () => {
     if (!propertyId) return;
@@ -39,13 +42,15 @@ const OwnerCalendar = () => {
     fetchData();
   }, [propertyId]);
 
-  if (loading) return <div className="p-8 text-center text-[#D4AF37]">Loading...</div>;
-
-  const [prices, setPrices] = useState({
-    weekday: '',
-    weekend: '',
-    special: [] as {date: string, price: string}[]
-  });
+  useEffect(() => {
+    if (property) {
+      setPrices({
+        weekday: property.weekday_price || '',
+        weekend: property.weekend_price || '',
+        special: property.special_prices || []
+      });
+    }
+  }, [property]);
 
   const handlePriceUpdate = async () => {
     try {
@@ -71,15 +76,7 @@ const OwnerCalendar = () => {
     }
   };
 
-  useEffect(() => {
-    if (property) {
-      setPrices({
-        weekday: property.weekday_price || '',
-        weekend: property.weekend_price || '',
-        special: property.special_prices || []
-      });
-    }
-  }, [property]);
+  if (loading) return <div className="p-8 text-center text-[#D4AF37]">Loading...</div>;
 
   return (
     <div className="space-y-6 max-w-full sm:max-w-2xl mx-auto px-0 sm:px-4 pb-10">
@@ -88,7 +85,6 @@ const OwnerCalendar = () => {
       </div>
       
       <div className="space-y-8">
-        {/* Prices Section */}
         <div className="bg-black/40 border border-[#D4AF37]/30 rounded-2xl p-6 sm:p-8 space-y-6">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <span className="w-1.5 h-6 bg-[#D4AF37] rounded-full" />

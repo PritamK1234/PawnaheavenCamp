@@ -210,8 +210,8 @@ export const CalendarSync = ({
                   <div className={cn(
                     "relative w-full h-full flex flex-col items-center justify-center p-0.5 rounded-md transition-all select-none",
                     isVilla 
-                      ? (isBooked ? "bg-[#FF0000] text-white" : "bg-[#00FF00] text-black")
-                      : (availableQuantity === 0 ? "bg-[#FF0000] text-white" : "bg-[#00FF00] text-black"),
+                      ? (isBooked ? "!bg-[#FF0000] !text-white" : "!bg-[#00FF00] !text-black")
+                      : (availableQuantity === 0 ? "!bg-[#FF0000] !text-white" : "!bg-[#00FF00] !text-black"),
                     isPast && "opacity-60 grayscale-[0.5]"
                   )}>
                     <span className="text-[11px] sm:text-xs font-bold leading-none">{format(date, 'd')}</span>

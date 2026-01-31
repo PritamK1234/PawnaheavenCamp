@@ -320,7 +320,7 @@ const getPropertyById = async (req, res) => {
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
                 AND check_out > d.date
-              ), 0) >= p.max_capacity,
+              ), 0) > 0,
               'available_quantity', p.max_capacity - COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries 
@@ -524,7 +524,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
                 AND check_out > d.date
-              ), 0) >= p.max_capacity,
+              ), 0) > 0,
               'available_quantity', p.max_capacity - COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries 

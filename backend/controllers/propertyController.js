@@ -284,7 +284,7 @@ const getPropertyById = async (req, res) => {
                 WHERE property_id = pu.property_id::text 
                 AND unit_id = pu.id 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0) >= pu.total_persons,
               'available_quantity', pu.total_persons - COALESCE((
                 SELECT SUM(persons) 
@@ -292,7 +292,7 @@ const getPropertyById = async (req, res) => {
                 WHERE property_id = pu.property_id::text 
                 AND unit_id = pu.id 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0),
               'is_weekend', d.is_weekend,
               'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
@@ -319,14 +319,14 @@ const getPropertyById = async (req, res) => {
                 FROM ledger_entries 
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0) >= p.max_capacity,
               'available_quantity', p.max_capacity - COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries 
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0)
             ) ORDER BY d.date) as calendar
             FROM properties p
@@ -488,7 +488,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 WHERE property_id = pu.property_id::text 
                 AND unit_id = pu.id 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0) >= pu.total_persons,
               'available_quantity', pu.total_persons - COALESCE((
                 SELECT SUM(persons) 
@@ -496,7 +496,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 WHERE property_id = pu.property_id::text 
                 AND unit_id = pu.id 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0),
               'is_weekend', d.is_weekend,
               'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
@@ -523,14 +523,14 @@ const getPublicPropertyBySlug = async (req, res) => {
                 FROM ledger_entries 
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0) >= p.max_capacity,
               'available_quantity', p.max_capacity - COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries 
                 WHERE property_id = p.property_id::text 
                 AND check_in <= d.date 
-                AND check_out >= d.date
+                AND check_out > d.date
               ), 0)
             ) ORDER BY d.date) as calendar
             FROM properties p

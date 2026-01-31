@@ -429,7 +429,7 @@ const processCancelledBooking = async (req, res) => {
 const getLedgerEntries = async (req, res) => {
   try {
     const { property_id, unit_id, date } = req.query;
-    let queryText = 'SELECT * FROM ledger_entries WHERE property_id = $1 AND check_in <= $2 AND check_out >= $2';
+    let queryText = 'SELECT * FROM ledger_entries WHERE property_id = $1 AND check_in <= $2 AND check_out > $2';
     let params = [property_id, date];
 
     if (unit_id && unit_id !== 'null' && unit_id !== 'undefined') {

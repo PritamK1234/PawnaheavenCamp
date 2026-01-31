@@ -334,6 +334,7 @@ const OwnerProfile = () => {
               className="hidden" 
               onChange={handleImageUpload} 
               accept="image/*"
+              multiple
             />
             <Button 
               type="button" 
@@ -349,7 +350,7 @@ const OwnerProfile = () => {
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
             {(details.images || []).map((img, idx) => (
               <div key={idx} className="aspect-square rounded-lg overflow-hidden relative group border border-white/10">
-                <img src={img} className="w-full h-full object-cover" />
+                <img src={img} className="w-full h-full object-cover" alt={`Property gallery ${idx}`} />
                 <button 
                   type="button" 
                   className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity" 

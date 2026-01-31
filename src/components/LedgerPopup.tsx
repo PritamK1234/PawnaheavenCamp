@@ -295,7 +295,7 @@ export const LedgerPopup = ({
               </div>
               {isVilla && (
                 <p className="text-[10px] text-white/40 font-bold uppercase mt-1">
-                  Max: {totalPersons} Persons
+                  {totalPersons} Persons Max Capacity
                 </p>
               )}
             </div>

@@ -43,10 +43,14 @@ const OwnerLayout = () => {
 
   if (!isLoggedIn) return null;
 
+  const isVilla = ownerData.propertyType?.toLowerCase() === 'villa' || ownerData.propertyName?.toLowerCase().includes('villa');
+  const dashboardPath = isVilla ? '/owner/dashboard/villa' : '/owner/dashboard/camping';
+  const profilePath = isVilla ? '/owner/profile/villa' : '/owner/profile/camping';
+
   const navItems = [
-    { label: 'Calendar & Prices', icon: Calendar, path: '/owner/dashboard' },
-    { label: 'Units', icon: LayoutGrid, path: '/owner/units', showIf: ownerData.propertyType?.toLowerCase() !== 'villa' && !ownerData.propertyName?.toLowerCase().includes('villa') },
-    { label: 'Profile', icon: User, path: '/owner/profile' },
+    { label: 'Calendar & Prices', icon: Calendar, path: dashboardPath },
+    { label: 'Units', icon: LayoutGrid, path: '/owner/units', showIf: !isVilla },
+    { label: 'Profile', icon: User, path: profilePath },
   ].filter(item => item.showIf === undefined || item.showIf);
 
   return (

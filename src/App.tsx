@@ -100,10 +100,12 @@ const App = () => {
               <Route path="/owner/login" element={<PageWrapper><OwnerLogin /></PageWrapper>} />
               
               <Route element={<OwnerLayout />}>
-              <Route path="/owner/dashboard" element={<PageWrapper>{(ownerData?.propertyType?.toLowerCase() === 'villa' || ownerData?.propertyName?.toLowerCase().includes('villa')) ? <VillaOwnerMain /> : <OwnerMain />}</PageWrapper>} />
-              <Route path="/owner/units" element={<PageWrapper><OwnerUnits /></PageWrapper>} />
-              <Route path="/owner/profile" element={<PageWrapper>{(ownerData?.propertyType?.toLowerCase() === 'villa' || ownerData?.propertyName?.toLowerCase().includes('villa')) ? <VillaOwnerProfile /> : <OwnerProfile />}</PageWrapper>} />
-            </Route>
+                <Route path="/owner/dashboard/villa" element={<PageWrapper><VillaOwnerMain /></PageWrapper>} />
+                <Route path="/owner/dashboard/camping" element={<PageWrapper><OwnerMain /></PageWrapper>} />
+                <Route path="/owner/profile/villa" element={<PageWrapper><VillaOwnerProfile /></PageWrapper>} />
+                <Route path="/owner/profile/camping" element={<PageWrapper><OwnerProfile /></PageWrapper>} />
+                <Route path="/owner/units" element={<PageWrapper><OwnerUnits /></PageWrapper>} />
+              </Route>
 
               <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
             </Routes>

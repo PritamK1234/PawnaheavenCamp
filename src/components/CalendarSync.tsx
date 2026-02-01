@@ -269,7 +269,7 @@ export const CalendarSync = ({
         unitId={unitId}
         unitName={unitName}
         availablePersons={getDayData(selectedLedgerDate || new Date())?.available_quantity ?? (propertyPrices.capacity || 0)}
-        totalPersons={propertyPrices.maxCapacity || 0}
+        totalPersons={getDayData(selectedLedgerDate || new Date())?.total_capacity ?? (propertyPrices.maxCapacity || 0)}
         isVilla={isVilla}
       />
     </div>

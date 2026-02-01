@@ -294,6 +294,7 @@ const getPropertyById = async (req, res) => {
                 AND check_in <= d.date 
                 AND check_out > d.date
               ), 0),
+              'total_capacity', pu.total_persons,
               'is_weekend', d.is_weekend,
               'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
             ) ORDER BY d.date)
@@ -328,6 +329,7 @@ const getPropertyById = async (req, res) => {
                 AND check_in <= d.date 
                 AND check_out > d.date
               ), 0),
+              'total_capacity', p.max_capacity,
               'weekday_price', p.weekday_price,
               'weekend_price', p.weekend_price,
               'special_dates', p.special_dates
@@ -501,6 +503,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 AND check_in <= d.date 
                 AND check_out > d.date
               ), 0),
+              'total_capacity', pu.total_persons,
               'is_weekend', d.is_weekend,
               'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
             ) ORDER BY d.date)
@@ -535,6 +538,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 AND check_in <= d.date 
                 AND check_out > d.date
               ), 0),
+              'total_capacity', p.max_capacity,
               'weekday_price', p.weekday_price,
               'weekend_price', p.weekend_price,
               'special_dates', p.special_dates

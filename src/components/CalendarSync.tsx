@@ -131,7 +131,7 @@ export const CalendarSync = ({
   };
 
   const handleUpdate = async (date: Date, isBooked: boolean) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !localStorage.getItem('ownerToken')) return;
     if (isBefore(startOfDay(date), startOfDay(new Date()))) return;
     
     try {
@@ -196,7 +196,7 @@ export const CalendarSync = ({
               return isPast || data?.is_booked;
             }}
             onSelect={(date) => {
-              if (date && isAdmin) {
+              if (date && (isAdmin || localStorage.getItem('ownerToken'))) {
                 setSelectedLedgerDate(date);
                 setIsLedgerOpen(true);
               }

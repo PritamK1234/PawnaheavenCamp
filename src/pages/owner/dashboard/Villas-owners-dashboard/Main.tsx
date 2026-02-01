@@ -96,7 +96,7 @@ const OwnerCalendar = () => {
               <div className="w-full overflow-hidden">
                 <CalendarSync 
                   propertyId={propertyId} 
-                  isAdmin={true} 
+                  isAdmin={false} 
                   propertyName={property?.title}
                   isVilla={true}
                 />

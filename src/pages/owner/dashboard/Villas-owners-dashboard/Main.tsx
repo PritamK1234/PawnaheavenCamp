@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 const OwnerCalendar = () => {
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
-  const propertyId = ownerData?.id || ownerData?.property_id;
+  const propertyId = ownerData?.property_id || ownerData?.id;
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [prices, setPrices] = useState({
@@ -24,12 +24,25 @@ const OwnerCalendar = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
+      // Try fetching by property_id (alphanumeric) first, then by numeric id
       const res = await fetch(`/api/properties/${propertyId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success) {
         setProperty(data.data);
+      } else {
+        // Fallback for numeric ID if alphanumeric fails
+        const numericId = ownerData?.id;
+        if (numericId && numericId !== propertyId) {
+          const resFallback = await fetch(`/api/properties/${numericId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const dataFallback = await resFallback.json();
+          if (dataFallback.success) {
+            setProperty(dataFallback.data);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error);

@@ -205,7 +205,7 @@ export const CalendarSync = ({
             components={{
               DayContent: ({ date }) => {
                 const data = getDayData(date);
-                const isBooked = data?.is_booked;
+                const isBooked = data?.is_booked || data?.available_quantity === 0;
                 const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
                 const availableQuantity = data?.available_quantity !== undefined ? data.available_quantity : null;
                 const totalCapacity = propertyPrices.maxCapacity || 0;

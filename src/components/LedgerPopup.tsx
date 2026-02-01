@@ -261,10 +261,10 @@ export const LedgerPopup = ({
           <div className="flex justify-between items-start">
             <div className="space-y-1 text-left">
               <DrawerTitle className="text-gold font-display text-2xl tracking-tight">
-                {unitName || propertyName}
+                {isVilla ? unitName : propertyName}
               </DrawerTitle>
               <DrawerDescription className="text-white/60 font-medium">
-                {format(date, 'dd MMM yyyy')}
+                {isVilla ? "Villa Exclusive Booking" : (unitName || "Unit Availability")} • {format(date, 'dd MMM yyyy')}
               </DrawerDescription>
             </div>
             <DrawerClose asChild>

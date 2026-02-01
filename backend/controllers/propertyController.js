@@ -333,6 +333,14 @@ const getPropertyById = async (req, res) => {
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
               ) THEN 0 ELSE p.max_capacity END,
+              'is_booked_villa', COALESCE(ac.is_booked, false) OR EXISTS (
+                SELECT 1 
+                FROM ledger_entries le
+                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
+                WHERE p_inner.id = p.id
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ),
               'total_capacity', p.max_capacity,
               'weekday_price', p.weekday_price,
               'weekend_price', p.weekend_price,
@@ -546,6 +554,14 @@ const getPublicPropertyBySlug = async (req, res) => {
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
               ) THEN 0 ELSE p.max_capacity END,
+              'is_booked_villa', COALESCE(ac.is_booked, false) OR EXISTS (
+                SELECT 1 
+                FROM ledger_entries le
+                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
+                WHERE p_inner.id = p.id
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ),
               'total_capacity', p.max_capacity,
               'weekday_price', p.weekday_price,
               'weekend_price', p.weekend_price,

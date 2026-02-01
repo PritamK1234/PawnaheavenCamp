@@ -205,7 +205,7 @@ export const CalendarSync = ({
             components={{
               DayContent: ({ date }) => {
                 const data = getDayData(date);
-                const isBooked = data?.is_booked || data?.available_quantity === 0;
+                const isBooked = data?.is_booked_villa === true || data?.is_booked === true || data?.available_quantity === 0;
                 const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
                 const availableQuantity = data?.available_quantity !== undefined ? data.available_quantity : null;
                 const totalCapacity = propertyPrices.maxCapacity || 0;
@@ -222,8 +222,11 @@ export const CalendarSync = ({
                     {!isPast && (
                       <div className="flex flex-col items-center mt-0.5 sm:mt-1 scale-90 sm:scale-100 font-black text-[8px] sm:text-[10px]">
                         {isVilla ? (
-                          <span className={isBooked ? "text-white/80" : "text-black/80 uppercase"}>
-                            {isBooked ? "Booked" : ""}
+                          <span className={cn(
+                            "uppercase",
+                            isBooked ? "text-white/90 drop-shadow-sm font-black tracking-widest" : "text-black/80"
+                          )}>
+                            {isVilla && isBooked ? "Booked" : ""}
                           </span>
                         ) : availableQuantity !== null && (
                           <div className="flex items-center gap-0.5">

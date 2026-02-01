@@ -271,8 +271,7 @@ const AdminDashboard = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const campingCount = properties.filter(p => p.category?.toLowerCase() === 'camping').length;
-  const cottageCount = properties.filter(p => p.category?.toLowerCase() === 'cottage').length;
+  const campingCottageCount = properties.filter(p => p.category?.toLowerCase() === 'campings_cottages').length;
   const villaCount = properties.filter(p => p.category?.toLowerCase() === 'villa').length;
 
   if (isLoading) {
@@ -360,8 +359,7 @@ const AdminDashboard = () => {
             </div>
 
             {categorySettings.map(setting => {
-              const count = setting.category === 'camping' ? campingCount : 
-                           setting.category === 'cottage' ? cottageCount : villaCount;
+              const count = setting.category === 'campings_cottages' ? campingCottageCount : villaCount;
               return (
                 <div key={setting.category} className={cn(
                   "glass-dark rounded-2xl border border-white/5 p-4 flex flex-col justify-center relative overflow-hidden",
@@ -370,10 +368,9 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 rounded-lg bg-gold/10 text-gold">
-                        {setting.category === 'camping' ? <Home className="w-4 h-4" /> : 
-                         setting.category === 'cottage' ? <Sparkles className="w-4 h-4" /> : <Star className="w-4 h-4" />}
+                        {setting.category === 'campings_cottages' ? <Home className="w-4 h-4" /> : <Star className="w-4 h-4" />}
                       </div>
-                      <p className="text-[10px] xs:text-xs text-muted-foreground uppercase tracking-wider font-semibold truncate max-w-[60px]">{setting.category}</p>
+                      <p className="text-[10px] xs:text-xs text-muted-foreground uppercase tracking-wider font-semibold truncate max-w-[120px]">{setting.category === 'campings_cottages' ? 'Campings_Cottages' : 'Villa'}</p>
                     </div>
                     <Badge variant={setting.is_closed ? "destructive" : "outline"} className="text-[8px] h-4 px-1 border-gold/20 text-gold">
                       {count}
@@ -424,13 +421,13 @@ const AdminDashboard = () => {
                 </div>
                 <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
                   <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5">
-                    {['all', 'camping', 'cottage', 'villa'].map(cat => (
+                    {['all', 'campings_cottages', 'villa'].map(cat => (
                       <TabsTrigger 
                         key={cat} 
                         value={cat} 
                         className="rounded-lg flex-1 text-[10px] xs:text-xs capitalize data-[state=active]:bg-gold data-[state=active]:text-black"
                       >
-                        {cat}
+                        {cat === 'campings_cottages' ? 'Campings_Cottages' : cat}
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -675,9 +672,9 @@ const AdminDashboard = () => {
               
               <Tabs value={ownerFilter} onValueChange={setOwnerFilter} className="w-full">
                 <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5">
-                  {['all', 'camping', 'cottage', 'villa'].map(cat => (
+                  {['all', 'campings_cottages', 'villa'].map(cat => (
                     <TabsTrigger key={cat} value={cat} className="rounded-lg flex-1 text-[10px] xs:text-xs capitalize data-[state=active]:bg-gold data-[state=active]:text-black">
-                      {cat}
+                      {cat === 'campings_cottages' ? 'Campings_Cottages' : cat}
                     </TabsTrigger>
                   ))}
                 </TabsList>

@@ -305,7 +305,7 @@ export const LedgerPopup = ({
             </div>
             <Button 
               onClick={() => setShowAddForm(!showAddForm)}
-              disabled={isVilla && entries.length > 0 && !showAddForm}
+              disabled={((isVilla && entries.length > 0) || (!isVilla && remainingCapacity <= 0)) && !showAddForm}
               className="bg-gold hover:bg-gold/80 text-black font-bold rounded-full h-10 px-4 gap-2"
             >
               <Plus className="w-4 h-4" />

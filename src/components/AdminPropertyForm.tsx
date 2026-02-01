@@ -236,19 +236,7 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
 
               <div className="space-y-2">
                 <Label>Weekday Price (Base)</Label>
-                <Input 
-                  type="number" 
-                  value={unitForm.weekday_price} 
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setUnitForm({ 
-                      ...unitForm, 
-                      weekday_price: val,
-                      price_per_person: val 
-                    });
-                  }} 
-                  className="bg-white/5 border-white/10" 
-                />
+                <Input type="number" value={unitForm.weekday_price} onChange={(e) => setUnitForm({ ...unitForm, weekday_price: e.target.value })} className="bg-white/5 border-white/10" />
               </div>
               <div className="space-y-2">
                 <Label>Weekend Price</Label>

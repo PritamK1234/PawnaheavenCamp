@@ -187,7 +187,12 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
                     <DialogTitle className="text-gold font-display">Manage Unit Calendar: {unit.name}</DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">Select dates to manage availability and pricing for this unit.</DialogDescription>
                   </DialogHeader>
-                  <CalendarSync propertyId={propertyId} unitId={unit.id} isAdmin={true} />
+                  <CalendarSync 
+                    propertyId={propertyId} 
+                    unitId={unit.id} 
+                    isAdmin={true} 
+                    unitName={unit.name}
+                  />
                 </DialogContent>
               </Dialog>
               <Button type="button" size="icon" variant="ghost" onClick={() => { 

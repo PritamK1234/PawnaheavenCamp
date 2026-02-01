@@ -267,9 +267,9 @@ export const CalendarSync = ({
         propertyName={propertyName}
         propertyId={propertyId}
         unitId={unitId}
-        unitName={unitName}
-        availablePersons={getDayData(selectedLedgerDate || new Date())?.available_quantity ?? (propertyPrices.capacity || 0)}
-        totalPersons={getDayData(selectedLedgerDate || new Date())?.total_capacity ?? (propertyPrices.maxCapacity || 0)}
+        unitName={unitName || propertyName}
+        availablePersons={getDayData(selectedLedgerDate || new Date())?.available_quantity ?? (getDayData(new Date())?.available_quantity ?? (propertyPrices.capacity || 0))}
+        totalPersons={getDayData(selectedLedgerDate || new Date())?.total_capacity ?? (getDayData(new Date())?.total_capacity ?? (propertyPrices.maxCapacity || 0))}
         isVilla={isVilla}
       />
     </div>

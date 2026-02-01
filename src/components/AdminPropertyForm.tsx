@@ -192,8 +192,8 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
                     unitId={unit.id} 
                     isAdmin={true} 
                     unitName={unit.name}
-                    propertyName={property?.title || "Property"}
-                    isVilla={property?.category === 'villa'}
+                    propertyName={formData.title}
+                    isVilla={formData.category === 'villa'}
                   />
                 </DialogContent>
               </Dialog>

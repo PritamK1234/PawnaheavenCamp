@@ -208,14 +208,16 @@ export const CalendarSync = ({
                 const isBooked = data?.is_booked_villa === true || data?.is_booked === true || data?.available_quantity === 0;
                 const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
                 const availableQuantity = data?.available_quantity !== undefined ? data.available_quantity : null;
-                const totalCapacity = propertyPrices.maxCapacity || 0;
+                const totalCapacity = data?.total_capacity || propertyPrices.maxCapacity || 0;
                 
+                // Force red color for villas if booked
+                const villaBookedStyle = (isVilla && isBooked) ? "!bg-[#FF0000] !text-white" : "!bg-[#00FF00] !text-black";
+                const campBookedStyle = (availableQuantity === 0) ? "!bg-[#FF0000] !text-white" : "!bg-[#00FF00] !text-black";
+
                 return (
                   <div className={cn(
                     "relative w-full h-full flex flex-col items-center justify-center p-0.5 rounded-md transition-all select-none",
-                    isVilla 
-                      ? (isBooked ? "!bg-[#FF0000] !text-white" : "!bg-[#00FF00] !text-black")
-                      : (availableQuantity === 0 ? "!bg-[#FF0000] !text-white" : "!bg-[#00FF00] !text-black"),
+                    isVilla ? villaBookedStyle : campBookedStyle,
                     isPast && "opacity-60 grayscale-[0.5]"
                   )}>
                     <span className="text-[11px] sm:text-xs font-bold leading-none">{format(date, 'd')}</span>

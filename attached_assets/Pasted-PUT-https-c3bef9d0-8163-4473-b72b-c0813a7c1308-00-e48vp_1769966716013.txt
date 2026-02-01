@@ -1,0 +1,37 @@
+PUT https://c3bef9d0-8163-4473-b72b-c0813a7c1308-00-e48vp2uki6gr.janeway.replit.dev/api/properties/units/1 500 (Internal Server Error)
+updateUnit @ api.ts:166
+handleSave @ Main.tsx:122
+callCallback2 @ chunk-TRNWTHID.js?v=aba9a8da:3674
+invokeGuardedCallbackDev @ chunk-TRNWTHID.js?v=aba9a8da:3699
+invokeGuardedCallback @ chunk-TRNWTHID.js?v=aba9a8da:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-TRNWTHID.js?v=aba9a8da:3736
+executeDispatch @ chunk-TRNWTHID.js?v=aba9a8da:7014
+processDispatchQueueItemsInOrder @ chunk-TRNWTHID.js?v=aba9a8da:7034
+processDispatchQueue @ chunk-TRNWTHID.js?v=aba9a8da:7043
+dispatchEventsForPlugins @ chunk-TRNWTHID.js?v=aba9a8da:7051
+(anonymous) @ chunk-TRNWTHID.js?v=aba9a8da:7174
+batchedUpdates$1 @ chunk-TRNWTHID.js?v=aba9a8da:18913
+batchedUpdates @ chunk-TRNWTHID.js?v=aba9a8da:3579
+dispatchEventForPluginEventSystem @ chunk-TRNWTHID.js?v=aba9a8da:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-TRNWTHID.js?v=aba9a8da:5478
+dispatchEvent @ chunk-TRNWTHID.js?v=aba9a8da:5472
+dispatchDiscreteEvent @ chunk-TRNWTHID.js?v=aba9a8da:5449Understand this error
+Main.tsx:148 Error saving rates: Error: Failed to update unit rates
+    at handleSave (Main.tsx:126:17)
+handleSave @ Main.tsx:148
+await in handleSave
+callCallback2 @ chunk-TRNWTHID.js?v=aba9a8da:3674
+invokeGuardedCallbackDev @ chunk-TRNWTHID.js?v=aba9a8da:3699
+invokeGuardedCallback @ chunk-TRNWTHID.js?v=aba9a8da:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-TRNWTHID.js?v=aba9a8da:3736
+executeDispatch @ chunk-TRNWTHID.js?v=aba9a8da:7014
+processDispatchQueueItemsInOrder @ chunk-TRNWTHID.js?v=aba9a8da:7034
+processDispatchQueue @ chunk-TRNWTHID.js?v=aba9a8da:7043
+dispatchEventsForPlugins @ chunk-TRNWTHID.js?v=aba9a8da:7051
+(anonymous) @ chunk-TRNWTHID.js?v=aba9a8da:7174
+batchedUpdates$1 @ chunk-TRNWTHID.js?v=aba9a8da:18913
+batchedUpdates @ chunk-TRNWTHID.js?v=aba9a8da:3579
+dispatchEventForPluginEventSystem @ chunk-TRNWTHID.js?v=aba9a8da:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-TRNWTHID.js?v=aba9a8da:5478
+dispatchEvent @ chunk-TRNWTHID.js?v=aba9a8da:5472
+dispatchDiscreteEvent @ chunk-TRNWTHID.js?v=aba9a8da:5449Understand this error

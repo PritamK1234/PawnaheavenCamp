@@ -893,10 +893,12 @@ const updatePropertyUnit = async (req, res) => {
          updated_at = CURRENT_TIMESTAMP
        WHERE id = $10 RETURNING *`,
       [
-        name, available_persons, total_persons,
+        name, 
+        available_persons !== undefined ? parseInt(available_persons) : null, 
+        total_persons !== undefined ? parseInt(total_persons) : null,
         Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null),
         Array.isArray(images) ? JSON.stringify(images) : (images || null),
-        price_per_person,
+        price_per_person !== undefined ? String(price_per_person) : null,
         weekday_price !== undefined ? String(weekday_price) : null,
         weekend_price !== undefined ? String(weekend_price) : null,
         Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),

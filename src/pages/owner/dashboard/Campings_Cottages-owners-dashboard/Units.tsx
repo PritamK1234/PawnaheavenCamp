@@ -207,7 +207,7 @@ const OwnerUnits = () => {
                   </div>
                 </div>
                 <div className="w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-center items-center sm:items-end bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-xl">
-                  <div className="text-xl font-black text-[#D4AF37] leading-none">₹{unit.price_per_person}</div>
+                  <div className="text-xl font-black text-[#D4AF37] leading-none">₹{unit.weekday_price || unit.price_per_person || '0'}</div>
                   <div className="text-[9px] text-gray-500 uppercase tracking-[0.1em] sm:mt-1 font-bold">Per Person</div>
                 </div>
               </div>

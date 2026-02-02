@@ -339,13 +339,12 @@ const getPropertyById = async (req, res) => {
               'date', d.date,
               'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
               'is_booked', COALESCE((
-                SELECT SUM(persons) 
-                FROM ledger_entries le
-                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-                WHERE p_inner.id = p.id
-                AND le.check_in <= d.date 
-                AND le.check_out > d.date
-              ), 0) > 0,
+          SELECT COUNT(*) 
+          FROM ledger_entries le
+          WHERE le.property_id = p.id::text OR le.property_id = p.property_id
+          AND le.check_in <= d.date 
+          AND le.check_out > d.date
+        ), 0) > 0,
               'available_quantity', p.max_capacity - COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries le
@@ -564,13 +563,12 @@ const getPublicPropertyBySlug = async (req, res) => {
               'date', d.date,
               'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
               'is_booked', COALESCE((
-                SELECT SUM(persons) 
-                FROM ledger_entries le
-                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-                WHERE p_inner.id = p.id
-                AND le.check_in <= d.date 
-                AND le.check_out > d.date
-              ), 0) > 0,
+          SELECT COUNT(*) 
+          FROM ledger_entries le
+          WHERE le.property_id = p.id::text OR le.property_id = p.property_id
+          AND le.check_in <= d.date 
+          AND le.check_out > d.date
+        ), 0) > 0,
               'available_quantity', p.max_capacity - COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries le

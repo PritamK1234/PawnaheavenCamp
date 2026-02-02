@@ -35,6 +35,13 @@ Preferred communication style: Simple, everyday language.
 - `getPropertyUnits/*` → camping controller
 - `getUnitCalendarData/*` → camping controller
 
+#### Image Sync Architecture (Feb 2026)
+- Images are stored in the `property_images` table (property_id, image_url, display_order)
+- Both `updateProperty` and `updateVilla` functions now sync images to property_images table
+- Frontend components (Profile.tsx, Info.tsx) parse images from API response correctly
+- Villa images: Managed at property level with gallery upload in admin panel
+- Camping/cottage images: Managed at unit level
+
 - **API Routes**: 
   - `/api/villa/*` - Villa-specific endpoints
   - `/api/camping_Cottages/*` - Camping/cottages-specific endpoints

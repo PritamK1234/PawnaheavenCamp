@@ -205,7 +205,7 @@ export const CalendarSync = ({
             components={{
               DayContent: ({ date }) => {
                 const data = getDayData(date);
-                const isBooked = !!data?.is_booked;
+                const isBooked = data?.is_booked;
                 const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
                 const availableQuantity = data?.available_quantity !== undefined ? data.available_quantity : null;
                 const totalCapacity = propertyPrices.maxCapacity || 0;
@@ -213,9 +213,9 @@ export const CalendarSync = ({
                 return (
                   <div className={cn(
                     "relative w-full h-full flex flex-col items-center justify-center p-0.5 rounded-md transition-all select-none",
-                    isBooked 
-                      ? "!bg-red-600 !text-white" 
-                      : (isVilla ? "!bg-green-500 !text-black" : (availableQuantity === 0 ? "!bg-red-600 !text-white" : "!bg-green-500 !text-black")),
+                    "!bg-[#00FF00] !text-black",
+                    isVilla && isBooked && "!bg-[#FF0000] !text-white",
+                    !isVilla && availableQuantity === 0 && "!bg-[#FF0000] !text-white",
                     isPast && "opacity-60 grayscale-[0.5]"
                   )}>
                     <span className="text-[11px] sm:text-xs font-bold leading-none">{format(date, 'd')}</span>

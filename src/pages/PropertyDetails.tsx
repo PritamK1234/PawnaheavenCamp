@@ -72,6 +72,8 @@ interface PropertyUnit {
   id: number;
   name: string;
   price_per_person: string;
+  weekday_price?: string;
+  weekend_price?: string;
   available_persons: number;
   total_persons: number;
   capacity?: number;
@@ -233,7 +235,7 @@ const PropertyDetails = () => {
 
   const isVilla = propertyData.category === "villa";
   const displayPrice = (propertyData.category === 'campings_cottages' && selectedUnit)
-    ? (selectedUnit.price_per_person || propertyData.price || 'Price on Selection')
+    ? (selectedUnit.weekday_price || selectedUnit.price_per_person || propertyData.price || 'Price on Selection')
     : (propertyData.price || 'N/A');
   const displayPriceNote = (propertyData.category === 'campings_cottages' && selectedUnit)
     ? 'per person'

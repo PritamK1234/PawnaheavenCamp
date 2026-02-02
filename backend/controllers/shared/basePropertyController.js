@@ -135,10 +135,10 @@ const getPublicProperties = async (req, res) => {
           AND uc.price IS NOT NULL
         ) as unit_starting_price,
         (
-          SELECT MIN(pu.price_per_person)
+          SELECT MIN(pu.weekday_price::numeric)
           FROM property_units pu
           WHERE pu.property_id = p.id
-          AND pu.price_per_person IS NOT NULL
+          AND pu.weekday_price IS NOT NULL AND pu.weekday_price != ''
         ) as unit_base_starting_price
       FROM properties p
       WHERE p.is_active = true

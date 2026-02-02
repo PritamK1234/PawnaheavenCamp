@@ -30,18 +30,14 @@ const getCampingById = async (req, res) => {
             'is_booked', COALESCE((
               SELECT SUM(persons) 
               FROM ledger_entries le
-              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-              WHERE p_inner.id = pu.property_id
-              AND le.unit_id = pu.id 
+              WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
             ), 0) >= pu.total_persons,
             'available_quantity', pu.total_persons - COALESCE((
               SELECT SUM(persons) 
               FROM ledger_entries le
-              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-              WHERE p_inner.id = pu.property_id
-              AND le.unit_id = pu.id 
+              WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
             ), 0),
@@ -123,18 +119,14 @@ const getPublicCampingBySlug = async (req, res) => {
             'is_booked', COALESCE((
               SELECT SUM(persons) 
               FROM ledger_entries le
-              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-              WHERE p_inner.id = pu.property_id
-              AND le.unit_id = pu.id 
+              WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
             ), 0) >= pu.total_persons,
             'available_quantity', pu.total_persons - COALESCE((
               SELECT SUM(persons) 
               FROM ledger_entries le
-              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-              WHERE p_inner.id = pu.property_id
-              AND le.unit_id = pu.id 
+              WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
             ), 0),

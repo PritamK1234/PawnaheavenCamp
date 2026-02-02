@@ -163,10 +163,10 @@ const getPublicProperties = async (req, res) => {
           AND uc.price IS NOT NULL
         ) as unit_starting_price,
         (
-          SELECT MIN(pu.price_per_person)
+          SELECT MIN(pu.weekday_price::numeric)
           FROM property_units pu
           WHERE pu.property_id = p.id
-          AND pu.price_per_person IS NOT NULL
+          AND pu.weekday_price IS NOT NULL AND pu.weekday_price != ''
         ) as unit_base_starting_price
       FROM properties p
       WHERE p.is_active = true
@@ -304,23 +304,19 @@ const getPropertyById = async (req, res) => {
               'date', d.date,
               'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
               'is_booked', COALESCE((
-                SELECT SUM(persons) 
-                FROM ledger_entries le
-                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-                WHERE p_inner.id = pu.property_id
-                AND le.unit_id = pu.id 
-                AND le.check_in <= d.date 
-                AND le.check_out > d.date
-              ), 0) >= pu.total_persons,
-              'available_quantity', pu.total_persons - COALESCE((
-                SELECT SUM(persons) 
-                FROM ledger_entries le
-                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-                WHERE p_inner.id = pu.property_id
-                AND le.unit_id = pu.id 
-                AND le.check_in <= d.date 
-                AND le.check_out > d.date
-              ), 0),
+              SELECT SUM(persons) 
+              FROM ledger_entries le
+              WHERE le.unit_id = pu.id 
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) >= pu.total_persons,
+            'available_quantity', pu.total_persons - COALESCE((
+              SELECT SUM(persons) 
+              FROM ledger_entries le
+              WHERE le.unit_id = pu.id 
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0),
               'total_capacity', pu.total_persons,
               'is_weekend', d.is_weekend,
               'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
@@ -533,23 +529,19 @@ const getPublicPropertyBySlug = async (req, res) => {
               'date', d.date,
               'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
               'is_booked', COALESCE((
-                SELECT SUM(persons) 
-                FROM ledger_entries le
-                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-                WHERE p_inner.id = pu.property_id
-                AND le.unit_id = pu.id 
-                AND le.check_in <= d.date 
-                AND le.check_out > d.date
-              ), 0) >= pu.total_persons,
-              'available_quantity', pu.total_persons - COALESCE((
-                SELECT SUM(persons) 
-                FROM ledger_entries le
-                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-                WHERE p_inner.id = pu.property_id
-                AND le.unit_id = pu.id 
-                AND le.check_in <= d.date 
-                AND le.check_out > d.date
-              ), 0),
+              SELECT SUM(persons) 
+              FROM ledger_entries le
+              WHERE le.unit_id = pu.id 
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) >= pu.total_persons,
+            'available_quantity', pu.total_persons - COALESCE((
+              SELECT SUM(persons) 
+              FROM ledger_entries le
+              WHERE le.unit_id = pu.id 
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0),
               'total_capacity', pu.total_persons,
               'is_weekend', d.is_weekend,
               'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)

@@ -6,11 +6,11 @@ const { validatePropertyId, validateUnitId, validateCalendarData, validateUnitDa
 
 router.get('/public/:slug', campingController.getPublicCampingBySlug);
 
-router.get('/:id', authMiddleware, validatePropertyId, campingController.getCampingById);
+router.get('/:id', validatePropertyId, campingController.getCampingById);
 router.put('/update/:id', authMiddleware, validatePropertyId, validatePropertyUpdate, campingController.updateCamping);
 router.put('/:id', authMiddleware, validatePropertyId, validatePropertyUpdate, campingController.updateCamping);
 
-router.get('/:propertyId/units', authMiddleware, campingController.getPropertyUnits);
+router.get('/:propertyId/units', campingController.getPropertyUnits);
 router.post('/:propertyId/units', authMiddleware, validateUnitData, campingController.createPropertyUnit);
 router.put('/units/:unitId', authMiddleware, validateUnitId, campingController.updatePropertyUnit);
 router.delete('/units/:unitId', authMiddleware, validateUnitId, campingController.deletePropertyUnit);

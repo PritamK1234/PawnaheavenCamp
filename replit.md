@@ -10,6 +10,19 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
+### Backend Architecture (Refactored Feb 2026)
+- **Controller Structure**: Separated by property type to prevent cross-contamination
+  - `controllers/shared/basePropertyController.js` - Common helper functions
+  - `controllers/villa/villaController.js` - Villa-only logic (NO units)
+  - `controllers/camping/camping_CottagesController.js` - Camping/cottage logic (unit-based)
+- **API Routes**: 
+  - `/api/villa/*` - Villa-specific endpoints
+  - `/api/camping_Cottages/*` - Camping/cottages-specific endpoints
+  - `/api/properties/*` - Shared/legacy endpoints
+- **Database**: PostgreSQL with separate calendar tables
+  - `availability_calendar` - Villa property-level availability
+  - `unit_calendar` - Camping/cottage unit-level availability
+
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite with SWC for fast compilation

@@ -389,6 +389,8 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
     map_link: '',
     rating: '4.5',
     price: '',
+    weekday_price: '',
+    weekend_price: '',
     price_note: 'per person with meal',
     capacity: '4',
     check_in_time: '2:00 PM',
@@ -467,6 +469,8 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
         map_link: property.map_link || '',
         rating: property.rating?.toString() || '4.5',
         price: property.price || '',
+        weekday_price: property.weekday_price || '',
+        weekend_price: property.weekend_price || '',
         price_note: property.price_note || 'per person with meal',
         capacity: property.capacity?.toString() || '4',
         check_in_time: property.check_in_time || '2:00 PM',
@@ -527,6 +531,10 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
       (payload as any).price = payload.price || 'Price on Selection';
       delete (payload as any).weekday_price;
       delete (payload as any).weekend_price;
+    } else if (formData.category === 'villa') {
+      // Include weekday and weekend prices for villas
+      (payload as any).weekday_price = formData.weekday_price;
+      (payload as any).weekend_price = formData.weekend_price;
     }
 
     try {
@@ -778,6 +786,38 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
                   required
                 />
               </div>
+
+              {formData.category === 'villa' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="weekday_price">Weekday Price (Base Price)</Label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="weekday_price"
+                        value={formData.weekday_price}
+                        onChange={(e) => setFormData({ ...formData, weekday_price: e.target.value })}
+                        className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                        placeholder="e.g., ₹7,499"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="weekend_price">Weekend Price</Label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="weekend_price"
+                        value={formData.weekend_price}
+                        onChange={(e) => setFormData({ ...formData, weekend_price: e.target.value })}
+                        className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                        placeholder="e.g., ₹9,999"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               {formData.category === 'villa' ? (
                 <div className="space-y-2">

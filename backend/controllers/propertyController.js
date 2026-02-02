@@ -967,6 +967,10 @@ const updatePropertyUnit = async (req, res) => {
     // Since pricing is managed at property level, update the parent property's rates
     if (weekday_price !== undefined || weekend_price !== undefined || special_dates !== undefined) {
       const propertyId = result.rows[0].property_id;
+      // Also fetch property's internal ID if result.rows[0].property_id is alphanumeric
+      const propLookup = await query('SELECT id FROM properties WHERE property_id = $1 OR id::text = $1', [propertyId]);
+      const internalPropId = propLookup.rows[0]?.id || propertyId;
+
       await query(`
         UPDATE properties
         SET
@@ -978,8 +982,8 @@ const updatePropertyUnit = async (req, res) => {
       `, [
         weekday_price !== undefined ? String(weekday_price) : null,
         weekend_price !== undefined ? String(weekend_price) : null,
-        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
-        propertyId
+        (Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null)),
+        internalPropId
       ]);
     }
 

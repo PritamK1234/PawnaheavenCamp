@@ -56,6 +56,7 @@ const formatPropertyResponse = (prop) => {
     policies: parsePostgresArray(prop.policies),
     schedule: parsePostgresArray(prop.schedule),
     availability: parsePostgresArray(prop.availability),
+    special_dates: prop.special_dates ? (typeof prop.special_dates === 'string' ? JSON.parse(prop.special_dates) : prop.special_dates) : [],
     images: prop.images || [],
     units: prop.units || [],
   };

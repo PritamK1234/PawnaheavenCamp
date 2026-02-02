@@ -68,6 +68,7 @@ const getCampingById = async (req, res) => {
       policies: parsePostgresArray(propData.policies),
       schedule: parsePostgresArray(propData.schedule),
       availability: parsePostgresArray(propData.availability),
+      special_dates: propData.special_dates ? (typeof propData.special_dates === 'string' ? JSON.parse(propData.special_dates) : propData.special_dates) : [],
       images: propData.images || [],
       units: unitsResult.rows
     };
@@ -153,6 +154,7 @@ const getPublicCampingBySlug = async (req, res) => {
       policies: parsePostgresArray(propData.policies),
       schedule: parsePostgresArray(propData.schedule),
       availability: parsePostgresArray(propData.availability),
+      special_dates: propData.special_dates ? (typeof propData.special_dates === 'string' ? JSON.parse(propData.special_dates) : propData.special_dates) : [],
       images: propData.images || [],
       units: unitsResult.rows
     };

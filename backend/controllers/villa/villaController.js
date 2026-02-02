@@ -28,7 +28,7 @@ const getVillaById = async (req, res) => {
         'is_booked', COALESCE((
           SELECT COUNT(*) 
           FROM ledger_entries le
-          WHERE le.property_id = p.id::text OR le.property_id = p.property_id
+          WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
           AND le.check_in <= d.date 
           AND le.check_out > d.date
         ), 0) > 0,
@@ -110,7 +110,7 @@ const getPublicVillaBySlug = async (req, res) => {
         'is_booked', COALESCE((
           SELECT COUNT(*) 
           FROM ledger_entries le
-          WHERE le.property_id = p.id::text OR le.property_id = p.property_id
+          WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
           AND le.check_in <= d.date 
           AND le.check_out > d.date
         ), 0) > 0,

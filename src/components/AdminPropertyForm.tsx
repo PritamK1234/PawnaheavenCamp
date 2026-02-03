@@ -65,15 +65,15 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
     try {
       const payload = {
         ...unitForm,
-        price_per_person: parseFloat(unitForm.price_per_person),
-        weekday_price: parseFloat(unitForm.weekday_price),
-        weekend_price: parseFloat(unitForm.weekend_price),
-        special_price: parseFloat(unitForm.special_price),
+        price_per_person: String(unitForm.price_per_person),
+        weekday_price: String(unitForm.weekday_price),
+        weekend_price: String(unitForm.weekend_price),
+        special_price: String(unitForm.special_price),
         available_persons: parseInt(unitForm.available_persons),
         total_persons: parseInt(unitForm.total_persons),
         amenities: unitForm.amenities.filter(a => a.trim()),
         images: unitForm.images.filter(i => i.trim()),
-        special_dates: unitForm.special_dates
+        special_dates: Array.isArray(unitForm.special_dates) ? unitForm.special_dates : []
       };
 
       const res = editingUnit 
@@ -526,6 +526,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
       policies: formData.policies.filter(p => p.trim()),
       schedule: formData.schedule.filter(s => s.time.trim() || s.title.trim()),
       images: formData.images.filter(i => i.trim()),
+      special_dates: Array.isArray(formData.special_dates) ? formData.special_dates : [],
     };
 
     // For campings_cottages, we don't send individual prices as they come from units

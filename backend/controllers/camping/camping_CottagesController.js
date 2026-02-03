@@ -72,7 +72,9 @@ const getCampingById = async (req, res) => {
         ...unit,
         amenities: parsePostgresArray(unit.amenities),
         images: parsePostgresArray(unit.images),
-        special_dates: unit.special_dates ? (typeof unit.special_dates === 'string' ? JSON.parse(unit.special_dates) : unit.special_dates) : []
+        special_dates: unit.special_dates ? (typeof unit.special_dates === 'string' ? JSON.parse(unit.special_dates) : unit.special_dates) : [],
+        weekday_price: unit.weekday_price || '',
+        weekend_price: unit.weekend_price || '',
       }))
     };
 
@@ -161,7 +163,9 @@ const getPublicCampingBySlug = async (req, res) => {
         ...unit,
         amenities: parsePostgresArray(unit.amenities),
         images: parsePostgresArray(unit.images),
-        special_dates: unit.special_dates ? (typeof unit.special_dates === 'string' ? JSON.parse(unit.special_dates) : unit.special_dates) : []
+        special_dates: unit.special_dates ? (typeof unit.special_dates === 'string' ? JSON.parse(unit.special_dates) : unit.special_dates) : [],
+        weekday_price: unit.weekday_price || '',
+        weekend_price: unit.weekend_price || '',
       }))
     };
 
@@ -290,7 +294,7 @@ const getPropertyUnits = async (req, res) => {
 const createPropertyUnit = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_dates } = req.body;
 
     const propertyCheck = await query(
       `SELECT id FROM properties WHERE (property_id = $1 OR id::text = $1) AND category = 'campings_cottages'`,
@@ -305,10 +309,21 @@ const createPropertyUnit = async (req, res) => {
     }
 
     const result = await query(
-      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_dates)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [propertyCheck.rows[0].id, name, available_persons, total_persons || available_persons, amenities, images, price_per_person]
+      [
+        propertyCheck.rows[0].id, 
+        name, 
+        available_persons, 
+        total_persons || available_persons, 
+        amenities, 
+        images, 
+        price_per_person,
+        weekday_price,
+        weekend_price,
+        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || '[]')
+      ]
     );
 
     return res.status(201).json({
@@ -325,7 +340,7 @@ const createPropertyUnit = async (req, res) => {
 const updatePropertyUnit = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_dates } = req.body;
 
     const result = await query(
       `UPDATE property_units 
@@ -335,10 +350,24 @@ const updatePropertyUnit = async (req, res) => {
            amenities = COALESCE($4, amenities),
            images = COALESCE($5, images),
            price_per_person = COALESCE($6, price_per_person),
+           weekday_price = COALESCE($7, weekday_price),
+           weekend_price = COALESCE($8, weekend_price),
+           special_dates = COALESCE($9, special_dates),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $7
+       WHERE id = $10
        RETURNING *`,
-      [name, available_persons, total_persons, amenities, images, price_per_person, unitId]
+      [
+        name, 
+        available_persons, 
+        total_persons, 
+        amenities, 
+        images, 
+        price_per_person,
+        weekday_price,
+        weekend_price,
+        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
+        unitId
+      ]
     );
 
     if (result.rows.length === 0) {

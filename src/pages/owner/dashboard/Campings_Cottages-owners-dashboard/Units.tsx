@@ -109,16 +109,21 @@ const OwnerUnits = () => {
         special_dates: unitForm.special_dates
       };
 
-      // Use camping-specific API route
-      const res = await campingAPI.updateUnit(editingUnit.id, payload);
+      const id = property.property_id || property.propertyId || property.id;
+      let res;
+      if (editingUnit) {
+        res = await campingAPI.updateUnit(editingUnit.id, payload);
+      } else {
+        res = await campingAPI.createUnit(id, payload);
+      }
       
       if (res.success) {
-        toast.success('Unit updated successfully');
+        toast.success(editingUnit ? 'Unit updated successfully' : 'Unit created successfully');
         setIsAdding(false);
         setEditingUnit(null);
         fetchData();
       } else {
-        toast.error('Failed to update unit');
+        toast.error(res.message || 'Failed to save unit');
       }
     } catch (e) {
       toast.error('Error saving unit');
@@ -175,6 +180,27 @@ const OwnerUnits = () => {
     <div className="space-y-6 max-w-full sm:max-w-4xl mx-auto px-4 sm:px-4 pb-10">
       <div className="flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-[#D4AF37] font-display tracking-tight">Manage Units</h1>
+        <Button 
+          onClick={() => {
+            setEditingUnit(null);
+            setUnitForm({
+              name: '', 
+              available_persons: '0',
+              total_persons: '0',
+              price_per_person: '0',
+              weekday_price: '0',
+              weekend_price: '0',
+              special_price: '0',
+              amenities: [''],
+              images: [] as string[],
+              special_dates: [] as { date: string, price: string }[]
+            });
+            setIsAdding(true);
+          }}
+          className="bg-gold hover:bg-gold/90 text-black font-bold"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add Unit
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -234,7 +260,9 @@ const OwnerUnits = () => {
         <DialogContent className="bg-charcoal border-white/10 rounded-3xl max-h-[90vh] overflow-y-auto sm:max-w-[600px] w-[95vw] p-0" aria-describedby="unit-form-desc">
           <div className="p-6 sm:p-8">
             <DialogHeader className="mb-6 text-center">
-              <DialogTitle className="text-gold font-display text-xl sm:text-2xl">Edit Unit</DialogTitle>
+              <DialogTitle className="text-gold font-display text-xl sm:text-2xl">
+                {editingUnit ? 'Edit Unit' : 'Add New Unit'}
+              </DialogTitle>
               <DialogDescription id="unit-form-desc" className="text-xs text-muted-foreground">
                 Specify the details for this accommodation unit including name, capacity, and amenities.
               </DialogDescription>
@@ -379,7 +407,7 @@ const OwnerUnits = () => {
               </div>
 
               <Button type="button" onClick={handleSaveUnit} className="w-full bg-[#D4AF37] hover:bg-[#B8962E] text-black font-bold h-12 rounded-xl mt-4 shadow-lg shadow-gold/10">
-                Update Unit
+                {editingUnit ? 'Update Unit' : 'Create Unit'}
               </Button>
             </div>
           </div>

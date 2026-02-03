@@ -294,7 +294,7 @@ const getPropertyUnits = async (req, res) => {
 const createPropertyUnit = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_dates } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates } = req.body;
 
     const propertyCheck = await query(
       `SELECT id FROM properties WHERE (property_id = $1 OR id::text = $1) AND category = 'campings_cottages'`,
@@ -309,19 +309,20 @@ const createPropertyUnit = async (req, res) => {
     }
 
     const result = await query(
-      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_dates)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         propertyCheck.rows[0].id, 
         name, 
         available_persons, 
         total_persons || available_persons, 
-        amenities, 
-        images, 
+        Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null), 
+        Array.isArray(images) ? JSON.stringify(images) : (images || null), 
         price_per_person,
         weekday_price,
         weekend_price,
+        special_price,
         Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || '[]')
       ]
     );
@@ -340,7 +341,7 @@ const createPropertyUnit = async (req, res) => {
 const updatePropertyUnit = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_dates } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates } = req.body;
 
     const result = await query(
       `UPDATE property_units 
@@ -352,19 +353,21 @@ const updatePropertyUnit = async (req, res) => {
            price_per_person = COALESCE($6, price_per_person),
            weekday_price = COALESCE($7, weekday_price),
            weekend_price = COALESCE($8, weekend_price),
-           special_dates = COALESCE($9, special_dates),
+           special_price = COALESCE($9, special_price),
+           special_dates = COALESCE($10, special_dates),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $10
+       WHERE id = $11
        RETURNING *`,
       [
         name, 
         available_persons, 
         total_persons, 
-        amenities, 
-        images, 
+        Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null), 
+        Array.isArray(images) ? JSON.stringify(images) : (images || null), 
         price_per_person,
         weekday_price,
         weekend_price,
+        special_price,
         Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
         unitId
       ]

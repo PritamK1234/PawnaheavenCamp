@@ -1,7 +1,13 @@
 const crypto = require('crypto');
+const axios = require('axios');
 const { query } = require('../db');
 const PaytmChecksum = require('paytmchecksum');
 const { WhatsAppService } = require('../utils/whatsappService');
+
+function getPublicDomain(req) {
+  const rawDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+  return (rawDomain.includes(',') ? rawDomain.split(',')[0] : rawDomain) || req.get('x-forwarded-host') || req.get('host');
+}
 
 function generatePaytmOrderId() {
   const timestamp = Date.now();
@@ -11,6 +17,14 @@ function generatePaytmOrderId() {
 
 function generateActionToken() {
   return crypto.randomBytes(32).toString('hex');
+}
+
+function getPaytmBaseUrl() {
+  const gatewayUrl = process.env.PAYTM_GATEWAY_URL || '';
+  if (gatewayUrl.includes('securegw.paytm.in') && !gatewayUrl.includes('securegw-stage')) {
+    return 'https://securegw.paytm.in';
+  }
+  return 'https://securegw-stage.paytm.in';
 }
 
 const initiatePaytmPayment = async (req, res) => {
@@ -37,74 +51,220 @@ const initiatePaytmPayment = async (req, res) => {
     }
 
     const paytmOrderId = generatePaytmOrderId();
-    const channelId = channel_id || process.env.PAYTM_CHANNEL_ID_FOR_WEB || 'WEB';
-
     const mid = process.env.PAYTM_MID;
     const website = process.env.PAYTM_WEBSITE;
-    const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
     const merchantKey = process.env.PAYTM_MERCHANT_KEY;
-    const rawDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
-    const publicDomain = (rawDomain.includes(',') ? rawDomain.split(',')[0] : rawDomain) || req.get('x-forwarded-host') || req.get('host');
+    const publicDomain = getPublicDomain(req);
     const callbackUrl = `https://${publicDomain}/api/payments/paytm/callback`;
-    const gatewayUrl = process.env.PAYTM_GATEWAY_URL || 'https://securegw-stage.paytm.in/order/process';
-    
-    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; frame-ancestors *; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *;");
-    res.setHeader('X-Frame-Options', 'ALLOWALL');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    const paytmBaseUrl = getPaytmBaseUrl();
+    const amount = parseFloat(booking.advance_amount).toFixed(2);
 
-    if (!mid || !website || !industryType || !merchantKey) {
+    if (!mid || !website || !merchantKey) {
       console.error('Missing Paytm configuration');
       return res.status(500).json({ error: 'Payment gateway not configured' });
     }
 
-    const paytmParams = {
-      MID: String(mid),
-      WEBSITE: String(website),
-      INDUSTRY_TYPE_ID: String(industryType),
-      CHANNEL_ID: String(channelId),
-      ORDER_ID: String(paytmOrderId),
-      CUST_ID: String(booking.guest_phone || 'GUEST'),
-      MOBILE_NO: String(booking.guest_phone || '0000000000'),
-      EMAIL: String(`${booking.guest_phone || 'guest'}@guest.com`),
-      TXN_AMOUNT: String(parseFloat(booking.advance_amount).toFixed(2)),
-      CALLBACK_URL: String(callbackUrl),
+    const paytmBody = {
+      requestType: 'Payment',
+      mid: mid,
+      websiteName: website,
+      orderId: paytmOrderId,
+      callbackUrl: callbackUrl,
+      txnAmount: {
+        value: amount,
+        currency: 'INR',
+      },
+      userInfo: {
+        custId: String(booking.guest_phone || 'GUEST'),
+      },
     };
 
-    const checksum = await PaytmChecksum.generateSignature(paytmParams, merchantKey);
+    const checksum = await PaytmChecksum.generateSignature(
+      JSON.stringify(paytmBody),
+      merchantKey
+    );
 
-    console.log('Payment Parameters:', {
+    const paytmRequest = {
+      body: paytmBody,
+      head: {
+        signature: checksum,
+      },
+    };
+
+    console.log('Initiating Paytm transaction:', {
       mid,
       website,
-      industryType,
       orderId: paytmOrderId,
-      amount: booking.advance_amount,
-      gatewayUrl,
+      amount,
+      callbackUrl,
+      paytmBaseUrl,
     });
+
+    const paytmResponse = await axios.post(
+      `${paytmBaseUrl}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${paytmOrderId}`,
+      paytmRequest,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    console.log('Paytm initiateTransaction response:', JSON.stringify(paytmResponse.data));
+
+    const responseBody = paytmResponse.data.body;
+
+    if (!responseBody || !responseBody.txnToken) {
+      console.error('Failed to get txnToken from Paytm:', paytmResponse.data);
+      return res.status(500).json({
+        error: 'Failed to initiate payment with gateway',
+        details: responseBody?.resultInfo?.resultMsg || 'No transaction token received',
+      });
+    }
 
     await query(
       'UPDATE bookings SET order_id = $1 WHERE booking_id = $2',
       [paytmOrderId, booking_id]
     );
 
+    const redirectUrl = `${paytmBaseUrl}/theia/api/v1/showPaymentPage?mid=${mid}&orderId=${paytmOrderId}&txnToken=${responseBody.txnToken}`;
+
     return res.status(200).json({
       success: true,
-      paytm_params: {
-        ...paytmParams,
-        CHECKSUMHASH: checksum,
-      },
-      gateway_url: gatewayUrl,
+      txnToken: responseBody.txnToken,
       order_id: paytmOrderId,
       booking_id: booking_id,
-      amount: booking.advance_amount,
+      amount: amount,
+      mid: mid,
+      redirect_url: redirectUrl,
     });
   } catch (error) {
-    console.error('Error initiating payment:', error);
+    console.error('Error initiating payment:', error.response?.data || error.message);
     return res.status(500).json({
       error: 'Internal server error',
-      details: error.message
+      details: error.response?.data?.body?.resultInfo?.resultMsg || error.message,
     });
+  }
+};
+
+const paytmRedirect = async (req, res) => {
+  try {
+    const { booking_id } = req.params;
+
+    if (!booking_id) {
+      return res.status(400).send('Booking ID is required');
+    }
+
+    const result = await query(
+      'SELECT * FROM bookings WHERE booking_id = $1',
+      [booking_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send('Booking not found');
+    }
+
+    const booking = result.rows[0];
+
+    if (booking.payment_status === 'SUCCESS') {
+      const frontendUrl = `https://${getPublicDomain(req)}`;
+      return res.redirect(`${frontendUrl}/ticket?booking_id=${booking.booking_id}`);
+    }
+
+    const mid = process.env.PAYTM_MID;
+    const website = process.env.PAYTM_WEBSITE;
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY;
+    const publicDomain = getPublicDomain(req);
+    const callbackUrl = `https://${publicDomain}/api/payments/paytm/callback`;
+    const paytmBaseUrl = getPaytmBaseUrl();
+    const amount = parseFloat(booking.advance_amount).toFixed(2);
+
+    if (!mid || !website || !merchantKey) {
+      return res.status(500).send('Payment gateway not configured');
+    }
+
+    const paytmOrderId = booking.order_id || generatePaytmOrderId();
+
+    if (!booking.order_id) {
+      await query(
+        'UPDATE bookings SET order_id = $1 WHERE booking_id = $2',
+        [paytmOrderId, booking_id]
+      );
+    }
+
+    const paytmBody = {
+      requestType: 'Payment',
+      mid: mid,
+      websiteName: website,
+      orderId: paytmOrderId,
+      callbackUrl: callbackUrl,
+      txnAmount: {
+        value: amount,
+        currency: 'INR',
+      },
+      userInfo: {
+        custId: String(booking.guest_phone || 'GUEST'),
+      },
+    };
+
+    const checksum = await PaytmChecksum.generateSignature(
+      JSON.stringify(paytmBody),
+      merchantKey
+    );
+
+    const paytmRequest = {
+      body: paytmBody,
+      head: { signature: checksum },
+    };
+
+    console.log('Paytm redirect - initiating transaction:', {
+      mid, website, orderId: paytmOrderId, amount, callbackUrl,
+    });
+
+    const paytmResponse = await axios.post(
+      `${paytmBaseUrl}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${paytmOrderId}`,
+      paytmRequest,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    console.log('Paytm initiateTransaction response:', JSON.stringify(paytmResponse.data));
+
+    const responseBody = paytmResponse.data.body;
+
+    if (!responseBody || !responseBody.txnToken) {
+      console.error('Failed to get txnToken:', paytmResponse.data);
+      const errorMsg = responseBody?.resultInfo?.resultMsg || 'Payment initiation failed';
+      const frontendUrl = `https://${publicDomain}`;
+      return res.status(200).send(`
+        <!DOCTYPE html>
+        <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>body{font-family:Arial;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0a;color:white;}
+        .container{background:#1a1a1a;padding:2rem;border-radius:16px;text-align:center;max-width:500px;}
+        .icon{font-size:4rem;margin-bottom:1rem;color:#ef4444;}
+        a{display:inline-block;margin-top:1.5rem;padding:0.75rem 2rem;background:#d4af37;color:black;text-decoration:none;border-radius:8px;font-weight:bold;}</style>
+        </head><body><div class="container">
+        <div class="icon">!</div>
+        <h2>Payment Error</h2>
+        <p style="color:#999">${errorMsg}</p>
+        <a href="${frontendUrl}">Back to Home</a>
+        </div></body></html>
+      `);
+    }
+
+    const showPaymentUrl = `${paytmBaseUrl}/theia/api/v1/showPaymentPage?mid=${mid}&orderId=${paytmOrderId}&txnToken=${responseBody.txnToken}`;
+    console.log('Redirecting to Paytm payment page:', showPaymentUrl);
+    return res.redirect(showPaymentUrl);
+
+  } catch (error) {
+    console.error('Error in Paytm redirect:', error.response?.data || error.message);
+    return res.status(500).send(`
+      <!DOCTYPE html>
+      <html><head><meta charset="UTF-8"><style>body{font-family:Arial;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0a;color:white;}
+      .container{background:#1a1a1a;padding:2rem;border-radius:16px;text-align:center;max-width:500px;}
+      .icon{font-size:4rem;margin-bottom:1rem;color:#ef4444;}</style>
+      </head><body><div class="container">
+      <div class="icon">!</div>
+      <h2>Payment Error</h2>
+      <p style="color:#999">Something went wrong. Please try again.</p>
+      <a href="/" style="display:inline-block;margin-top:1.5rem;padding:0.75rem 2rem;background:#d4af37;color:black;text-decoration:none;border-radius:8px;font-weight:bold;">Back to Home</a>
+      </div></body></html>
+    `);
   }
 };
 
@@ -157,9 +317,7 @@ const paytmCallback = async (req, res) => {
 
     if (booking.webhook_processed && booking.payment_status === 'SUCCESS') {
       console.log('Webhook already processed for booking:', booking.booking_id);
-      const rawDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
-      const domain = (rawDomain.includes(',') ? rawDomain.split(',')[0] : rawDomain) || req.get('x-forwarded-host') || req.get('host');
-      const frontendUrl = `https://${domain}`;
+      const frontendUrl = `https://${getPublicDomain(req)}`;
       return res.redirect(`${frontendUrl}/ticket?booking_id=${booking.booking_id}`);
     }
 
@@ -216,9 +374,7 @@ const paytmCallback = async (req, res) => {
       });
 
       const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
-      const rawDomainOwner = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
-      const domainOwner = (rawDomainOwner.includes(',') ? rawDomainOwner.split(',')[0] : rawDomainOwner) || req.get('x-forwarded-host') || req.get('host');
-      const frontendUrl = `https://${domainOwner}`;
+      const frontendUrl = `https://${getPublicDomain(req)}`;
       const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
       const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
 
@@ -247,9 +403,7 @@ const paytmCallback = async (req, res) => {
       console.log('WhatsApp notifications sent for booking:', booking.booking_id);
     }
 
-    const rawDomainRedirect = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
-    const domainRedirect = (rawDomainRedirect.includes(',') ? rawDomainRedirect.split(',')[0] : rawDomainRedirect) || req.get('x-forwarded-host') || req.get('host');
-    const frontendUrl = `https://${domainRedirect}`;
+    const frontendUrl = `https://${getPublicDomain(req)}`;
     const redirectUrl = status === 'TXN_SUCCESS'
       ? `${frontendUrl}/ticket?booking_id=${booking.booking_id}`
       : `${frontendUrl}`;
@@ -344,5 +498,6 @@ const paytmCallback = async (req, res) => {
 
 module.exports = {
   initiatePaytmPayment,
+  paytmRedirect,
   paytmCallback,
 };

@@ -140,6 +140,9 @@ export function BookingForm({
       const checkOutDateTime = new Date(formData.checkOut);
       checkOutDateTime.setHours(11, 0, 0, 0);
 
+      const savedReferral = localStorage.getItem("applied_referral_code") || "";
+      const referralCode = (formData as any).referralCode || savedReferral;
+
       const bookingPayload: any = {
         property_id: propertyId,
         property_name: propertyName,
@@ -151,17 +154,19 @@ export function BookingForm({
         checkin_datetime: checkInDateTime.toISOString(),
         checkout_datetime: checkOutDateTime.toISOString(),
         advance_amount: advanceAmount,
+        total_amount: totalPrice,
+        referral_code: referralCode || undefined,
       };
 
       if (isVilla) {
         bookingPayload.persons = formData.persons;
-        bookingPayload.max_capacity = 6;
+        bookingPayload.max_capacity = maxCapacity;
       } else {
         bookingPayload.veg_guest_count = formData.vegPersons || 0;
         bookingPayload.nonveg_guest_count = formData.nonVegPersons || 0;
       }
 
-      const bookingResponse = await fetch(`${apiBaseUrl}/api/bookings/initiate`, {
+      const bookingResponse = await fetch(`/api/bookings/initiate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

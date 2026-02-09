@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { query } = require('../db');
 const { PaytmChecksum } = require('../utils/paytmChecksum');
 const { WhatsAppService } = require('../utils/whatsappService');
@@ -8,18 +9,8 @@ function generatePaytmOrderId() {
   return `PAYTM_${timestamp}_${random}`;
 }
 
-function parseFormData(body) {
-  const params = {};
-  const pairs = body.split('&');
-
-  for (const pair of pairs) {
-    const [key, value] = pair.split('=');
-    if (key && value) {
-      params[decodeURIComponent(key)] = decodeURIComponent(value.replace(/\+/g, ' '));
-    }
-  }
-
-  return params;
+function generateActionToken() {
+  return crypto.randomBytes(32).toString('hex');
 }
 
 const initiatePaytmPayment = async (req, res) => {
@@ -53,12 +44,9 @@ const initiatePaytmPayment = async (req, res) => {
     const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
     const merchantKey = process.env.PAYTM_MERCHANT_KEY || 'j@D7fI3pAMAl7nQC';
     const host = req.get('x-forwarded-host') || req.get('host');
-    // Force HTTPS for replit.dev domains as Paytm requires secure callbacks
-    const protocol = host.includes('replit.dev') ? 'https' : 'http';
     const callbackUrl = `https://${host}/api/payments/paytm/callback`;
     const gatewayUrl = process.env.PAYTM_GATEWAY_URL || 'https://securegw-stage.paytm.in/order/process';
     
-    // Completely open security headers for the payment initiation response
     res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; frame-ancestors *; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *;");
     res.setHeader('X-Frame-Options', 'ALLOWALL');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -148,6 +136,7 @@ const paytmCallback = async (req, res) => {
 
     if (!isValidChecksum) {
       console.error('Invalid checksum received from Paytm');
+      return res.status(400).json({ error: 'Invalid checksum - payment verification failed' });
     }
 
     const orderId = paytmResponse.ORDERID;
@@ -168,19 +157,38 @@ const paytmCallback = async (req, res) => {
 
     const booking = result.rows[0];
 
+    if (booking.webhook_processed && booking.payment_status === 'SUCCESS') {
+      console.log('Webhook already processed for booking:', booking.booking_id);
+      const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
+      return res.redirect(`${frontendUrl}/ticket?booking_id=${booking.booking_id}`);
+    }
+
+    if (parseFloat(txnAmount) !== parseFloat(booking.advance_amount)) {
+      console.error('Amount mismatch:', { expected: booking.advance_amount, received: txnAmount });
+      return res.status(400).json({ error: 'Amount mismatch detected' });
+    }
+
     let updatePaymentStatus = 'FAILED';
-    let updateBookingStatus = booking.booking_status;
+    let updateBookingStatus = 'PAYMENT_FAILED';
 
     if (status === 'TXN_SUCCESS') {
       updatePaymentStatus = 'SUCCESS';
-      updateBookingStatus = 'PAYMENT_SUCCESS';
+      updateBookingStatus = 'PENDING_OWNER_CONFIRMATION';
     } else if (status === 'PENDING') {
       updatePaymentStatus = 'PENDING';
+      updateBookingStatus = 'PAYMENT_PENDING';
     }
 
+    const actionToken = generateActionToken();
+    const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
     await query(
-      'UPDATE bookings SET payment_status = $1, booking_status = $2, transaction_id = $3 WHERE booking_id = $4',
-      [updatePaymentStatus, updateBookingStatus, txnId, booking.booking_id]
+      `UPDATE bookings SET 
+        payment_status = $1, booking_status = $2, transaction_id = $3,
+        webhook_processed = true, action_token = $4, action_token_used = false, 
+        action_token_expires_at = $5, updated_at = NOW()
+      WHERE booking_id = $6`,
+      [updatePaymentStatus, updateBookingStatus, txnId, actionToken, tokenExpiry, booking.booking_id]
     );
 
     console.log('Booking updated successfully:', {
@@ -195,7 +203,7 @@ const paytmCallback = async (req, res) => {
 
       await whatsapp.sendTextMessage(
         booking.guest_phone,
-        `Payment successful ✅\n\nWe are processing your booking.\nYou will receive your e-ticket after owner confirmation.`
+        `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${txnAmount}\n\nYour booking is received. You will get confirmation within 1 hour.`
       );
 
       const checkinDate = new Date(booking.checkin_datetime).toLocaleString('en-IN', {
@@ -208,19 +216,22 @@ const paytmCallback = async (req, res) => {
       });
 
       const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
+      const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
+      const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
+      const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
 
-      const ownerMessage = `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name}\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || 0}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel:`;
+      const ownerMessage = `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || 0}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel this booking:`;
 
       await whatsapp.sendInteractiveButtons(
         booking.owner_phone,
         ownerMessage,
         [
           {
-            id: JSON.stringify({ bookingId: booking.booking_id, action: 'CONFIRM' }),
+            id: JSON.stringify({ token: actionToken, action: 'CONFIRM' }),
             title: '✅ Confirm',
           },
           {
-            id: JSON.stringify({ bookingId: booking.booking_id, action: 'CANCEL' }),
+            id: JSON.stringify({ token: actionToken, action: 'CANCEL' }),
             title: '❌ Cancel',
           },
         ]
@@ -228,18 +239,13 @@ const paytmCallback = async (req, res) => {
 
       await whatsapp.sendTextMessage(
         booking.admin_phone,
-        `📋 New Booking Alert\n\nProperty: ${booking.property_name}\nOwner: ${booking.owner_phone}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation`
-      );
-
-      await query(
-        "UPDATE bookings SET booking_status = 'BOOKING_REQUEST_SENT_TO_OWNER' WHERE booking_id = $1",
-        [booking.booking_id]
+        `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nOwner: ${booking.owner_phone}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`
       );
 
       console.log('WhatsApp notifications sent for booking:', booking.booking_id);
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
     const redirectUrl = status === 'TXN_SUCCESS'
       ? `${frontendUrl}/ticket?booking_id=${booking.booking_id}`
       : `${frontendUrl}`;
@@ -259,13 +265,14 @@ const paytmCallback = async (req, res) => {
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0a0a0a;
+            color: white;
           }
           .container {
-            background: white;
+            background: #1a1a1a;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-radius: 16px;
+            border: 1px solid #d4af3730;
             text-align: center;
             max-width: 500px;
           }
@@ -273,11 +280,11 @@ const paytmCallback = async (req, res) => {
           .failed { color: #ef4444; }
           .icon { font-size: 4rem; margin-bottom: 1rem; }
           h1 { margin: 0 0 1rem 0; }
-          p { color: #666; margin: 0.5rem 0; }
+          p { color: #999; margin: 0.5rem 0; }
           .details {
-            background: #f9fafb;
+            background: #111;
             padding: 1rem;
-            border-radius: 5px;
+            border-radius: 8px;
             margin: 1rem 0;
             text-align: left;
           }
@@ -286,21 +293,25 @@ const paytmCallback = async (req, res) => {
             display: inline-block;
             margin-top: 1.5rem;
             padding: 0.75rem 2rem;
-            background: #667eea;
-            color: white;
+            background: #d4af37;
+            color: black;
             text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
+            border-radius: 8px;
+            font-weight: bold;
           }
-          .btn:hover { background: #5568d3; }
         </style>
+        <script>
+          setTimeout(function() {
+            window.location.href = "${redirectUrl}";
+          }, 3000);
+        </script>
       </head>
       <body>
         <div class="container">
           ${status === 'TXN_SUCCESS' ? `
             <div class="icon success">✓</div>
             <h1 class="success">Payment Successful!</h1>
-            <p>Your booking has been confirmed.</p>
+            <p>Redirecting to your booking ticket...</p>
           ` : `
             <div class="icon failed">✗</div>
             <h1 class="failed">Payment Failed</h1>
@@ -313,7 +324,7 @@ const paytmCallback = async (req, res) => {
             <p><strong>Amount:</strong> ₹${txnAmount}</p>
             <p><strong>Status:</strong> ${status}</p>
           </div>
-          <a href="${redirectUrl}" class="btn">Continue</a>
+          <a href="${redirectUrl}" class="btn">${status === 'TXN_SUCCESS' ? 'View Ticket' : 'Back to Home'}</a>
         </div>
       </body>
       </html>

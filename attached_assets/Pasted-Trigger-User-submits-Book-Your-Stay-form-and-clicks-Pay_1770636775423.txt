@@ -1,0 +1,81 @@
+Trigger:
+User submits “Book Your Stay” form and clicks “Pay & Confirm”.
+
+Booking Status Enum:
+- PAYMENT_PENDING
+- PAYMENT_FAILED
+- PENDING_OWNER_CONFIRMATION
+- CONFIRMED
+- CANCELLED_BY_OWNER
+
+Payment:
+- Use Paytm All-in-One Gateway
+- Frontend never decides payment result
+- Paytm webhook is the ONLY source of truth
+
+ON PAYTM WEBHOOK = SUCCESS:
+- Verify:
+  - Paytm signature
+  - Order ID
+  - Amount
+- Ensure webhook idempotency (no double processing)
+
+- Update:
+  payment_status = SUCCESS
+  booking_status = PENDING_OWNER_CONFIRMATION
+- Soft-lock availability
+
+- Send WhatsApp Cloud API messages:
+
+  Customer:
+  "Booking received. Confirmation within 1 hour."
+
+  Admin:
+  Full booking details + owner contact
+
+  Owner:
+  Booking details with action buttons:
+    - Confirm Booking
+    - Cancel Booking
+
+Buttons:
+- Token-based
+- Single-use
+- Expire in 1 hour
+- Action allowed ONLY if booking_status = PENDING_OWNER_CONFIRMATION
+
+ON OWNER CONFIRM:
+- booking_status = CONFIRMED
+- Hard-lock availability
+- Generate booking ticket
+- Send ticket to Customer & Admin via WhatsApp
+- Ticket must:
+  - Be token-protected
+  - Watermarked
+  - Expire after checkout time
+- Mark referral commission = PENDING
+- Credit referral ONLY after successful checkout
+
+ON OWNER CANCEL:
+- booking_status = CANCELLED_BY_OWNER
+- Release availability
+- Cancel referral commission
+- Notify Customer & Admin via WhatsApp
+- Refund allowed ONLY if payment_status = SUCCESS
+- Refund handled manually by Admin
+
+PAYMENT PENDING:
+- booking_status = PAYMENT_PENDING
+- Start 15-minute timer
+- If still pending after 15 minutes:
+  - Notify Admin only via WhatsApp
+
+PAYMENT FAILED or USER CANCEL:
+- booking_status = PAYMENT_FAILED
+- Stop flow immediately
+- No WhatsApp messages to Owner or Customer
+
+SECURITY RULES:
+- No booking confirmation without Paytm SUCCESS webhook
+- Prevent duplicate webhook & button actions
+- All WhatsApp actions must be authenticated and idempotent

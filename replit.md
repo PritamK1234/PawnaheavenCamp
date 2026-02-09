@@ -72,12 +72,26 @@ Preferred communication style: Simple, everyday language.
 ### Key Pages
 - **Index**: Landing page with hero, destinations, and property listings
 - **PropertyDetails**: Individual property view with image slider and booking information
+- **TicketPage**: E-ticket display with QR code, auto-refreshes when waiting for owner confirmation
 - **NotFound**: 404 error handling
 
+### Booking & Payment System (Feb 2026)
+- **Booking Flow**: PAYMENT_PENDING → PENDING_OWNER_CONFIRMATION (payment_status=SUCCESS) → TICKET_GENERATED (owner confirms)
+- **Booking ID Format**: PHC-{timestamp36}-{hex} (e.g. PHC-M2K3F4-A1B2C3)
+- **Payment Gateway**: Paytm (STAGING env with test credentials as fallback)
+- **Payment Callback**: Verifies checksum, updates booking status, generates action tokens for owner
+- **15-minute Payment Alert**: If booking stays PAYMENT_PENDING for 15 min, WhatsApp alert sent to admin
+- **Owner Action Tokens**: Single-use, 1-hour expiry, prevent duplicate processing
+- **Owner Action Endpoints**: GET /api/bookings/owner-action?token=...&action=CONFIRM|CANCEL
+- **WhatsApp Webhook**: GET/POST /api/bookings/webhook/whatsapp for Meta webhook verification and button responses
+- **Referral System**: 5% discount on advance amount, PENDING commission created on booking confirmation
+- **E-Ticket**: Generated after owner confirms, shows QR code, property details, payment summary
+- **Ticket Page States**: Loading, pending confirmation (auto-refresh 10s), confirmed (full ticket), expired, error
+
 ### Data Architecture
-- Currently uses static mock data embedded in components
-- Property data structure supports categories (camping, cottage, villa), amenities, pricing, and multiple images
-- Ready for backend integration via React Query
+- PostgreSQL database with full booking/payment schema
+- Property data from database with category settings
+- Referral users and transactions tables
 
 ## External Dependencies
 

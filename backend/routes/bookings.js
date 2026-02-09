@@ -3,6 +3,9 @@ const router = express.Router();
 const bookingController = require('../controllers/bookingController');
 
 router.post('/initiate', bookingController.initiateBooking);
+router.get('/owner-action', bookingController.handleOwnerAction);
+router.get('/webhook/whatsapp', bookingController.handleWhatsAppWebhook);
+router.post('/webhook/whatsapp', bookingController.handleWhatsAppWebhook);
 router.get('/ledger', bookingController.getLedgerEntries);
 router.get('/ledger/monthly', bookingController.getMonthlyLedger);
 router.post('/ledger', bookingController.addLedgerEntry);

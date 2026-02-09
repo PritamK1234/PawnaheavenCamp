@@ -88,6 +88,7 @@ const App = () => {
               <Route path="/admin/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
               <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
               <Route path="/payment/demo" element={<PageWrapper><DemoPayment /></PageWrapper>} />
+              <Route path="/ticket" element={<PageWrapper><TicketPage /></PageWrapper>} />
               <Route path="/ticket/:ticketId" element={<PageWrapper><TicketPage /></PageWrapper>} />
               <Route path="/info/:type" element={<PageWrapper><InformationPage /></PageWrapper>} />
               <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />

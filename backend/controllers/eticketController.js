@@ -125,8 +125,34 @@ const getBookingETicket = async (req, res) => {
       });
     }
 
+    const pendingStatuses = ['PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'PAYMENT_SUCCESS'];
+    if (pendingStatuses.includes(booking.booking_status)) {
+      const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
+      return res.status(200).json({
+        booking_id: booking.booking_id,
+        property_name: booking.property_name,
+        guest_name: booking.guest_name,
+        advance_amount: booking.advance_amount,
+        due_amount: dueAmount,
+        booking_status: booking.booking_status,
+        created_at: booking.created_at,
+      });
+    }
+
+    const failedStatuses = ['PAYMENT_FAILED', 'PAYMENT_PENDING', 'CANCELLED_BY_OWNER', 'CANCELLED_NO_REFUND'];
+    if (failedStatuses.includes(booking.booking_status)) {
+      return res.status(403).json({
+        error: 'Ticket not available',
+        message: booking.booking_status === 'CANCELLED_BY_OWNER' 
+          ? 'This booking was cancelled by the property owner' 
+          : 'E-ticket is not available for this booking',
+        current_status: booking.booking_status,
+      });
+    }
+
     if (booking.booking_status !== 'TICKET_GENERATED' &&
-        booking.booking_status !== 'OWNER_CONFIRMED') {
+        booking.booking_status !== 'OWNER_CONFIRMED' &&
+        booking.booking_status !== 'CONFIRMED') {
       return res.status(403).json({
         error: 'Ticket not available',
         message: 'E-ticket is not yet available for this booking',

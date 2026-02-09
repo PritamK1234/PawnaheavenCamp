@@ -1,18 +1,33 @@
+const crypto = require('crypto');
 const { query } = require('../db');
 const { WhatsAppService } = require('../utils/whatsappService');
 
 const VALID_TRANSITIONS = {
-  'PAYMENT_PENDING': ['PAYMENT_SUCCESS'],
-  'PAYMENT_SUCCESS': ['BOOKING_REQUEST_SENT_TO_OWNER'],
-  'BOOKING_REQUEST_SENT_TO_OWNER': ['OWNER_CONFIRMED', 'OWNER_CANCELLED'],
-  'OWNER_CONFIRMED': ['TICKET_GENERATED'],
-  'OWNER_CANCELLED': ['REFUND_REQUIRED', 'REFUND_INITIATED', 'CANCELLED_NO_REFUND'],
+  'PAYMENT_PENDING': ['PAYMENT_SUCCESS', 'PAYMENT_FAILED'],
+  'PAYMENT_SUCCESS': ['PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER'],
+  'PENDING_OWNER_CONFIRMATION': ['CONFIRMED', 'CANCELLED_BY_OWNER', 'BOOKING_REQUEST_SENT_TO_OWNER'],
+  'BOOKING_REQUEST_SENT_TO_OWNER': ['OWNER_CONFIRMED', 'OWNER_CANCELLED', 'CONFIRMED', 'CANCELLED_BY_OWNER'],
+  'OWNER_CONFIRMED': ['TICKET_GENERATED', 'CONFIRMED'],
+  'CONFIRMED': ['TICKET_GENERATED'],
+  'OWNER_CANCELLED': ['REFUND_REQUIRED', 'REFUND_INITIATED', 'CANCELLED_NO_REFUND', 'CANCELLED_BY_OWNER'],
+  'CANCELLED_BY_OWNER': ['REFUND_REQUIRED', 'REFUND_INITIATED', 'CANCELLED_NO_REFUND'],
   'TICKET_GENERATED': [],
   'REFUND_REQUIRED': ['REFUND_INITIATED', 'REFUND_FAILED'],
   'REFUND_INITIATED': [],
   'REFUND_FAILED': [],
   'CANCELLED_NO_REFUND': [],
+  'PAYMENT_FAILED': [],
 };
+
+function generateBookingId() {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = crypto.randomBytes(3).toString('hex').toUpperCase();
+  return `PHC-${timestamp}-${random}`;
+}
+
+function generateActionToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 function isValidTransition(currentStatus, newStatus) {
   const allowedTransitions = VALID_TRANSITIONS[currentStatus] || [];
@@ -76,72 +91,81 @@ const initiateBooking = async (req, res) => {
       return res.status(400).json({ error: validation.error });
     }
 
-    let insertQuery;
-    let values;
+    const bookingId = generateBookingId();
+    let referralDiscount = 0;
 
-    if (bookingRequest.property_type === 'VILLA') {
-      insertQuery = `
-        INSERT INTO bookings (
-          property_id, property_name, property_type,
-          guest_name, guest_phone, owner_phone, admin_phone,
-          checkin_datetime, checkout_datetime, advance_amount,
-          persons, max_capacity,
-          owner_name, map_link, property_address, total_amount,
-          payment_status, booking_status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'INITIATED', 'PAYMENT_PENDING')
-        RETURNING *
-      `;
-      values = [
-        bookingRequest.property_id,
-        bookingRequest.property_name,
-        bookingRequest.property_type,
-        bookingRequest.guest_name,
-        bookingRequest.guest_phone,
-        bookingRequest.owner_phone,
-        bookingRequest.admin_phone,
-        bookingRequest.checkin_datetime,
-        bookingRequest.checkout_datetime,
-        bookingRequest.advance_amount,
-        bookingRequest.persons,
-        bookingRequest.max_capacity,
-        bookingRequest.owner_name || null,
-        bookingRequest.map_link || null,
-        bookingRequest.property_address || null,
-        bookingRequest.total_amount || null,
-      ];
-    } else {
-      insertQuery = `
-        INSERT INTO bookings (
-          property_id, property_name, property_type,
-          guest_name, guest_phone, owner_phone, admin_phone,
-          checkin_datetime, checkout_datetime, advance_amount,
-          veg_guest_count, nonveg_guest_count,
-          owner_name, map_link, property_address, total_amount,
-          payment_status, booking_status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'INITIATED', 'PAYMENT_PENDING')
-        RETURNING *
-      `;
-      values = [
-        bookingRequest.property_id,
-        bookingRequest.property_name,
-        bookingRequest.property_type,
-        bookingRequest.guest_name,
-        bookingRequest.guest_phone,
-        bookingRequest.owner_phone,
-        bookingRequest.admin_phone,
-        bookingRequest.checkin_datetime,
-        bookingRequest.checkout_datetime,
-        bookingRequest.advance_amount,
-        bookingRequest.veg_guest_count,
-        bookingRequest.nonveg_guest_count,
-        bookingRequest.owner_name || null,
-        bookingRequest.map_link || null,
-        bookingRequest.property_address || null,
-        bookingRequest.total_amount || null,
-      ];
+    if (bookingRequest.referral_code) {
+      const refResult = await query(
+        "SELECT * FROM referral_users WHERE referral_code = $1 AND status = 'active'",
+        [bookingRequest.referral_code.toUpperCase()]
+      );
+      if (refResult.rows.length > 0) {
+        referralDiscount = Math.round(bookingRequest.advance_amount * 0.05);
+        bookingRequest.advance_amount = bookingRequest.advance_amount - referralDiscount;
+      }
     }
 
+    const totalPersons = bookingRequest.property_type === 'VILLA'
+      ? bookingRequest.persons
+      : (bookingRequest.veg_guest_count || 0) + (bookingRequest.nonveg_guest_count || 0);
+
+    const insertQuery = `
+      INSERT INTO bookings (
+        booking_id, property_id, property_name, property_type,
+        guest_name, guest_phone, owner_phone, admin_phone,
+        checkin_datetime, checkout_datetime, advance_amount,
+        total_amount, persons, max_capacity,
+        veg_guest_count, nonveg_guest_count,
+        owner_name, map_link, property_address,
+        referral_code, referral_discount,
+        payment_status, booking_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, 'INITIATED', 'PAYMENT_PENDING')
+      RETURNING *
+    `;
+    const values = [
+      bookingId,
+      bookingRequest.property_id,
+      bookingRequest.property_name,
+      bookingRequest.property_type,
+      bookingRequest.guest_name,
+      bookingRequest.guest_phone,
+      bookingRequest.owner_phone,
+      bookingRequest.admin_phone,
+      bookingRequest.checkin_datetime,
+      bookingRequest.checkout_datetime,
+      bookingRequest.advance_amount,
+      bookingRequest.total_amount || null,
+      totalPersons,
+      bookingRequest.max_capacity || null,
+      bookingRequest.veg_guest_count || null,
+      bookingRequest.nonveg_guest_count || null,
+      bookingRequest.owner_name || null,
+      bookingRequest.map_link || null,
+      bookingRequest.property_address || null,
+      bookingRequest.referral_code ? bookingRequest.referral_code.toUpperCase() : null,
+      referralDiscount,
+    ];
+
     const result = await query(insertQuery, values);
+
+    setTimeout(async () => {
+      try {
+        const checkResult = await query(
+          "SELECT * FROM bookings WHERE booking_id = $1 AND booking_status = 'PAYMENT_PENDING'",
+          [bookingId]
+        );
+        if (checkResult.rows.length > 0) {
+          const whatsapp = new WhatsAppService();
+          await whatsapp.sendTextMessage(
+            bookingRequest.admin_phone,
+            `⚠️ Payment Pending Alert\n\nBooking ID: ${bookingId}\nGuest: ${bookingRequest.guest_name} (${bookingRequest.guest_phone})\nProperty: ${bookingRequest.property_name}\nAmount: ₹${bookingRequest.advance_amount}\n\nPayment has been pending for 15 minutes.`
+          );
+          console.log('15-min payment pending alert sent for booking:', bookingId);
+        }
+      } catch (err) {
+        console.error('Error in payment timeout check:', err);
+      }
+    }, 15 * 60 * 1000);
 
     return res.status(201).json({
       success: true,
@@ -617,6 +641,281 @@ const getMonthlyLedger = async (req, res) => {
   }
 };
 
+const handleOwnerAction = async (req, res) => {
+  try {
+    const { token, action } = req.query;
+
+    if (!token || !action) {
+      return res.status(400).json({ error: 'Token and action are required' });
+    }
+
+    if (!['CONFIRM', 'CANCEL'].includes(action)) {
+      return res.status(400).json({ error: 'Invalid action. Must be CONFIRM or CANCEL' });
+    }
+
+    const result = await query(
+      'SELECT * FROM bookings WHERE action_token = $1',
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Invalid or expired token' });
+    }
+
+    const booking = result.rows[0];
+
+    if (booking.action_token_used) {
+      return res.status(400).json({ error: 'This action has already been taken', booking_status: booking.booking_status });
+    }
+
+    if (new Date() > new Date(booking.action_token_expires_at)) {
+      return res.status(400).json({ error: 'Action token has expired' });
+    }
+
+    const validStatuses = ['PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER'];
+    if (!validStatuses.includes(booking.booking_status)) {
+      return res.status(400).json({
+        error: 'Booking is not in a state that allows this action',
+        current_status: booking.booking_status,
+      });
+    }
+
+    if (booking.payment_status !== 'SUCCESS') {
+      return res.status(400).json({
+        error: 'Cannot process action - payment not confirmed',
+        payment_status: booking.payment_status,
+      });
+    }
+
+    const whatsapp = new WhatsAppService();
+    const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
+
+    if (action === 'CONFIRM') {
+      await query(
+        "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+        [booking.booking_id]
+      );
+
+      const ticketUrl = `${frontendUrl}/ticket?booking_id=${booking.booking_id}`;
+
+      await whatsapp.sendTextMessage(
+        booking.guest_phone,
+        `🎉 Booking Confirmed!\n\nYour booking has been confirmed by the property owner.\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\n\nView your e-ticket:\n${ticketUrl}`
+      );
+
+      const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
+      await whatsapp.sendTextMessage(
+        booking.admin_phone,
+        `✅ Booking Confirmed & Ticket Generated\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\n\nE-ticket: ${ticketUrl}`
+      );
+
+      if (booking.referral_code) {
+        try {
+          const refUser = await query(
+            "SELECT * FROM referral_users WHERE referral_code = $1 AND status = 'active'",
+            [booking.referral_code]
+          );
+          if (refUser.rows.length > 0) {
+            const commission = Math.round(parseFloat(booking.advance_amount) * 0.05);
+            const existingTxn = await query(
+              "SELECT id FROM referral_transactions WHERE booking_id = $1",
+              [booking.id]
+            );
+            if (existingTxn.rows.length === 0) {
+              await query(
+                "INSERT INTO referral_transactions (referral_user_id, booking_id, amount, type, status, source) VALUES ($1, $2, $3, 'earning', 'pending', 'booking')",
+                [refUser.rows[0].id, booking.id, commission]
+              );
+              console.log('Referral commission (PENDING) created for booking:', booking.booking_id);
+            }
+          }
+        } catch (refErr) {
+          console.error('Error creating referral commission:', refErr);
+        }
+      }
+
+      return res.status(200).send(`
+        <!DOCTYPE html><html><head><title>Booking Confirmed</title>
+        <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>body{font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0a;color:white;}.container{background:#1a1a1a;padding:2rem;border-radius:16px;border:1px solid #10b98130;text-align:center;max-width:400px;}.icon{font-size:4rem;margin-bottom:1rem;color:#10b981;}h1{color:#10b981;}p{color:#999;}</style>
+        </head><body><div class="container"><div class="icon">✅</div><h1>Booking Confirmed!</h1><p>Guest: ${booking.guest_name}</p><p>Property: ${booking.property_name}</p><p>Ticket has been sent to the customer.</p></div></body></html>
+      `);
+    } else {
+      await query(
+        "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+        [booking.booking_id]
+      );
+
+      if (booking.payment_status === 'SUCCESS') {
+        await whatsapp.sendTextMessage(
+          booking.guest_phone,
+          `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${booking.advance_amount}\n\nYour refund will be processed within 5-7 business days.`
+        );
+
+        await whatsapp.sendTextMessage(
+          booking.admin_phone,
+          `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nRefund Amount: ₹${booking.advance_amount}\n\nManual refund required.`
+        );
+      }
+
+      if (booking.referral_code) {
+        try {
+          await query(
+            "DELETE FROM referral_transactions WHERE booking_id = $1 AND status = 'pending'",
+            [booking.id]
+          );
+        } catch (refErr) {
+          console.error('Error cancelling referral commission:', refErr);
+        }
+      }
+
+      return res.status(200).send(`
+        <!DOCTYPE html><html><head><title>Booking Cancelled</title>
+        <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>body{font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0a;color:white;}.container{background:#1a1a1a;padding:2rem;border-radius:16px;border:1px solid #ef444430;text-align:center;max-width:400px;}.icon{font-size:4rem;margin-bottom:1rem;color:#ef4444;}h1{color:#ef4444;}p{color:#999;}</style>
+        </head><body><div class="container"><div class="icon">❌</div><h1>Booking Cancelled</h1><p>Guest: ${booking.guest_name}</p><p>Property: ${booking.property_name}</p><p>Customer and admin have been notified.</p></div></body></html>
+      `);
+    }
+  } catch (error) {
+    console.error('Error handling owner action:', error);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+};
+
+const handleWhatsAppWebhook = async (req, res) => {
+  try {
+    const whatsapp = new WhatsAppService();
+
+    if (req.method === 'GET') {
+      const mode = req.query['hub.mode'];
+      const token = req.query['hub.verify_token'];
+      const challenge = req.query['hub.challenge'];
+
+      const result = whatsapp.verifyWebhook(mode, token, challenge);
+      if (result) {
+        return res.status(200).send(result);
+      }
+      return res.status(403).send('Forbidden');
+    }
+
+    const buttonResponse = whatsapp.extractButtonResponse(req.body);
+
+    if (buttonResponse) {
+      try {
+        const payload = JSON.parse(buttonResponse.buttonId);
+        const { token, action } = payload;
+
+        if (token && action) {
+          const result = await query(
+            'SELECT * FROM bookings WHERE action_token = $1',
+            [token]
+          );
+
+          if (result.rows.length > 0) {
+            const booking = result.rows[0];
+
+            if (booking.action_token_used) {
+              await whatsapp.sendTextMessage(buttonResponse.from, '⚠️ This action has already been taken.');
+              return res.status(200).json({ status: 'ok' });
+            }
+
+            if (new Date() > new Date(booking.action_token_expires_at)) {
+              await whatsapp.sendTextMessage(buttonResponse.from, '⚠️ This action link has expired.');
+              return res.status(200).json({ status: 'ok' });
+            }
+
+            const frontendUrl = process.env.FRONTEND_URL || 'https://pawnahavencamp.com';
+
+            if (booking.payment_status !== 'SUCCESS') {
+              await whatsapp.sendTextMessage(buttonResponse.from, '⚠️ Cannot process - payment not confirmed for this booking.');
+              return res.status(200).json({ status: 'ok' });
+            }
+
+            if (action === 'CONFIRM') {
+              await query(
+                "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+                [booking.booking_id]
+              );
+
+              const ticketUrl = `${frontendUrl}/ticket?booking_id=${booking.booking_id}`;
+
+              await whatsapp.sendTextMessage(
+                booking.guest_phone,
+                `🎉 Booking Confirmed!\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\n\nView your e-ticket:\n${ticketUrl}`
+              );
+
+              await whatsapp.sendTextMessage(
+                booking.admin_phone,
+                `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name}\n\nE-ticket: ${ticketUrl}`
+              );
+
+              await whatsapp.sendTextMessage(buttonResponse.from, `✅ Booking ${booking.booking_id} confirmed! Guest has been notified.`);
+
+              if (booking.referral_code) {
+                try {
+                  const refUser = await query(
+                    "SELECT * FROM referral_users WHERE referral_code = $1 AND status = 'active'",
+                    [booking.referral_code]
+                  );
+                  if (refUser.rows.length > 0) {
+                    const commission = Math.round(parseFloat(booking.advance_amount) * 0.05);
+                    const existingTxn = await query(
+                      "SELECT id FROM referral_transactions WHERE booking_id = $1",
+                      [booking.id]
+                    );
+                    if (existingTxn.rows.length === 0) {
+                      await query(
+                        "INSERT INTO referral_transactions (referral_user_id, booking_id, amount, type, status, source) VALUES ($1, $2, $3, 'earning', 'pending', 'booking')",
+                        [refUser.rows[0].id, booking.id, commission]
+                      );
+                    }
+                  }
+                } catch (refErr) {
+                  console.error('Error creating referral commission:', refErr);
+                }
+              }
+            } else if (action === 'CANCEL') {
+              await query(
+                "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+                [booking.booking_id]
+              );
+
+              if (booking.payment_status === 'SUCCESS') {
+                await whatsapp.sendTextMessage(
+                  booking.guest_phone,
+                  `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled.\nRefund of ₹${booking.advance_amount} will be processed within 5-7 days.`
+                );
+              }
+
+              await whatsapp.sendTextMessage(
+                booking.admin_phone,
+                `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\nGuest: ${booking.guest_name}\nRefund: ₹${booking.advance_amount}`
+              );
+
+              await whatsapp.sendTextMessage(buttonResponse.from, `❌ Booking ${booking.booking_id} cancelled. Customer notified.`);
+
+              if (booking.referral_code) {
+                try {
+                  await query("DELETE FROM referral_transactions WHERE booking_id = $1 AND status = 'pending'", [booking.id]);
+                } catch (refErr) {
+                  console.error('Error cancelling referral:', refErr);
+                }
+              }
+            }
+          }
+        }
+      } catch (parseErr) {
+        console.error('Error parsing button response:', parseErr);
+      }
+    }
+
+    return res.status(200).json({ status: 'ok' });
+  } catch (error) {
+    console.error('WhatsApp webhook error:', error);
+    return res.status(200).json({ status: 'ok' });
+  }
+};
+
 module.exports = {
   getLedgerEntries,
   addLedgerEntry,
@@ -628,4 +927,6 @@ module.exports = {
   processCancelledBooking,
   updateLedgerEntry,
   deleteLedgerEntry,
+  handleOwnerAction,
+  handleWhatsAppWebhook,
 };

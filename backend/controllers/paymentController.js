@@ -64,6 +64,9 @@ const initiatePaytmPayment = async (req, res) => {
       return res.status(500).json({ error: 'Payment gateway not configured' });
     }
 
+    const channelId = process.env.PAYTM_CHANNEL_ID || 'WEB';
+    const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
+
     const paytmBody = {
       requestType: 'Payment',
       mid: mid,
@@ -77,6 +80,7 @@ const initiatePaytmPayment = async (req, res) => {
       userInfo: {
         custId: String(booking.guest_phone || 'GUEST'),
       },
+      channelId: channelId,
     };
 
     const checksum = await PaytmChecksum.generateSignature(
@@ -94,6 +98,7 @@ const initiatePaytmPayment = async (req, res) => {
     console.log('Initiating Paytm transaction:', {
       mid,
       website,
+      channelId,
       orderId: paytmOrderId,
       amount,
       callbackUrl,
@@ -188,6 +193,9 @@ const paytmRedirect = async (req, res) => {
       );
     }
 
+    const channelId = process.env.PAYTM_CHANNEL_ID || 'WEB';
+    const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
+
     const paytmBody = {
       requestType: 'Payment',
       mid: mid,
@@ -201,6 +209,7 @@ const paytmRedirect = async (req, res) => {
       userInfo: {
         custId: String(booking.guest_phone || 'GUEST'),
       },
+      channelId: channelId,
     };
 
     const checksum = await PaytmChecksum.generateSignature(
@@ -214,7 +223,7 @@ const paytmRedirect = async (req, res) => {
     };
 
     console.log('Paytm redirect - initiating transaction:', {
-      mid, website, orderId: paytmOrderId, amount, callbackUrl,
+      mid, website, channelId, orderId: paytmOrderId, amount, callbackUrl,
     });
 
     const paytmResponse = await axios.post(

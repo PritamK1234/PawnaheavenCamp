@@ -116,6 +116,7 @@ interface PropertyDetail {
   schedule?: { time: string; title: string; icon?: string }[];
   contact?: string;
   owner_mobile?: string;
+  owner_name?: string;
   map_link?: string;
   is_available: boolean;
   property_id: string;
@@ -375,6 +376,8 @@ const PropertyDetails = () => {
                         propertyCategory={propertyData.category}
                         maxCapacity={displayCapacityValue}
                         selectedUnitId={selectedUnit?.id}
+                        ownerPhone={propertyData.owner_mobile}
+                        ownerName={propertyData.owner_name}
                       />
                     </DialogContent>
                   </Dialog>
@@ -557,6 +560,8 @@ const PropertyDetails = () => {
                   propertyCategory={propertyData.category}
                   maxCapacity={displayCapacityValue}
                   selectedUnitId={selectedUnit?.id}
+                  ownerPhone={propertyData.owner_mobile}
+                  ownerName={propertyData.owner_name}
                 />
               </DialogContent>
             </Dialog>

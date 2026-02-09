@@ -43,8 +43,9 @@ const initiatePaytmPayment = async (req, res) => {
     const website = process.env.PAYTM_WEBSITE || 'WEBSTAGING';
     const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
     const merchantKey = process.env.PAYTM_MERCHANT_KEY || 'j@D7fI3pAMAl7nQC';
-    const host = req.get('x-forwarded-host') || req.get('host');
-    const callbackUrl = `https://${host}/api/payments/paytm/callback`;
+    const rawDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+    const publicDomain = (rawDomain.includes(',') ? rawDomain.split(',')[0] : rawDomain) || req.get('x-forwarded-host') || req.get('host');
+    const callbackUrl = `https://${publicDomain}/api/payments/paytm/callback`;
     const gatewayUrl = process.env.PAYTM_GATEWAY_URL || 'https://securegw-stage.paytm.in/order/process';
     
     res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; img-src * data: blob:; frame-ancestors *; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *;");

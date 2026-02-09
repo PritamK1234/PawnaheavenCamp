@@ -24,6 +24,8 @@ interface BookingFormProps {
   maxCapacity?: number;
   onClose?: () => void;
   selectedUnitId?: number;
+  ownerPhone?: string;
+  ownerName?: string;
 }
 
 export function BookingForm({ 
@@ -33,7 +35,9 @@ export function BookingForm({
   propertyCategory = "camping", 
   maxCapacity = 4,
   onClose,
-  selectedUnitId
+  selectedUnitId,
+  ownerPhone,
+  ownerName,
 }: BookingFormProps) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -149,8 +153,9 @@ export function BookingForm({
         property_type: isVilla ? "VILLA" : "CAMPING",
         guest_name: formData.name,
         guest_phone: formData.mobile,
-        owner_phone: "+918806092609",
+        owner_phone: ownerPhone ? (ownerPhone.startsWith("+91") ? ownerPhone : `+91${ownerPhone}`) : "+918806092609",
         admin_phone: "+918806092609",
+        owner_name: ownerName || undefined,
         checkin_datetime: checkInDateTime.toISOString(),
         checkout_datetime: checkOutDateTime.toISOString(),
         advance_amount: advanceAmount,

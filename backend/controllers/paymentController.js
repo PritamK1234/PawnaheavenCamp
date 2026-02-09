@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { query } = require('../db');
-const { PaytmChecksum } = require('../utils/paytmChecksum');
+const PaytmChecksum = require('paytmchecksum');
 const { WhatsAppService } = require('../utils/whatsappService');
 
 function generatePaytmOrderId() {
@@ -37,12 +37,12 @@ const initiatePaytmPayment = async (req, res) => {
     }
 
     const paytmOrderId = generatePaytmOrderId();
-    const channelId = channel_id || process.env.PAYTM_CHANNEL_ID || 'WEB';
+    const channelId = channel_id || process.env.PAYTM_CHANNEL_ID_FOR_WEB || 'WEB';
 
-    const mid = process.env.PAYTM_MID || 'SpwYpD36833569776448';
-    const website = process.env.PAYTM_WEBSITE || 'WEBSTAGING';
+    const mid = process.env.PAYTM_MID;
+    const website = process.env.PAYTM_WEBSITE;
     const industryType = process.env.PAYTM_INDUSTRY_TYPE || 'Retail';
-    const merchantKey = process.env.PAYTM_MERCHANT_KEY || 'j@D7fI3pAMAl7nQC';
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY;
     const rawDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
     const publicDomain = (rawDomain.includes(',') ? rawDomain.split(',')[0] : rawDomain) || req.get('x-forwarded-host') || req.get('host');
     const callbackUrl = `https://${publicDomain}/api/payments/paytm/callback`;
@@ -72,7 +72,7 @@ const initiatePaytmPayment = async (req, res) => {
       CALLBACK_URL: String(callbackUrl),
     };
 
-    const checksum = await PaytmChecksum.generateChecksum(paytmParams, merchantKey);
+    const checksum = await PaytmChecksum.generateSignature(paytmParams, merchantKey);
 
     console.log('Payment Parameters:', {
       mid,
@@ -110,41 +110,38 @@ const initiatePaytmPayment = async (req, res) => {
 
 const paytmCallback = async (req, res) => {
   try {
-    const contentType = req.headers['content-type'] || '';
-    let paytmResponse;
+    const paytmResponse = req.body;
 
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      paytmResponse = req.body;
-    } else if (contentType.includes('application/json')) {
-      paytmResponse = req.body;
-    } else {
-      return res.status(400).json({ error: 'Unsupported content type' });
+    if (!paytmResponse || Object.keys(paytmResponse).length === 0) {
+      console.error('Empty callback body received');
+      return res.status(400).json({ error: 'Empty response from payment gateway' });
     }
 
     console.log('Paytm callback received:', paytmResponse);
-
-    const checksumHash = paytmResponse.CHECKSUMHASH;
-    if (!checksumHash) {
-      return res.status(400).json({ error: 'Checksum not found in response' });
-    }
-
-    const merchantKey = process.env.PAYTM_MERCHANT_KEY || 'j@D7fI3pAMAl7nQC';
-    const isValidChecksum = await PaytmChecksum.verifyChecksumByObject(
-      paytmResponse,
-      merchantKey,
-      checksumHash
-    );
-
-    if (!isValidChecksum) {
-      console.error('Invalid checksum received from Paytm');
-      return res.status(400).json({ error: 'Invalid checksum - payment verification failed' });
-    }
 
     const orderId = paytmResponse.ORDERID;
     const txnId = paytmResponse.TXNID || '';
     const txnAmount = paytmResponse.TXNAMOUNT || '';
     const status = paytmResponse.STATUS || '';
     const respMsg = paytmResponse.RESPMSG || '';
+
+    const checksumHash = paytmResponse.CHECKSUMHASH;
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY;
+
+    if (checksumHash && merchantKey) {
+      const isValidChecksum = await PaytmChecksum.verifySignature(paytmResponse, merchantKey, checksumHash);
+
+      if (!isValidChecksum) {
+        console.error('Invalid checksum received from Paytm');
+        return res.status(400).json({ error: 'Invalid checksum - payment verification failed' });
+      }
+      console.log('Checksum verified successfully');
+    } else if (status === 'TXN_SUCCESS') {
+      console.error('CRITICAL: Successful transaction missing checksum - rejecting');
+      return res.status(400).json({ error: 'Checksum verification required for successful payments' });
+    } else {
+      console.log('No checksum in failed/rejected response, proceeding with status:', status);
+    }
 
     const result = await query(
       'SELECT * FROM bookings WHERE order_id = $1',
@@ -160,11 +157,13 @@ const paytmCallback = async (req, res) => {
 
     if (booking.webhook_processed && booking.payment_status === 'SUCCESS') {
       console.log('Webhook already processed for booking:', booking.booking_id);
-      const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
+      const rawDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+      const domain = (rawDomain.includes(',') ? rawDomain.split(',')[0] : rawDomain) || req.get('x-forwarded-host') || req.get('host');
+      const frontendUrl = `https://${domain}`;
       return res.redirect(`${frontendUrl}/ticket?booking_id=${booking.booking_id}`);
     }
 
-    if (parseFloat(txnAmount) !== parseFloat(booking.advance_amount)) {
+    if (status === 'TXN_SUCCESS' && parseFloat(txnAmount) !== parseFloat(booking.advance_amount)) {
       console.error('Amount mismatch:', { expected: booking.advance_amount, received: txnAmount });
       return res.status(400).json({ error: 'Amount mismatch detected' });
     }
@@ -217,7 +216,9 @@ const paytmCallback = async (req, res) => {
       });
 
       const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
-      const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
+      const rawDomainOwner = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+      const domainOwner = (rawDomainOwner.includes(',') ? rawDomainOwner.split(',')[0] : rawDomainOwner) || req.get('x-forwarded-host') || req.get('host');
+      const frontendUrl = `https://${domainOwner}`;
       const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
       const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
 
@@ -246,7 +247,9 @@ const paytmCallback = async (req, res) => {
       console.log('WhatsApp notifications sent for booking:', booking.booking_id);
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
+    const rawDomainRedirect = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+    const domainRedirect = (rawDomainRedirect.includes(',') ? rawDomainRedirect.split(',')[0] : rawDomainRedirect) || req.get('x-forwarded-host') || req.get('host');
+    const frontendUrl = `https://${domainRedirect}`;
     const redirectUrl = status === 'TXN_SUCCESS'
       ? `${frontendUrl}/ticket?booking_id=${booking.booking_id}`
       : `${frontendUrl}`;

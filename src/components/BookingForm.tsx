@@ -48,6 +48,7 @@ export function BookingForm({
     nonVegPersons: 0,
     checkIn: undefined as Date | undefined,
     checkOut: undefined as Date | undefined,
+    referralCode: localStorage.getItem("applied_referral_code") || "",
   });
 
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
@@ -144,8 +145,7 @@ export function BookingForm({
       const checkOutDateTime = new Date(formData.checkOut);
       checkOutDateTime.setHours(11, 0, 0, 0);
 
-      const savedReferral = localStorage.getItem("applied_referral_code") || "";
-      const referralCode = (formData as any).referralCode || savedReferral;
+      const referralCode = formData.referralCode || "";
 
       const bookingPayload: any = {
         property_id: propertyId,
@@ -370,8 +370,8 @@ export function BookingForm({
           <Input 
             id="referral" 
             placeholder="Enter code for 5% discount" 
-            value={(formData as any).referralCode || ""}
-            onChange={(e) => setFormData({ ...formData, referralCode: e.target.value } as any)}
+            value={formData.referralCode}
+            onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
             className="h-11 border-primary/30 focus:border-primary"
           />
         </div>

@@ -1,0 +1,342 @@
+Below is a **clean, precise, Replit AI Agent prompt** rewritten from your full description.
+It is **optimized for low token usage**, **unambiguous**, **secure**, and **implementation-ready**, so Replit can correctly build **Paytm + Referral + WhatsApp webhook flow** without misunderstanding.
+
+You can **copy-paste this directly into Replit AI Agent (Plan Mode)**.
+
+---
+
+## ✅ FINAL REPLIT AI AGENT PROMPT
+
+**(Booking + Paytm + Referral + WhatsApp Automation)**
+
+---
+
+### 📌 PROJECT CONTEXT
+
+We have a **villa & camping booking web application**.
+Backend is the **single source of truth**.
+Payments are handled using **Paytm All-in-One Gateway**.
+WhatsApp Cloud API is used for notifications.
+
+⚠️ **Golden Rule**
+
+> NOTHING proceeds unless Paytm confirms **PAYMENT SUCCESS** via backend webhook.
+
+---
+
+## 🧠 CORE BOOKING FLOW (AUTHORITATIVE)
+
+### STEP 1️⃣ Booking Form (Frontend → Backend)
+
+User fills **“Book Your Stay”** form and clicks **Pay & Confirm**.
+
+Fields sent from frontend:
+
+* Full Name
+* Mobile Number (WhatsApp)
+* Property ID
+* Unit ID (auto for Villas)
+* Check-in Date
+* Check-out Date
+* Veg Persons
+* Non-Veg Persons
+* Total Persons (auto-calculated)
+* Referral Code (optional)
+* Advance Payment = **30%**
+
+⚠️ Owner & Admin mobile numbers must be fetched **only from backend DB** using Property ID (NOT user input).
+
+Backend creates **temporary booking**:
+
+```text
+payment_status = INITIATED
+booking_status = PAYMENT_PENDING
+availability = SOFT_LOCKED
+```
+
+❌ No WhatsApp messages at this stage.
+
+---
+
+### STEP 2️⃣ Paytm Order Creation
+
+Backend creates Paytm order with:
+
+* orderId = booking_id
+* amount = 30% advance
+* customer details
+* callback URL (mandatory)
+
+User is redirected to Paytm hosted checkout page.
+
+---
+
+## 🧩 PAYTM PAYMENT OUTCOMES
+
+### 🟢 CASE A: PAYMENT SUCCESS (ONLY FLOW THAT CONTINUES)
+
+Paytm:
+
+* Redirects user to callback URL
+* Sends server-to-server webhook
+
+Backend MUST:
+
+* Verify checksum
+* Verify orderId exists
+* Verify amount
+
+Then update:
+
+```text
+payment_status = SUCCESS
+booking_status = PENDING_OWNER_CONFIRMATION
+```
+
+---
+
+### 📲 WHATSAPP AUTOMATION (AFTER SUCCESS)
+
+#### 1️⃣ Customer WhatsApp
+
+> “Your booking request has been received.
+> Owner confirmation is pending.
+> Ticket will be shared within 1 hour.”
+
+#### 2️⃣ Admin WhatsApp
+
+Include:
+
+* Customer name & number
+* Property + unit
+* Dates
+* Persons
+* Advance amount
+* Owner contact number
+  Button → **Call Owner**
+
+#### 3️⃣ Owner WhatsApp
+
+Include booking details **(exclude payment amount)**
+Buttons:
+
+* ✅ Confirm Booking
+* ❌ Cancel Booking
+
+Buttons must contain:
+
+* booking_id
+* owner_id
+* signed token (expires in 1 hour, single-use)
+
+---
+
+### 🟡 CASE B: PAYMENT PENDING
+
+```text
+payment_status = PENDING
+booking_status = PAYMENT_PENDING
+```
+
+Start **15-minute timer**.
+
+If still pending:
+
+* Send WhatsApp ONLY to Admin:
+
+  > “Payment pending for booking ID ___ for more than 15 minutes.”
+
+  * Button → Call Owner
+
+❌ No customer or owner message.
+
+---
+
+### 🔴 CASE C: PAYMENT FAILED / USER CANCEL
+
+```text
+payment_status = FAILED
+booking_status = PAYMENT_FAILED
+```
+
+❌ No WhatsApp messages
+❌ Flow stops permanently
+
+---
+
+## 🧠 OWNER ACTION FLOW
+
+### OWNER CONFIRMS ✅
+
+Backend checks:
+
+* booking still pending
+* availability valid
+
+Then:
+
+```text
+booking_status = CONFIRMED
+availability = HARD_LOCKED
+referral_status = CONFIRMED
+```
+
+Actions:
+
+* Generate booking ticket
+* WhatsApp ticket link to Customer & Admin
+
+---
+
+### OWNER CANCELS ❌
+
+Backend:
+
+```text
+booking_status = CANCELLED_BY_OWNER
+availability = RELEASED
+referral_status = CANCELLED
+refund_status = REFUND_INITIATED
+```
+
+WhatsApp:
+
+* Customer → refund message
+* Admin → refund pending alert
+
+---
+
+## 💸 REFUND FLOW (ADMIN PANEL)
+
+* Refund request appears in **Admin → Referrals → Requests**
+* Admin clicks **Refund**
+* Redirect to Paytm Refund API (original payment method)
+* On success:
+
+```text
+refund_status = REFUND_SUCCESSFUL
+```
+
+* WhatsApp to customer:
+
+> “Refund has been successfully credited to your account.”
+
+---
+
+## 🔐 PAYTM BACKEND ENDPOINTS (MANDATORY)
+
+### 1️⃣ Payment Callback (UI Redirect)
+
+```
+POST /api/paytm/callback
+```
+
+Used to:
+
+* Verify checksum
+* Show success / failure UI
+* NEVER trusted as source of truth
+
+### 2️⃣ Payment Webhook (Server-to-Server)
+
+```
+POST /api/paytm/webhook
+```
+
+Used to:
+
+* Update DB
+* Trigger WhatsApp automation
+* FINAL source of truth
+
+⚠️ Webhook always overrides frontend response.
+
+---
+
+## 🤝 REFERRAL & COMMISSION LOGIC (FINAL)
+
+### Advance Payment = 30% of total booking
+
+### IF referral_code is NOT applied:
+
+* Admin commission = 30%
+* No referrer
+
+### IF referral_code IS applied:
+
+* Admin = 15%
+* Referrer = 15%
+* Customer discount = 0%
+
+Owner payout is **never affected**.
+
+---
+
+### COMMISSION STATES
+
+```text
+PENDING → on payment success
+CONFIRMED → on owner confirm
+CANCELLED → on owner cancel
+```
+
+Commission paid **after checkout date only**.
+
+---
+
+## 🗄️ BOOKING DB MUST STORE
+
+```text
+booking_id
+referral_code (nullable)
+advance_amount
+admin_commission
+referrer_commission
+commission_status
+payment_status
+booking_status
+refund_status
+```
+
+---
+
+## 🔐 SECURITY RULES
+
+* Referral commission paid only after checkout
+* Referral code can be reused by referrer
+* Same booking cannot apply referral twice
+* Admin can disable / expire referral codes
+* WhatsApp action tokens:
+
+  * Single-use
+  * Expire in 1 hour
+
+---
+
+## 🔗 REFERRAL URL LOGIC
+
+* Add `referral_url` column in user table
+* Save referral URL during referrer registration
+* Auto-fill referral code in booking form if user opens site via referral URL
+
+---
+
+### ✅ DELIVERABLE EXPECTATION FROM REPLIT
+
+* Clean backend architecture
+* Secure Paytm integration
+* Reliable webhook-driven flow
+* WhatsApp automation with buttons
+* Correct referral & refund lifecycle
+
+---
+
+If you want, next I can:
+
+* Review **Replit-generated code**
+* Design **DB schema**
+* Draw **sequence diagram**
+* Validate **Paytm checksum logic**
+* Create **WhatsApp template payloads**
+
+Just tell me 👍

@@ -692,7 +692,7 @@ const handleOwnerAction = async (req, res) => {
 
     if (action === 'CONFIRM') {
       await query(
-        "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+        "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CONFIRMED' ELSE commission_status END, updated_at = NOW() WHERE booking_id = $1",
         [booking.booking_id]
       );
 
@@ -742,19 +742,19 @@ const handleOwnerAction = async (req, res) => {
       `);
     } else {
       await query(
-        "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+        "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END, refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_INITIATED' ELSE refund_status END, refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END, updated_at = NOW() WHERE booking_id = $1",
         [booking.booking_id]
       );
 
       if (booking.payment_status === 'SUCCESS') {
         await whatsapp.sendTextMessage(
           booking.guest_phone,
-          `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${booking.advance_amount}\n\nYour refund will be processed within 5-7 business days.`
+          `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${booking.advance_amount}\n\nYour refund will be processed shortly.`
         );
 
         await whatsapp.sendTextMessage(
           booking.admin_phone,
-          `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nRefund Amount: ₹${booking.advance_amount}\n\nManual refund required.`
+          `❌ Booking Cancelled by Owner - Refund Required\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nRefund Amount: ₹${booking.advance_amount}\n\nPlease process refund from Admin Panel → Referrals → Requests.`
         );
       }
 
@@ -833,7 +833,7 @@ const handleWhatsAppWebhook = async (req, res) => {
 
             if (action === 'CONFIRM') {
               await query(
-                "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+                "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CONFIRMED' ELSE commission_status END, updated_at = NOW() WHERE booking_id = $1",
                 [booking.booking_id]
               );
 
@@ -876,20 +876,20 @@ const handleWhatsAppWebhook = async (req, res) => {
               }
             } else if (action === 'CANCEL') {
               await query(
-                "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, updated_at = NOW() WHERE booking_id = $1",
+                "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END, refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_INITIATED' ELSE refund_status END, refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END, updated_at = NOW() WHERE booking_id = $1",
                 [booking.booking_id]
               );
 
               if (booking.payment_status === 'SUCCESS') {
                 await whatsapp.sendTextMessage(
                   booking.guest_phone,
-                  `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled.\nRefund of ₹${booking.advance_amount} will be processed within 5-7 days.`
+                  `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled.\nRefund of ₹${booking.advance_amount} will be processed shortly.`
                 );
               }
 
               await whatsapp.sendTextMessage(
                 booking.admin_phone,
-                `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\nGuest: ${booking.guest_name}\nRefund: ₹${booking.advance_amount}`
+                `❌ Booking Cancelled by Owner - Refund Required\n\nBooking ID: ${booking.booking_id}\nGuest: ${booking.guest_name}\nRefund: ₹${booking.advance_amount}\n\nPlease process from Admin Panel → Referrals → Requests.`
               );
 
               await whatsapp.sendTextMessage(buttonResponse.from, `❌ Booking ${booking.booking_id} cancelled. Customer notified.`);

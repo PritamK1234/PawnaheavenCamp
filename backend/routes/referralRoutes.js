@@ -10,6 +10,7 @@ const authMiddleware = require('../middleware/auth');
 
 // Public endpoints
 router.get('/top-earners', ReferralController.getTopEarners);
+router.get('/validate/:code', ReferralController.validateCode);
 
 // OTP endpoints
 router.post('/request-otp', OtpController.requestOtp);

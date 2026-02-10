@@ -365,16 +365,17 @@ export function BookingForm({
           </div>
         )}
 
-        <div className="grid gap-1.5">
-          <Label htmlFor="referral">Referral Code (Optional)</Label>
-          <Input 
-            id="referral" 
-            placeholder="Enter code for 5% discount" 
-            value={formData.referralCode}
-            onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
-            className="h-11 border-primary/30 focus:border-primary"
-          />
-        </div>
+        {formData.referralCode && (
+          <div className="grid gap-1.5">
+            <Label htmlFor="referral">Referral Code</Label>
+            <Input 
+              id="referral" 
+              value={formData.referralCode}
+              readOnly
+              className="h-11 border-primary/30 bg-primary/5 cursor-default"
+            />
+          </div>
+        )}
 
         <div className="bg-primary/5 p-2 rounded-lg border border-primary/10">
           <p className="text-[10px] text-primary font-medium flex items-center gap-1.5">

@@ -49,7 +49,6 @@ export const LedgerPopup = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Calculate current occupancy (total persons booked for the day)
   const currentOccupancy = entries.reduce((sum, entry) => sum + (entry.persons || 0), 0);
   const remainingCapacity = Math.max(0, totalPersons - currentOccupancy);
 
@@ -150,6 +149,14 @@ export const LedgerPopup = ({
     check_out: ""
   });
 
+  const editingPersons = editingEntry ? (editingEntry.persons || 0) : 0;
+  const effectiveOccupancy = currentOccupancy - editingPersons;
+  const maxAllowedPersons = isVilla
+    ? (entries.length === 0 || editingEntry ? totalPersons : 0)
+    : Math.max(0, totalPersons - effectiveOccupancy);
+  const enteredPersons = parseInt(formData.persons) || 0;
+  const personsExceeded = formData.persons !== "" && (enteredPersons > maxAllowedPersons || enteredPersons < 1);
+
   useEffect(() => {
     if (isOpen && date) {
       fetchEntries();
@@ -198,6 +205,10 @@ export const LedgerPopup = ({
         })
       });
       const data = await res.json();
+      if (!data.success) {
+        toast.error(data.message || "Failed to save entry");
+        return;
+      }
       if (data.success) {
         toast.success(editingEntry ? "Entry updated successfully" : "Entry added successfully");
         setShowAddForm(false);
@@ -331,18 +342,27 @@ export const LedgerPopup = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-white/40 uppercase px-1">Persons</label>
+                  <label className="text-xs font-bold text-white/40 uppercase px-1">
+                    Persons {maxAllowedPersons > 0 && <span className="text-white/20">(max {maxAllowedPersons})</span>}
+                  </label>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                     <Input 
                       required
                       type="number"
+                      min={1}
+                      max={maxAllowedPersons}
                       value={formData.persons}
                       onChange={e => setFormData(f => ({...f, persons: e.target.value}))}
-                      className="bg-black/40 border-white/10 pl-10 h-11 text-white" 
+                      className={`bg-black/40 pl-10 h-11 text-white ${formData.persons && personsExceeded ? 'border-red-500 ring-1 ring-red-500' : 'border-white/10'}`}
                       placeholder="Count"
                     />
                   </div>
+                  {formData.persons && personsExceeded && (
+                    <p className="text-red-400 text-[10px] font-bold px-1">
+                      {enteredPersons < 1 ? 'Minimum 1 person required' : `Exceeds available capacity (${maxAllowedPersons})`}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-white/40 uppercase px-1">Amount</label>
@@ -401,8 +421,8 @@ export const LedgerPopup = ({
               </div>
 
               <Button 
-                disabled={isSubmitting}
-                className="w-full bg-gold hover:bg-gold/80 text-black font-black h-12 rounded-xl mt-4"
+                disabled={isSubmitting || (!!formData.persons && personsExceeded)}
+                className="w-full bg-gold hover:bg-gold/80 text-black font-black h-12 rounded-xl mt-4 disabled:opacity-40"
               >
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Entry"}
               </Button>

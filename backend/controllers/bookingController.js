@@ -479,17 +479,59 @@ const getLedgerEntries = async (req, res) => {
 const addLedgerEntry = async (req, res) => {
   try {
     const { property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount } = req.body;
-    
-    // 1. Calculate dates in the range (excluding check-out day)
-    const dates = [];
-    let current = new Date(check_in);
-    const end = new Date(check_out);
-    while (current < end) {
-      dates.push(current.toISOString().split('T')[0]);
-      current.setDate(current.getDate() + 1);
+
+    if (!persons || persons < 1) {
+      return res.status(400).json({ success: false, message: 'Persons must be at least 1' });
     }
 
-    // 2. Ensure unit_calendar entries exist and update availability
+    // Resolve property and check capacity
+    let totalCapacity = 0;
+    let isVilla = false;
+    if (unit_id) {
+      const unitResult = await query('SELECT total_persons FROM property_units WHERE id = $1', [unit_id]);
+      if (unitResult.rows.length === 0) return res.status(404).json({ success: false, message: 'Unit not found' });
+      totalCapacity = unitResult.rows[0].total_persons;
+    } else {
+      const propResult = await query('SELECT id, max_capacity, category FROM properties WHERE id::text = $1 OR property_id = $1', [property_id]);
+      if (propResult.rows.length === 0) return res.status(404).json({ success: false, message: 'Property not found' });
+      totalCapacity = propResult.rows[0].max_capacity || 0;
+      isVilla = propResult.rows[0].category === 'villas';
+    }
+
+    // Validate capacity for each date in range
+    const dates = [];
+    let currentDate = new Date(check_in);
+    const endDate = new Date(check_out);
+    while (currentDate < endDate) {
+      dates.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    for (const dateStr of dates) {
+      if (isVilla) {
+        // Villa: reject if any entry already exists for this date
+        const existingVilla = unit_id
+          ? await query('SELECT COUNT(*) as cnt FROM ledger_entries WHERE unit_id = $1 AND check_in <= $2 AND check_out > $2', [unit_id, dateStr])
+          : await query(`SELECT COUNT(*) as cnt FROM ledger_entries le JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id) WHERE (p.id::text = $1 OR p.property_id = $1) AND le.unit_id IS NULL AND le.check_in <= $2 AND le.check_out > $2`, [property_id, dateStr]);
+        if (parseInt(existingVilla.rows[0].cnt) > 0) {
+          return res.status(400).json({ success: false, message: `Villa is already booked for ${dateStr}` });
+        }
+      } else {
+        // Camping: check persons capacity
+        const existingQuery = unit_id
+          ? await query('SELECT COALESCE(SUM(persons), 0) as occupied FROM ledger_entries WHERE unit_id = $1 AND check_in <= $2 AND check_out > $2', [unit_id, dateStr])
+          : await query(`SELECT COALESCE(SUM(persons), 0) as occupied FROM ledger_entries le JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id) WHERE (p.id::text = $1 OR p.property_id = $1) AND le.unit_id IS NULL AND le.check_in <= $2 AND le.check_out > $2`, [property_id, dateStr]);
+        const occupied = parseInt(existingQuery.rows[0].occupied) || 0;
+        if (persons > totalCapacity - occupied) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `Persons (${persons}) exceeds available capacity (${totalCapacity - occupied}) on ${dateStr}` 
+          });
+        }
+      }
+    }
+
+    // Ensure unit_calendar entries exist and update availability
     if (unit_id) {
       for (const date of dates) {
         // Check if entry exists, if not create it with total capacity first
@@ -533,12 +575,54 @@ const updateLedgerEntry = async (req, res) => {
   try {
     const { id } = req.params;
     const { customer_name, persons, check_in, check_out, payment_mode, amount } = req.body;
+
+    if (!persons || persons < 1) {
+      return res.status(400).json({ success: false, message: 'Persons must be at least 1' });
+    }
     
-    // Get old entry to handle availability reversal
     const oldEntry = await query('SELECT * FROM ledger_entries WHERE id = $1', [id]);
     if (oldEntry.rows.length === 0) return res.status(404).json({ success: false, message: 'Entry not found' });
     
     const old = oldEntry.rows[0];
+
+    // Validate against capacity (excluding current entry)
+    let totalCapacity = 0;
+    let isVilla = false;
+    if (old.unit_id) {
+      const unitResult = await query('SELECT total_persons FROM property_units WHERE id = $1', [old.unit_id]);
+      totalCapacity = unitResult.rows[0]?.total_persons || 0;
+    } else {
+      const propResult = await query('SELECT id, max_capacity, category FROM properties WHERE id::text = $1 OR property_id = $1', [old.property_id]);
+      totalCapacity = propResult.rows[0]?.max_capacity || 0;
+      isVilla = propResult.rows[0]?.category === 'villas';
+    }
+
+    // Validate each date in the new range
+    let valCurrent = new Date(check_in);
+    const valEnd = new Date(check_out);
+    while (valCurrent < valEnd) {
+      const dateStr = valCurrent.toISOString().split('T')[0];
+      if (isVilla) {
+        const existingVilla = old.unit_id
+          ? await query('SELECT COUNT(*) as cnt FROM ledger_entries WHERE unit_id = $1 AND check_in <= $2 AND check_out > $2 AND id != $3', [old.unit_id, dateStr, id])
+          : await query(`SELECT COUNT(*) as cnt FROM ledger_entries le JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id) WHERE (p.id::text = $1 OR p.property_id = $1) AND le.unit_id IS NULL AND le.check_in <= $2 AND le.check_out > $2 AND le.id != $3`, [old.property_id, dateStr, id]);
+        if (parseInt(existingVilla.rows[0].cnt) > 0) {
+          return res.status(400).json({ success: false, message: `Villa is already booked for ${dateStr}` });
+        }
+      } else {
+        const existingQuery = old.unit_id
+          ? await query('SELECT COALESCE(SUM(persons), 0) as occupied FROM ledger_entries WHERE unit_id = $1 AND check_in <= $2 AND check_out > $2 AND id != $3', [old.unit_id, dateStr, id])
+          : await query(`SELECT COALESCE(SUM(persons), 0) as occupied FROM ledger_entries le JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id) WHERE (p.id::text = $1 OR p.property_id = $1) AND le.unit_id IS NULL AND le.check_in <= $2 AND le.check_out > $2 AND le.id != $3`, [old.property_id, dateStr, id]);
+        const occupied = parseInt(existingQuery.rows[0].occupied) || 0;
+        if (persons > totalCapacity - occupied) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `Persons (${persons}) exceeds available capacity (${totalCapacity - occupied}) on ${dateStr}` 
+          });
+        }
+      }
+      valCurrent.setDate(valCurrent.getDate() + 1);
+    }
     
     // Reverse old availability
     if (old.unit_id) {

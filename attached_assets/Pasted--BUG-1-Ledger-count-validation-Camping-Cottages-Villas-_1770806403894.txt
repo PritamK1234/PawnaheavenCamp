@@ -1,0 +1,180 @@
+🐞 BUG 1 – Ledger count validation (Camping_Cottages + Villas)
+
+Fix ledger form validation for Camping_Cottages and Villa properties in Owner Dashboard.
+
+Requirement:
+- The "count" field must accept values ONLY <= available person capacity of that property.
+- Fetch max capacity from backend (property availability).
+- If entered value > availability:
+  - Show validation error message
+  - Highlight input field in red
+  - Disable "Save Entry" button
+- Validation must work on both frontend (UX) and backend (safety).
+
+🐞 BUG 2 – Availability calendar mismatch (Public vs Owner/Admin)
+
+I – Camping & Cottages (Public site not updating)
+Fix availability calendar sync issue for Camping & Cottages.
+
+Requirement:
+- Availability status must be calculated from the SAME backend source for:
+  - Admin dashboard
+  - Owner dashboard
+  - Public site
+  - "Book Your Stay" form
+- If availability is fully booked:
+  - Date cell must be RED everywhere
+- Remove any frontend-only availability calculations.
+- Public site must always reflect backend availability state.
+
+II – Villas (Calendar incorrect everywhere)
+Fix Villa availability calendar logic across all platforms.
+
+Requirement:
+- Villa availability should be treated as FULLY BOOKED when:
+  - Any confirmed booking exists for that date
+- Apply same logic to:
+  - Public property listing
+  - Book Your Stay form
+  - Owner dashboard calendar
+  - Admin dashboard calendar
+- Ensure booking status = CONFIRMED is the only condition for hard lock.
+
+III – Public Site calendar UX
+Improve public site availability calendar UX.
+
+Requirement:
+- Date cells must be NON-CLICKABLE
+- Each date cell must show availability text:
+  - Example: "12 / 100"
+- Color rules:
+  - Green = available
+  - Red = fully booked
+- Clicking date selection should only be allowed from "Book Your Stay" form.
+
+
+🐞 BUG 3 – Available capacity not updating on property details page
+Fix available capacity calculation on property details page.
+
+Requirement:
+- Available capacity must be dynamically calculated as:
+  total_capacity - confirmed_booked_persons
+- Only CONFIRMED bookings should reduce capacity
+- Pending or cancelled bookings must not affect capacity
+- Backend should return computed available_capacity field.
+
+
+🐞 BUG 4 – Calendar icon color (Admin panel)
+Fix calendar icon color in Admin Panel "Add New Property" form.
+
+Requirement:
+- Change calendar icon color to white
+- Ensure visibility in dark-themed UI
+- Apply consistent icon styling across admin forms.
+
+🐞 BUG-5: Cloudinary Image Upload Integration
+📌 CONTEXT
+
+We need to implement secure image upload using Cloudinary.
+All image uploads must go through the backend.
+Frontend must never upload directly to Cloudinary.
+
+🎯 SCOPE (WHERE IMAGE UPLOAD IS REQUIRED)
+I) Admin Dashboard
+
+Add Property form
+Add Unit form
+
+II) Owner Dashboard
+
+Villas
+PROFILE tab → Property Gallery → Upload Image
+Camping & Cottages
+UNITS tab → Unit Gallery → Upload Image
+
+🔄 REQUIRED IMAGE UPLOAD FLOW (MANDATORY)
+User selects image(s) on frontend
+Frontend sends image file(s) to backend API (multipart/form-data)
+
+Backend:
+Validates image size
+Compresses image if size > 20 MB
+Uploads image to Cloudinary
+Receives secure Cloudinary image URL
+Saves image URL in database
+Backend returns stored image URL(s) to frontend
+Frontend updates gallery view
+
+⚠️ Do NOT upload directly from frontend to Cloudinary
+
+📐 IMAGE RULES (STRICT)
+Max image size: 20 MB
+If image > 20 MB:
+Compress server-side until ≤ 20 MB
+Image count limit:
+Camping & Cottages: max 20 images per unit
+Villas: max 20 images per villa (villa = single unit)
+Reject upload if image count exceeds limit
+
+Allowed formats: jpg, jpeg, png, webp
+
+
+
+🐞 BUG 6 – Special day price missing on Edit Property
+Fix missing "Special Day Prices" on Edit Property form.
+
+Requirement:
+- When property is created with special day prices:
+  - Those prices must be fetched from DB
+  - Pre-filled in Edit Property form
+- Ensure correct serialization/deserialization of date-price mapping.
+
+
+🐞 BUG 7 – Unit pricing missing on Edit Unit
+Fix pricing data not loading on Edit Unit form.
+
+Requirement:
+- Fetch and pre-fill the following fields:
+  - Weekend Price
+  - Weekday Price (Base)
+  - Special Date Prices
+- Ensure DB fields match frontend model
+- Verify API response includes all pricing fields.
+
+
+🐞 BUG 8 – UI improvements
+Implement UI improvements.
+
+1) Public site:
+- On "Popular Locations" section:
+  - Clicking Pawna Lake card should:
+    - Scroll to "Camping & Cottages" section
+    - Auto-select that tab (same behavior as Lonavala)
+
+2) Owner login page:
+- Add "Back to Register" button and redirect on register page
+- Use standard naming and placement
+
+3) Admin panel:
+- Add "Copy Property ID" button wherever Property ID is displayed
+- Copy value to clipboard with confirmation tooltip.
+
+
+🐞 BUG 9 – Owner registration form cleanup
+Update Owner Registration form.
+
+Requirement:
+- REMOVE fields:
+  - Property Name
+  - Property Type
+  - Owner Name
+- KEEP only:
+  - Property ID (placeholder: "Enter Property ID provided by Admin")
+  - Owner Mobile Number
+- Backend should validate Property ID existence before registration.
+
+
+Important:
+- Do not change existing business logic unless required.
+- Ensure fixes do not break Paytm, availability locking, or referral flow.
+- Prefer backend-driven state over frontend assumptions.

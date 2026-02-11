@@ -495,7 +495,7 @@ const addLedgerEntry = async (req, res) => {
       const propResult = await query('SELECT id, max_capacity, category FROM properties WHERE id::text = $1 OR property_id = $1', [property_id]);
       if (propResult.rows.length === 0) return res.status(404).json({ success: false, message: 'Property not found' });
       totalCapacity = propResult.rows[0].max_capacity || 0;
-      isVilla = propResult.rows[0].category === 'villas';
+      isVilla = propResult.rows[0].category === 'villa';
     }
 
     // Validate capacity for each date in range
@@ -594,7 +594,7 @@ const updateLedgerEntry = async (req, res) => {
     } else {
       const propResult = await query('SELECT id, max_capacity, category FROM properties WHERE id::text = $1 OR property_id = $1', [old.property_id]);
       totalCapacity = propResult.rows[0]?.max_capacity || 0;
-      isVilla = propResult.rows[0]?.category === 'villas';
+      isVilla = propResult.rows[0]?.category === 'villa';
     }
 
     // Validate each date in the new range

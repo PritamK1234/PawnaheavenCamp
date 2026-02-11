@@ -59,17 +59,23 @@ export function BookingForm({
   useEffect(() => {
     const fetchAvailability = async () => {
       try {
-        const response = await fetch(`/api/properties/${propertyId}`);
-        const result = await response.json();
-        if (result.success && result.data.availability) {
-          setBookedDates(result.data.availability);
+        const calUrl = selectedUnitId
+          ? `/api/properties/units/${selectedUnitId}/calendar`
+          : `/api/properties/${propertyId}/calendar`;
+        const calRes = await fetch(calUrl);
+        const calResult = await calRes.json();
+        if (calResult.success && calResult.data) {
+          const fullyBooked = calResult.data
+            .filter((d: any) => d.is_booked)
+            .map((d: any) => new Date(d.date).toISOString().split('T')[0]);
+          setBookedDates(fullyBooked);
         }
       } catch (error) {
         console.error("Error fetching availability:", error);
       }
     };
     fetchAvailability();
-  }, [propertyId]);
+  }, [propertyId, selectedUnitId]);
 
   const [totalPrice, setTotalPrice] = useState(0);
   const [advanceAmount, setAdvanceAmount] = useState(0);

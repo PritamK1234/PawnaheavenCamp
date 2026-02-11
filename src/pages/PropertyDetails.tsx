@@ -339,6 +339,9 @@ const PropertyDetails = () => {
                         <CalendarSync 
                           propertyId={propertyData.property_id || propertyData.id} 
                           unitId={selectedUnit?.id}
+                          isVilla={propertyData.category === 'villa'}
+                          isPublic={true}
+                          propertyName={propertyData.title}
                         />
                       </div>
                     </DialogContent>
@@ -469,6 +472,9 @@ const PropertyDetails = () => {
                     <CalendarSync 
                       propertyId={propertyData.property_id || propertyData.id} 
                       unitId={selectedUnit?.id}
+                      isVilla={propertyData.category === 'villa'}
+                      isPublic={true}
+                      propertyName={propertyData.title}
                     />
                   </div>
                 </DialogContent>
@@ -585,6 +591,9 @@ const PropertyDetails = () => {
                   <CalendarSync 
                     propertyId={propertyData.property_id || propertyData.id} 
                     unitId={selectedUnit?.id}
+                    isVilla={propertyData.category === 'villa'}
+                    isPublic={true}
+                    propertyName={propertyData.title}
                   />
                 </div>
               </DialogContent>

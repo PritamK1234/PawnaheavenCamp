@@ -1010,13 +1010,80 @@ const deletePropertyUnit = async (req, res) => {
 const getUnitCalendarData = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const result = await query(
+
+    const unitResult = await query('SELECT id, total_persons, property_id FROM property_units WHERE id = $1', [unitId]);
+    if (unitResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Unit not found' });
+    }
+    const unit = unitResult.rows[0];
+    const totalCapacity = unit.total_persons || 0;
+
+    const calResult = await query(
       'SELECT date, price, available_quantity, is_weekend, is_special FROM unit_calendar WHERE unit_id = $1',
       [unitId]
     );
+
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+
+    const ledgerResult = await query(
+      `SELECT check_in, check_out, persons FROM ledger_entries
+       WHERE unit_id = $1 AND check_out >= $2 AND check_in <= $3`,
+      [unitId, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]
+    );
+
+    const bookingResult = await query(
+      `SELECT checkin_datetime, checkout_datetime, persons FROM bookings
+       WHERE unit_id = $1 AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'TICKET_GENERATED')
+       AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
+      [unitId, startDate.toISOString(), endDate.toISOString()]
+    );
+
+    const calendarMap = {};
+    for (const row of calResult.rows) {
+      const dateStr = new Date(row.date).toISOString().split('T')[0];
+      calendarMap[dateStr] = { 
+        date: dateStr, price: row.price, is_booked: false,
+        available_quantity: totalCapacity, total_capacity: totalCapacity,
+        is_weekend: row.is_weekend, is_special: row.is_special
+      };
+    }
+
+    const ensureDate = (dateStr) => {
+      if (!calendarMap[dateStr]) {
+        calendarMap[dateStr] = { date: dateStr, price: null, is_booked: false, available_quantity: totalCapacity, total_capacity: totalCapacity };
+      }
+    };
+
+    for (const entry of ledgerResult.rows) {
+      let d = new Date(entry.check_in);
+      const end = new Date(entry.check_out);
+      while (d < end) {
+        const ds = d.toISOString().split('T')[0];
+        ensureDate(ds);
+        calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (entry.persons || 0));
+        if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+        d.setDate(d.getDate() + 1);
+      }
+    }
+
+    for (const booking of bookingResult.rows) {
+      let d = new Date(booking.checkin_datetime);
+      const end = new Date(booking.checkout_datetime);
+      while (d < end) {
+        const ds = d.toISOString().split('T')[0];
+        ensureDate(ds);
+        calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (booking.persons || 0));
+        if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+        d.setDate(d.getDate() + 1);
+      }
+    }
+
     return res.status(200).json({
       success: true,
-      data: result.rows
+      data: Object.values(calendarMap),
+      meta: { totalCapacity }
     });
   } catch (error) {
     console.error('Get unit calendar error:', error);
@@ -1066,13 +1133,93 @@ const updateUnitCalendarData = async (req, res) => {
 const getCalendarData = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await query(
-      'SELECT date, price, is_booked FROM availability_calendar WHERE property_id = (SELECT id FROM properties WHERE property_id = $1 OR id::text = $1)',
+
+    const propResult = await query(
+      'SELECT id, property_id, category, max_capacity FROM properties WHERE property_id = $1 OR id::text = $1',
       [id]
     );
+    if (propResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Property not found' });
+    }
+    const prop = propResult.rows[0];
+    const isVilla = prop.category === 'villa';
+    const totalCapacity = prop.max_capacity || 0;
+
+    const calendarResult = await query(
+      'SELECT date, price, is_booked FROM availability_calendar WHERE property_id = $1',
+      [prop.id]
+    );
+
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+
+    const ledgerResult = await query(
+      `SELECT check_in, check_out, persons FROM ledger_entries le
+       JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id)
+       WHERE (p.id = $1) AND le.unit_id IS NULL
+       AND le.check_out >= $2 AND le.check_in <= $3`,
+      [prop.id, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]
+    );
+
+    const bookingResult = await query(
+      `SELECT checkin_datetime, checkout_datetime, persons FROM bookings
+       WHERE property_id = $1 AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'TICKET_GENERATED')
+       AND unit_id IS NULL
+       AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
+      [prop.property_id, startDate.toISOString(), endDate.toISOString()]
+    );
+
+    const calendarMap = {};
+    for (const row of calendarResult.rows) {
+      const dateStr = new Date(row.date).toISOString().split('T')[0];
+      calendarMap[dateStr] = { date: dateStr, price: row.price, is_booked: false, available_quantity: totalCapacity, total_capacity: totalCapacity };
+    }
+
+    const computeForDate = (dateStr) => {
+      if (!calendarMap[dateStr]) {
+        calendarMap[dateStr] = { date: dateStr, price: null, is_booked: false, available_quantity: totalCapacity, total_capacity: totalCapacity };
+      }
+    };
+
+    for (const entry of ledgerResult.rows) {
+      let d = new Date(entry.check_in);
+      const end = new Date(entry.check_out);
+      while (d < end) {
+        const ds = d.toISOString().split('T')[0];
+        computeForDate(ds);
+        if (isVilla) {
+          calendarMap[ds].is_booked = true;
+          calendarMap[ds].available_quantity = 0;
+        } else {
+          calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (entry.persons || 0));
+          if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+    }
+
+    for (const booking of bookingResult.rows) {
+      let d = new Date(booking.checkin_datetime);
+      const end = new Date(booking.checkout_datetime);
+      while (d < end) {
+        const ds = d.toISOString().split('T')[0];
+        computeForDate(ds);
+        if (isVilla) {
+          calendarMap[ds].is_booked = true;
+          calendarMap[ds].available_quantity = 0;
+        } else {
+          calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (booking.persons || 0));
+          if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+    }
+
     return res.status(200).json({
       success: true,
-      data: result.rows
+      data: Object.values(calendarMap),
+      meta: { totalCapacity, isVilla }
     });
   } catch (error) {
     console.error('Get calendar data error:', error);

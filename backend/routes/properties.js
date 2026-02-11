@@ -47,7 +47,7 @@ router.get('/:propertyId/units', authMiddleware, propertyController.getPropertyU
 router.post('/:propertyId/units', authMiddleware, propertyController.createPropertyUnit);
 router.put('/units/:unitId', authMiddleware, propertyController.updatePropertyUnit);
 router.delete('/units/:unitId', authMiddleware, propertyController.deletePropertyUnit);
-router.get('/units/:unitId/calendar', authMiddleware, propertyController.getUnitCalendarData);
+router.get('/units/:unitId/calendar', propertyController.getUnitCalendarData);
 router.post('/units/:unitId/calendar', authMiddleware, propertyController.updateUnitCalendarData);
 
 // Calendar routes

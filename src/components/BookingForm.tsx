@@ -54,28 +54,6 @@ export function BookingForm({
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [bookedDates, setBookedDates] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchAvailability = async () => {
-      try {
-        const calUrl = selectedUnitId
-          ? `/api/properties/units/${selectedUnitId}/calendar`
-          : `/api/properties/${propertyId}/calendar`;
-        const calRes = await fetch(calUrl);
-        const calResult = await calRes.json();
-        if (calResult.success && calResult.data) {
-          const fullyBooked = calResult.data
-            .filter((d: any) => d.is_booked)
-            .map((d: any) => new Date(d.date).toISOString().split('T')[0]);
-          setBookedDates(fullyBooked);
-        }
-      } catch (error) {
-        console.error("Error fetching availability:", error);
-      }
-    };
-    fetchAvailability();
-  }, [propertyId, selectedUnitId]);
 
   const [totalPrice, setTotalPrice] = useState(0);
   const [advanceAmount, setAdvanceAmount] = useState(0);
@@ -252,6 +230,9 @@ export function BookingForm({
                 <div className="p-3">
                   <CalendarSync 
                     propertyId={propertyId} 
+                    unitId={selectedUnitId}
+                    isVilla={isVilla}
+                    isBookingForm={true}
                     onDateSelect={handleCheckInSelect}
                   />
                 </div>
@@ -278,6 +259,9 @@ export function BookingForm({
                   <div className="p-3">
                     <CalendarSync 
                       propertyId={propertyId} 
+                      unitId={selectedUnitId}
+                      isVilla={isVilla}
+                      isBookingForm={true}
                       onDateSelect={(date) => {
                         setFormData({ ...formData, checkOut: date });
                         setIsCheckOutOpen(false);

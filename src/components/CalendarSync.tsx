@@ -14,6 +14,7 @@ interface CalendarSyncProps {
   propertyName?: string;
   isVilla?: boolean;
   isPublic?: boolean;
+  isBookingForm?: boolean;
 }
 
 export const CalendarSync = ({ 
@@ -24,7 +25,8 @@ export const CalendarSync = ({
   unitName, 
   propertyName = "Property",
   isVilla = false,
-  isPublic = false
+  isPublic = false,
+  isBookingForm = false
 }: CalendarSyncProps) => {
   const [calendarData, setCalendarData] = useState<any[]>([]);
   const [calendarMeta, setCalendarMeta] = useState<{ totalCapacity?: number; isVilla?: boolean }>({});
@@ -192,12 +194,19 @@ export const CalendarSync = ({
             disabled={(date) => {
               if (isPublic) return true;
               const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
+              if (isBookingForm) {
+                const data = getDayData(date);
+                const isFullyBooked = isVilla 
+                  ? data?.is_booked 
+                  : (data?.available_quantity !== undefined && data.available_quantity <= 0);
+                return isPast || !!isFullyBooked;
+              }
               const data = getDayData(date);
               return isPast || data?.is_booked;
             }}
             onSelect={(date) => {
               if (isPublic) return;
-              if (date && isOwnerOrAdmin) {
+              if (date && isOwnerOrAdmin && !isBookingForm) {
                 setSelectedLedgerDate(date);
                 setIsLedgerOpen(true);
               }
@@ -269,7 +278,7 @@ export const CalendarSync = ({
               ),
               day_today: "ring-1 sm:ring-2 ring-yellow-400 ring-offset-1 sm:ring-offset-2 ring-offset-black rounded-md",
               day_selected: "bg-transparent text-inherit hover:bg-transparent hover:text-inherit focus:bg-transparent focus:text-inherit",
-              day_disabled: isPublic ? "opacity-100 cursor-default" : "opacity-50 cursor-not-allowed",
+              day_disabled: isPublic ? "opacity-100 cursor-default" : (isBookingForm ? "opacity-100 cursor-not-allowed" : "opacity-50 cursor-not-allowed"),
               day_outside: "hidden",
             }}
           />

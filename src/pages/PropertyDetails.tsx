@@ -540,16 +540,11 @@ const PropertyDetails = () => {
             <Dialog>
               <DialogTrigger asChild>
                 <Button
-                  disabled={propertyData.category === 'campings_cottages' ? (selectedUnit ? (selectedUnit.calendar?.[0]?.available_quantity ?? 0) <= 0 : !propertyData.is_available) : !propertyData.is_available}
                   className="w-full bg-gradient-to-b from-[#D4AF37] to-[#C5A021] text-black hover:from-[#C5A021] hover:to-[#A6861A] h-[52px] rounded-2xl text-lg font-bold transition-all active:translate-y-1 active:shadow-inner shadow-[0_6px_0_rgb(146,120,33),0_12px_25px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3 group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <MessageCircle className="w-6 h-6 relative z-10" />
-                  <span className="relative z-10">
-                    {propertyData.category === 'campings_cottages' 
-                      ? ((selectedUnit ? (selectedUnit.calendar?.[0]?.available_quantity ?? 0) > 0 : propertyData.is_available) ? "Book Your Stay" : "Currently Booked")
-                      : (propertyData.is_available ? "Book Your Stay" : "Currently Booked")}
-                  </span>
+                  <span className="relative z-10">Book Your Stay</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px] rounded-[2rem]">

@@ -201,8 +201,7 @@ export const CalendarSync = ({
                   : (data?.available_quantity !== undefined && data.available_quantity <= 0);
                 return isPast || !!isFullyBooked;
               }
-              const data = getDayData(date);
-              return isPast || data?.is_booked;
+              return isPast;
             }}
             onSelect={(date) => {
               if (isPublic) return;

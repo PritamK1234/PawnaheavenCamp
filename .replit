@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web"]
 [agent]
 expertMode = true
 integrations = ["javascript_database:1.0.0"]
@@ -8,8 +8,8 @@ channel = "stable-25_05"
 packages = ["jq", "imagemagick"]
 
 [deployment]
-deploymentTarget = "static"
-run = ["node", "./dist/index.cjs"]
+deploymentTarget = "vm"
+run = ["bash", "-c", "cd backend && node server.js & npx vite preview --host 0.0.0.0 --port 5000"]
 build = ["npm", "run", "build"]
 publicDir = "dist"
 

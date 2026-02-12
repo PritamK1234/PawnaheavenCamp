@@ -59,7 +59,7 @@ const Destinations = () => {
                 <div 
                   className="absolute inset-0 p-8 flex flex-col justify-end cursor-pointer"
                   onClick={() => {
-                    const targetCategory = destination.name === "Lonavala" ? "villa" : "camping";
+                    const targetCategory = destination.name === "Lonavala" ? "villa" : "campings_cottages";
                     const element = document.getElementById(`category-${targetCategory}`);
                     if (element) {
                       element.click();

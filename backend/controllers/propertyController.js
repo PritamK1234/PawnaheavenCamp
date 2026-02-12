@@ -402,7 +402,9 @@ const updateProperty = async (req, res) => {
     const { 
       amenities, activities, highlights, policies, schedule, 
       description, availability, weekday_price, weekend_price, 
-      price_note, price, special_dates, special_prices, images 
+      price_note, price, special_dates, special_prices, images,
+      title, location, map_link, max_capacity, capacity, rating,
+      check_in_time, check_out_time, owner_name, owner_mobile
     } = req.body;
 
     console.log('Update property request received for ID:', id);
@@ -423,6 +425,16 @@ const updateProperty = async (req, res) => {
         price_note = COALESCE($10, price_note),
         price = COALESCE(NULLIF($11, ''), price),
         special_dates = COALESCE($12, special_dates),
+        title = COALESCE(NULLIF($14, ''), title),
+        location = COALESCE(NULLIF($15, ''), location),
+        map_link = COALESCE($16, map_link),
+        max_capacity = COALESCE($17, max_capacity),
+        capacity = COALESCE($18, capacity),
+        rating = COALESCE($19, rating),
+        check_in_time = COALESCE(NULLIF($20, ''), check_in_time),
+        check_out_time = COALESCE(NULLIF($21, ''), check_out_time),
+        owner_name = COALESCE(NULLIF($22, ''), owner_name),
+        owner_mobile = COALESCE(NULLIF($23, ''), owner_mobile),
         updated_at = CURRENT_TIMESTAMP
       WHERE property_id = $13 OR id::text = $13
       RETURNING *
@@ -439,7 +451,17 @@ const updateProperty = async (req, res) => {
       price_note || null,
       price !== undefined ? String(price) : null,
       (Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || (Array.isArray(special_prices) ? JSON.stringify(special_prices) : null))),
-      id
+      id,
+      title || null,
+      location || null,
+      map_link !== undefined ? map_link : null,
+      max_capacity !== undefined ? parseInt(max_capacity) || null : null,
+      capacity !== undefined ? parseInt(capacity) || null : null,
+      rating !== undefined ? parseFloat(rating) || null : null,
+      check_in_time || null,
+      check_out_time || null,
+      owner_name || null,
+      owner_mobile || null
     ]);
 
     console.log('Rows updated:', result.rowCount);
@@ -470,7 +492,6 @@ const updateProperty = async (req, res) => {
       console.log('Updated property images:', images.length);
     }
 
-    const { owner_name, owner_mobile } = req.body;
     if (owner_name || owner_mobile) {
       await query(`
         UPDATE owners 

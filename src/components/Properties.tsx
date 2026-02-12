@@ -51,13 +51,27 @@ const Properties = () => {
     fetchProperties();
   }, []);
 
+  const getPriceCategory = (price: string | number, category: string): string => {
+    const num = typeof price === 'number' ? price : parseFloat(String(price).replace(/[^0-9.]/g, '')) || 0;
+    if (category === 'villa') {
+      if (num <= 10000) return 'affordable';
+      if (num <= 20000) return 'premium';
+      return 'luxury';
+    }
+    if (num <= 1200) return 'affordable';
+    if (num <= 2000) return 'premium';
+    return 'luxury';
+  };
+
   const filteredProperties = properties.filter((p) => {
-    // Only show active properties on the index page
     if (!p.is_active && !p.isActive) return false;
     
     const categoryMatch = selectedCategory === "all" || p.category === selectedCategory;
-    const priceMatch = selectedPriceFilter === "all" || p.propertyCategory === selectedPriceFilter;
-    return categoryMatch && priceMatch;
+    if (!categoryMatch) return false;
+    if (selectedPriceFilter === "all") return true;
+
+    const effectiveCategory = selectedCategory === "all" ? p.category : selectedCategory;
+    return getPriceCategory(p.price, effectiveCategory) === selectedPriceFilter;
   });
 
   const categories = ["all", "campings_cottages", "villa"];

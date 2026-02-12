@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CalendarSync } from "@/components/CalendarSync";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,11 +32,11 @@ interface BookingFormProps {
   ownerName?: string;
 }
 
-export function BookingForm({ 
-  propertyName, 
-  propertyId, 
-  pricePerPerson, 
-  propertyCategory = "camping", 
+export function BookingForm({
+  propertyName,
+  propertyId,
+  pricePerPerson,
+  propertyCategory = "camping",
   maxCapacity = 4,
   onClose,
   selectedUnitId,
@@ -63,7 +67,9 @@ export function BookingForm({
   useEffect(() => {
     let days = 1;
     if (formData.checkIn && formData.checkOut) {
-      const diffTime = Math.abs(formData.checkOut.getTime() - formData.checkIn.getTime());
+      const diffTime = Math.abs(
+        formData.checkOut.getTime() - formData.checkIn.getTime(),
+      );
       days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       if (days < 1) days = 1;
     }
@@ -72,34 +78,52 @@ export function BookingForm({
     if (isVilla) {
       total = pricePerPerson * days;
     } else {
-      const totalPersons = (formData.vegPersons || 0) + (formData.nonVegPersons || 0);
+      const totalPersons =
+        (formData.vegPersons || 0) + (formData.nonVegPersons || 0);
       total = totalPersons * pricePerPerson;
       // Keep persons count in sync for other logic if needed
       if (formData.persons !== totalPersons) {
-        setFormData(prev => ({ ...prev, persons: totalPersons }));
+        setFormData((prev) => ({ ...prev, persons: totalPersons }));
       }
     }
-    
+
     setTotalPrice(total);
     setAdvanceAmount(Math.round(total * 0.3)); // 30% advance
-  }, [formData.persons, formData.vegPersons, formData.nonVegPersons, formData.checkIn, formData.checkOut, pricePerPerson, isVilla]);
+  }, [
+    formData.persons,
+    formData.vegPersons,
+    formData.nonVegPersons,
+    formData.checkIn,
+    formData.checkOut,
+    pricePerPerson,
+    isVilla,
+  ]);
 
   const handleCheckInSelect = (date: Date | undefined) => {
     if (!date) return;
-    
+
     const nextDay = new Date(date);
     nextDay.setDate(date.getDate() + 1);
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       checkIn: date,
-      checkOut: isVilla ? (prev.checkOut && prev.checkOut > date ? prev.checkOut : nextDay) : nextDay
+      checkOut: isVilla
+        ? prev.checkOut && prev.checkOut > date
+          ? prev.checkOut
+          : nextDay
+        : nextDay,
     }));
     setIsCheckInOpen(false);
   };
 
   const handleBook = async () => {
-    if (!formData.name || !formData.mobile || !formData.checkIn || !formData.checkOut) {
+    if (
+      !formData.name ||
+      !formData.mobile ||
+      !formData.checkIn ||
+      !formData.checkOut
+    ) {
       alert("Please fill all details");
       return;
     }
@@ -121,7 +145,7 @@ export function BookingForm({
     try {
       if (onClose) onClose();
 
-      const apiBaseUrl = '';
+      const apiBaseUrl = "";
 
       const checkInDateTime = new Date(formData.checkIn);
       checkInDateTime.setHours(14, 0, 0, 0);
@@ -137,7 +161,11 @@ export function BookingForm({
         property_type: isVilla ? "VILLA" : "CAMPING",
         guest_name: formData.name,
         guest_phone: formData.mobile,
-        owner_phone: ownerPhone ? (ownerPhone.startsWith("+91") ? ownerPhone : `+91${ownerPhone}`) : "+918806092609",
+        owner_phone: ownerPhone
+          ? ownerPhone.startsWith("+91")
+            ? ownerPhone
+            : `+91${ownerPhone}`
+          : "+918806092609",
         admin_phone: "+918806092609",
         owner_name: ownerName || undefined,
         checkin_datetime: checkInDateTime.toISOString(),
@@ -174,7 +202,10 @@ export function BookingForm({
         throw new Error("Invalid booking response");
       }
 
-      await PaytmPaymentService.initiateAndRedirect(bookingData.booking.booking_id, "WEB");
+      await PaytmPaymentService.initiateAndRedirect(
+        bookingData.booking.booking_id,
+        "WEB",
+      );
     } catch (error) {
       console.error("Booking error:", error);
       alert(`Booking failed: ${error.message}. Please try again.`);
@@ -188,23 +219,27 @@ export function BookingForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="name">Full Name</Label>
-            <Input 
-              id="name" 
-              placeholder="Your name" 
+            <Input
+              id="name"
+              placeholder="Your name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="h-11"
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="mobile">Mobile Number (whatsapp)</Label>
-            <Input 
-              id="mobile" 
+            <Input
+              id="mobile"
               type="tel"
               inputMode="tel"
-              placeholder="Mobile" 
+              placeholder="Mobile"
               value={formData.mobile}
-              onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, mobile: e.target.value })
+              }
               className="h-11"
             />
           </div>
@@ -219,17 +254,21 @@ export function BookingForm({
                   variant="outline"
                   className={cn(
                     "h-11 justify-start text-left font-normal px-3",
-                    !formData.checkIn && "text-muted-foreground"
+                    !formData.checkIn && "text-muted-foreground",
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                  <span className="truncate">{formData.checkIn ? format(formData.checkIn, "MMM d") : "Date"}</span>
+                  <span className="truncate">
+                    {formData.checkIn
+                      ? format(formData.checkIn, "MMM d")
+                      : "Date"}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-0" align="start">
                 <div className="p-3">
-                  <CalendarSync 
-                    propertyId={propertyId} 
+                  <CalendarSync
+                    propertyId={propertyId}
                     unitId={selectedUnitId}
                     isVilla={isVilla}
                     isBookingForm={true}
@@ -248,17 +287,21 @@ export function BookingForm({
                     variant="outline"
                     className={cn(
                       "h-11 justify-start text-left font-normal px-3",
-                      !formData.checkOut && "text-muted-foreground"
+                      !formData.checkOut && "text-muted-foreground",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                    <span className="truncate">{formData.checkOut ? format(formData.checkOut, "MMM d") : "Date"}</span>
+                    <span className="truncate">
+                      {formData.checkOut
+                        ? format(formData.checkOut, "MMM d")
+                        : "Date"}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[320px] p-0" align="end">
                   <div className="p-3">
-                    <CalendarSync 
-                      propertyId={propertyId} 
+                    <CalendarSync
+                      propertyId={propertyId}
                       unitId={selectedUnitId}
                       isVilla={isVilla}
                       isBookingForm={true}
@@ -273,19 +316,21 @@ export function BookingForm({
             ) : (
               <div className="h-11 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground flex items-center gap-2 cursor-not-allowed opacity-70">
                 <CalendarIcon className="h-4 w-4 shrink-0" />
-                {formData.checkOut ? format(formData.checkOut, "MMM d") : "Next day"}
+                {formData.checkOut
+                  ? format(formData.checkOut, "MMM d")
+                  : "Next day"}
               </div>
             )}
           </div>
         </div>
-        
+
         {isVilla ? (
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="persons">Persons</Label>
-              <Input 
-                id="persons" 
-                type="number" 
+              <Input
+                id="persons"
+                type="number"
                 min="1"
                 max={maxCapacity}
                 value={formData.persons}
@@ -312,16 +357,19 @@ export function BookingForm({
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label htmlFor="vegPersons">Veg</Label>
-                <Input 
-                  id="vegPersons" 
-                  type="text" 
+                <Input
+                  id="vegPersons"
+                  type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
                   value={formData.vegPersons === 0 ? "" : formData.vegPersons}
                   onChange={(e) => {
                     const val = e.target.value;
                     if (val === "" || /^[0-9]+$/.test(val)) {
-                      setFormData({ ...formData, vegPersons: val === "" ? 0 : parseInt(val) });
+                      setFormData({
+                        ...formData,
+                        vegPersons: val === "" ? 0 : parseInt(val),
+                      });
                     }
                   }}
                   className="h-11"
@@ -329,16 +377,21 @@ export function BookingForm({
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="nonVegPersons">Non-Veg</Label>
-                <Input 
-                  id="nonVegPersons" 
-                  type="text" 
+                <Input
+                  id="nonVegPersons"
+                  type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  value={formData.nonVegPersons === 0 ? "" : formData.nonVegPersons}
+                  value={
+                    formData.nonVegPersons === 0 ? "" : formData.nonVegPersons
+                  }
                   onChange={(e) => {
                     const val = e.target.value;
                     if (val === "" || /^[0-9]+$/.test(val)) {
-                      setFormData({ ...formData, nonVegPersons: val === "" ? 0 : parseInt(val) });
+                      setFormData({
+                        ...formData,
+                        nonVegPersons: val === "" ? 0 : parseInt(val),
+                      });
                     }
                   }}
                   className="h-11"
@@ -358,8 +411,8 @@ export function BookingForm({
         {formData.referralCode && (
           <div className="grid gap-1.5">
             <Label htmlFor="referral">Referral Code</Label>
-            <Input 
-              id="referral" 
+            <Input
+              id="referral"
               value={formData.referralCode}
               readOnly
               className="h-11 border-primary/30 bg-primary/5 cursor-default"
@@ -377,11 +430,17 @@ export function BookingForm({
 
       <div className="bg-secondary/50 p-3 rounded-xl flex items-center justify-between">
         <div>
-          <span className="text-xs font-medium block text-muted-foreground">Advance Payment (30%)</span>
-          <span className="text-lg font-bold text-primary">₹{advanceAmount}</span>
+          <span className="text-xs font-medium block text-muted-foreground">
+            Advance Payment (30%)
+          </span>
+          <span className="text-lg font-bold text-primary">
+            ₹{advanceAmount}
+          </span>
         </div>
         <div className="text-right">
-          <span className="text-[10px] font-medium block text-muted-foreground">Total: ₹{totalPrice}</span>
+          <span className="text-[10px] font-medium block text-muted-foreground">
+            Total: ₹{totalPrice}
+          </span>
         </div>
       </div>
 

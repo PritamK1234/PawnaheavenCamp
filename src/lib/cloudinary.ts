@@ -1,27 +1,51 @@
-export const cloudinaryConfig = {
-  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '',
-  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '',
+const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_IMAGES = 20;
+
+export const validateImageFile = (file: File): string | null => {
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!ALLOWED_FORMATS.includes(ext)) {
+    return `Invalid format. Allowed: ${ALLOWED_FORMATS.join(', ')}`;
+  }
+  return null;
+};
+
+export const checkImageCount = (currentCount: number, adding: number = 1): string | null => {
+  if (currentCount + adding > MAX_IMAGES) {
+    return `Maximum ${MAX_IMAGES} images allowed. You have ${currentCount} already.`;
+  }
+  return null;
 };
 
 export const uploadImage = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', cloudinaryConfig.uploadPreset);
+  const validation = validateImageFile(file);
+  if (validation) {
+    throw new Error(validation);
+  }
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('ownerToken');
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const response = await fetch('/api/properties/upload-image', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
 
   if (!response.ok) {
-    throw new Error('Upload failed');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Upload failed');
   }
 
   const data = await response.json();
-  return data.secure_url;
+  if (!data.success) {
+    throw new Error(data.message || 'Upload failed');
+  }
+
+  return data.url;
 };
 
 export const getOptimizedImageUrl = (url: string, width: number = 800) => {
@@ -34,3 +58,5 @@ export const getOptimizedImageUrl = (url: string, width: number = 800) => {
     `/upload/f_auto,q_${quality},w_${width},c_limit,dpr_auto/`
   );
 };
+
+export { ALLOWED_FORMATS, MAX_FILE_SIZE, MAX_IMAGES };

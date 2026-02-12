@@ -42,6 +42,16 @@ Preferred communication style: Simple, everyday language.
 - Villa images: Managed at property level with gallery upload in admin panel
 - Camping/cottage images: Managed at unit level
 
+#### Cloudinary Image Upload (Feb 2026)
+- All image uploads go through backend API (`/api/properties/upload-image`) - NO direct frontend-to-Cloudinary uploads
+- Backend uses multer memory storage + sharp for server-side compression + Cloudinary upload_stream
+- Allowed formats: jpg, jpeg, png, webp
+- Max 20 images per property/unit
+- Images >20MB are auto-compressed server-side using sharp (iterative quality reduction + resize)
+- Frontend validates format and count before upload; backend enforces all rules
+- `backend/utils/cloudinary.js` - Core upload/compression logic
+- `src/lib/cloudinary.ts` - Frontend upload helper (routes through backend API only)
+
 - **API Routes**: 
   - `/api/villa/*` - Villa-specific endpoints
   - `/api/camping_Cottages/*` - Camping/cottages-specific endpoints

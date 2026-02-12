@@ -181,6 +181,17 @@ const OwnerProfile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if ((details.images || []).length >= 20) {
+      toast.error('Maximum 20 images allowed per property');
+      return;
+    }
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+      toast.error('Invalid format. Allowed: jpg, jpeg, png, webp');
+      return;
+    }
+
     setIsUploading(true);
     const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
     const formDataUpload = new FormData();
@@ -197,6 +208,8 @@ const OwnerProfile = () => {
       if (result.success) {
         setDetails(prev => ({ ...prev, images: [...prev.images, result.url] }));
         toast.success('Image uploaded');
+      } else {
+        toast.error(result.message || 'Upload failed');
       }
     } catch (error) {
       toast.error('Upload error');
@@ -334,21 +347,20 @@ const OwnerProfile = () => {
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Property Gallery</Label>
+            <Label className="text-sm font-bold uppercase tracking-widest text-gray-400">Property Gallery ({(details.images || []).length}/20)</Label>
             <input 
               type="file" 
               id="prop-img-owner" 
               className="hidden" 
               onChange={handleImageUpload} 
-              accept="image/*"
-              multiple
+              accept=".jpg,.jpeg,.png,.webp"
             />
             <Button 
               type="button" 
               size="sm" 
               variant="outline" 
               onClick={() => document.getElementById('prop-img-owner')?.click()} 
-              disabled={isUploading}
+              disabled={isUploading || (details.images || []).length >= 20}
               className="border-[#D4AF37]/30 text-[#D4AF37] h-9"
             >
               {isUploading ? 'Uploading...' : 'Upload Image'}

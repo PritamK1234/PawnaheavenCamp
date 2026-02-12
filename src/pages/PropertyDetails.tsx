@@ -142,7 +142,7 @@ const PropertyDetails = () => {
           const p = response.data;
           console.log("Property Raw Data:", JSON.stringify(p, null, 2));
           let mappedImages: string[] = [];
-          
+
           if (p.images && Array.isArray(p.images) && p.images.length > 0) {
             mappedImages = p.images.map((img: any) => {
               if (typeof img === 'string') return img;
@@ -154,7 +154,7 @@ const PropertyDetails = () => {
               return url;
             }).filter(Boolean);
           }
-          
+
           // Ensure arrays are actually arrays
           const ensureArray = (val: any) => {
             if (Array.isArray(val)) return val;
@@ -347,7 +347,7 @@ const PropertyDetails = () => {
                     </DialogContent>
                   </Dialog>
                 </div>
-                
+
                 {/* Capacity Info - Added into availability section */}
                 <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
                   <span className="text-[9px] uppercase tracking-widest font-bold text-gray-500">Capacity:</span>
@@ -424,7 +424,7 @@ const PropertyDetails = () => {
                     </DialogContent>
                   </Dialog>
                 </div>
-                
+
                 <Button 
                   variant="outline" 
                   className="flex flex-col gap-1 h-14 rounded-2xl bg-[#1A1A1A] border-2 border-[#D4AF37] shadow-[0_4px_0_rgb(146,120,33),0_8px_15px_rgba(0,0,0,0.5)] hover:bg-[#2A2A2A] text-white transition-all active:translate-y-1 active:shadow-inner px-1 w-full group relative overflow-hidden"
@@ -487,7 +487,7 @@ const PropertyDetails = () => {
       {/* Desktop view - restored previous layout */}
       <Card className={cn("rounded-[2.5rem] p-8 md:p-10 bg-card shadow-2xl-soft border border-border/50 overflow-hidden relative", !isDesktop ? "hidden md:block" : "block")}>
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative">
           {/* Desktop Unit Selector */}
           {propertyData.category === 'campings_cottages' && propertyData.units && propertyData.units.length > 0 && (
@@ -520,7 +520,7 @@ const PropertyDetails = () => {
               <span className="text-5xl font-display font-bold text-[#C5A021] tracking-tight">{displayPrice.startsWith('₹') ? '' : '₹'}{displayPrice}</span>
               <span className="text-muted-foreground font-medium text-lg">/ {isVilla ? 'villa' : 'person'}</span>
             </div>
-            
+
             {propertyData.category === 'campings_cottages' && (
               <div className="mt-4 p-4 rounded-2xl bg-secondary/30 border border-border/50">
                 <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground block mb-2">Available Capacity</span>
@@ -529,7 +529,7 @@ const PropertyDetails = () => {
                 </div>
               </div>
             )}
-            
+
             <p className="text-sm text-muted-foreground mt-3 font-medium flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-green-500" />
               {propertyData.priceNote}
@@ -593,7 +593,7 @@ const PropertyDetails = () => {
                 </div>
               </DialogContent>
             </Dialog>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <Button
                 variant="outline"
@@ -670,7 +670,7 @@ const PropertyDetails = () => {
                 className="h-full rounded-none" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent pointer-events-none" />
-              
+
               {/* Floating Badges for Mobile */}
               <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 pointer-events-none w-max max-w-[60%] justify-center">
                 <Badge variant="outline" className="bg-black/70 backdrop-blur-md border-white/20 text-white px-2 py-0.5 rounded-full text-[8px] uppercase font-bold tracking-widest pointer-events-auto opacity-70 whitespace-nowrap">
@@ -691,13 +691,13 @@ const PropertyDetails = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="hidden md:block">
             <div className="h-auto w-full relative container mx-auto px-6 py-8">
               <ImageSlider images={propertyData.category === 'campings_cottages' ? (selectedUnit?.images || propertyData.images) : propertyData.images} title={propertyData.title} className="rounded-3xl shadow-2xl" />
             </div>
           </div>
-          
+
           {/* Back & Share Buttons */}
           <div className="absolute top-8 left-6 right-6 flex items-center justify-between z-20">
             <Link to="/" className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 text-white">
@@ -795,23 +795,23 @@ const PropertyDetails = () => {
                     <Clock className="w-6 h-6 text-[#C5A021]" />
                     Property Schedule
                   </h3>
-                  
+
                   <div className="relative space-y-0 pb-8">
                     {/* Vertical Line */}
                     <div className="absolute left-[21px] top-2 bottom-0 w-0.5 bg-gradient-to-b from-[#C5A021] via-[#C5A021]/50 to-transparent" />
-                    
+
                     {propertyData.schedule.map((item, idx) => (
                       <div key={idx} className="relative flex items-start gap-6 pb-10 group last:pb-0">
                         {/* Dot on line */}
                         <div className="absolute left-[18px] top-2 w-2 h-2 rounded-full bg-[#C5A021] border-4 border-[#0A0A0A] z-10 shadow-[0_0_10px_rgba(197,160,33,0.5)] group-hover:scale-150 transition-transform" />
-                        
+
                         {/* Icon Box */}
                         <div className="w-11 h-11 rounded-xl bg-[#1A1A1A] border border-[#C5A021]/20 flex items-center justify-center shrink-0 shadow-lg group-hover:border-[#C5A021]/50 transition-all">
                           <div className="text-[#C5A021]">
                             {getIcon(item.title || item.icon || "")}
                           </div>
                         </div>
-                        
+
                         {/* Content */}
                         <div className="pt-0.5 flex flex-col gap-1">
                           <span className="text-xs font-bold text-[#C5A021] uppercase tracking-widest">{item.time}</span>

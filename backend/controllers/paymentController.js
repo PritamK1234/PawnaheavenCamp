@@ -73,7 +73,7 @@ const initiatePaytmPayment = async (req, res) => {
       return res.status(500).json({ error: "Payment gateway not configured" });
     }
 
-    const channelId = process.env.PAYTM_CHANNEL_ID || 'WEB';
+    const channelId = process.env.PAYTM_CHANNEL_ID || "WEB";
 
     const paytmBody = {
       requestType: "Payment",
@@ -211,7 +211,7 @@ const paytmRedirect = async (req, res) => {
       ]);
     }
 
-    const channelId = process.env.PAYTM_CHANNEL_ID || 'WEB';
+    const channelId = process.env.PAYTM_CHANNEL_ID || "WEB";
 
     const paytmBody = {
       requestType: "Payment",
@@ -408,7 +408,7 @@ const paytmCallback = async (req, res) => {
         adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
         referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
       } else {
-        adminComm = Math.round(advanceAmt * 0.30 * 100) / 100;
+        adminComm = Math.round(advanceAmt * 0.3 * 100) / 100;
         referrerComm = 0;
       }
       commStatus = "PENDING";
@@ -626,7 +626,7 @@ const paytmWebhook = async (req, res) => {
     const isValidChecksum = await PaytmChecksum.verifySignature(
       dataForVerify,
       merchantKey,
-      checksumHash
+      checksumHash,
     );
 
     if (!isValidChecksum) {
@@ -636,7 +636,9 @@ const paytmWebhook = async (req, res) => {
 
     console.log("Webhook: Checksum verified successfully");
 
-    const result = await query("SELECT * FROM bookings WHERE order_id = $1", [orderId]);
+    const result = await query("SELECT * FROM bookings WHERE order_id = $1", [
+      orderId,
+    ]);
 
     if (result.rows.length === 0) {
       console.error("Webhook: Booking not found for order_id:", orderId);
@@ -646,12 +648,21 @@ const paytmWebhook = async (req, res) => {
     const booking = result.rows[0];
 
     if (booking.webhook_processed && booking.payment_status === "SUCCESS") {
-      console.log("Webhook: Already processed for booking:", booking.booking_id);
+      console.log(
+        "Webhook: Already processed for booking:",
+        booking.booking_id,
+      );
       return res.status(200).json({ status: "already_processed" });
     }
 
-    if (status === "TXN_SUCCESS" && parseFloat(txnAmount) !== parseFloat(booking.advance_amount)) {
-      console.error("Webhook: Amount mismatch:", { expected: booking.advance_amount, received: txnAmount });
+    if (
+      status === "TXN_SUCCESS" &&
+      parseFloat(txnAmount) !== parseFloat(booking.advance_amount)
+    ) {
+      console.error("Webhook: Amount mismatch:", {
+        expected: booking.advance_amount,
+        received: txnAmount,
+      });
       return res.status(400).json({ error: "Amount mismatch" });
     }
 
@@ -677,7 +688,7 @@ const paytmWebhook = async (req, res) => {
         adminCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
         referrerCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
       } else {
-        adminCommission = Math.round(advanceAmount * 0.30 * 100) / 100;
+        adminCommission = Math.round(advanceAmount * 0.3 * 100) / 100;
         referrerCommission = 0;
       }
       commissionStatus = "PENDING";
@@ -694,16 +705,25 @@ const paytmWebhook = async (req, res) => {
         action_token = $8, action_token_used = false, action_token_expires_at = $9,
         updated_at = NOW()
       WHERE booking_id = $10`,
-      [updatePaymentStatus, updateBookingStatus, txnId, paymentMode,
-       adminCommission, referrerCommission, commissionStatus,
-       actionToken, tokenExpiry, booking.booking_id]
+      [
+        updatePaymentStatus,
+        updateBookingStatus,
+        txnId,
+        paymentMode,
+        adminCommission,
+        referrerCommission,
+        commissionStatus,
+        actionToken,
+        tokenExpiry,
+        booking.booking_id,
+      ],
     );
 
     console.log("Webhook: Booking updated:", {
       booking_id: booking.booking_id,
       payment_status: updatePaymentStatus,
       booking_status: updateBookingStatus,
-      commission: { admin: adminCommission, referrer: referrerCommission }
+      commission: { admin: adminCommission, referrer: referrerCommission },
     });
 
     if (status === "TXN_SUCCESS") {
@@ -711,13 +731,22 @@ const paytmWebhook = async (req, res) => {
 
       await whatsapp.sendTextMessage(
         booking.guest_phone,
-        `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${txnAmount}\n\nYour booking request has been received.\nOwner confirmation is pending.\nTicket will be shared within 1 hour.`
+        `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${txnAmount}\n\nYour booking request has been received.\nOwner confirmation is pending.\nTicket will be shared within 1 hour.`,
       );
 
-      const checkinDate = new Date(booking.checkin_datetime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
-      const checkoutDate = new Date(booking.checkout_datetime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+      const checkinDate = new Date(booking.checkin_datetime).toLocaleString(
+        "en-IN",
+        { dateStyle: "medium", timeStyle: "short" },
+      );
+      const checkoutDate = new Date(booking.checkout_datetime).toLocaleString(
+        "en-IN",
+        { dateStyle: "medium", timeStyle: "short" },
+      );
       const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
-      const publicDomain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN || "";
+      const publicDomain =
+        process.env.REPLIT_DOMAINS?.split(",")[0] ||
+        process.env.REPLIT_DEV_DOMAIN ||
+        "";
       const frontendUrl = `https://${publicDomain}`;
       const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
       const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
@@ -725,16 +754,25 @@ const paytmWebhook = async (req, res) => {
       const ownerMessage = `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || 0}\n\nPlease confirm or cancel this booking:`;
 
       await whatsapp.sendInteractiveButtons(booking.owner_phone, ownerMessage, [
-        { id: JSON.stringify({ token: actionToken, action: "CONFIRM" }), title: "✅ Confirm" },
-        { id: JSON.stringify({ token: actionToken, action: "CANCEL" }), title: "❌ Cancel" },
+        {
+          id: JSON.stringify({ token: actionToken, action: "CONFIRM" }),
+          title: "✅ Confirm",
+        },
+        {
+          id: JSON.stringify({ token: actionToken, action: "CANCEL" }),
+          title: "❌ Cancel",
+        },
       ]);
 
       await whatsapp.sendTextMessage(
         booking.admin_phone,
-        `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nOwner: ${booking.owner_name || ""} (${booking.owner_phone})\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nPayment Method: ${paymentMode}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`
+        `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nOwner: ${booking.owner_name || ""} (${booking.owner_phone})\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nPayment Method: ${paymentMode}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`,
       );
 
-      console.log("Webhook: WhatsApp notifications sent for:", booking.booking_id);
+      console.log(
+        "Webhook: WhatsApp notifications sent for:",
+        booking.booking_id,
+      );
     }
 
     return res.status(200).json({ status: "ok" });
@@ -752,7 +790,9 @@ const initiateRefund = async (req, res) => {
       return res.status(400).json({ error: "Booking ID is required" });
     }
 
-    const result = await query("SELECT * FROM bookings WHERE booking_id = $1", [booking_id]);
+    const result = await query("SELECT * FROM bookings WHERE booking_id = $1", [
+      booking_id,
+    ]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Booking not found" });
@@ -761,7 +801,12 @@ const initiateRefund = async (req, res) => {
     const booking = result.rows[0];
 
     if (booking.refund_status === "REFUND_SUCCESSFUL") {
-      return res.status(400).json({ error: "Refund already completed", refund_id: booking.refund_id });
+      return res
+        .status(400)
+        .json({
+          error: "Refund already completed",
+          refund_id: booking.refund_id,
+        });
     }
 
     if (booking.payment_status !== "SUCCESS") {
@@ -769,7 +814,9 @@ const initiateRefund = async (req, res) => {
     }
 
     if (!booking.order_id) {
-      return res.status(400).json({ error: "No order ID found for this booking" });
+      return res
+        .status(400)
+        .json({ error: "No order ID found for this booking" });
     }
 
     const mid = process.env.PAYTM_MID;
@@ -794,7 +841,7 @@ const initiateRefund = async (req, res) => {
 
     const checksum = await PaytmChecksum.generateSignature(
       JSON.stringify(paytmBody),
-      merchantKey
+      merchantKey,
     );
 
     const paytmRequest = {
@@ -802,12 +849,16 @@ const initiateRefund = async (req, res) => {
       head: { signature: checksum },
     };
 
-    console.log("Initiating Paytm refund:", { booking_id, refundId, amount: refundAmount });
+    console.log("Initiating Paytm refund:", {
+      booking_id,
+      refundId,
+      amount: refundAmount,
+    });
 
     const paytmResponse = await axios.post(
       `${paytmBaseUrl}/refund/apply`,
       paytmRequest,
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { "Content-Type": "application/json" } },
     );
 
     console.log("Paytm refund response:", JSON.stringify(paytmResponse.data));
@@ -815,26 +866,32 @@ const initiateRefund = async (req, res) => {
     const responseBody = paytmResponse.data.body;
     const refundResult = responseBody?.resultInfo;
 
-    if (refundResult?.resultStatus === "TXN_SUCCESS" || refundResult?.resultStatus === "PENDING") {
-      const refundStatus = refundResult.resultStatus === "TXN_SUCCESS" ? "REFUND_SUCCESSFUL" : "REFUND_INITIATED";
+    if (
+      refundResult?.resultStatus === "TXN_SUCCESS" ||
+      refundResult?.resultStatus === "PENDING"
+    ) {
+      const refundStatus =
+        refundResult.resultStatus === "TXN_SUCCESS"
+          ? "REFUND_SUCCESSFUL"
+          : "REFUND_INITIATED";
 
       await query(
         `UPDATE bookings SET 
           refund_id = $1, refund_status = $2, refund_amount = $3,
           booking_status = 'REFUND_INITIATED', updated_at = NOW()
         WHERE booking_id = $4`,
-        [refundId, refundStatus, refundAmount, booking_id]
+        [refundId, refundStatus, refundAmount, booking_id],
       );
 
       if (refundStatus === "REFUND_SUCCESSFUL") {
         const whatsapp = new WhatsAppService();
         await whatsapp.sendTextMessage(
           booking.guest_phone,
-          `💰 Refund Successful!\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${refundAmount}\n\nYour refund has been successfully credited to your account.`
+          `💰 Refund Successful!\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${refundAmount}\n\nYour refund has been successfully credited to your account.`,
         );
         await whatsapp.sendTextMessage(
           booking.admin_phone,
-          `✅ Refund Completed\n\nBooking ID: ${booking.booking_id}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nRefund Amount: ₹${refundAmount}\nRefund ID: ${refundId}`
+          `✅ Refund Completed\n\nBooking ID: ${booking.booking_id}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nRefund Amount: ₹${refundAmount}\nRefund ID: ${refundId}`,
         );
       }
 
@@ -848,7 +905,7 @@ const initiateRefund = async (req, res) => {
     } else {
       await query(
         `UPDATE bookings SET refund_status = 'REFUND_FAILED', updated_at = NOW() WHERE booking_id = $1`,
-        [booking_id]
+        [booking_id],
       );
 
       return res.status(400).json({
@@ -858,10 +915,14 @@ const initiateRefund = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error initiating refund:", error.response?.data || error.message);
+    console.error(
+      "Error initiating refund:",
+      error.response?.data || error.message,
+    );
     return res.status(500).json({
       error: "Internal server error",
-      details: error.response?.data?.body?.resultInfo?.resultMsg || error.message,
+      details:
+        error.response?.data?.body?.resultInfo?.resultMsg || error.message,
     });
   }
 };

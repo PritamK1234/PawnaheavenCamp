@@ -107,6 +107,17 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (unitForm.images.length >= 20) {
+      toast({ title: 'Maximum 20 images allowed per unit', variant: 'destructive' });
+      return;
+    }
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+      toast({ title: 'Invalid format. Allowed: jpg, jpeg, png, webp', variant: 'destructive' });
+      return;
+    }
+
     setIsUploading(true);
     const token = localStorage.getItem('adminToken') || localStorage.getItem('ownerToken');
     const formDataUpload = new FormData();
@@ -123,6 +134,8 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
       if (result.success) {
         setUnitForm(prev => ({ ...prev, images: [...prev.images, result.url] }));
         toast({ title: 'Image uploaded' });
+      } else {
+        toast({ title: result.message || 'Upload failed', variant: 'destructive' });
       }
     } catch (error) {
       toast({ title: 'Upload error', variant: 'destructive' });
@@ -349,9 +362,9 @@ const UnitManager = ({ propertyId, category, units, onRefresh }: { propertyId: s
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Unit Gallery</Label>
-                <input type="file" id="unit-img" className="hidden" onChange={handleUnitImageUpload} />
-                <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById('unit-img')?.click()} disabled={isUploading}>
+                <Label>Unit Gallery ({unitForm.images.length}/20)</Label>
+                <input type="file" id="unit-img" className="hidden" onChange={handleUnitImageUpload} accept=".jpg,.jpeg,.png,.webp" />
+                <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById('unit-img')?.click()} disabled={isUploading || unitForm.images.length >= 20}>
                   {isUploading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Upload className="w-3 h-3 mr-1" />} Upload
                 </Button>
               </div>
@@ -431,6 +444,17 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (formData.images.filter(img => img.trim()).length >= 20) {
+      toast({ title: 'Maximum 20 images allowed per property', variant: 'destructive' });
+      return;
+    }
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+      toast({ title: 'Invalid format. Allowed: jpg, jpeg, png, webp', variant: 'destructive' });
+      return;
+    }
+
     setIsUploading(true);
     const token = localStorage.getItem('adminToken');
     const formDataUpload = new FormData();
@@ -447,7 +471,6 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
 
       const result = await response.json();
       if (result.success) {
-        // Add new image to the list
         setFormData(prev => ({ ...prev, images: [...prev.images.filter(img => img.trim()), result.url] }));
         toast({ title: 'Image uploaded successfully' });
       } else {
@@ -1089,14 +1112,14 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Star className="w-5 h-5 text-primary" />
-                  Property Images *
+                  Property Images * ({formData.images.filter(img => img.trim()).length}/20)
                 </h2>
                 <div className="relative">
                   <input
                     type="file"
                     id="image-upload"
                     className="hidden"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.webp"
                     onChange={handleImageUpload}
                     disabled={isUploading}
                   />
@@ -1105,7 +1128,7 @@ const AdminPropertyForm = ({ property, onSuccess, onCancel }: AdminPropertyFormP
                     variant="outline"
                     size="sm"
                     className="rounded-xl gap-2"
-                    disabled={isUploading}
+                    disabled={isUploading || formData.images.filter(img => img.trim()).length >= 20}
                     onClick={() => document.getElementById('image-upload')?.click()}
                   >
                     {isUploading ? (

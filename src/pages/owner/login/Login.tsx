@@ -154,7 +154,17 @@ const OwnerLogin = () => {
           )}
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-6 text-center">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/owner/register')}
+            className="text-sm text-muted-foreground hover:text-primary"
+          >
+            Back to Register
+          </Button>
+        </div>
+
+        <div className="mt-4 text-center">
           <p className="text-[10px] tracking-[0.2em] font-bold text-muted-foreground/40 uppercase">
             Powered by PawnaHavenCamp Luxury Stay
           </p>

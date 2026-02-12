@@ -2,12 +2,18 @@ const { pool, query } = require('../db');
 const { generateToken } = require('../utils/jwt');
 
 exports.registerOwner = async (req, res) => {
-  const { propertyName, propertyId, propertyType, ownerName, ownerMobile } = req.body;
+  const { propertyId, ownerMobile } = req.body;
+
+  if (!propertyId || !ownerMobile) {
+    return res.status(400).json({
+      success: false,
+      message: 'Property ID and Mobile Number are required.'
+    });
+  }
 
   try {
-    // 1. Check if Property ID exists in properties table
     const propertyCheck = await pool.query(
-      'SELECT * FROM properties WHERE property_id = $1',
+      'SELECT property_id, title, category, owner_name FROM properties WHERE property_id = $1',
       [propertyId]
     );
 
@@ -18,7 +24,8 @@ exports.registerOwner = async (req, res) => {
       });
     }
 
-    // 2. Check if Property ID is already linked to an owner
+    const property = propertyCheck.rows[0];
+
     const ownerPropertyCheck = await pool.query(
       'SELECT * FROM owners WHERE property_id = $1',
       [propertyId]
@@ -31,7 +38,6 @@ exports.registerOwner = async (req, res) => {
       });
     }
 
-    // 3. Check if mobile number is already registered
     const mobileCheck = await pool.query(
       'SELECT * FROM owners WHERE mobile_number = $1',
       [ownerMobile]
@@ -44,13 +50,12 @@ exports.registerOwner = async (req, res) => {
       });
     }
 
-    // 5. Register owner
     const result = await pool.query(
       `INSERT INTO owners 
        (property_id, property_name, property_type, owner_name, mobile_number) 
        VALUES ($1, $2, $3, $4, $5) 
        RETURNING id, property_id, property_name, owner_name, mobile_number`,
-      [propertyId, propertyName, propertyType, ownerName, ownerMobile]
+      [propertyId, property.title, property.category, property.owner_name || '', ownerMobile]
     );
 
     return res.status(201).json({

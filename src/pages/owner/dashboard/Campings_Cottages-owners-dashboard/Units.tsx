@@ -131,44 +131,52 @@ const OwnerUnits = () => {
   };
 
   const handleUnitImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    if (unitForm.images.length >= 20) {
+    const remaining = 20 - unitForm.images.length;
+    if (remaining <= 0) {
       toast.error('Maximum 20 images allowed per unit');
       return;
     }
-
-    const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-      toast.error('Invalid format. Allowed: jpg, jpeg, png, webp');
-      return;
+    const filesToUpload = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.error(`Only uploading ${remaining} image(s) to stay within the 20 limit`);
     }
 
     setIsUploading(true);
     const token = localStorage.getItem('ownerToken') || localStorage.getItem('adminToken');
-    const formDataUpload = new FormData();
-    formDataUpload.append('image', file);
 
-    try {
-      const response = await fetch('/api/properties/upload-image', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formDataUpload,
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setUnitForm(prev => ({ ...prev, images: [...prev.images, result.url] }));
-        toast.success('Image uploaded');
-      } else {
-        toast.error(result.message || 'Upload failed');
+    for (const file of filesToUpload) {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+        toast.error(`"${file.name}" skipped — invalid format. Allowed: jpg, jpeg, png, webp`);
+        continue;
       }
-    } catch (error) {
-      toast.error('Upload error');
-    } finally {
-      setIsUploading(false);
+
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', file);
+
+      try {
+        const response = await fetch('/api/properties/upload-image', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formDataUpload,
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          setUnitForm(prev => ({ ...prev, images: [...prev.images, result.url] }));
+          toast.success('Image uploaded');
+        } else {
+          toast.error(result.message || 'Upload failed');
+        }
+      } catch (error) {
+        toast.error('Upload error');
+      }
     }
+    setIsUploading(false);
+    e.target.value = '';
   };
 
   const parseJson = (val: any) => {
@@ -402,7 +410,7 @@ const OwnerUnits = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-gray-400 text-xs uppercase font-bold">Unit Gallery ({unitForm.images.length}/20)</Label>
-                  <input type="file" id="unit-img-owner" className="hidden" onChange={handleUnitImageUpload} accept=".jpg,.jpeg,.png,.webp" />
+                  <input type="file" id="unit-img-owner" className="hidden" onChange={handleUnitImageUpload} accept=".jpg,.jpeg,.png,.webp" multiple />
                   <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById('unit-img-owner')?.click()} disabled={isUploading || unitForm.images.length >= 20} className="border-gold/30 text-gold h-9">
                     {isUploading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Upload className="w-3 h-3 mr-1" />} Upload
                   </Button>

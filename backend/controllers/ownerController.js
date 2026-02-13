@@ -34,7 +34,7 @@ exports.registerOwner = async (req, res) => {
     if (ownerPropertyCheck.rows.length > 0) {
       return res.status(400).json({
         success: false,
-        message: 'This Property ID is already registered with another owner.'
+        message: 'Owner already registered for this Property ID. Please login.'
       });
     }
 

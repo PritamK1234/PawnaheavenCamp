@@ -233,17 +233,6 @@ const updateVilla = async (req, res) => {
       console.log('Updated villa images:', images.length);
     }
 
-    if (owner_name || owner_mobile) {
-      await query(`
-        UPDATE owners 
-        SET 
-          owner_name = COALESCE($1, owner_name),
-          mobile_number = COALESCE($2, mobile_number),
-          property_name = COALESCE($3, property_name)
-        WHERE property_id = $4
-      `, [owner_name, owner_mobile, result.rows[0].title, result.rows[0].property_id]);
-    }
-
     return res.status(200).json({
       success: true,
       message: 'Villa updated successfully.',

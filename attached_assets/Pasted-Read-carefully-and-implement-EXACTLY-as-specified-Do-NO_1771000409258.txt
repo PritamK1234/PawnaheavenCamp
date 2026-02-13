@@ -1,0 +1,62 @@
+Read carefully and implement EXACTLY as specified.
+Do NOT modify existing database schema.
+Do NOT sync or copy data between tables unless explicitly stated.
+
+SYSTEM OVERVIEW:
+- properties table:
+  - owner_mobile → used ONLY for WhatsApp/webhook communication
+- owners table:
+  - mobile_number → used ONLY for OTP login
+  - owner_name → login-related only
+
+IMPORTANT RULE:
+There is NO relation between:
+- properties.owner_mobile
+- owners.mobile_number
+Except logical link via property_id ONLY
+
+They must NEVER be auto-updated or overwritten.
+
+FLOW REQUIREMENTS:
+
+1) Admin creates a property
+   - Saves owner_mobile in properties table
+   - Generates unique property_id
+   - Shares property_id with owner
+
+2) Owner Registration (ONE-TIME ONLY per property_id)
+   - Fields:
+     - property_id (required)
+     - mobile_number 
+   - Rule for entering mobile number:
+     - mobile_number can be same as admin-added owner_mobile number at the time of property registartion
+     - OR may be a NEW number
+     - This choice is allowed ONLY ONCE if tried registration again must throw error
+   - Validation:
+     property_id must exist in properties
+     property_id must NOT already exist in owners
+   - On success:
+     - Insert new row into owners table
+     - Store property_id + mobile_number
+   - DO NOT update properties table
+
+3) Re-registration Attempt
+   - If owner tries to register again using same property_id:
+     - Reject with clear error:
+       "Owner already registered for this Property ID. Please login."
+
+4) Login Rule
+   - OTP login allowed ONLY on:
+     - the mobile_number stored in owners table
+   - Any other number must be rejected
+
+DATA INTEGRITY RULES:
+- NEVER update properties.owner_mobile during owner registration
+- NEVER copy owner_mobile into owners table
+- Registration allowed ONLY ONCE per property_id
+- Enforce DB-level or backend validation to prevent duplicates
+
+OUTPUT:
+- Update backend logic only
+- Return clear validation errors
+- Keep code minimal and clean

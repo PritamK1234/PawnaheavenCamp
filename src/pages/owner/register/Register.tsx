@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Sparkles, Shield, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Sparkles, Shield, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const OwnerRegister = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    propertyId: '',
-    ownerNumber: ''
+    propertyId: "",
+    ownerNumber: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,29 +19,29 @@ const OwnerRegister = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/owners/register', {
-        method: 'POST',
+      const response = await fetch("/api/owners/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           propertyId: formData.propertyId,
-          ownerMobile: formData.ownerNumber
+          ownerMobile: formData.ownerNumber,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Registration successful!');
-        localStorage.setItem('tempOwnerData', JSON.stringify(data.data));
-        navigate('/owner/login'); 
+        toast.success("Registration successful!");
+        localStorage.setItem("tempOwnerData", JSON.stringify(data.data));
+        navigate("/owner/login");
       } else {
-        toast.error(data.message || 'Registration failed');
+        toast.error(data.message || "Registration failed");
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error('An error occurred during registration. Please try again.');
+      console.error("Registration error:", error);
+      toast.error("An error occurred during registration. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -54,7 +54,7 @@ const OwnerRegister = () => {
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float delay-300" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/5 to-transparent rounded-full" />
       </div>
-      
+
       <div className="absolute inset-0 bg-[linear-gradient(rgba(193,155,74,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(193,155,74,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
       <div className="w-full max-w-md relative z-10 py-8">
@@ -74,34 +74,46 @@ const OwnerRegister = () => {
 
         <div className="glass rounded-3xl p-8 border border-border/50 shadow-card">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-foreground mb-1">Register Your Property</h2>
-            <p className="text-sm text-muted-foreground">Enter the Property ID provided by Admin and your mobile number</p>
+            <h2 className="text-xl font-semibold text-foreground mb-1">
+              Register Your Property
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Enter the Property ID provided by Admin and your mobile number
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">Property ID</Label>
-              <Input 
-                required 
-                value={formData.propertyId} 
-                onChange={e => setFormData({...formData, propertyId: e.target.value})}
+              <Label className="text-sm font-medium text-foreground">
+                Property ID
+              </Label>
+              <Input
+                required
+                value={formData.propertyId}
+                onChange={(e) =>
+                  setFormData({ ...formData, propertyId: e.target.value })
+                }
                 className="h-12 bg-secondary/50 border-border/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                 placeholder="Enter Property ID provided by Admin"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">Owner Mobile Number</Label>
-              <Input 
-                required 
-                type="tel" 
-                value={formData.ownerNumber} 
-                onChange={e => setFormData({...formData, ownerNumber: e.target.value})}
+              <Label className="text-sm font-medium text-foreground">
+                Owner Mobile Number
+              </Label>
+              <Input
+                required
+                type="tel"
+                value={formData.ownerNumber}
+                onChange={(e) =>
+                  setFormData({ ...formData, ownerNumber: e.target.value })
+                }
                 className="h-12 bg-secondary/50 border-border/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                 placeholder="10-digit mobile number"
               />
             </div>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading}
               className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-gold-dark hover:from-gold-dark hover:to-primary transition-all duration-500 shadow-gold hover:shadow-gold-lg transform hover:-translate-y-0.5 mt-6"
             >
@@ -111,18 +123,18 @@ const OwnerRegister = () => {
                   Registering...
                 </>
               ) : (
-                'Register'
+                "Register"
               )}
             </Button>
 
             <div className="text-center pt-2">
               <Button
                 type="button"
-                variant="ghost"
-                onClick={() => navigate('/owner/login')}
+                variant="link"
+                onClick={() => navigate("/owner/login")}
                 className="text-sm text-muted-foreground hover:text-primary"
               >
-                Already registered? Login
+                Already registered? Login Here
               </Button>
             </div>
           </form>

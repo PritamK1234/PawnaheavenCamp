@@ -127,13 +127,12 @@ const Header = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-primary hover:bg-transparent gap-2"
+                className="text-sm font-medium text-foreground/70 hover:text-primary hover:bg-transparent gap-2 elegant-underline transition-colors duration-300"
               >
                 <Phone className="w-4 h-4" />
-                <span className="font-medium">+91 88060 92609</span>
+                <span>+91 88060 92609</span>
               </Button>
             </a>
-
             <Button
               onClick={() => scrollToSection("#properties")}
               className="bg-gradient-to-r from-primary to-gold-light text-primary-foreground hover:opacity-90 font-semibold px-6 shadow-gold"

@@ -10,15 +10,17 @@ import { PWAInstallButton } from "./PWAInstallButton";
 const Hero = () => {
   const navigate = useNavigate();
   const scrollToProperties = () => {
-    document.querySelector("#properties")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .querySelector("#properties")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const { data: properties } = useQuery({
-    queryKey: ['/api/properties/public-list'],
+    queryKey: ["/api/properties/public-list"],
     queryFn: async () => {
       const response = await propertyAPI.getPublicList();
       return response.data;
-    }
+    },
   });
 
   const propertyCount = properties?.length || 0;
@@ -46,7 +48,9 @@ const Hero = () => {
             <PWAInstallButton variant="hero" />
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm">
               <Star className="w-4 h-4 text-primary fill-primary" />
-              <span className="text-sm font-medium text-primary">Premium Luxury Stays</span>
+              <span className="text-sm font-medium text-primary">
+                Premium Luxury Stays
+              </span>
             </div>
           </div>
 
@@ -56,13 +60,14 @@ const Hero = () => {
             <br />
             <span className="text-gradient-gold italic">Extraordinary</span>
             <br />
-            <span className="text-foreground">Getaways</span>
+            <span className="text-foreground">Escapes</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 opacity-0 animate-fade-up delay-200 font-light leading-relaxed">
-            Discover handpicked luxury glamping domes, hillside villas, and lakeside cottages 
-            near Pawna Lake and Lonavala. Your perfect escape awaits.
+            Discover handpicked luxury glamping domes, hillside villas, and
+            lakeside cottages near Pawna Lake and Lonavala. Your perfect escape
+            awaits.
           </p>
 
           {/* CTA Buttons */}
@@ -79,7 +84,7 @@ const Hero = () => {
               variant="outline"
               size="lg"
               className="border-foreground/20 text-foreground hover:bg-foreground/5 font-medium px-8 h-14 text-lg gap-2"
-              onClick={() => navigate('/videos')}
+              onClick={() => navigate("/videos")}
             >
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                 <Play className="w-4 h-4 text-primary fill-primary" />
@@ -91,18 +96,30 @@ const Hero = () => {
           {/* Stats */}
           <div className="flex flex-wrap gap-8 md:gap-12 opacity-0 animate-fade-up delay-400">
             <div className="flex flex-col">
-              <span className="font-display text-4xl md:text-5xl font-bold text-gradient-gold">{propertyCount || '50'}+</span>
-              <span className="text-sm text-muted-foreground mt-1">Luxury Properties</span>
+              <span className="font-display text-4xl md:text-5xl font-bold text-gradient-gold">
+                {propertyCount || "50"}+
+              </span>
+              <span className="text-sm text-muted-foreground mt-1">
+                Luxury Properties
+              </span>
             </div>
             <div className="w-px bg-border/50 hidden md:block" />
             <div className="flex flex-col">
-              <span className="font-display text-4xl md:text-5xl font-bold text-gradient-gold">4.9</span>
-              <span className="text-sm text-muted-foreground mt-1">Guest Rating</span>
+              <span className="font-display text-4xl md:text-5xl font-bold text-gradient-gold">
+                4.9
+              </span>
+              <span className="text-sm text-muted-foreground mt-1">
+                Guest Rating
+              </span>
             </div>
             <div className="w-px bg-border/50 hidden md:block" />
             <div className="flex flex-col">
-              <span className="font-display text-4xl md:text-5xl font-bold text-gradient-gold">10K+</span>
-              <span className="text-sm text-muted-foreground mt-1">Happy Guests</span>
+              <span className="font-display text-4xl md:text-5xl font-bold text-gradient-gold">
+                10K+
+              </span>
+              <span className="text-sm text-muted-foreground mt-1">
+                Happy Guests
+              </span>
             </div>
           </div>
         </div>
@@ -112,14 +129,20 @@ const Hero = () => {
       <div className="absolute bottom-8 right-8 hidden lg:flex items-center gap-3 px-5 py-3 rounded-full glass border border-border/30">
         <MapPin className="w-5 h-5 text-primary" />
         <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">Featured Location</span>
-          <span className="text-sm font-medium text-foreground">Pawna Lake, Maharashtra</span>
+          <span className="text-xs text-muted-foreground">
+            Featured Location
+          </span>
+          <span className="text-sm font-medium text-foreground">
+            Pawna Lake, Maharashtra
+          </span>
         </div>
       </div>
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60">
-        <span className="text-xs uppercase tracking-widest text-muted-foreground">Scroll</span>
+        <span className="text-xs uppercase tracking-widest text-muted-foreground">
+          Scroll
+        </span>
         <div className="w-px h-12 bg-gradient-to-b from-primary to-transparent" />
       </div>
     </section>

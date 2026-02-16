@@ -192,8 +192,17 @@ export const CalendarSync = ({
             className="w-full p-0"
             selected={undefined}
             disabled={(date) => {
-              if (isPublic) return true;
               const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
+              if (isPublic) {
+                if (onDateSelect) {
+                  const data = getDayData(date);
+                  const isFullyBooked = isVilla 
+                    ? data?.is_booked 
+                    : (data?.available_quantity !== undefined && data.available_quantity <= 0);
+                  return isPast || !!isFullyBooked;
+                }
+                return true;
+              }
               if (isBookingForm) {
                 const data = getDayData(date);
                 const isFullyBooked = isVilla 
@@ -204,8 +213,8 @@ export const CalendarSync = ({
               return isPast;
             }}
             onSelect={(date) => {
-              if (isPublic) return;
-              if (date && isOwnerOrAdmin && !isBookingForm) {
+              if (isPublic && !onDateSelect) return;
+              if (date && isOwnerOrAdmin && !isBookingForm && !isPublic) {
                 setSelectedLedgerDate(date);
                 setIsLedgerOpen(true);
               }
@@ -226,7 +235,8 @@ export const CalendarSync = ({
                     "!bg-[#00FF00] !text-black",
                     isFullyBooked && "!bg-[#FF0000] !text-white",
                     isPast && "opacity-60 grayscale-[0.5]",
-                    isPublic && "cursor-default"
+                    isPublic && !onDateSelect && "cursor-default",
+                    isPublic && onDateSelect && "cursor-pointer"
                   )}>
                     <span className="text-[11px] sm:text-xs font-bold leading-none">{format(date, 'd')}</span>
                     {!isPast && (
@@ -269,15 +279,15 @@ export const CalendarSync = ({
               row: "flex w-full mt-1",
               cell: cn(
                 "flex-1 aspect-square h-auto relative p-0.5 text-center text-sm",
-                isPublic && "pointer-events-none"
+                isPublic && !onDateSelect && "pointer-events-none"
               ),
               day: cn(
                 "h-full w-full p-0 font-normal aria-selected:opacity-100 transition-transform",
-                isPublic && "!cursor-default hover:!bg-transparent"
+                isPublic && !onDateSelect && "!cursor-default hover:!bg-transparent"
               ),
               day_today: "ring-1 sm:ring-2 ring-yellow-400 ring-offset-1 sm:ring-offset-2 ring-offset-black rounded-md",
               day_selected: "bg-transparent text-inherit hover:bg-transparent hover:text-inherit focus:bg-transparent focus:text-inherit",
-              day_disabled: isPublic ? "opacity-100 cursor-default" : (isBookingForm ? "opacity-100 cursor-not-allowed" : "opacity-50 cursor-not-allowed"),
+              day_disabled: (isPublic && !onDateSelect) ? "opacity-100 cursor-default" : (isPublic && onDateSelect) ? "opacity-50 cursor-not-allowed" : (isBookingForm ? "opacity-100 cursor-not-allowed" : "opacity-50 cursor-not-allowed"),
               day_outside: "hidden",
             }}
           />

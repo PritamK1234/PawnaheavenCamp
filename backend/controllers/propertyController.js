@@ -1,10 +1,10 @@
-const { query, getClient } = require('../db');
+const { query, getClient } = require("../db");
 
 /**
  * SHARED/ADMIN CONTROLLER - DO NOT DELETE
- * 
+ *
  * STATUS (Feb 2026): This controller contains essential shared/admin functions.
- * 
+ *
  * FUNCTIONS TO KEEP HERE (not type-specific):
  * - getAllProperties - Admin listing (all property types)
  * - getPublicProperties - Public listing with category settings
@@ -13,13 +13,13 @@ const { query, getClient } = require('../db');
  * - deleteProperty - Deletes any property
  * - togglePropertyStatus - Toggle active/top-selling status
  * - getCalendarData/updateCalendarData - General calendar fallback
- * 
+ *
  * MIGRATED TO TYPE-SPECIFIC CONTROLLERS:
  * - getPropertyById → villa/camping controllers
- * - updateProperty → villa/camping controllers  
+ * - updateProperty → villa/camping controllers
  * - getPublicPropertyBySlug → villa/camping controllers
  * - Unit management → camping controller
- * 
+ *
  * For type-specific operations use:
  * - /api/villa/* endpoints (villaController.js)
  * - /api/camping_Cottages/* endpoints (camping_CottagesController.js)
@@ -29,31 +29,37 @@ const { query, getClient } = require('../db');
 const generateSlug = (title) => {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 };
 
 const parsePostgresArray = (field) => {
   if (!field) return [];
   if (Array.isArray(field)) return field;
-  if (typeof field === 'string') {
+  if (typeof field === "string") {
     let trimmed = field.trim();
-    
+
     // Handle double-quoted JSON strings from Postgres
     if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-      trimmed = trimmed.substring(1, trimmed.length - 1).replace(/""/g, '"').replace(/\\"/g, '"');
+      trimmed = trimmed
+        .substring(1, trimmed.length - 1)
+        .replace(/""/g, '"')
+        .replace(/\\"/g, '"');
     }
 
-    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-      return trimmed.substring(1, trimmed.length - 1).split(',').map(item => item.trim().replace(/^"(.*)"$/, '$1'));
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      return trimmed
+        .substring(1, trimmed.length - 1)
+        .split(",")
+        .map((item) => item.trim().replace(/^"(.*)"$/, "$1"));
     }
-    
+
     try {
       const parsed = JSON.parse(trimmed);
       return Array.isArray(parsed) ? parsed : [parsed];
     } catch (e) {
-      if (trimmed.includes(',')) {
-        return trimmed.split(',').map(s => s.trim());
+      if (trimmed.includes(",")) {
+        return trimmed.split(",").map((s) => s.trim());
       }
       return [trimmed];
     }
@@ -83,13 +89,16 @@ const getAllProperties = async (req, res) => {
       ORDER BY p.created_at DESC
     `);
 
-    const properties = result.rows.map(prop => {
+    const properties = result.rows.map((prop) => {
       const parseField = (field) => {
         if (!field) return [];
         if (Array.isArray(field)) return field;
-        if (typeof field === 'string' && field.startsWith('{')) {
+        if (typeof field === "string" && field.startsWith("{")) {
           // Handle PostgreSQL array format like "{item1,item2}"
-          return field.substring(1, field.length - 1).split(',').map(item => item.trim().replace(/^"(.*)"$/, '$1'));
+          return field
+            .substring(1, field.length - 1)
+            .split(",")
+            .map((item) => item.trim().replace(/^"(.*)"$/, "$1"));
         }
         try {
           return JSON.parse(field);
@@ -116,10 +125,10 @@ const getAllProperties = async (req, res) => {
       data: properties,
     });
   } catch (error) {
-    console.error('Get all properties error:', error);
+    console.error("Get all properties error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch properties.',
+      message: "Failed to fetch properties.",
     });
   }
 };
@@ -128,14 +137,14 @@ const getAllProperties = async (req, res) => {
 const getPublicProperties = async (req, res) => {
   try {
     // Fetch category settings
-    const settingsResult = await query('SELECT * FROM category_settings');
+    const settingsResult = await query("SELECT * FROM category_settings");
     const categorySettings = {};
-    settingsResult.rows.forEach(s => {
+    settingsResult.rows.forEach((s) => {
       categorySettings[s.category] = {
         is_closed: s.is_closed,
         reason: s.closed_reason,
         from: s.closed_from,
-        to: s.closed_to
+        to: s.closed_to,
       };
     });
 
@@ -173,13 +182,16 @@ const getPublicProperties = async (req, res) => {
       ORDER BY p.is_available DESC, p.is_top_selling DESC, p.created_at DESC
     `);
 
-    const properties = result.rows.map(prop => {
+    const properties = result.rows.map((prop) => {
       const parseField = (field) => {
         if (!field) return [];
         if (Array.isArray(field)) return field;
-        if (typeof field === 'string' && field.startsWith('{')) {
+        if (typeof field === "string" && field.startsWith("{")) {
           // Handle PostgreSQL array format like "{item1,item2}"
-          return field.substring(1, field.length - 1).split(',').map(item => item.trim().replace(/^"(.*)"$/, '$1'));
+          return field
+            .substring(1, field.length - 1)
+            .split(",")
+            .map((item) => item.trim().replace(/^"(.*)"$/, "$1"));
         }
         try {
           return JSON.parse(field);
@@ -189,7 +201,11 @@ const getPublicProperties = async (req, res) => {
       };
 
       // Ensure starting price is used if available from units (either calendar or base unit price)
-      const displayPrice = prop.unit_starting_price || prop.unit_base_starting_price || prop.price || 'Price on Selection';
+      const displayPrice =
+        prop.unit_starting_price ||
+        prop.unit_base_starting_price ||
+        prop.price ||
+        "Price on Selection";
 
       return {
         ...prop,
@@ -207,13 +223,13 @@ const getPublicProperties = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: properties,
-      categorySettings
+      categorySettings,
     });
   } catch (error) {
-    console.error('Get public properties error:', error);
+    console.error("Get public properties error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch properties.',
+      message: "Failed to fetch properties.",
     });
   }
 };
@@ -221,16 +237,18 @@ const getPublicProperties = async (req, res) => {
 // Category Settings (Admin)
 const getCategorySettings = async (req, res) => {
   try {
-    const result = await query('SELECT * FROM category_settings ORDER BY category');
+    const result = await query(
+      "SELECT * FROM category_settings ORDER BY category",
+    );
     return res.status(200).json({
       success: true,
-      data: result.rows
+      data: result.rows,
     });
   } catch (error) {
-    console.error('Get category settings error:', error);
+    console.error("Get category settings error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch settings.'
+      message: "Failed to fetch settings.",
     });
   }
 };
@@ -244,18 +262,18 @@ const updateCategorySettings = async (req, res) => {
       `UPDATE category_settings 
        SET is_closed = $1, closed_reason = $2, closed_from = $3, closed_to = $4, updated_at = CURRENT_TIMESTAMP
        WHERE category = $5`,
-      [is_closed, closed_reason, closed_from, closed_to, category]
+      [is_closed, closed_reason, closed_from, closed_to, category],
     );
 
     return res.status(200).json({
       success: true,
-      message: 'Settings updated successfully.'
+      message: "Settings updated successfully.",
     });
   } catch (error) {
-    console.error('Update category settings error:', error);
+    console.error("Update category settings error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to update settings.'
+      message: "Failed to update settings.",
     });
   }
 };
@@ -266,29 +284,35 @@ const getPropertyById = async (req, res) => {
     const { id } = req.params;
 
     // First try by alphanumeric property_id
-    let result = await query(`
+    let result = await query(
+      `
       SELECT p.*,
         (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
          FROM property_images pi WHERE pi.property_id = p.id) as images
       FROM properties p
       WHERE p.property_id = $1
-    `, [id]);
+    `,
+      [id],
+    );
 
     // If not found, try by numeric auto-increment id
     if (result.rows.length === 0) {
-      result = await query(`
+      result = await query(
+        `
         SELECT p.*,
           (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
            FROM property_images pi WHERE pi.property_id = p.id) as images
         FROM properties p
         WHERE p.id::text = $1
-      `, [id]);
+      `,
+        [id],
+      );
     }
 
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Property not found.',
+        message: "Property not found.",
       });
     }
 
@@ -296,8 +320,9 @@ const getPropertyById = async (req, res) => {
     let units = [];
 
     // If category is campings_cottages, fetch units and their calendar
-    if (propData.category === 'campings_cottages') {
-      const unitsResult = await query(`
+    if (propData.category === "campings_cottages") {
+      const unitsResult = await query(
+        `
         SELECT pu.*,
           (
             SELECT json_agg(json_build_object(
@@ -330,11 +355,14 @@ const getPropertyById = async (req, res) => {
           ) as calendar
         FROM property_units pu
         WHERE pu.property_id = $1
-      `, [propData.id]);
+      `,
+        [propData.id],
+      );
       units = unitsResult.rows;
-    } else if (propData.category === 'villa') {
-       // Add villa-specific calendar logic
-       const villaCalendarResult = await query(`
+    } else if (propData.category === "villa") {
+      // Add villa-specific calendar logic
+      const villaCalendarResult = await query(
+        `
             SELECT json_agg(json_build_object(
               'date', d.date,
               'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
@@ -365,8 +393,10 @@ const getPropertyById = async (req, res) => {
             ) d
             LEFT JOIN availability_calendar ac ON ac.property_id = p.id AND ac.date = d.date
             WHERE p.id = $1
-       `, [propData.id]);
-       propData.calendar = villaCalendarResult.rows[0]?.calendar || [];
+       `,
+        [propData.id],
+      );
+      propData.calendar = villaCalendarResult.rows[0]?.calendar || [];
     }
 
     const property = {
@@ -377,9 +407,13 @@ const getPropertyById = async (req, res) => {
       policies: parsePostgresArray(propData.policies),
       schedule: parsePostgresArray(propData.schedule),
       availability: parsePostgresArray(propData.availability),
-      special_dates: propData.special_dates ? (typeof propData.special_dates === 'string' ? JSON.parse(propData.special_dates) : propData.special_dates) : [],
+      special_dates: propData.special_dates
+        ? typeof propData.special_dates === "string"
+          ? JSON.parse(propData.special_dates)
+          : propData.special_dates
+        : [],
       images: propData.images || [],
-      units: units
+      units: units,
     };
 
     return res.status(200).json({
@@ -387,10 +421,10 @@ const getPropertyById = async (req, res) => {
       data: property,
     });
   } catch (error) {
-    console.error('Get property by ID error:', error);
+    console.error("Get property by ID error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch property.',
+      message: "Failed to fetch property.",
     });
   }
 };
@@ -399,18 +433,38 @@ const getPropertyById = async (req, res) => {
 const updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      amenities, activities, highlights, policies, schedule, 
-      description, availability, weekday_price, weekend_price, 
-      price_note, price, special_dates, special_prices, images,
-      title, location, map_link, max_capacity, capacity, rating,
-      check_in_time, check_out_time, owner_name, owner_mobile
+    const {
+      amenities,
+      activities,
+      highlights,
+      policies,
+      schedule,
+      description,
+      availability,
+      weekday_price,
+      weekend_price,
+      price_note,
+      price,
+      special_dates,
+      special_prices,
+      images,
+      title,
+      location,
+      map_link,
+      max_capacity,
+      capacity,
+      rating,
+      check_in_time,
+      check_out_time,
+      owner_name,
+      owner_mobile,
     } = req.body;
 
-    console.log('Update property request received for ID:', id);
-    console.log('Update payload:', JSON.stringify(req.body, null, 2));
+    console.log("Update property request received for ID:", id);
+    console.log("Update payload:", JSON.stringify(req.body, null, 2));
 
-    const result = await query(`
+    const result = await query(
+      `
       UPDATE properties 
       SET 
         amenities = COALESCE($1, amenities), 
@@ -438,70 +492,93 @@ const updateProperty = async (req, res) => {
         updated_at = CURRENT_TIMESTAMP
       WHERE property_id = $13 OR id::text = $13
       RETURNING *
-    `, [
-      Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null), 
-      Array.isArray(activities) ? JSON.stringify(activities) : (activities || null), 
-      Array.isArray(highlights) ? JSON.stringify(highlights) : (highlights || null), 
-      Array.isArray(policies) ? JSON.stringify(policies) : (policies || null), 
-      Array.isArray(schedule) ? JSON.stringify(schedule) : (schedule || null), 
-      description || null,
-      Array.isArray(availability) ? JSON.stringify(availability) : (availability || null),
-      weekday_price !== undefined ? String(weekday_price) : null,
-      weekend_price !== undefined ? String(weekend_price) : null,
-      price_note || null,
-      price !== undefined ? String(price) : null,
-      (Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || (Array.isArray(special_prices) ? JSON.stringify(special_prices) : null))),
-      id,
-      title || null,
-      location || null,
-      map_link !== undefined ? map_link : null,
-      max_capacity !== undefined ? parseInt(max_capacity) || null : null,
-      capacity !== undefined ? parseInt(capacity) || null : null,
-      rating !== undefined ? parseFloat(rating) || null : null,
-      check_in_time || null,
-      check_out_time || null,
-      owner_name || null,
-      owner_mobile || null
-    ]);
+    `,
+      [
+        Array.isArray(amenities)
+          ? JSON.stringify(amenities)
+          : amenities || null,
+        Array.isArray(activities)
+          ? JSON.stringify(activities)
+          : activities || null,
+        Array.isArray(highlights)
+          ? JSON.stringify(highlights)
+          : highlights || null,
+        Array.isArray(policies) ? JSON.stringify(policies) : policies || null,
+        Array.isArray(schedule) ? JSON.stringify(schedule) : schedule || null,
+        description || null,
+        Array.isArray(availability)
+          ? JSON.stringify(availability)
+          : availability || null,
+        weekday_price !== undefined ? String(weekday_price) : null,
+        weekend_price !== undefined ? String(weekend_price) : null,
+        price_note || null,
+        price !== undefined ? String(price) : null,
+        Array.isArray(special_dates)
+          ? JSON.stringify(special_dates)
+          : special_dates ||
+            (Array.isArray(special_prices)
+              ? JSON.stringify(special_prices)
+              : null),
+        id,
+        title || null,
+        location || null,
+        map_link !== undefined ? map_link : null,
+        max_capacity !== undefined ? parseInt(max_capacity) || null : null,
+        capacity !== undefined ? parseInt(capacity) || null : null,
+        rating !== undefined ? parseFloat(rating) || null : null,
+        check_in_time || null,
+        check_out_time || null,
+        owner_name || null,
+        owner_mobile || null,
+      ],
+    );
 
-    console.log('Rows updated:', result.rowCount);
+    console.log("Rows updated:", result.rowCount);
     if (result.rows.length > 0) {
-      console.log('New column values - Weekday:', result.rows[0].weekday_price, 'Weekend:', result.rows[0].weekend_price);
+      console.log(
+        "New column values - Weekday:",
+        result.rows[0].weekday_price,
+        "Weekend:",
+        result.rows[0].weekend_price,
+      );
     }
 
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Property not found.',
+        message: "Property not found.",
       });
     }
 
     const propertyId = result.rows[0].id;
 
     if (images && Array.isArray(images)) {
-      await query('DELETE FROM property_images WHERE property_id = $1', [propertyId]);
+      await query("DELETE FROM property_images WHERE property_id = $1", [
+        propertyId,
+      ]);
       for (let i = 0; i < images.length; i++) {
-        const imgUrl = typeof images[i] === 'string' ? images[i] : images[i].image_url;
+        const imgUrl =
+          typeof images[i] === "string" ? images[i] : images[i].image_url;
         if (imgUrl) {
           await query(
-            'INSERT INTO property_images (property_id, image_url, display_order) VALUES ($1, $2, $3)',
-            [propertyId, imgUrl, i]
+            "INSERT INTO property_images (property_id, image_url, display_order) VALUES ($1, $2, $3)",
+            [propertyId, imgUrl, i],
           );
         }
       }
-      console.log('Updated property images:', images.length);
+      console.log("Updated property images:", images.length);
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Property updated successfully.',
-      data: result.rows[0]
+      message: "Property updated successfully.",
+      data: result.rows[0],
     });
   } catch (error) {
-    console.error('Update property error:', error);
+    console.error("Update property error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to update property.',
+      message: "Failed to update property.",
     });
   }
 };
@@ -511,18 +588,21 @@ const getPublicPropertyBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const result = await query(`
+    const result = await query(
+      `
       SELECT p.*,
         (SELECT json_agg(json_build_object('id', pi.id, 'image_url', pi.image_url, 'display_order', pi.display_order) ORDER BY pi.display_order)
          FROM property_images pi WHERE pi.property_id = p.id) as images
       FROM properties p
       WHERE p.slug = $1 AND p.is_active = true
-    `, [slug]);
+    `,
+      [slug],
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Property not found.',
+        message: "Property not found.",
       });
     }
 
@@ -530,8 +610,9 @@ const getPublicPropertyBySlug = async (req, res) => {
     let units = [];
 
     // If category is campings_cottages, fetch units and their calendar
-    if (propData.category === 'campings_cottages') {
-      const unitsResult = await query(`
+    if (propData.category === "campings_cottages") {
+      const unitsResult = await query(
+        `
         SELECT pu.*,
           (
             SELECT json_agg(json_build_object(
@@ -564,11 +645,14 @@ const getPublicPropertyBySlug = async (req, res) => {
           ) as calendar
         FROM property_units pu
         WHERE pu.property_id = $1
-      `, [propData.id]);
+      `,
+        [propData.id],
+      );
       units = unitsResult.rows;
-    } else if (propData.category === 'villa') {
-       // Add villa-specific calendar logic
-       const villaCalendarResult = await query(`
+    } else if (propData.category === "villa") {
+      // Add villa-specific calendar logic
+      const villaCalendarResult = await query(
+        `
             SELECT json_agg(json_build_object(
               'date', d.date,
               'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
@@ -599,8 +683,10 @@ const getPublicPropertyBySlug = async (req, res) => {
             ) d
             LEFT JOIN availability_calendar ac ON ac.property_id = p.id AND ac.date = d.date
             WHERE p.id = $1
-       `, [propData.id]);
-       propData.calendar = villaCalendarResult.rows[0]?.calendar || [];
+       `,
+        [propData.id],
+      );
+      propData.calendar = villaCalendarResult.rows[0]?.calendar || [];
     }
 
     const property = {
@@ -611,9 +697,13 @@ const getPublicPropertyBySlug = async (req, res) => {
       policies: parsePostgresArray(propData.policies),
       schedule: parsePostgresArray(propData.schedule),
       availability: parsePostgresArray(propData.availability),
-      special_dates: propData.special_dates ? (typeof propData.special_dates === 'string' ? JSON.parse(propData.special_dates) : propData.special_dates) : [],
+      special_dates: propData.special_dates
+        ? typeof propData.special_dates === "string"
+          ? JSON.parse(propData.special_dates)
+          : propData.special_dates
+        : [],
       images: propData.images || [],
-      units: units
+      units: units,
     };
 
     return res.status(200).json({
@@ -621,10 +711,10 @@ const getPublicPropertyBySlug = async (req, res) => {
       data: property,
     });
   } catch (error) {
-    console.error('Get public property by slug error:', error);
+    console.error("Get public property by slug error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch property.',
+      message: "Failed to fetch property.",
     });
   }
 };
@@ -665,24 +755,36 @@ const createProperty = async (req, res) => {
       images,
     } = req.body;
 
-    console.log('Creating property with data:', { title, category, imageCount: images?.length });
+    console.log("Creating property with data:", {
+      title,
+      category,
+      imageCount: images?.length,
+    });
 
     // Validate required fields
-    if (!title || !description || !category || !location || !price_note || !capacity) {
+    if (
+      !title ||
+      !description ||
+      !category ||
+      !location ||
+      !price_note ||
+      !capacity
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields.',
+        message: "Missing required fields.",
       });
     }
 
     // Ensure price is present for villa, or use a placeholder for campings_cottages if backend requires it
-    const finalPrice = price || (category === 'campings_cottages' ? 'Price on Selection' : null);
-    
-    if (!finalPrice && category === 'villa') {
-        return res.status(400).json({
-          success: false,
-          message: 'Price is required for villas.',
-        });
+    const finalPrice =
+      price || (category === "campings_cottages" ? "Price on Selection" : null);
+
+    if (!finalPrice && category === "villa") {
+      return res.status(400).json({
+        success: false,
+        message: "Price is required for villas.",
+      });
     }
 
     // Generate slug
@@ -690,8 +792,8 @@ const createProperty = async (req, res) => {
 
     // Generate unique 5-digit property ID (e.g., AD75C) only if not provided by frontend
     const generatePropertyId = () => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = '';
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let result = "";
       for (let i = 0; i < 5; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
       }
@@ -700,7 +802,7 @@ const createProperty = async (req, res) => {
     const property_id = req.body.property_id || generatePropertyId();
 
     // Start transaction
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // Insert property
     const propertyResult = await client.query(
@@ -724,23 +826,35 @@ const createProperty = async (req, res) => {
         price_note,
         capacity,
         max_capacity || capacity,
-        check_in_time || '2:00 PM',
-        check_out_time || '11:00 AM',
-        status || 'Verified',
+        check_in_time || "2:00 PM",
+        check_out_time || "11:00 AM",
+        status || "Verified",
         is_top_selling || false,
         is_active !== undefined ? is_active : true,
         is_available !== undefined ? is_available : true,
-        contact || '+91 8669505727',
+        contact || "+91 8669505727",
         owner_name,
         owner_mobile,
         map_link,
-        typeof amenities === 'string' ? amenities : JSON.stringify(amenities || []),
-        typeof activities === 'string' ? activities : JSON.stringify(activities || []),
-        typeof highlights === 'string' ? highlights : JSON.stringify(highlights || []),
-        typeof policies === 'string' ? policies : JSON.stringify(policies || []),
-        typeof schedule === 'string' ? schedule : JSON.stringify(schedule || []),
-        typeof availability === 'string' ? availability : JSON.stringify(availability || []),
-      ]
+        typeof amenities === "string"
+          ? amenities
+          : JSON.stringify(amenities || []),
+        typeof activities === "string"
+          ? activities
+          : JSON.stringify(activities || []),
+        typeof highlights === "string"
+          ? highlights
+          : JSON.stringify(highlights || []),
+        typeof policies === "string"
+          ? policies
+          : JSON.stringify(policies || []),
+        typeof schedule === "string"
+          ? schedule
+          : JSON.stringify(schedule || []),
+        typeof availability === "string"
+          ? availability
+          : JSON.stringify(availability || []),
+      ],
     );
 
     const newProperty = propertyResult.rows[0];
@@ -749,38 +863,38 @@ const createProperty = async (req, res) => {
     if (images && images.length > 0) {
       for (let i = 0; i < images.length; i++) {
         await client.query(
-          'INSERT INTO property_images (property_id, image_url, display_order) VALUES ($1, $2, $3)',
-          [newProperty.id, images[i], i]
+          "INSERT INTO property_images (property_id, image_url, display_order) VALUES ($1, $2, $3)",
+          [newProperty.id, images[i], i],
         );
       }
     }
 
     // Commit transaction
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     return res.status(201).json({
       success: true,
-      message: 'Property created successfully.',
+      message: "Property created successfully.",
       data: {
         id: newProperty.id,
         slug: newProperty.slug,
       },
     });
   } catch (error) {
-    if (client) await client.query('ROLLBACK');
-    console.error('Detailed Create property error:', error);
+    if (client) await client.query("ROLLBACK");
+    console.error("Detailed Create property error:", error);
 
-    if (error.code === '23505') {
+    if (error.code === "23505") {
       return res.status(400).json({
         success: false,
-        message: 'Property with this title already exists.',
+        message: "Property with this title already exists.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to update property.',
-      error: error.message
+      message: "Failed to update property.",
+      error: error.message,
     });
   } finally {
     if (client) client.release();
@@ -794,24 +908,24 @@ const deleteProperty = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await query('DELETE FROM properties WHERE id = $1', [id]);
+    const result = await query("DELETE FROM properties WHERE id = $1", [id]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Property not found.',
+        message: "Property not found.",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Property deleted successfully.',
+      message: "Property deleted successfully.",
     });
   } catch (error) {
-    console.error('Delete property error:', error);
+    console.error("Delete property error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to delete property.',
+      message: "Failed to delete property.",
     });
   }
 };
@@ -825,14 +939,15 @@ const togglePropertyStatus = async (req, res) => {
     if (!field || value === undefined) {
       return res.status(400).json({
         success: false,
-        message: 'Field and value are required.',
+        message: "Field and value are required.",
       });
     }
 
-    if (!['is_active', 'is_top_selling', 'is_available'].includes(field)) {
+    if (!["is_active", "is_top_selling", "is_available"].includes(field)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid field. Only is_active, is_top_selling and is_available can be toggled.',
+        message:
+          "Invalid field. Only is_active, is_top_selling and is_available can be toggled.",
       });
     }
 
@@ -842,19 +957,19 @@ const togglePropertyStatus = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Property not found.',
+        message: "Property not found.",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Property status updated successfully.',
+      message: "Property status updated successfully.",
     });
   } catch (error) {
-    console.error('Toggle property status error:', error);
+    console.error("Toggle property status error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to update property status.',
+      message: "Failed to update property status.",
     });
   }
 };
@@ -864,72 +979,114 @@ const togglePropertyStatus = async (req, res) => {
 const getPropertyUnits = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    
+
     // First find the property internal numeric ID
-    const propResult = await query(`
+    const propResult = await query(
+      `
       SELECT id FROM properties WHERE property_id = $1 OR id::text = $1
-    `, [propertyId]);
+    `,
+      [propertyId],
+    );
 
     if (propResult.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Property not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Property not found" });
     }
 
     const internalId = propResult.rows[0].id;
 
     const result = await query(
-      'SELECT * FROM property_units WHERE property_id = $1 ORDER BY id ASC',
-      [internalId]
+      "SELECT * FROM property_units WHERE property_id = $1 ORDER BY id ASC",
+      [internalId],
     );
     return res.status(200).json({
       success: true,
-      data: result.rows
+      data: result.rows,
     });
   } catch (error) {
-    console.error('Get property units error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to fetch units.' });
+    console.error("Get property units error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch units." });
   }
 };
 
 const createPropertyUnit = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const { 
-      name, amenities, images,
-      price_per_person, available_persons, total_persons,
-      weekday_price, weekend_price, special_price, special_dates
+    const {
+      name,
+      available_persons,
+      total_persons,
+      amenities,
+      images,
+      price_per_person,
+      weekday_price,
+      weekend_price,
+      special_price,
+      special_dates,
     } = req.body;
 
     const result = await query(
       `INSERT INTO property_units (
-        property_id, name, available_persons, total_persons, 
-        amenities, images, price_per_person
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        property_id,
+        name,
+        available_persons,
+        total_persons,
+        amenities,
+        images,
+        price_per_person,
+        weekday_price,
+        weekend_price,
+        special_price,
+        special_dates
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING *`,
       [
-        propertyId, name, available_persons || 0, total_persons || 0,
-        JSON.stringify(amenities || []), JSON.stringify(images || []),
-        price_per_person || 0
-      ]
+        propertyId,
+        name,
+        available_persons ?? 0,
+        total_persons ?? 0,
+        JSON.stringify(amenities || []),
+        JSON.stringify(images || []),
+        price_per_person ?? "0",
+        weekday_price ?? "0",
+        weekend_price ?? "0",
+        special_price ?? "0",
+        JSON.stringify(special_dates || []),
+      ],
     );
 
     return res.status(201).json({
       success: true,
-      message: 'Unit created successfully.',
-      data: result.rows[0]
+      message: "Unit created successfully.",
+      data: result.rows[0],
     });
   } catch (error) {
-    console.error('Create property unit error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to create unit.' });
+    console.error("Create property unit error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create unit.",
+    });
   }
 };
 
 const updatePropertyUnit = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const { 
-      name, available_persons, total_persons, 
-      amenities, images, price_per_person,
-      weekday_price, weekend_price, special_price, special_dates
+    const {
+      name,
+      available_persons,
+      total_persons,
+      amenities,
+      images,
+      price_per_person,
+      weekday_price,
+      weekend_price,
+      special_price,
+      special_dates,
     } = req.body;
 
     const result = await query(
@@ -943,77 +1100,94 @@ const updatePropertyUnit = async (req, res) => {
          price_per_person = COALESCE($6, price_per_person),
          weekday_price = COALESCE(NULLIF($7, ''), weekday_price),
          weekend_price = COALESCE(NULLIF($8, ''), weekend_price),
-         special_dates = COALESCE($9, special_dates),
+         special_price = COALESCE(NULLIF($9, ''), special_price),
+         special_dates = COALESCE($10, special_dates),
          updated_at = CURRENT_TIMESTAMP
-       WHERE id = $10 RETURNING *`,
+       WHERE id = $11
+       RETURNING *`,
       [
-        name, 
-        available_persons !== undefined ? parseInt(available_persons) : null, 
+        name,
+        available_persons !== undefined ? parseInt(available_persons) : null,
         total_persons !== undefined ? parseInt(total_persons) : null,
-        Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null),
-        Array.isArray(images) ? JSON.stringify(images) : (images || null),
+        Array.isArray(amenities)
+          ? JSON.stringify(amenities)
+          : amenities || null,
+        Array.isArray(images) ? JSON.stringify(images) : images || null,
         price_per_person !== undefined ? String(price_per_person) : null,
         weekday_price !== undefined ? String(weekday_price) : null,
         weekend_price !== undefined ? String(weekend_price) : null,
-        (Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null)),
-        unitId
-      ]
+        special_price !== undefined ? String(special_price) : null,
+        Array.isArray(special_dates)
+          ? JSON.stringify(special_dates)
+          : special_dates || null,
+        unitId,
+      ],
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: 'Unit not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Unit not found." });
     }
 
-    // Since pricing is managed at property level, update the parent property's rates
-    if (weekday_price !== undefined || weekend_price !== undefined || special_dates !== undefined) {
-      const propertyId = result.rows[0].property_id;
-      // Also fetch property's internal ID if result.rows[0].property_id is alphanumeric
-      const propLookup = await query('SELECT id FROM properties WHERE property_id = $1 OR id::text = $1', [propertyId]);
-      const internalPropId = propLookup.rows[0]?.id || propertyId;
+    // // Since pricing is managed at property level, update the parent property's rates
+    // if (weekday_price !== undefined || weekend_price !== undefined || special_dates !== undefined) {
+    //   const propertyId = result.rows[0].property_id;
+    //   // Also fetch property's internal ID if result.rows[0].property_id is alphanumeric
+    //   const propLookup = await query('SELECT id FROM properties WHERE property_id = $1 OR id::text = $1', [propertyId]);
+    //   const internalPropId = propLookup.rows[0]?.id || propertyId;
 
-      await query(`
-        UPDATE properties
-        SET
-          weekday_price = COALESCE(NULLIF($1, ''), weekday_price),
-          weekend_price = COALESCE(NULLIF($2, ''), weekend_price),
-          special_dates = COALESCE($3, special_dates),
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = $4
-      `, [
-        weekday_price !== undefined ? String(weekday_price) : null,
-        weekend_price !== undefined ? String(weekend_price) : null,
-        (Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null)),
-        internalPropId
-      ]);
-    }
+    //   await query(`
+    //     UPDATE properties
+    //     SET
+    //       weekday_price = COALESCE(NULLIF($1, ''), weekday_price),
+    //       weekend_price = COALESCE(NULLIF($2, ''), weekend_price),
+    //       special_dates = COALESCE($3, special_dates),
+    //       updated_at = CURRENT_TIMESTAMP
+    //     WHERE id = $4
+    //   `, [
+    //     weekday_price !== undefined ? String(weekday_price) : null,
+    //     weekend_price !== undefined ? String(weekend_price) : null,
+    //     (Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null)),
+    //     internalPropId
+    //   ]);
+    // }
 
     return res.status(200).json({
       success: true,
-      message: 'Unit updated successfully.',
-      data: result.rows[0]
+      message: "Unit updated successfully.",
+      data: result.rows[0],
     });
   } catch (error) {
-    console.error('Update property unit error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to update unit.' });
+    console.error("Update property unit error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to update unit." });
   }
 };
 
 const deletePropertyUnit = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const result = await query('DELETE FROM property_units WHERE id = $1', [unitId]);
+    const result = await query("DELETE FROM property_units WHERE id = $1", [
+      unitId,
+    ]);
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: 'Unit not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Unit not found." });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Unit deleted successfully.'
+      message: "Unit deleted successfully.",
     });
   } catch (error) {
-    console.error('Delete property unit error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to delete unit.' });
+    console.error("Delete property unit error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to delete unit." });
   }
 };
 
@@ -1021,16 +1195,21 @@ const getUnitCalendarData = async (req, res) => {
   try {
     const { unitId } = req.params;
 
-    const unitResult = await query('SELECT id, total_persons, property_id FROM property_units WHERE id = $1', [unitId]);
+    const unitResult = await query(
+      "SELECT id, total_persons, property_id FROM property_units WHERE id = $1",
+      [unitId],
+    );
     if (unitResult.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Unit not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Unit not found" });
     }
     const unit = unitResult.rows[0];
     const totalCapacity = unit.total_persons || 0;
 
     const calResult = await query(
-      'SELECT date, price, available_quantity, is_weekend, is_special FROM unit_calendar WHERE unit_id = $1',
-      [unitId]
+      "SELECT date, price, available_quantity, is_weekend, is_special FROM unit_calendar WHERE unit_id = $1",
+      [unitId],
     );
 
     const today = new Date();
@@ -1040,29 +1219,43 @@ const getUnitCalendarData = async (req, res) => {
     const ledgerResult = await query(
       `SELECT check_in, check_out, persons FROM ledger_entries
        WHERE unit_id = $1 AND check_out >= $2 AND check_in <= $3`,
-      [unitId, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]
+      [
+        unitId,
+        startDate.toISOString().split("T")[0],
+        endDate.toISOString().split("T")[0],
+      ],
     );
 
     const bookingResult = await query(
       `SELECT checkin_datetime, checkout_datetime, persons FROM bookings
        WHERE unit_id = $1 AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'TICKET_GENERATED')
        AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
-      [unitId, startDate.toISOString(), endDate.toISOString()]
+      [unitId, startDate.toISOString(), endDate.toISOString()],
     );
 
     const calendarMap = {};
     for (const row of calResult.rows) {
-      const dateStr = new Date(row.date).toISOString().split('T')[0];
-      calendarMap[dateStr] = { 
-        date: dateStr, price: row.price, is_booked: false,
-        available_quantity: totalCapacity, total_capacity: totalCapacity,
-        is_weekend: row.is_weekend, is_special: row.is_special
+      const dateStr = new Date(row.date).toISOString().split("T")[0];
+      calendarMap[dateStr] = {
+        date: dateStr,
+        price: row.price,
+        is_booked: false,
+        available_quantity: totalCapacity,
+        total_capacity: totalCapacity,
+        is_weekend: row.is_weekend,
+        is_special: row.is_special,
       };
     }
 
     const ensureDate = (dateStr) => {
       if (!calendarMap[dateStr]) {
-        calendarMap[dateStr] = { date: dateStr, price: null, is_booked: false, available_quantity: totalCapacity, total_capacity: totalCapacity };
+        calendarMap[dateStr] = {
+          date: dateStr,
+          price: null,
+          is_booked: false,
+          available_quantity: totalCapacity,
+          total_capacity: totalCapacity,
+        };
       }
     };
 
@@ -1070,10 +1263,14 @@ const getUnitCalendarData = async (req, res) => {
       let d = new Date(entry.check_in);
       const end = new Date(entry.check_out);
       while (d < end) {
-        const ds = d.toISOString().split('T')[0];
+        const ds = d.toISOString().split("T")[0];
         ensureDate(ds);
-        calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (entry.persons || 0));
-        if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+        calendarMap[ds].available_quantity = Math.max(
+          0,
+          calendarMap[ds].available_quantity - (entry.persons || 0),
+        );
+        if (calendarMap[ds].available_quantity <= 0)
+          calendarMap[ds].is_booked = true;
         d.setDate(d.getDate() + 1);
       }
     }
@@ -1082,10 +1279,14 @@ const getUnitCalendarData = async (req, res) => {
       let d = new Date(booking.checkin_datetime);
       const end = new Date(booking.checkout_datetime);
       while (d < end) {
-        const ds = d.toISOString().split('T')[0];
+        const ds = d.toISOString().split("T")[0];
         ensureDate(ds);
-        calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (booking.persons || 0));
-        if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+        calendarMap[ds].available_quantity = Math.max(
+          0,
+          calendarMap[ds].available_quantity - (booking.persons || 0),
+        );
+        if (calendarMap[ds].available_quantity <= 0)
+          calendarMap[ds].is_booked = true;
         d.setDate(d.getDate() + 1);
       }
     }
@@ -1093,23 +1294,32 @@ const getUnitCalendarData = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: Object.values(calendarMap),
-      meta: { totalCapacity }
+      meta: { totalCapacity },
     });
   } catch (error) {
-    console.error('Get unit calendar error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to fetch unit calendar.' });
+    console.error("Get unit calendar error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch unit calendar." });
   }
 };
 
 const updateUnitCalendarData = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const { date, price, available_quantity, is_weekend, is_special } = req.body;
+    const { date, price, available_quantity, is_weekend, is_special } =
+      req.body;
 
     // Fetch total capacity if available_quantity is not provided
     let finalAvailableQuantity = available_quantity;
-    if (finalAvailableQuantity === undefined || finalAvailableQuantity === null) {
-      const unitResult = await query('SELECT total_persons FROM property_units WHERE id = $1', [unitId]);
+    if (
+      finalAvailableQuantity === undefined ||
+      finalAvailableQuantity === null
+    ) {
+      const unitResult = await query(
+        "SELECT total_persons FROM property_units WHERE id = $1",
+        [unitId],
+      );
       if (unitResult.rows.length > 0) {
         finalAvailableQuantity = unitResult.rows[0].total_persons;
       } else {
@@ -1126,16 +1336,18 @@ const updateUnitCalendarData = async (req, res) => {
          available_quantity = EXCLUDED.available_quantity,
          is_weekend = EXCLUDED.is_weekend,
          is_special = EXCLUDED.is_special`,
-      [unitId, date, price, finalAvailableQuantity, is_weekend, is_special]
+      [unitId, date, price, finalAvailableQuantity, is_weekend, is_special],
     );
 
     return res.status(200).json({
       success: true,
-      message: 'Unit calendar updated successfully.'
+      message: "Unit calendar updated successfully.",
     });
   } catch (error) {
-    console.error('Update unit calendar error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to update unit calendar.' });
+    console.error("Update unit calendar error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to update unit calendar." });
   }
 };
 
@@ -1145,19 +1357,21 @@ const getCalendarData = async (req, res) => {
     const { id } = req.params;
 
     const propResult = await query(
-      'SELECT id, property_id, category, max_capacity FROM properties WHERE property_id = $1 OR id::text = $1',
-      [id]
+      "SELECT id, property_id, category, max_capacity FROM properties WHERE property_id = $1 OR id::text = $1",
+      [id],
     );
     if (propResult.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Property not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Property not found" });
     }
     const prop = propResult.rows[0];
-    const isVilla = prop.category === 'villa';
+    const isVilla = prop.category === "villa";
     const totalCapacity = prop.max_capacity || 0;
 
     const calendarResult = await query(
-      'SELECT date, price, is_booked FROM availability_calendar WHERE property_id = $1',
-      [prop.id]
+      "SELECT date, price, is_booked FROM availability_calendar WHERE property_id = $1",
+      [prop.id],
     );
 
     const today = new Date();
@@ -1169,7 +1383,11 @@ const getCalendarData = async (req, res) => {
        JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id)
        WHERE (p.id = $1) AND le.unit_id IS NULL
        AND le.check_out >= $2 AND le.check_in <= $3`,
-      [prop.id, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]
+      [
+        prop.id,
+        startDate.toISOString().split("T")[0],
+        endDate.toISOString().split("T")[0],
+      ],
     );
 
     const bookingResult = await query(
@@ -1177,18 +1395,30 @@ const getCalendarData = async (req, res) => {
        WHERE property_id = $1 AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'TICKET_GENERATED')
        AND unit_id IS NULL
        AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
-      [prop.property_id, startDate.toISOString(), endDate.toISOString()]
+      [prop.property_id, startDate.toISOString(), endDate.toISOString()],
     );
 
     const calendarMap = {};
     for (const row of calendarResult.rows) {
-      const dateStr = new Date(row.date).toISOString().split('T')[0];
-      calendarMap[dateStr] = { date: dateStr, price: row.price, is_booked: false, available_quantity: totalCapacity, total_capacity: totalCapacity };
+      const dateStr = new Date(row.date).toISOString().split("T")[0];
+      calendarMap[dateStr] = {
+        date: dateStr,
+        price: row.price,
+        is_booked: false,
+        available_quantity: totalCapacity,
+        total_capacity: totalCapacity,
+      };
     }
 
     const computeForDate = (dateStr) => {
       if (!calendarMap[dateStr]) {
-        calendarMap[dateStr] = { date: dateStr, price: null, is_booked: false, available_quantity: totalCapacity, total_capacity: totalCapacity };
+        calendarMap[dateStr] = {
+          date: dateStr,
+          price: null,
+          is_booked: false,
+          available_quantity: totalCapacity,
+          total_capacity: totalCapacity,
+        };
       }
     };
 
@@ -1196,14 +1426,18 @@ const getCalendarData = async (req, res) => {
       let d = new Date(entry.check_in);
       const end = new Date(entry.check_out);
       while (d < end) {
-        const ds = d.toISOString().split('T')[0];
+        const ds = d.toISOString().split("T")[0];
         computeForDate(ds);
         if (isVilla) {
           calendarMap[ds].is_booked = true;
           calendarMap[ds].available_quantity = 0;
         } else {
-          calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (entry.persons || 0));
-          if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+          calendarMap[ds].available_quantity = Math.max(
+            0,
+            calendarMap[ds].available_quantity - (entry.persons || 0),
+          );
+          if (calendarMap[ds].available_quantity <= 0)
+            calendarMap[ds].is_booked = true;
         }
         d.setDate(d.getDate() + 1);
       }
@@ -1213,14 +1447,18 @@ const getCalendarData = async (req, res) => {
       let d = new Date(booking.checkin_datetime);
       const end = new Date(booking.checkout_datetime);
       while (d < end) {
-        const ds = d.toISOString().split('T')[0];
+        const ds = d.toISOString().split("T")[0];
         computeForDate(ds);
         if (isVilla) {
           calendarMap[ds].is_booked = true;
           calendarMap[ds].available_quantity = 0;
         } else {
-          calendarMap[ds].available_quantity = Math.max(0, calendarMap[ds].available_quantity - (booking.persons || 0));
-          if (calendarMap[ds].available_quantity <= 0) calendarMap[ds].is_booked = true;
+          calendarMap[ds].available_quantity = Math.max(
+            0,
+            calendarMap[ds].available_quantity - (booking.persons || 0),
+          );
+          if (calendarMap[ds].available_quantity <= 0)
+            calendarMap[ds].is_booked = true;
         }
         d.setDate(d.getDate() + 1);
       }
@@ -1229,11 +1467,13 @@ const getCalendarData = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: Object.values(calendarMap),
-      meta: { totalCapacity, isVilla }
+      meta: { totalCapacity, isVilla },
     });
   } catch (error) {
-    console.error('Get calendar data error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to fetch calendar data.' });
+    console.error("Get calendar data error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch calendar data." });
   }
 };
 
@@ -1248,16 +1488,18 @@ const updateCalendarData = async (req, res) => {
        VALUES ((SELECT id FROM properties WHERE property_id = $1 OR id::text = $1), $2, $3, $4, CURRENT_TIMESTAMP)
        ON CONFLICT (property_id, date) 
        DO UPDATE SET price = EXCLUDED.price, is_booked = EXCLUDED.is_booked, updated_at = CURRENT_TIMESTAMP`,
-      [id, date, price, is_booked]
+      [id, date, price, is_booked],
     );
 
     return res.status(200).json({
       success: true,
-      message: 'Calendar updated successfully.'
+      message: "Calendar updated successfully.",
     });
   } catch (error) {
-    console.error('Update calendar data error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to update calendar.' });
+    console.error("Update calendar data error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to update calendar." });
   }
 };
 
@@ -1280,5 +1522,5 @@ module.exports = {
   updatePropertyUnit,
   deletePropertyUnit,
   getUnitCalendarData,
-  updateUnitCalendarData
+  updateUnitCalendarData,
 };

@@ -30,6 +30,7 @@ interface BookingFormProps {
   selectedUnitId?: number;
   ownerPhone?: string;
   ownerName?: string;
+  initialCheckIn?: Date;
 }
 
 export function BookingForm({
@@ -42,16 +43,29 @@ export function BookingForm({
   selectedUnitId,
   ownerPhone,
   ownerName,
+  initialCheckIn,
 }: BookingFormProps) {
   const navigate = useNavigate();
+
+  const getInitialDates = () => {
+    if (initialCheckIn) {
+      const nextDay = new Date(initialCheckIn);
+      nextDay.setDate(initialCheckIn.getDate() + 1);
+      return { checkIn: initialCheckIn, checkOut: nextDay };
+    }
+    return { checkIn: undefined as Date | undefined, checkOut: undefined as Date | undefined };
+  };
+
+  const initialDates = getInitialDates();
+
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
     persons: 1,
     vegPersons: 1,
     nonVegPersons: 0,
-    checkIn: undefined as Date | undefined,
-    checkOut: undefined as Date | undefined,
+    checkIn: initialDates.checkIn,
+    checkOut: initialDates.checkOut,
     referralCode: localStorage.getItem("applied_referral_code") || "",
   });
 

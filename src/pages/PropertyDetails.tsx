@@ -130,6 +130,13 @@ const PropertyDetails = () => {
   const [propertyData, setPropertyData] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date | undefined>(undefined);
+
+  const handleCalendarDateSelect = (date: Date) => {
+    setCalendarSelectedDate(date);
+    setBookingDialogOpen(true);
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -342,6 +349,7 @@ const PropertyDetails = () => {
                           isVilla={propertyData.category === 'villa'}
                           isPublic={true}
                           propertyName={propertyData.title}
+                          onDateSelect={handleCalendarDateSelect}
                         />
                       </div>
                     </DialogContent>
@@ -357,7 +365,7 @@ const PropertyDetails = () => {
 
               <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-2 gap-2">
-                  <Dialog>
+                  <Dialog open={bookingDialogOpen} onOpenChange={(open) => { setBookingDialogOpen(open); if (!open) setCalendarSelectedDate(undefined); }}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="flex flex-col gap-1 h-[65px] rounded-2xl bg-gradient-to-b from-[#D4AF37] to-[#C5A021] border-none hover:from-[#C5A021] hover:to-[#A6861A] transition-all group active:translate-y-1 active:shadow-inner shadow-[0_6px_0_rgb(146,120,33),0_12px_20px_rgba(0,0,0,0.3)] px-1 relative overflow-hidden">
                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -373,6 +381,7 @@ const PropertyDetails = () => {
                         </DialogDescription>
                       </DialogHeader>
                       <BookingForm 
+                        key={calendarSelectedDate?.getTime() || 'no-date'}
                         propertyName={propertyData.title} 
                         propertyId={propertyData.id}
                         pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (Number(displayPrice) || 0)}
@@ -381,6 +390,7 @@ const PropertyDetails = () => {
                         selectedUnitId={selectedUnit?.id}
                         ownerPhone={propertyData.owner_mobile}
                         ownerName={propertyData.owner_name}
+                        initialCheckIn={calendarSelectedDate}
                       />
                     </DialogContent>
                   </Dialog>
@@ -475,6 +485,7 @@ const PropertyDetails = () => {
                       isVilla={propertyData.category === 'villa'}
                       isPublic={true}
                       propertyName={propertyData.title}
+                      onDateSelect={handleCalendarDateSelect}
                     />
                   </div>
                 </DialogContent>
@@ -537,7 +548,7 @@ const PropertyDetails = () => {
           </div>
 
           <div className="space-y-6 mb-8">
-            <Dialog>
+            <Dialog open={bookingDialogOpen} onOpenChange={(open) => { setBookingDialogOpen(open); if (!open) setCalendarSelectedDate(undefined); }}>
               <DialogTrigger asChild>
                 <Button
                   className="w-full bg-gradient-to-b from-[#D4AF37] to-[#C5A021] text-black hover:from-[#C5A021] hover:to-[#A6861A] h-[52px] rounded-2xl text-lg font-bold transition-all active:translate-y-1 active:shadow-inner shadow-[0_6px_0_rgb(146,120,33),0_12px_25px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3 group relative overflow-hidden"
@@ -555,6 +566,7 @@ const PropertyDetails = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <BookingForm 
+                  key={calendarSelectedDate?.getTime() || 'no-date'}
                   propertyName={propertyData.title} 
                   propertyId={propertyData.id}
                   pricePerPerson={typeof displayPrice === 'string' ? (parseInt(displayPrice.replace(/[^\d]/g, "")) || 0) : (Number(displayPrice) || 0)}
@@ -563,6 +575,7 @@ const PropertyDetails = () => {
                   selectedUnitId={selectedUnit?.id}
                   ownerPhone={propertyData.owner_mobile}
                   ownerName={propertyData.owner_name}
+                  initialCheckIn={calendarSelectedDate}
                 />
               </DialogContent>
             </Dialog>
@@ -589,6 +602,7 @@ const PropertyDetails = () => {
                     isVilla={propertyData.category === 'villa'}
                     isPublic={true}
                     propertyName={propertyData.title}
+                    onDateSelect={handleCalendarDateSelect}
                   />
                 </div>
               </DialogContent>

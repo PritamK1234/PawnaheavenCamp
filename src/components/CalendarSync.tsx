@@ -229,6 +229,8 @@ export const CalendarSync = ({
                 const dayTotalCapacity = data?.total_capacity || totalCapacity;
                 const isFullyBooked = isVilla ? isBooked : (availableQuantity !== null && availableQuantity <= 0);
                 
+                const isDisabled = isPast || !!isFullyBooked;
+                
                 return (
                   <div className={cn(
                     "relative w-full h-full flex flex-col items-center justify-center p-0.5 rounded-md transition-all select-none",
@@ -236,7 +238,8 @@ export const CalendarSync = ({
                     isFullyBooked && "!bg-[#FF0000] !text-white",
                     isPast && "opacity-60 grayscale-[0.5]",
                     isPublic && !onDateSelect && "cursor-default",
-                    isPublic && onDateSelect && "cursor-pointer"
+                    isPublic && onDateSelect && !isDisabled && "cursor-pointer",
+                    isPublic && onDateSelect && isDisabled && "!cursor-not-allowed"
                   )}>
                     <span className="text-[11px] sm:text-xs font-bold leading-none">{format(date, 'd')}</span>
                     {!isPast && (
@@ -287,7 +290,7 @@ export const CalendarSync = ({
               ),
               day_today: "ring-1 sm:ring-2 ring-yellow-400 ring-offset-1 sm:ring-offset-2 ring-offset-black rounded-md",
               day_selected: "bg-transparent text-inherit hover:bg-transparent hover:text-inherit focus:bg-transparent focus:text-inherit",
-              day_disabled: (isPublic && !onDateSelect) ? "opacity-100 cursor-default" : (isPublic && onDateSelect) ? "opacity-50 cursor-not-allowed" : (isBookingForm ? "opacity-100 cursor-not-allowed" : "opacity-50 cursor-not-allowed"),
+              day_disabled: (isPublic && !onDateSelect) ? "opacity-100 !cursor-default hover:!bg-transparent" : (isPublic && onDateSelect) ? "opacity-50 !cursor-not-allowed hover:!bg-transparent hover:!no-underline" : (isBookingForm ? "opacity-100 !cursor-not-allowed hover:!bg-transparent" : "opacity-50 !cursor-not-allowed hover:!bg-transparent"),
               day_outside: "hidden",
             }}
           />

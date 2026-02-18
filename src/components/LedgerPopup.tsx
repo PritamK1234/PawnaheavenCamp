@@ -442,7 +442,7 @@ export const LedgerPopup = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white/40 hover:text-white hover:bg-white/5 rounded-full"
+                className="text-white/60 hover:text-white hover:bg-white/5 rounded-full"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -453,17 +453,17 @@ export const LedgerPopup = ({
         <div className="px-6 overflow-y-auto pb-10">
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex items-center justify-between mb-6">
             <div className="space-y-1">
-              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider">
+              <p className="text-[10px] capatalize font-bold text-white/60 tracking-wider">
                 {isVilla ? "Status" : "Unit Availability"}
               </p>
               <div className="flex items-center gap-2">
                 {isVilla ? (
                   entries.length > 0 ? (
-                    <span className="text-xl font-black text-[#FF0000] uppercase tracking-wider">
+                    <span className="text-xl font-black text-[#FF0000] capatalize tracking-wider">
                       Booked
                     </span>
                   ) : (
-                    <span className="text-xl font-black text-[#00FF41] uppercase tracking-wider">
+                    <span className="text-xl font-black text-[#00FF41] capatalize tracking-wider">
                       Available
                     </span>
                   )
@@ -481,7 +481,7 @@ export const LedgerPopup = ({
                 )}
               </div>
               {isVilla && (
-                <p className="text-[10px] text-white/40 font-bold uppercase mt-1">
+                <p className="text-[10px] text-white/60 font-bold capatalize mt-1">
                   {totalPersons} Persons Max Capacity
                 </p>
               )}
@@ -506,7 +506,7 @@ export const LedgerPopup = ({
               className="space-y-4 bg-white/5 p-4 rounded-2xl border border-gold/20 animate-in fade-in slide-in-from-top-2"
             >
               <div className="space-y-2">
-                <label className="text-xs font-bold text-white/40 uppercase px-1">
+                <label className="text-xs font-bold text-white/60 capatalize px-1">
                   Customer Name
                 </label>
                 <div className="relative">
@@ -527,7 +527,7 @@ export const LedgerPopup = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-white/40 uppercase px-1">
+                  <label className="text-xs font-bold text-white/60 capatalize px-1">
                     Persons{" "}
                     {maxAllowedPersons > 0 && (
                       <span className="text-white/20">
@@ -594,7 +594,7 @@ export const LedgerPopup = ({
                   )}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-white/40 uppercase px-1">
+                  <label className="text-xs font-bold text-white/60 capatalize px-1">
                     Amount
                   </label>
                   <div className="relative">
@@ -644,7 +644,7 @@ export const LedgerPopup = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-white/40 uppercase px-1">
+                <label className="text-xs font-bold text-white/60 capatalize px-1">
                   Payment Mode
                 </label>
                 <div className="relative">
@@ -670,7 +670,7 @@ export const LedgerPopup = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-white/40 uppercase px-1">
+                  <label className="text-xs font-bold text-white/60 capatalize px-1">
                     Check-in
                   </label>
                   <Input
@@ -688,7 +688,7 @@ export const LedgerPopup = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-white/40 uppercase px-1">
+                  <label className="text-xs font-bold text-white/60 capatalize px-1">
                     Check-out
                   </label>
                   <Input
@@ -722,7 +722,7 @@ export const LedgerPopup = ({
             </form>
           ) : (
             <div className="space-y-3">
-              <h3 className="text-xs font-black text-white/20 uppercase tracking-[0.2em] px-1">
+              <h3 className="text-xs font-black text-white/20 capatalize tracking-[0.2em] px-1">
                 Bookings List
               </h3>
               {loading ? (
@@ -731,7 +731,7 @@ export const LedgerPopup = ({
                 </div>
               ) : entries.length === 0 ? (
                 <div className="text-center py-10 bg-white/5 rounded-2xl border border-dashed border-white/10">
-                  <p className="text-white/40 text-sm italic">
+                  <p className="text-white/60 text-sm italic">
                     No bookings found for this date
                   </p>
                 </div>
@@ -751,10 +751,10 @@ export const LedgerPopup = ({
                             {entry.customer_name}
                           </p>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[10px] text-white/40 flex items-center gap-1">
+                            <span className="text-[10px] text-white/60 flex items-center gap-1">
                               <Users className="w-3 h-3" /> {entry.persons}
                             </span>
-                            <span className="text-[10px] text-white/40 flex items-center gap-1 uppercase tracking-wider">
+                            <span className="text-[10px] text-white/60 flex items-center gap-1 capatalize tracking-wider">
                               <CreditCard className="w-3 h-3" />{" "}
                               {entry.payment_mode}
                             </span>
@@ -766,7 +766,7 @@ export const LedgerPopup = ({
                           <p className="text-gold font-black">
                             ₹{entry.amount}
                           </p>
-                          <p className="text-[8px] text-white/20 uppercase font-bold tracking-tighter mt-1">
+                          <p className="text-[8px] text-white/20 capatalize font-bold tracking-tighter mt-1">
                             {format(new Date(entry.check_in), "dd MMM")} -{" "}
                             {format(new Date(entry.check_out), "dd MMM")}
                           </p>
@@ -774,13 +774,13 @@ export const LedgerPopup = ({
                         <div className="flex flex-col gap-2 border-l border-white/10 pl-3">
                           <button
                             onClick={() => handleEdit(entry)}
-                            className="text-white/40 hover:text-gold transition-colors"
+                            className="text-white/60 hover:text-gold transition-colors"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(entry.id)}
-                            className="text-white/40 hover:text-red-500 transition-colors"
+                            className="text-white/60 hover:text-red-500 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -816,7 +816,7 @@ export const LedgerPopup = ({
                 PDF
               </Button>
             </div>
-            <p className="text-center text-[10px] text-white/20 uppercase font-bold tracking-[0.2em]">
+            <p className="text-center text-[10px] text-white/30 capatalize font-bold tracking-[0.2em]">
               Daily Booking Ledger
             </p>
           </div>

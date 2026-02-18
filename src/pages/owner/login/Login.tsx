@@ -118,7 +118,7 @@ const OwnerLogin = () => {
               </div>
               <Input
                 type="tel"
-                placeholder="Mobile Number"
+                placeholder="Enter registred mobile number"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 className="h-12 bg-secondary/50 border-border/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
@@ -148,11 +148,30 @@ const OwnerLogin = () => {
               </div>
               <Input
                 type="text"
-                maxLength={6}
-                className="text-center text-2xl tracking-widest h-14 bg-secondary/50 border-border/50 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20"
+                inputMode="numeric" // mobile numeric keypad
+                pattern="[0-9]*" // numbers only
+                maxLength={6} // hard limit to 6 digits
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="000000"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                  setOtp(value.slice(0, 6)); // limit to 6 digits
+                }}
+                placeholder="Enter OTP"
+                className="
+                  h-14
+                  bg-secondary/50
+                  border-border/50
+                  rounded-xl
+                  text-center
+                  text-2xl
+                  tracking-widest
+                  font-bold
+                  normal-case
+                  placeholder:normal-case
+                  placeholder:text-muted-foreground
+                  placeholder:opacity-40
+                  focus:placeholder:opacity-25
+                "
               />
               <Button
                 type="submit"
@@ -166,11 +185,18 @@ const OwnerLogin = () => {
                 )}
               </Button>
               <Button
-                variant="ghost"
+                variant="link"
                 onClick={() => setShowOTP(false)}
-                className="text-muted-foreground hover:text-primary"
+                className="
+                  text-muted-foreground
+                  hover:text-primary
+                  hover:bg-transparent
+                  focus:bg-transparent
+                  active:bg-transparent
+                  transition-colors
+                "
               >
-                Change Number
+                Change mobile number
               </Button>
             </form>
           )}

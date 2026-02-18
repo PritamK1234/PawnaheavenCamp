@@ -1,6 +1,6 @@
-const CACHE_NAME = 'pawna-owner-v1';
+const CACHE_NAME = 'pawna-admin-v1';
 const ASSETS_TO_CACHE = [
-  '/owner',
+  '/admin',
   '/offline.html',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
@@ -20,7 +20,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name.startsWith('pawna-owner'))
+          .filter((name) => name !== CACHE_NAME && name.startsWith('pawna-admin'))
           .map((name) => caches.delete(name))
       );
     })
@@ -29,7 +29,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('/owner')) {
+  if (event.request.url.includes('/admin')) {
     if (event.request.mode === 'navigate') {
       event.respondWith(
         fetch(event.request).catch(() => {

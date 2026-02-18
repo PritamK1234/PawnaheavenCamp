@@ -1,6 +1,6 @@
-const CACHE_NAME = 'pawna-owner-v1';
+const CACHE_NAME = 'pawna-public-v1';
 const ASSETS_TO_CACHE = [
-  '/owner',
+  '/',
   '/offline.html',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
@@ -20,7 +20,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name.startsWith('pawna-owner'))
+          .filter((name) => name !== CACHE_NAME && name.startsWith('pawna-public'))
           .map((name) => caches.delete(name))
       );
     })
@@ -29,19 +29,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('/owner')) {
-    if (event.request.mode === 'navigate') {
-      event.respondWith(
-        fetch(event.request).catch(() => {
-          return caches.match('/offline.html');
-        })
-      );
-    } else {
-      event.respondWith(
-        caches.match(event.request).then((response) => {
-          return response || fetch(event.request);
-        })
-      );
-    }
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/offline.html');
+      })
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request);
+      })
+    );
   }
 });

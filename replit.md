@@ -98,6 +98,16 @@ Preferred communication style: Simple, everyday language.
 - **E-Ticket**: Generated after owner confirms, shows QR code, property details, payment summary
 - **Ticket Page States**: Loading, pending confirmation (auto-refresh 10s), confirmed (full ticket), expired, error
 
+### PWA (Progressive Web App) - Feb 2026
+- **Multi-domain PWA**: Separate installable apps for public, owner, and admin portals
+  - Public: `manifest-public.json` + `sw-public.js` (scope `/`, domain: pawnahavencamp.com)
+  - Owner: `public/owner/manifest.json` + `public/owner/sw.js` (scope `/owner`, domain: pawnahavencamp.shop)
+  - Admin: `backend/public/admin/manifest.json` + `backend/public/admin/sw.js` (scope `/admin`, domain: pawnahavencamp.cloud)
+- **SW Registration Strategy**: `main.tsx` conditionally registers VitePWA SW only on non-owner paths; OwnerLayout registers owner SW separately
+- **Install Button**: `src/components/PWAInstallButton.tsx` - unified component with iOS Safari modal support
+- **Install Detection**: Auto-hides when app installed, reappears on uninstall (uses `display-mode: standalone` media query)
+- **VitePWA Config**: `injectRegister: false` to allow manual SW registration control
+
 ### Data Architecture
 - PostgreSQL database with full booking/payment schema
 - Property data from database with category settings

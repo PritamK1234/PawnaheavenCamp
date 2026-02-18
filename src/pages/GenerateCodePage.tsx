@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { 
-  ChevronLeft, 
-  Smartphone, 
+import {
+  ChevronLeft,
+  Smartphone,
   Fingerprint,
   ShieldCheck,
   ArrowRight,
   User,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,21 +29,32 @@ const GenerateCodePage = () => {
   const [loading, setLoading] = useState(false);
 
   const handleRequestOTP = async () => {
+    // 👉 ADD HERE (top of the function)
+    if (formData.mobile.length !== 10) {
+      toast.error("Please enter a valid 10-digit mobile number");
+      return;
+    }
+
     if (!formData.mobile || !formData.username || !formData.referralCode) {
       toast.error("Please fill all fields");
       return;
     }
+
     setLoading(true);
     try {
       const res = await axios.post("/api/referrals/request-otp", {
         mobile: formData.mobile,
-        purpose: "register"
+        purpose: "register",
       });
+
       if (res.data.debug_otp) {
-        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, { duration: 10000 });
+        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, {
+          duration: 10000,
+        });
       } else {
         toast.success("OTP sent to your mobile");
       }
+
       setStep("otp");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to send OTP");
@@ -62,17 +73,18 @@ const GenerateCodePage = () => {
       const verifyRes = await axios.post("/api/referrals/verify-otp", {
         mobile: formData.mobile,
         otp: otp,
-        purpose: "register"
+        purpose: "register",
       });
 
       const token = verifyRes.data.token;
-      
-      await axios.post("/api/referrals/register", 
-        { 
+
+      await axios.post(
+        "/api/referrals/register",
+        {
           username: formData.username,
-          referralCode: formData.referralCode 
+          referralCode: formData.referralCode,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       toast.success("Referral account created successfully!");
@@ -93,7 +105,10 @@ const GenerateCodePage = () => {
       {/* Header */}
       <div className="sticky top-0 z-50 bg-black border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center gap-4">
-          <Link to="/referral" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all">
+          <Link
+            to="/referral"
+            className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all"
+          >
             <ChevronLeft className="w-6 h-6" />
           </Link>
           <h1 className="font-display text-xl font-bold">Generate Code</h1>
@@ -106,11 +121,13 @@ const GenerateCodePage = () => {
             <Fingerprint className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-display font-bold mb-3">
-            {step === "details" ? "Create New Referral code" : "Verify Your Mobile"}
+            {step === "details"
+              ? "Create New Referral code"
+              : "Verify Your Mobile"}
           </h2>
           <p className="text-muted-foreground">
-            {step === "details" 
-              ? "Enter your details to generate a new unique referral code" 
+            {step === "details"
+              ? "Enter your details to generate a new unique referral code"
               : `Enter the OTP sent to ${formData.mobile}`}
           </p>
         </div>
@@ -119,21 +136,34 @@ const GenerateCodePage = () => {
           {step === "details" ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="referralCode" className="text-sm font-bold flex items-center gap-2">
+                <Label
+                  htmlFor="referralCode"
+                  className="text-sm font-bold flex items-center gap-2"
+                >
                   <ShieldCheck className="w-4 h-4 text-primary" />
-                  Enter Referral code
+                  Enter Referral Code
                 </Label>
                 <Input
                   id="referralCode"
                   placeholder="Create your referral code"
-                  className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg"
+                  className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg Capatalize"
                   value={formData.referralCode}
-                  onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      referralCode: e.target.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, ""),
+                    })
+                  }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-bold flex items-center gap-2">
+                <Label
+                  htmlFor="username"
+                  className="text-sm font-bold flex items-center gap-2"
+                >
                   <User className="w-4 h-4 text-primary" />
                   Create Your User Name
                 </Label>
@@ -142,32 +172,46 @@ const GenerateCodePage = () => {
                   placeholder="Enter username"
                   className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg"
                   value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
+                  }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile" className="text-sm font-bold flex items-center gap-2">
+                <Label
+                  htmlFor="mobile"
+                  className="text-sm font-bold flex items-center gap-2"
+                >
                   <Smartphone className="w-4 h-4 text-primary" />
                   Enter Mobile Number
                 </Label>
                 <Input
                   id="mobile"
                   type="tel"
-                  inputMode="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
                   placeholder="Enter mobile number"
                   className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg"
                   value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    if (value.length <= 10) {
+                      setFormData({ ...formData, mobile: value });
+                    }
+                  }}
                 />
               </div>
 
-              <Button 
+              <Button
                 className="w-full h-16 rounded-2xl text-xl font-bold gap-3 shadow-gold group transition-all"
                 onClick={handleRequestOTP}
                 disabled={loading}
               >
-                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
                   <>
                     Send OTP
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -178,7 +222,10 @@ const GenerateCodePage = () => {
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="otp" className="text-sm font-bold flex items-center gap-2">
+                <Label
+                  htmlFor="otp"
+                  className="text-sm font-bold flex items-center gap-2"
+                >
                   <ShieldCheck className="w-4 h-4 text-primary" />
                   Enter OTP
                 </Label>
@@ -192,16 +239,20 @@ const GenerateCodePage = () => {
                 />
               </div>
 
-              <Button 
+              <Button
                 className="w-full h-16 rounded-2xl text-xl font-bold gap-3 shadow-gold group transition-all"
                 onClick={handleVerifyAndRegister}
                 disabled={loading}
               >
-                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Verify & Generate"}
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  "Verify & Generate"
+                )}
               </Button>
-              
-              <Button 
-                variant="ghost" 
+
+              <Button
+                variant="ghost"
                 className="w-full text-xs text-muted-foreground"
                 onClick={() => setStep("details")}
                 disabled={loading}
@@ -213,7 +264,7 @@ const GenerateCodePage = () => {
         </Card>
 
         <p className="mt-8 text-center text-xs text-muted-foreground px-6 leading-relaxed">
-          By continuing, you agree to our referral program terms and conditions. 
+          By continuing, you agree to our referral program terms and conditions.
           Standard verification process applies.
         </p>
       </div>

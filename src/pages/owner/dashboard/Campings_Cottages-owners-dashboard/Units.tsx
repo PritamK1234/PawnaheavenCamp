@@ -360,7 +360,7 @@ const OwnerUnits = () => {
             <div className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-400 text-xs uppercase font-bold">
+                  <Label className="text-gray-400 text-xs font-bold">
                     Unit Name
                   </Label>
                   <Input
@@ -375,32 +375,54 @@ const OwnerUnits = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-400 text-xs uppercase font-bold">
+                    <Label className="text-gray-400 text-xs capitalize font-bold">
                       Weekday Price (Base)
                     </Label>
                     <Input
                       type="number"
-                      value={unitForm.weekday_price}
+                      placeholder="Enter weekday price!"
+                      min="0"
+                      value={
+                        unitForm.weekday_price === "0"
+                          ? ""
+                          : unitForm.weekday_price
+                      }
+                      onFocus={() => {
+                        if (unitForm.weekday_price === "0") {
+                          setUnitForm({ ...unitForm, weekday_price: "" });
+                        }
+                      }}
                       onChange={(e) =>
                         setUnitForm({
                           ...unitForm,
-                          weekday_price: e.target.value,
+                          weekday_price: e.target.value.replace(/^-/g, ""),
                         })
                       }
                       className="bg-white/5 border-white/10 h-11 text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-400 text-xs uppercase font-bold">
+                    <Label className="text-gray-400 text-xs capitalize font-bold">
                       Weekend Price
                     </Label>
                     <Input
                       type="number"
-                      value={unitForm.weekend_price}
+                      min="0"
+                      placeholder="Enter weekend price!"
+                      value={
+                        unitForm.weekend_price === "0"
+                          ? ""
+                          : unitForm.weekend_price
+                      }
+                      onFocus={() => {
+                        if (unitForm.weekend_price === "0") {
+                          setUnitForm({ ...unitForm, weekend_price: "" });
+                        }
+                      }}
                       onChange={(e) =>
                         setUnitForm({
                           ...unitForm,
-                          weekend_price: e.target.value,
+                          weekend_price: e.target.value.replace(/^-/g, ""),
                         })
                       }
                       className="bg-white/5 border-white/10 h-11 text-white"
@@ -409,7 +431,7 @@ const OwnerUnits = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs uppercase font-bold">
+                  <Label className="text-xs capitalize font-bold">
                     <span className="text-[#00FF41]">Available</span> /{" "}
                     <span className="text-[#FFA500]">
                       Total persons capacity
@@ -418,24 +440,45 @@ const OwnerUnits = () => {
                   <div className="flex gap-2">
                     <Input
                       type="number"
+                      min="0"
                       placeholder="Available"
-                      value={unitForm.available_persons}
+                      value={
+                        unitForm.available_persons === "0"
+                          ? ""
+                          : unitForm.available_persons
+                      }
+                      onFocus={() => {
+                        if (unitForm.available_persons === "0") {
+                          setUnitForm({ ...unitForm, available_persons: "" });
+                        }
+                      }}
                       onChange={(e) =>
                         setUnitForm({
                           ...unitForm,
-                          available_persons: e.target.value,
+                          available_persons: e.target.value.replace(/^-/g, ""),
                         })
                       }
                       className="bg-white/5 border-white/10 text-[#00FF41] font-bold h-11"
                     />
+
                     <Input
                       type="number"
+                      min="0"
                       placeholder="Total"
-                      value={unitForm.total_persons}
+                      value={
+                        unitForm.total_persons === "0"
+                          ? ""
+                          : unitForm.total_persons
+                      }
+                      onFocus={() => {
+                        if (unitForm.total_persons === "0") {
+                          setUnitForm({ ...unitForm, total_persons: "" });
+                        }
+                      }}
                       onChange={(e) =>
                         setUnitForm({
                           ...unitForm,
-                          total_persons: e.target.value,
+                          total_persons: e.target.value.replace(/^-/g, ""),
                         })
                       }
                       className="bg-white/5 border-white/10 text-[#FFA500] font-bold h-11"
@@ -446,12 +489,12 @@ const OwnerUnits = () => {
 
               <div className="space-y-4 pt-4 border-t border-white/5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gold text-xs uppercase font-bold">
+                  <Label className="text-gold text-xs capitalize font-bold">
                     Special Date Prices
                   </Label>
+
                   <Button
                     type="button"
-                    variant="outline"
                     size="sm"
                     onClick={() =>
                       setUnitForm({
@@ -462,11 +505,22 @@ const OwnerUnits = () => {
                         ],
                       })
                     }
-                    className="bg-gold/10 border-gold/20 text-gold hover:bg-gold/20 h-8"
+                    className="
+                      border border-gold/30
+                      text-gold
+                      bg-transparent
+                      hover:bg-gold
+                      hover:text-black
+                      hover:border-gold
+                      transition-colors
+                      h-8
+                    "
                   >
-                    + Add Date
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Date
                   </Button>
                 </div>
+
                 <div className="space-y-3">
                   {unitForm.special_dates.map((sd, idx) => (
                     <div
@@ -474,7 +528,7 @@ const OwnerUnits = () => {
                       className="flex gap-3 items-end bg-white/5 p-3 rounded-xl border border-white/5"
                     >
                       <div className="flex-1 space-y-2">
-                        <Label className="text-[10px] text-gray-500 uppercase font-bold">
+                        <Label className="text-[10px] text-gray-500 capitalize font-bold">
                           Date
                         </Label>
                         <Input
@@ -491,25 +545,31 @@ const OwnerUnits = () => {
                           className="bg-charcoal border-white/10 h-10 text-white"
                         />
                       </div>
+
                       <div className="flex-1 space-y-2">
-                        <Label className="text-[10px] text-gray-500 uppercase font-bold">
+                        <Label className="text-[10px] text-gray-500 capitalize font-bold">
                           Price
                         </Label>
                         <Input
                           type="number"
+                          min="0"
+                          placeholder="Special price"
                           value={sd.price}
                           onChange={(e) => {
                             const newDates = [...unitForm.special_dates];
-                            newDates[idx].price = e.target.value;
+                            newDates[idx].price = e.target.value.replace(
+                              /^-/g,
+                              "",
+                            );
                             setUnitForm({
                               ...unitForm,
                               special_dates: newDates,
                             });
                           }}
-                          placeholder="₹ 2999"
                           className="bg-charcoal border-white/10 h-10 text-white"
                         />
                       </div>
+
                       <Button
                         type="button"
                         variant="ghost"
@@ -530,9 +590,10 @@ const OwnerUnits = () => {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-gray-400 text-xs uppercase font-bold">
+                <Label className="text-gray-400 text-xs capitalize font-bold">
                   Amenities
                 </Label>
+
                 <div className="space-y-2">
                   {unitForm.amenities.map((val, idx) => (
                     <div key={idx} className="flex gap-2">
@@ -545,6 +606,7 @@ const OwnerUnits = () => {
                         }}
                         className="bg-white/5 border-white/10 h-10 text-white"
                       />
+
                       <Button
                         type="button"
                         variant="ghost"
@@ -564,11 +626,21 @@ const OwnerUnits = () => {
                       </Button>
                     </div>
                   ))}
+
                   <Button
                     type="button"
-                    variant="outline"
                     size="sm"
-                    className="w-full border-dashed border-gold/30 text-gold hover:bg-gold/10 h-10"
+                    className="
+                      w-full
+                      border border-dashed border-gold/30
+                      text-gold
+                      bg-transparent
+                      hover:bg-gold
+                      hover:text-black
+                      hover:border-gold
+                      transition-colors
+                      h-10
+                    "
                     onClick={() =>
                       setUnitForm({
                         ...unitForm,
@@ -576,15 +648,16 @@ const OwnerUnits = () => {
                       })
                     }
                   >
-                    <Plus className="w-4 h-4 mr-1" /> Add Amenities
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Amenities
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-400 text-xs uppercase font-bold">
-                    Unit Gallery ({unitForm.images.length}/20)
+                  <Label className="text-gray-400 text-xs capitalize font-bold">
+                    Unit Image Gallery ({unitForm.images.length}/20)
                   </Label>
                   <input
                     type="file"

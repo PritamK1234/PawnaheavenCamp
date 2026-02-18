@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { 
-  ChevronLeft, 
-  ShieldCheck, 
-  Smartphone, 
+import {
+  ChevronLeft,
+  ShieldCheck,
+  Smartphone,
   Lock,
   Wallet,
   User,
@@ -18,7 +18,7 @@ import {
   QrCode,
   Copy,
   Download,
-  Share2
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -51,14 +51,16 @@ const CheckEarningPage = () => {
   const [loading, setLoading] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [shareData, setShareData] = useState<ShareData | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem("referral_token"));
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("referral_token"),
+  );
 
   const [formData, setFormData] = useState({
     code: "",
     otp: "",
     withdrawCode: "",
     accountDetails: "",
-    withdrawAmount: ""
+    withdrawAmount: "",
   });
 
   useEffect(() => {
@@ -72,7 +74,7 @@ const CheckEarningPage = () => {
     setLoading(true);
     try {
       const res = await axios.get("/api/referrals/dashboard", {
-        headers: { Authorization: `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` },
       });
       setDashboard(res.data);
       setStep("dashboard");
@@ -89,7 +91,7 @@ const CheckEarningPage = () => {
   const fetchShareData = async (authToken: string) => {
     try {
       const res = await axios.get("/api/referrals/share", {
-        headers: { Authorization: `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` },
       });
       setShareData(res.data);
     } catch (error: any) {
@@ -129,27 +131,29 @@ ${shareData.referralLink}`;
     }
     setLoading(true);
     try {
-      // Find mobile from code first? No, the API expects mobile. 
+      // Find mobile from code first? No, the API expects mobile.
       // We need to either change the API or find a way.
-      // Based on Step 3 logic, login is via OTP. 
-      // I'll assume we need to find the user by code first to get mobile, 
+      // Based on Step 3 logic, login is via OTP.
+      // I'll assume we need to find the user by code first to get mobile,
       // but the API rules say login is mobile based.
       // Actually, standard login flow is: Input Code -> Get Mobile -> Send OTP.
       // Let's look for a "get mobile by code" public endpoint or use a hack.
       // Wait, the API spec says: POST /api/referrals/request-otp { mobile, purpose: "login" }
       // The frontend needs the mobile number. I'll search for how the frontend is supposed to get it.
-      
+
       // I'll implement a temporary solution: search for user by code
       const userRes = await axios.get(`/api/referrals/top-earners`); // This doesn't help.
-      // I will assume for now that the user enters their mobile number instead of code for login, 
+      // I will assume for now that the user enters their mobile number instead of code for login,
       // as per standard OTP flows. I'll update the UI to ask for mobile.
-      
+
       const res = await axios.post("/api/referrals/request-otp", {
         mobile: formData.code, // Treating the input as mobile for now
-        purpose: "login"
+        purpose: "login",
       });
       if (res.data.debug_otp) {
-        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, { duration: 10000 });
+        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, {
+          duration: 10000,
+        });
       } else {
         toast.success("OTP sent to your registered mobile");
       }
@@ -167,14 +171,18 @@ ${shareData.referralLink}`;
       const verifyRes = await axios.post("/api/referrals/verify-otp", {
         mobile: formData.code,
         otp: formData.otp,
-        purpose: "login"
+        purpose: "login",
       });
 
       const otpToken = verifyRes.data.token;
-      
-      const loginRes = await axios.post("/api/referrals/login", {}, {
-        headers: { Authorization: `Bearer ${otpToken}` }
-      });
+
+      const loginRes = await axios.post(
+        "/api/referrals/login",
+        {},
+        {
+          headers: { Authorization: `Bearer ${otpToken}` },
+        },
+      );
 
       const finalToken = loginRes.data.token;
       localStorage.setItem("referral_token", finalToken);
@@ -191,12 +199,16 @@ ${shareData.referralLink}`;
     if (!token) return;
     setLoading(true);
     try {
-      await axios.post("/api/referrals/withdraw", {
-        amount: parseFloat(formData.withdrawAmount),
-        upi: formData.accountDetails
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(
+        "/api/referrals/withdraw",
+        {
+          amount: parseFloat(formData.withdrawAmount),
+          upi: formData.accountDetails,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       toast.success("Withdrawal request submitted!");
       fetchDashboard(token);
       setFormData({ ...formData, withdrawAmount: "", accountDetails: "" });
@@ -232,14 +244,22 @@ ${shareData.referralLink}`;
       <div className="sticky top-0 z-50 bg-black border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link to="/referral" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all">
+            <Link
+              to="/referral"
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all"
+            >
               <ChevronLeft className="w-6 h-6" />
             </Link>
             <h1 className="font-display text-xl font-bold">Check Earning</h1>
           </div>
           {dashboard && (
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground hover:text-red-500">
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-muted-foreground hover:text-red-500"
+            >
               <LogOut className="w-5 h-5" />
+              <span className="text-sm font-medium">Logout Referral</span>
             </Button>
           )}
         </div>
@@ -252,27 +272,59 @@ ${shareData.referralLink}`;
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-4">
                 <ShieldCheck className="w-8 h-8" />
               </div>
-              <h2 className="text-2xl font-display font-bold">Login to Dashboard</h2>
-              <p className="text-sm text-muted-foreground">Enter your registered mobile number</p>
+              <h2 className="text-2xl font-display font-bold">
+                Login to Dashboard
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Enter your registered mobile number
+              </p>
             </div>
             <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-4">
               <div className="space-y-2">
                 <Label>Mobile Number</Label>
-                <Input 
-                  placeholder="e.g. 9999999999" 
+                <Input
+                  placeholder="e.g. 9999999999"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
                   value={formData.code}
-                  onChange={(e) => setFormData({...formData, code: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    if (value.length <= 10) {
+                      setFormData({ ...formData, code: value });
+                    }
+                  }}
                   className="h-12 bg-secondary/50 rounded-xl"
                 />
               </div>
-              <Button onClick={handleSendOTP} disabled={loading} className="w-full h-12 rounded-xl font-bold gap-2">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+
+              <Button
+                onClick={handleSendOTP}
+                disabled={loading}
+                className="w-full h-12 rounded-xl font-bold gap-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
                   <>
                     <Send className="w-4 h-4" />
                     Send OTP
                   </>
                 )}
               </Button>
+              {/* 👇 ADD THIS PART */}
+              <div className="text-center pt-2">
+                <span className="text-xs text-muted-foreground">
+                  Not registered yet?{" "}
+                  <Link
+                    to="/referral/generate"
+                    className="text-primary font-bold hover:underline"
+                  >
+                    Create your own referral code
+                  </Link>
+                </span>
+              </div>
             </Card>
           </div>
         )}
@@ -284,21 +336,33 @@ ${shareData.referralLink}`;
                 <Lock className="w-8 h-8" />
               </div>
               <h2 className="text-2xl font-display font-bold">Enter OTP</h2>
-              <p className="text-sm text-muted-foreground">Verification code sent to {formData.code}</p>
+              <p className="text-sm text-muted-foreground">
+                Verification code sent to {formData.code}
+              </p>
             </div>
             <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-4">
               <div className="space-y-2">
                 <Label>OTP Code</Label>
-                <Input 
-                  placeholder="000000" 
+                <Input
+                  placeholder="000000"
                   value={formData.otp}
-                  onChange={(e) => setFormData({...formData, otp: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, otp: e.target.value })
+                  }
                   className="h-12 bg-secondary/50 rounded-xl text-center text-2xl tracking-[0.5em] font-bold"
                   maxLength={6}
                 />
               </div>
-              <Button onClick={handleVerifyOTP} disabled={loading} className="w-full h-12 rounded-xl font-bold">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & Login"}
+              <Button
+                onClick={handleVerifyOTP}
+                disabled={loading}
+                className="w-full h-12 rounded-xl font-bold"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Verify & Login"
+                )}
               </Button>
             </Card>
           </div>
@@ -313,13 +377,21 @@ ${shareData.referralLink}`;
                     <User className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-xs text-white/70 font-bold uppercase tracking-widest">Welcome back</p>
-                    <p className="text-xl font-display font-bold capitalize">{dashboard.username} ({dashboard.referral_code})</p>
+                    <p className="text-xs text-white/70 font-bold Capatalize tracking-widest">
+                      Welcome back
+                    </p>
+                    <p className="text-xl font-display font-bold capitalize">
+                      {dashboard.username} ({dashboard.referral_code})
+                    </p>
                   </div>
                 </div>
                 <div className="pt-4 border-t border-white/10">
-                  <p className="text-xs text-white/70 font-bold uppercase tracking-widest mb-1">Available Balance</p>
-                  <p className="text-4xl font-display font-bold">₹{dashboard.available_balance.toLocaleString('en-IN')}</p>
+                  <p className="text-xs text-white/70 font-bold Capatalize tracking-widest mb-1">
+                    Available Balance
+                  </p>
+                  <p className="text-4xl font-display font-bold">
+                    ₹{dashboard.available_balance.toLocaleString("en-IN")}
+                  </p>
                 </div>
               </div>
               <Wallet className="absolute -right-6 -bottom-6 w-32 h-32 text-white/10" />
@@ -327,15 +399,24 @@ ${shareData.referralLink}`;
 
             <Tabs defaultValue="withdraw" className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-secondary/50 rounded-2xl p-1 h-14">
-                <TabsTrigger value="withdraw" className="rounded-xl font-bold data-[state=active]:bg-primary">
+                <TabsTrigger
+                  value="withdraw"
+                  className="rounded-xl font-bold data-[state=active]:bg-primary"
+                >
                   <Wallet className="w-4 h-4 mr-2" />
                   Withdraw
                 </TabsTrigger>
-                <TabsTrigger value="history" className="rounded-xl font-bold data-[state=active]:bg-primary">
+                <TabsTrigger
+                  value="history"
+                  className="rounded-xl font-bold data-[state=active]:bg-primary"
+                >
                   <History className="w-4 h-4 mr-2" />
                   Stats
                 </TabsTrigger>
-                <TabsTrigger value="share" className="rounded-xl font-bold data-[state=active]:bg-primary">
+                <TabsTrigger
+                  value="share"
+                  className="rounded-xl font-bold data-[state=active]:bg-primary"
+                >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </TabsTrigger>
@@ -345,29 +426,49 @@ ${shareData.referralLink}`;
                 <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-4">
                   <div className="space-y-2">
                     <Label>UPI ID / Account Details</Label>
-                    <Input 
-                      placeholder="e.g. user@upi" 
+                    <Input
+                      placeholder="e.g. user@upi"
                       value={formData.accountDetails}
-                      onChange={(e) => setFormData({...formData, accountDetails: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          accountDetails: e.target.value,
+                        })
+                      }
                       className="h-12 bg-secondary/50 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Withdraw Amount (Min ₹500)</Label>
-                    <Input 
-                      placeholder="e.g. 500" 
+                    <Input
+                      placeholder="e.g. 500"
                       type="number"
                       value={formData.withdrawAmount}
-                      onChange={(e) => setFormData({...formData, withdrawAmount: e.target.value})}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          withdrawAmount: e.target.value,
+                        })
+                      }
                       className="h-12 bg-secondary/50 rounded-xl"
                     />
                   </div>
-                  <Button 
+                  <Button
                     onClick={handleWithdraw}
-                    disabled={loading || !formData.withdrawAmount || parseFloat(formData.withdrawAmount) < 500 || parseFloat(formData.withdrawAmount) > dashboard.available_balance}
+                    disabled={
+                      loading ||
+                      !formData.withdrawAmount ||
+                      parseFloat(formData.withdrawAmount) < 500 ||
+                      parseFloat(formData.withdrawAmount) >
+                        dashboard.available_balance
+                    }
                     className="w-full h-14 rounded-2xl font-bold shadow-gold"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Withdraw Amount"}
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Withdraw Amount"
+                    )}
                   </Button>
                 </Card>
 
@@ -379,11 +480,20 @@ ${shareData.referralLink}`;
                     </h3>
                     <Card className="p-4 bg-card border-orange-500/20 rounded-2xl flex justify-between items-center">
                       <div>
-                        <p className="font-bold">₹{dashboard.pending_withdrawal_amount.toLocaleString('en-IN')}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Withdrawal Request</p>
+                        <p className="font-bold">
+                          ₹
+                          {dashboard.pending_withdrawal_amount.toLocaleString(
+                            "en-IN",
+                          )}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                          Withdrawal Request
+                        </p>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full font-bold uppercase tracking-widest">Pending</span>
+                        <span className="text-[10px] bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                          Pending
+                        </span>
                       </div>
                     </Card>
                   </div>
@@ -393,12 +503,20 @@ ${shareData.referralLink}`;
               <TabsContent value="history" className="mt-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <Card className="p-4 bg-card border-border/50 rounded-2xl text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Total Earned</p>
-                    <p className="text-lg font-bold text-primary">₹{dashboard.total_earnings.toLocaleString('en-IN')}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">
+                      Total Earned
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      ₹{dashboard.total_earnings.toLocaleString("en-IN")}
+                    </p>
                   </Card>
                   <Card className="p-4 bg-card border-border/50 rounded-2xl text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Total Referrals</p>
-                    <p className="text-lg font-bold text-primary">{dashboard.total_referrals}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">
+                      Total Referrals
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {dashboard.total_referrals}
+                    </p>
                   </Card>
                 </div>
               </TabsContent>
@@ -408,11 +526,21 @@ ${shareData.referralLink}`;
                   <div className="space-y-6">
                     {/* QR Code Section */}
                     <Card className="p-6 bg-card border-border/50 rounded-3xl text-center space-y-4">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Your QR Code</Label>
+                      <Label className="text-xs font-bold Capatalize tracking-widest text-muted-foreground">
+                        Your QR Code
+                      </Label>
                       <div className="bg-white p-4 rounded-2xl inline-block mx-auto">
-                        <img src={shareData.referralQrCode} alt="Referral QR" className="w-48 h-48" />
+                        <img
+                          src={shareData.referralQrCode}
+                          alt="Referral QR"
+                          className="w-48 h-48"
+                        />
                       </div>
-                      <Button variant="outline" onClick={handleDownloadQR} className="w-full gap-2 rounded-xl">
+                      <Button
+                        variant="outline"
+                        onClick={handleDownloadQR}
+                        className="w-full gap-2 rounded-xl"
+                      >
                         <Download className="w-4 h-4" />
                         Download QR
                       </Button>
@@ -420,10 +548,22 @@ ${shareData.referralLink}`;
 
                     {/* Referral Link Section */}
                     <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-3">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Referral Link</Label>
+                      <Label className="text-xs font-bold Capatalize tracking-widest text-muted-foreground">
+                        Referral Link
+                      </Label>
                       <div className="flex gap-2">
-                        <Input readOnly value={shareData.referralLink} className="bg-secondary/30 border-none" />
-                        <Button size="icon" variant="secondary" onClick={() => handleCopy(shareData.referralLink, "Link")}>
+                        <Input
+                          readOnly
+                          value={shareData.referralLink}
+                          className="bg-secondary/30 border-none"
+                        />
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          onClick={() =>
+                            handleCopy(shareData.referralLink, "Link")
+                          }
+                        >
                           <Copy className="w-4 h-4" />
                         </Button>
                       </div>
@@ -431,17 +571,27 @@ ${shareData.referralLink}`;
 
                     {/* Referral Code Section */}
                     <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-3">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Referral Code</Label>
+                      <Label className="text-xs font-bold Capatalize tracking-widest text-muted-foreground">
+                        Referral Code
+                      </Label>
                       <div className="flex items-center justify-between bg-secondary/30 p-4 rounded-xl">
-                        <span className="text-2xl font-display font-bold text-primary tracking-wider">{shareData.referralCode}</span>
-                        <Button size="icon" variant="ghost" onClick={() => handleCopy(shareData.referralCode, "Code")}>
+                        <span className="text-2xl font-display font-bold text-primary tracking-wider">
+                          {shareData.referralCode}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() =>
+                            handleCopy(shareData.referralCode, "Code")
+                          }
+                        >
                           <Copy className="w-4 h-4" />
                         </Button>
                       </div>
                     </Card>
 
                     {/* WhatsApp Share Button */}
-                    <Button 
+                    <Button
                       onClick={handleWhatsAppShare}
                       className="w-full h-14 rounded-2xl font-bold bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg"
                     >

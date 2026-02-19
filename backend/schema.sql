@@ -48,6 +48,53 @@ CREATE TABLE IF NOT EXISTS properties (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create bookings table for booking flow
+CREATE TABLE IF NOT EXISTS bookings (
+  id SERIAL PRIMARY KEY,
+  booking_id VARCHAR(50) UNIQUE NOT NULL,
+  property_id VARCHAR(50) NOT NULL,
+  property_name VARCHAR(255) NOT NULL,
+  property_type VARCHAR(50) NOT NULL,
+  guest_name VARCHAR(255) NOT NULL,
+  guest_phone VARCHAR(20) NOT NULL,
+  owner_phone VARCHAR(20) NOT NULL,
+  admin_phone VARCHAR(20) NOT NULL,
+  checkin_datetime TIMESTAMP NOT NULL,
+  checkout_datetime TIMESTAMP NOT NULL,
+  advance_amount DECIMAL(10,2) NOT NULL,
+  total_amount DECIMAL(10,2),
+  persons INTEGER,
+  max_capacity INTEGER,
+  veg_guest_count INTEGER,
+  nonveg_guest_count INTEGER,
+  owner_name VARCHAR(255),
+  map_link TEXT,
+  property_address TEXT,
+  referral_code VARCHAR(50),
+  referral_discount DECIMAL(10,2) DEFAULT 0,
+  payment_status VARCHAR(50) DEFAULT 'INITIATED',
+  booking_status VARCHAR(50) DEFAULT 'PAYMENT_PENDING',
+  order_id VARCHAR(100),
+  transaction_id VARCHAR(100),
+  refund_id VARCHAR(100),
+  refund_status VARCHAR(50),
+  refund_amount DECIMAL(10,2),
+  payment_method VARCHAR(50),
+  admin_commission DECIMAL(10,2),
+  referrer_commission DECIMAL(10,2),
+  commission_status VARCHAR(50),
+  unit_id INTEGER,
+  action_token VARCHAR(100),
+  action_token_used BOOLEAN DEFAULT false,
+  action_token_expires_at TIMESTAMP,
+  webhook_processed BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  commission_paid BOOLEAN DEFAULT false,
+  commission_paid_at TIMESTAMP,
+  utr_number VARCHAR(100)
+);
+
 -- Create availability_calendar table for real-time sync (Villa calendar)
 CREATE TABLE IF NOT EXISTS availability_calendar (
   id SERIAL PRIMARY KEY,
@@ -183,50 +230,6 @@ CREATE INDEX IF NOT EXISTS idx_referral_users_mobile ON referral_users(mobile_nu
 CREATE INDEX IF NOT EXISTS idx_referral_users_code ON referral_users(referral_code);
 CREATE INDEX IF NOT EXISTS idx_referral_transactions_user ON referral_transactions(referral_user_id);
 CREATE INDEX IF NOT EXISTS idx_otp_verifications_mobile ON otp_verifications(mobile_number);
-
--- Create bookings table for booking flow
-CREATE TABLE IF NOT EXISTS bookings (
-  id SERIAL PRIMARY KEY,
-  booking_id VARCHAR(50) UNIQUE NOT NULL,
-  property_id VARCHAR(50) NOT NULL,
-  property_name VARCHAR(255) NOT NULL,
-  property_type VARCHAR(50) NOT NULL,
-  guest_name VARCHAR(255) NOT NULL,
-  guest_phone VARCHAR(20) NOT NULL,
-  owner_phone VARCHAR(20) NOT NULL,
-  admin_phone VARCHAR(20) NOT NULL,
-  checkin_datetime TIMESTAMP NOT NULL,
-  checkout_datetime TIMESTAMP NOT NULL,
-  advance_amount DECIMAL(10,2) NOT NULL,
-  total_amount DECIMAL(10,2),
-  persons INTEGER,
-  max_capacity INTEGER,
-  veg_guest_count INTEGER,
-  nonveg_guest_count INTEGER,
-  owner_name VARCHAR(255),
-  map_link TEXT,
-  property_address TEXT,
-  referral_code VARCHAR(50),
-  referral_discount DECIMAL(10,2) DEFAULT 0,
-  payment_status VARCHAR(50) DEFAULT 'INITIATED',
-  booking_status VARCHAR(50) DEFAULT 'PAYMENT_PENDING',
-  order_id VARCHAR(100),
-  transaction_id VARCHAR(100),
-  refund_id VARCHAR(100),
-  refund_status VARCHAR(50),
-  refund_amount DECIMAL(10,2),
-  payment_method VARCHAR(50),
-  admin_commission DECIMAL(10,2),
-  referrer_commission DECIMAL(10,2),
-  commission_status VARCHAR(50),
-  unit_id INTEGER,
-  action_token VARCHAR(100),
-  action_token_used BOOLEAN DEFAULT false,
-  action_token_expires_at TIMESTAMP,
-  webhook_processed BOOLEAN DEFAULT false,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE INDEX IF NOT EXISTS idx_bookings_booking_id ON bookings(booking_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_order_id ON bookings(order_id);

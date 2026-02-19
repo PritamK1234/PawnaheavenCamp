@@ -264,8 +264,24 @@ const OwnerProfile = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-[#D4AF37]">Profile</h2>
+        <h2 className="text-xl font-bold text-[#D4AF37]">Owner Dashboard</h2>
         <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[#D4AF37] hover:bg-[#D4AF37]/10"
+            onClick={() => navigate("/owner/bookings")}
+          >
+            Bookings
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[#D4AF37] hover:bg-[#D4AF37]/10"
+            onClick={() => navigate("/owner/referrals")}
+          >
+            Referrals
+          </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button

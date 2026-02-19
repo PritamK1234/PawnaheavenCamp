@@ -10,23 +10,16 @@ async function seed() {
   try {
     await client.query('BEGIN');
 
-    const categories = ['camping', 'cottage', 'villa'];
+    const categories = ['campings_cottages', 'villa'];
     const propertiesPerCategory = 5;
 
     const data = {
-      camping: [
+      campings_cottages: [
         { title: 'Riverfront Tent Stay', location: 'Rishikesh, Uttarakhand' },
         { title: 'Mountain View Camping', location: 'Manali, Himachal Pradesh' },
         { title: 'Desert Safari Camp', location: 'Jaisalmer, Rajasthan' },
         { title: 'Forest Edge Glamping', location: 'Wayanad, Kerala' },
         { title: 'Lakeside Stargazing Camp', location: 'Pawna Lake, Maharashtra' }
-      ],
-      cottage: [
-        { title: 'Pine Wood Cottage', location: 'Shimla, Himachal Pradesh' },
-        { title: 'Heritage Tea Estate Cottage', location: 'Munnar, Kerala' },
-        { title: 'Snow Peak Cabin', location: 'Gulmarg, Kashmir' },
-        { title: 'Riverside Log House', location: 'Tirthan Valley, Himachal Pradesh' },
-        { title: 'Apple Orchard Cottage', location: 'Manali, Himachal Pradesh' }
       ],
       villa: [
         { title: 'Infinity Pool Villa', location: 'Lonavala, Maharashtra' },
@@ -38,17 +31,11 @@ async function seed() {
     };
 
     const imageUrls = {
-      camping: [
+      campings_cottages: [
         'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=60',
         'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=800&q=60',
         'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&w=800&q=60',
         'https://images.unsplash.com/photo-1496080174650-637e3f22fa03?auto=format&fit=crop&w=800&q=60'
-      ],
-      cottage: [
-        'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=800&q=60',
-        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=60',
-        'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=60',
-        'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=60'
       ],
       villa: [
         'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=60',
@@ -72,11 +59,11 @@ async function seed() {
           [
             prop.title,
             slug,
-            `Beautiful ${category} located in ${prop.location}. Perfect for a relaxing getaway.`,
+            `Beautiful property located in ${prop.location}. Perfect for a relaxing getaway.`,
             category,
             prop.location,
             4.5 + Math.random() * 0.5,
-            category === 'camping' ? '₹1,999' : (category === 'cottage' ? '₹4,999' : '₹12,999'),
+            category === 'campings_cottages' ? '₹1,999' : '₹12,999',
             'per night',
             category === 'villa' ? 8 : 4,
             JSON.stringify(['Wifi', 'Parking', 'Kitchen', 'View']),

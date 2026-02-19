@@ -32,6 +32,10 @@ import { toast } from "sonner";
 interface DashboardData {
   username: string;
   referral_code: string;
+  referral_type: string;
+  commission_label: string;
+  linked_property_id: number | null;
+  linked_property_slug: string | null;
   total_earnings: number;
   total_withdrawals: number;
   available_balance: number;
@@ -43,6 +47,8 @@ interface ShareData {
   referralCode: string;
   referralLink: string;
   referralQrCode: string;
+  referralType: string;
+  linkedPropertySlug: string | null;
 }
 
 const CheckEarningPage = () => {
@@ -383,6 +389,17 @@ ${shareData.referralLink}`;
                     <p className="text-xl font-display font-bold capitalize">
                       {dashboard.username} ({dashboard.referral_code})
                     </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                        dashboard.referral_type === 'owner' ? 'bg-blue-500/20 text-blue-400' :
+                        dashboard.referral_type === 'b2b' ? 'bg-amber-500/20 text-amber-400' :
+                        'bg-emerald-500/20 text-emerald-400'
+                      )}>
+                        {dashboard.referral_type === 'owner' ? 'Owner' : dashboard.referral_type === 'b2b' ? 'B2B Partner' : 'Public'} Referral
+                      </span>
+                      <span className="text-[10px] text-white/50">{dashboard.commission_label}</span>
+                    </div>
                   </div>
                 </div>
                 <div className="pt-4 border-t border-white/10">

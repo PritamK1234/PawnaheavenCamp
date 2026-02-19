@@ -108,6 +108,17 @@ Preferred communication style: Simple, everyday language.
 - **Install Detection**: Auto-hides when app installed, reappears on uninstall (uses `display-mode: standalone` media query)
 - **VitePWA Config**: `injectRegister: false` to allow manual SW registration control
 
+### Referral System (Extended Feb 2026)
+- **Three referral types**: Public (15% commission), Owner (25% commission, property-linked), B2B (22% commission)
+- **Commission structure**: No referral = 30% Admin; Public = 15% Referrer + 15% Admin; Owner = 25% Owner + 5% Admin; B2B = 22% B2B + 8% Admin
+- **Admin-only creation**: Owner and B2B codes are created exclusively from Admin Dashboard > B2B tab
+- **Owner referral links**: Redirect to specific property page (`/property/slug?ref=CODE`) and lock customer to that property via `localStorage.owner_referral_lock`
+- **B2B/Public links**: Redirect to home page (`/?ref=CODE`)
+- **Owner Dashboard referral page**: `/owner/referral` - auto-fetches owner's referral data by their mobile number
+- **Database columns**: `referral_type` (public/owner/b2b), `linked_property_id`, `linked_property_slug` on `referral_users` table
+- **Backend endpoints**: `POST /api/referrals/admin/create` (admin creates owner/b2b codes), `GET /api/referrals/owner-lookup/:mobile`, `GET /api/referrals/validate/:code` (returns type info)
+- **Pages reused**: CheckEarningPage, GenerateCodePage, ReferralPage all display type-specific info via conditional rendering
+
 ### Data Architecture
 - PostgreSQL database with full booking/payment schema
 - Property data from database with category settings

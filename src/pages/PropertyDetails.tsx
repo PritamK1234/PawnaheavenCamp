@@ -953,12 +953,19 @@ const PropertyDetails = () => {
 
           {/* Back & Share Buttons */}
           <div className="absolute top-8 left-6 right-6 flex items-center justify-between z-20">
-            <Link
-              to="/"
+            <button
+              onClick={() => {
+                const ownerLock = localStorage.getItem("owner_referral_lock");
+                if (ownerLock) {
+                  window.history.length > 1 ? window.history.back() : window.close();
+                } else {
+                  window.location.href = "/";
+                }
+              }}
               className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 text-white"
             >
               <ChevronLeft className="w-6 h-6" />
-            </Link>
+            </button>
             <Button
               variant="ghost"
               size="icon"

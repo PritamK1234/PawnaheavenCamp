@@ -40,6 +40,7 @@ const OwnerInfo = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-o
 const VillaOwnerMain = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Main"));
 const VillaOwnerProfile = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Profile"));
 const VillaOwnerInfo = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Info"));
+const OwnerReferral = lazy(() => import("./pages/owner/dashboard/OwnerReferral"));
 
 const queryClient = new QueryClient();
 
@@ -49,11 +50,18 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
   const [showChildren, setShowChildren] = useState(false);
 
   useEffect(() => {
-    // Referral Auto-Apply Logic
     const params = new URLSearchParams(location.search);
     const refCode = params.get("ref");
     if (refCode) {
       localStorage.setItem("applied_referral_code", refCode.toUpperCase());
+      axios.get(`/api/referrals/validate/${refCode}`).then(res => {
+        if (res.data.valid && res.data.referral_type === 'owner' && res.data.linked_property_slug) {
+          localStorage.setItem("owner_referral_lock", res.data.linked_property_slug);
+          if (!location.pathname.startsWith('/property/')) {
+            window.location.href = `/property/${res.data.linked_property_slug}?ref=${refCode.toUpperCase()}`;
+          }
+        }
+      }).catch(() => {});
     }
 
     setShowChildren(false);
@@ -104,6 +112,7 @@ const App = () => {
               <Route path="/owner/register/otp" element={<PageWrapper><OwnerRegisterOTP /></PageWrapper>} />
               <Route path="/owner/login" element={<PageWrapper><OwnerLogin /></PageWrapper>} />
               <Route path="/owner/dashboard" element={<PageWrapper><DashboardRedirect /></PageWrapper>} />
+              <Route path="/owner/referral" element={<PageWrapper><OwnerReferral /></PageWrapper>} />
               
               <Route element={<OwnerLayout />}>
                 <Route path="/owner/dashboard/villa" element={<PageWrapper><VillaOwnerMain /></PageWrapper>} />

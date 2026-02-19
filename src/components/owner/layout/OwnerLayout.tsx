@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Calendar, IndianRupee, User, LayoutGrid, Info } from 'lucide-react';
+import { Calendar, IndianRupee, User, LayoutGrid, Info, ClipboardList, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PWAInstallButton from '../pwa/PWAInstallButton';
 
@@ -44,7 +44,9 @@ const OwnerLayout = () => {
   const profilePath = isVilla ? '/owner/profile/villa' : '/owner/profile/camping';
 
   const navItems = [
-    { label: 'Calendar & Prices', icon: Calendar, path: dashboardPath },
+    { label: 'Calendar', icon: Calendar, path: dashboardPath },
+    { label: 'Bookings', icon: ClipboardList, path: '/owner/bookings' },
+    { label: 'Referrals', icon: Share2, path: '/owner/referrals' },
     { label: 'Units', icon: LayoutGrid, path: '/owner/units', showIf: !isVilla },
     { label: 'Profile', icon: User, path: profilePath },
   ].filter(item => item.showIf === undefined || item.showIf);

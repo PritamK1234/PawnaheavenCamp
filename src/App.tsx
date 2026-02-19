@@ -33,6 +33,7 @@ const OwnerLayout = lazy(() => import("./components/owner/layout/OwnerLayout"));
 const OwnerMain = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Main"));
 const OwnerProfile = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Profile"));
 const OwnerUnits = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Units"));
+const OwnerBookings = lazy(() => import("./pages/owner/dashboard/bookings/Bookings"));
 const OwnerInfo = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Info"));
 
 const VillaOwnerMain = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Main"));
@@ -107,6 +108,7 @@ const App = () => {
                 <Route path="/owner/dashboard/camping" element={<PageWrapper><OwnerMain /></PageWrapper>} />
                 <Route path="/owner/profile/villa" element={<PageWrapper><VillaOwnerProfile /></PageWrapper>} />
                 <Route path="/owner/profile/camping" element={<PageWrapper><OwnerProfile /></PageWrapper>} />
+                <Route path="/owner/bookings" element={<PageWrapper><OwnerBookings /></PageWrapper>} />
                 <Route path="/owner/units" element={<PageWrapper><OwnerUnits /></PageWrapper>} />
               </Route>
 

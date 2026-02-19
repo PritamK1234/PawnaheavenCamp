@@ -46,7 +46,6 @@ const OwnerLayout = () => {
   const navItems = [
     { label: 'Calendar', icon: Calendar, path: dashboardPath },
     { label: 'Bookings', icon: ClipboardList, path: '/owner/bookings' },
-    { label: 'Referrals', icon: Share2, path: '/owner/referrals' },
     { label: 'Units', icon: LayoutGrid, path: '/owner/units', showIf: !isVilla },
     { label: 'Profile', icon: User, path: profilePath },
   ].filter(item => item.showIf === undefined || item.showIf);

@@ -4,7 +4,7 @@ const properties = [
   // Top Campings (Pawna) - 6 properties
   {
     title: "Pawna Riverside Glamping",
-    price: "₹2,999",
+    price: "2,999",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Experience ultimate glamping at Pawna River with DJ and riverfront views.",
@@ -21,7 +21,7 @@ const properties = [
   },
   {
     title: "CozyNest at Chavsar – Pawna Lake",
-    price: "₹3,300",
+    price: "3,300",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Cozy camping experience at Pawna with food included and lake access.",
@@ -38,7 +38,7 @@ const properties = [
   },
   {
     title: "Lakeside Glamping Camp – Pawna Lake",
-    price: "₹2,499",
+    price: "2,499",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Exclusive glamping camp with stargazing and lake access.",
@@ -55,7 +55,7 @@ const properties = [
   },
   {
     title: "Adventure Camping Resort – Pawna",
-    price: "₹2,799",
+    price: "2,799",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Adventure-packed camping with nature trails and photography opportunities.",
@@ -72,7 +72,7 @@ const properties = [
   },
   {
     title: "Nature's Embrace Camping – Pawna",
-    price: "₹2,599",
+    price: "2,599",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Peaceful camping with local cuisine and expert guides.",
@@ -89,7 +89,7 @@ const properties = [
   },
   {
     title: "Pawna Eco Glamping Site",
-    price: "₹3,099",
+    price: "3,099",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Eco-friendly glamping with organic food and wellness activities.",
@@ -107,7 +107,7 @@ const properties = [
   // Top Cottages (Pawna) - 7 properties
   {
     title: "AC House with Sleeping Loft – Pawna Lake",
-    price: "₹3,199",
+    price: "3,199",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Comfortable AC cottage with swimming pool and lake activities.",
@@ -123,7 +123,7 @@ const properties = [
   },
   {
     title: "Lakestory Resort – Pawna Lake",
-    price: "₹7,499",
+    price: "7,499",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Luxury cottage resort with private pool and smart entertainment.",
@@ -139,7 +139,7 @@ const properties = [
   },
   {
     title: "Dew Dreams – Couple Stay with Private Pool",
-    price: "₹8,249",
+    price: "8,249",
     priceNote: "per person with meal",
     capacity: 2,
     description: "Romantic couple retreat with private pool and spa services.",
@@ -155,7 +155,7 @@ const properties = [
   },
   {
     title: "Serene Cottage Retreat – Pawna",
-    price: "₹4,999",
+    price: "4,999",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Peaceful cottage with valley views and mini kitchen.",
@@ -171,7 +171,7 @@ const properties = [
   },
   {
     title: "Riverside Cottage Escape – Pawna",
-    price: "₹5,499",
+    price: "5,499",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Riverside cottage with water activities and natural beauty.",
@@ -187,7 +187,7 @@ const properties = [
   },
   {
     title: "Heritage Cottage Hotel – Pawna",
-    price: "₹6,299",
+    price: "6,299",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Heritage cottage with fine dining and spa services.",
@@ -203,7 +203,7 @@ const properties = [
   },
   {
     title: "Green Canvas Cottages",
-    price: "₹3,199",
+    price: "3,199",
     priceNote: "Adult per night",
     capacity: 2,
     description: "Extreme lakeside location with boating, bonfire, and live music on Saturdays.",
@@ -220,7 +220,7 @@ const properties = [
   // Top Villas (Lonavala) - 6 properties
   {
     title: "Dome Story Resort – Malvandi Lake, Lonavala",
-    price: "₹7,499",
+    price: "7,499",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Luxury dome villa resort with lake views and exclusive amenities.",
@@ -236,7 +236,7 @@ const properties = [
   },
   {
     title: "Luxury Villa Estate – Lonavala",
-    price: "₹12,999",
+    price: "12,999",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Ultimate luxury villa with private chef and premium amenities.",
@@ -252,7 +252,7 @@ const properties = [
   },
   {
     title: "Mountain Retreat Villa – Lonavala",
-    price: "₹9,999",
+    price: "9,999",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Mountain villa with valley views and private pool.",
@@ -268,7 +268,7 @@ const properties = [
   },
   {
     title: "Heritage Villa – Lonavala",
-    price: "₹10,499",
+    price: "10,499",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Historic villa with antique furnishings and fine dining.",
@@ -284,7 +284,7 @@ const properties = [
   },
   {
     title: "Waterfront Villa Paradise – Lonavala",
-    price: "₹11,499",
+    price: "11,499",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Waterfront villa with yacht access and premium water amenities.",
@@ -300,7 +300,7 @@ const properties = [
   },
   {
     title: "Eco-Luxury Villa – Lonavala",
-    price: "₹8,999",
+    price: "8,999",
     priceNote: "per person with meal",
     capacity: 4,
     description: "Sustainable luxury villa with wellness facilities.",
@@ -339,7 +339,7 @@ async function populateProperties() {
     const campingProps = [
       {
         title: "Pawna Riverside Glamping",
-        price: "₹2,999",
+        price: "2,999",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Experience ultimate glamping at Pawna River with DJ and riverfront views.",
@@ -361,7 +361,7 @@ async function populateProperties() {
       },
       {
         title: "CozyNest at Chavsar – Pawna Lake",
-        price: "₹3,300",
+        price: "3,300",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Cozy camping experience at Pawna with food included and lake access.",
@@ -383,7 +383,7 @@ async function populateProperties() {
       },
       {
         title: "Lakeside Glamping Camp – Pawna Lake",
-        price: "₹2,499",
+        price: "2,499",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Exclusive glamping camp with stargazing and lake access.",
@@ -405,7 +405,7 @@ async function populateProperties() {
       },
       {
         title: "Adventure Camping Resort – Pawna",
-        price: "₹2,799",
+        price: "2,799",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Adventure-packed camping with nature trails and photography opportunities.",
@@ -427,7 +427,7 @@ async function populateProperties() {
       },
       {
         title: "Nature's Embrace Camping – Pawna",
-        price: "₹2,599",
+        price: "2,599",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Peaceful camping with local cuisine and expert guides.",
@@ -453,7 +453,7 @@ async function populateProperties() {
     const cottageProps = [
       {
         title: "AC House with Sleeping Loft – Pawna Lake",
-        price: "₹3,199",
+        price: "3,199",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Comfortable AC cottage with swimming pool and lake activities.",
@@ -474,7 +474,7 @@ async function populateProperties() {
       },
       {
         title: "Lakestory Resort – Pawna Lake",
-        price: "₹7,499",
+        price: "7,499",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Luxury cottage resort with private pool and smart entertainment.",
@@ -495,7 +495,7 @@ async function populateProperties() {
       },
       {
         title: "Dew Dreams – Couple Stay",
-        price: "₹8,249",
+        price: "8,249",
         priceNote: "per person with meal",
         capacity: 2,
         description: "Romantic couple retreat with private pool and spa services.",
@@ -516,7 +516,7 @@ async function populateProperties() {
       },
       {
         title: "Serene Cottage Retreat – Pawna",
-        price: "₹4,999",
+        price: "4,999",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Peaceful cottage with valley views and mini kitchen.",
@@ -537,7 +537,7 @@ async function populateProperties() {
       },
       {
         title: "Riverside Cottage Escape – Pawna",
-        price: "₹5,499",
+        price: "5,499",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Riverside cottage with water activities and natural beauty.",
@@ -562,7 +562,7 @@ async function populateProperties() {
     const villaProps = [
       {
         title: "Dome Story Resort – Malvandi Lake",
-        price: "₹7,499",
+        price: "7,499",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Luxury dome villa resort with lake views and exclusive amenities.",
@@ -583,7 +583,7 @@ async function populateProperties() {
       },
       {
         title: "Luxury Villa Estate – Lonavala",
-        price: "₹12,999",
+        price: "12,999",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Ultimate luxury villa with private chef and premium amenities.",
@@ -604,7 +604,7 @@ async function populateProperties() {
       },
       {
         title: "Mountain Retreat Villa – Lonavala",
-        price: "₹9,999",
+        price: "9,999",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Mountain villa with valley views and private pool.",
@@ -625,7 +625,7 @@ async function populateProperties() {
       },
       {
         title: "Heritage Villa – Lonavala",
-        price: "₹10,499",
+        price: "10,499",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Historic villa with antique furnishings and fine dining.",
@@ -646,7 +646,7 @@ async function populateProperties() {
       },
       {
         title: "Eco-Luxury Villa – Lonavala",
-        price: "₹8,999",
+        price: "8,999",
         priceNote: "per person with meal",
         capacity: 4,
         description: "Sustainable luxury villa with wellness facilities.",

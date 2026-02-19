@@ -756,12 +756,14 @@ const createProperty = async (req, res) => {
       schedule,
       availability,
       images,
+      referral_code,
     } = req.body;
 
     console.log("Creating property with data:", {
       title,
       category,
       imageCount: images?.length,
+      referral_code,
     });
 
     // Validate required fields
@@ -812,8 +814,8 @@ const createProperty = async (req, res) => {
       `INSERT INTO properties (
         title, slug, property_id, description, category, location, rating, price, weekday_price, weekend_price, price_note,
         capacity, max_capacity, check_in_time, check_out_time, status, is_top_selling, is_active, is_available,
-        contact, owner_name, owner_mobile, map_link, amenities, activities, highlights, policies, schedule, availability, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, CURRENT_TIMESTAMP)
+        contact, owner_name, owner_mobile, map_link, amenities, activities, highlights, policies, schedule, availability, referral_code, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, CURRENT_TIMESTAMP)
       RETURNING *`,
       [
         title,
@@ -857,6 +859,7 @@ const createProperty = async (req, res) => {
         typeof availability === "string"
           ? availability
           : JSON.stringify(availability || []),
+        referral_code || null,
       ],
     );
 
@@ -946,16 +949,16 @@ const togglePropertyStatus = async (req, res) => {
       });
     }
 
-    if (!["is_active", "is_top_selling", "is_available"].includes(field)) {
+    if (!["is_active", "is_top_selling", "is_available", "referral_code"].includes(field)) {
       return res.status(400).json({
         success: false,
         message:
-          "Invalid field. Only is_active, is_top_selling and is_available can be toggled.",
+          "Invalid field. Only is_active, is_top_selling, is_available and referral_code can be toggled.",
       });
     }
 
-    const updateQuery = `UPDATE properties SET ${field} = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`;
-    const result = await query(updateQuery, [value, id]);
+    const updateQuery = `UPDATE properties SET ${field} = $1, referral_code = CASE WHEN $2 = 'referral_code' THEN $1 ELSE referral_code END, updated_at = CURRENT_TIMESTAMP WHERE id = $3`;
+    const result = await query(updateQuery, [value, field, id]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({

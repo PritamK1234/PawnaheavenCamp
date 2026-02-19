@@ -47,10 +47,10 @@ const Bookings = () => {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pb-32">
       {/* Sticky Filters Header */}
-      <div className="sticky top-0 z-50 bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-4 py-4 shadow-xl">
+      <div className="sticky top-[61px] z-50 px-4 py-1.5 backdrop-blur-sm">
         <div className="grid grid-cols-3 gap-2">
           <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="h-10 bg-black/40 border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold focus:ring-1 focus:ring-[#D4AF37]/50 rounded-xl">
+            <SelectTrigger className="h-8 bg-[#1A1A1A]/80 border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold focus:ring-0 focus:ring-offset-0 rounded-lg">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent className="bg-[#1A1A1A] border-[#D4AF37]/30 text-white">
@@ -61,7 +61,7 @@ const Bookings = () => {
           </Select>
 
           <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="h-10 bg-black/40 border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold focus:ring-1 focus:ring-[#D4AF37]/50 rounded-xl">
+            <SelectTrigger className="h-8 bg-[#1A1A1A]/80 border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold focus:ring-0 focus:ring-offset-0 rounded-lg">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
             <SelectContent className="bg-[#1A1A1A] border-[#D4AF37]/30 text-white">
@@ -72,7 +72,7 @@ const Bookings = () => {
           </Select>
 
           <Select value={unit} onValueChange={setUnit}>
-            <SelectTrigger className="h-10 bg-black/40 border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold focus:ring-1 focus:ring-[#D4AF37]/50 rounded-xl">
+            <SelectTrigger className="h-8 bg-[#1A1A1A]/80 border-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold focus:ring-0 focus:ring-offset-0 rounded-lg">
               <SelectValue placeholder="Unit" />
             </SelectTrigger>
             <SelectContent className="bg-[#1A1A1A] border-[#D4AF37]/30 text-white">

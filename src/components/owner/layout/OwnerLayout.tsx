@@ -52,7 +52,7 @@ const OwnerLayout = () => {
 
   return (
     <div className="min-h-screen bg-black pb-24">
-      <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-3 py-3 sticky top-0 z-40 shadow-2xl">
+      <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-3 py-3 sticky top-0 z-[60] shadow-2xl">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col min-w-0 flex-shrink">
             <h1 className="text-[8px] font-bold uppercase tracking-[0.1em] text-[#D4AF37] leading-none mb-0.5">Owner Portal</h1>

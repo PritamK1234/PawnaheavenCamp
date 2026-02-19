@@ -8,9 +8,10 @@ interface ImageSliderProps {
   images: string[];
   title: string;
   className?: string;
+  aspectRatio?: string;
 }
 
-const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
+const ImageSlider = ({ images, title, className, aspectRatio }: ImageSliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -55,7 +56,11 @@ const ImageSlider = ({ images, title, className }: ImageSliderProps) => {
 
   return (
     <div 
-      className={cn("relative w-full aspect-[4/3] md:aspect-[16/9] bg-neutral-900 rounded-2xl overflow-hidden group", className)}
+      className={cn(
+        "relative w-full bg-neutral-900 rounded-2xl overflow-hidden group",
+        aspectRatio === "1:1" ? "aspect-square" : "aspect-[4/3] md:aspect-[16/9]",
+        className
+      )}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

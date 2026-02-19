@@ -343,29 +343,12 @@ const AdminDashboard = () => {
                   variant="ghost"
                   size="icon"
                   className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10 relative"
+                  onClick={() => navigate("/admin/requests")}
                 >
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-charcoal animate-pulse" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent
-                align="end"
-                className="w-80 bg-charcoal/95 border-white/10 text-white rounded-2xl backdrop-blur-xl mt-2 shadow-2xl"
-              >
-                <div className="p-4">
-                  <h3 className="font-bold text-lg mb-2 text-gold">
-                    Notifications
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                      <p className="text-sm font-medium">System Alert</p>
-                      <p className="text-xs text-white/50">
-                        Server is running smoothly.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
             </Popover>
             <Button
               variant="ghost"
@@ -948,31 +931,6 @@ const AdminDashboard = () => {
                 ))}
               </TabsList>
             </Tabs>
-
-            <div className="flex gap-2">
-              <Button
-                variant={transactionSubTab === "requests" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTransactionSubTab("requests")}
-                className={cn(
-                  "rounded-full text-[10px] h-7 px-3",
-                  transactionSubTab === "requests" ? "bg-gold text-black" : "border-gold/30 text-gold",
-                )}
-              >
-                Withdraw Request
-              </Button>
-              <Button
-                variant={transactionSubTab === "history" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTransactionSubTab("history")}
-                className={cn(
-                  "rounded-full text-[10px] h-7 px-3",
-                  transactionSubTab === "history" ? "bg-gold text-black" : "border-gold/30 text-gold",
-                )}
-              >
-                Withdraw History
-              </Button>
-            </div>
 
             {transactionSubTab === "all" && (
               <>

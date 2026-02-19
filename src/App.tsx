@@ -21,6 +21,7 @@ const InformationPage = lazy(() => import("./pages/InformationPage"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
 const GenerateCodePage = lazy(() => import("./pages/GenerateCodePage"));
 const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
+const RequestsPage = lazy(() => import("./pages/RequestsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Owner Dashboard Pages
@@ -95,6 +96,7 @@ const App = () => {
               <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />
               <Route path="/referral/generate" element={<PageWrapper><GenerateCodePage /></PageWrapper>} />
               <Route path="/referral/check" element={<PageWrapper><CheckEarningPage /></PageWrapper>} />
+              <Route path="/admin/requests" element={<PageWrapper><RequestsPage /></PageWrapper>} />
               
               {/* Owner Routes */}
               <Route path="/owner" element={<PageWrapper><OwnerEntry /></PageWrapper>} />

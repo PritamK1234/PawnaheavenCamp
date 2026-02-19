@@ -99,12 +99,12 @@ const ReferralPage = () => {
               <Trophy className="w-6 h-6 text-primary" />
               <h2 className="font-display text-2xl font-bold">Top Earners</h2>
             </div>
-            <Tabs defaultValue="all-time" className="w-full sm:w-[200px]" onValueChange={(v) => setPeriod(v as any)}>
-              <TabsList className="grid w-full grid-cols-2 bg-secondary/50 rounded-xl">
-                <TabsTrigger value="month" className="text-[10px] uppercase font-bold rounded-lg">Month</TabsTrigger>
-                <TabsTrigger value="all-time" className="text-[10px] uppercase font-bold rounded-lg">All Time</TabsTrigger>
-              </TabsList>
-            </Tabs>
+        <Tabs defaultValue="all" className="w-full sm:w-[200px]" onValueChange={(v) => setPeriod(v as any)}>
+          <TabsList className="grid w-full grid-cols-2 bg-secondary/50 rounded-xl">
+            <TabsTrigger value="month" className="text-[10px] uppercase font-bold rounded-lg">Month</TabsTrigger>
+            <TabsTrigger value="all" className="text-[10px] uppercase font-bold rounded-lg">All Time</TabsTrigger>
+          </TabsList>
+        </Tabs>
           </div>
 
           <div className="space-y-3">

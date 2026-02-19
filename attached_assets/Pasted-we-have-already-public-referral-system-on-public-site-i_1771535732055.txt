@@ -1,0 +1,65 @@
+we have already public referral system on public site (in "referral earning"section) which consist of those  3 pages shown below:  
+CheckEarningPage.tsx
+GenerateCodePage.tsx
+ReferralPage.tsx 
+
+now on admin dashboard we have 2 more types of referrals (B2B referrals and Owaners referrals).
+this 2 referrals should be generated on owners dashboard from "B2B" tab where there are 2 tabs "Generate code for B2B" and "Generate code for Owners ".
+
+let me tell you first about "Owners referral": 
+
+1) this code is created at "B2B" tab >> "Generate code for Owners " on admin dashboard by only admin. 
+2) then its dashboard should be access by owner (using login otp) either from owners dashboard (from referrals page)   or from public site (from referral earning section)
+3) if admin have never generated Owners referral code for any owner then in that owners dashboards referral page it will show all fields blank of referral dashboard and when admin gerenate owners referral code for that owner using property ID,  then that blank of referral dashboard auto fetch that dashboards info.
+
+
+ I ->  Owner Referral Code Rules (IMPORTANT)
+- Owner referral code is special
+- Created only by admin
+- Referral link / QR:
+	- Redirects customer only to that owner’s property details page (that mean each owner property referral link should route us to that owners property only with that property owner referral 25% of 30% advance payment when customer make booking, admin get 8% of 30% advance payment )
+	- Customer must never land on public home page (customer has only access to that referral owners property)
+	- If customer goes back, redirect to external source app (where link was clicked)
+- Owner can use site as white-label marketing page for his properties
+
+
+
+
+let me tell you first about "B2B referral": 
+
+1) this code is created at "B2B" tab >> "Generate code for B2B " on admin dashboard by only admin. 
+2) then its dashboard should be access by B2B partner (using login otp) same as public referral,  from public site (from referral earning section)
+
+
+ I ->  B2B Referral Code Rules (IMPORTANT)
+- B2B referral code is also special
+- Created only by admin
+- Referral link / QR:
+	- Redirects customer to public home page (on our public site same as public referral code) that owner get 22% of 30% advance payment if any customer make booking from his B2B referral link admin get 8% of 30% advance payment. 
+	- Customer can book any property which is listed on our website (customer has access to all properties)
+-It is basically work same like public referral code but referral cummission rules are diferrent.
+
+ # Commission Logic (Advance Payment = 30%)
+⚠️ Referral amount is credited only after checkout date
+ Case 1 (Existing – keep as it is)
+- No referral code → 30% to Admin
+ Case 2 (Existing – keep as it is)
+- Public referral code → 15% Referral + 15% Admin
+ Case 3 (NEW – implement)
+- Owner referral code:
+	- 25% → Owner Referral Dashboard
+	- 5% → Admin
+ Case 4 (NEW – implement)
+- B2B referral code:
+	- 22% → B2B Referral Dashboard
+	- 8% → Admin
+#  General Rules
+- Do NOT break existing referral logic
+- Credit referral after checkout date only
+- All these 3 referral (Owner, public and B2B) can login to their dashboard from public side(Referral Earning) Section
+
+
+
+now all this three uses same referrals uses same pages CheckEarningPage.tsx , GenerateCodePage.tsx and ReferralPage.tsx . 
+so tell me each should have different this 3 pages or we should use same pages for code generation , login and referral dashboard , just add those cummission rules, data storage (to the database) and data fetch (from database to referral dashboard) according to property types to this existing three pages (CheckEarningPage.tsx , GenerateCodePage.tsx and ReferralPage.tsx) ?
+give me complete plan how it will work ? 

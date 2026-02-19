@@ -17,11 +17,18 @@ const ReferralController = {
       const { code } = req.params;
       if (!code) return res.status(400).json({ valid: false, error: 'Code is required' });
       const result = await query(
-        "SELECT id, username, referral_code FROM referral_users WHERE referral_code = $1 AND status = 'active'",
+        "SELECT id, username, referral_code, referral_type, linked_property_id, linked_property_slug FROM referral_users WHERE referral_code = $1 AND status = 'active'",
         [code.toUpperCase()]
       );
       if (result.rows.length > 0) {
-        return res.json({ valid: true, referrer: result.rows[0].username });
+        const user = result.rows[0];
+        return res.json({ 
+          valid: true, 
+          referrer: user.username,
+          referral_type: user.referral_type || 'public',
+          linked_property_id: user.linked_property_id || null,
+          linked_property_slug: user.linked_property_slug || null
+        });
       }
       return res.json({ valid: false });
     } catch (error) {
@@ -51,6 +58,23 @@ const ReferralController = {
     try {
       const shareInfo = await ReferralService.getShareInfo(req.user.id);
       res.json(shareInfo);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  async ownerLookup(req, res) {
+    try {
+      const { mobile } = req.params;
+      if (!mobile) return res.status(400).json({ error: 'Mobile number is required' });
+      const result = await query(
+        "SELECT id, username, referral_code, referral_type, linked_property_id, linked_property_slug, status FROM referral_users WHERE mobile_number = $1 AND referral_type = 'owner'",
+        [mobile]
+      );
+      if (result.rows.length > 0) {
+        return res.json({ found: true, data: result.rows[0] });
+      }
+      return res.json({ found: false });
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

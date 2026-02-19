@@ -93,13 +93,15 @@ const initiateBooking = async (req, res) => {
 
     const bookingId = generateBookingId();
     let referralDiscount = 0;
+    let referralType = null;
 
     if (bookingRequest.referral_code) {
       const refResult = await query(
-        "SELECT * FROM referral_users WHERE referral_code = $1 AND status = 'active'",
+        "SELECT *, referral_type FROM referral_users WHERE referral_code = $1 AND status = 'active'",
         [bookingRequest.referral_code.toUpperCase()]
       );
       if (refResult.rows.length > 0) {
+        referralType = refResult.rows[0].referral_type || 'public';
         referralDiscount = Math.round(bookingRequest.advance_amount * 0.05);
         bookingRequest.advance_amount = bookingRequest.advance_amount - referralDiscount;
       }
@@ -117,9 +119,9 @@ const initiateBooking = async (req, res) => {
         total_amount, persons, max_capacity,
         veg_guest_count, nonveg_guest_count,
         owner_name, map_link, property_address,
-        referral_code, referral_discount,
+        referral_code, referral_discount, referral_type,
         payment_status, booking_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, 'INITIATED', 'PAYMENT_PENDING')
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, 'INITIATED', 'PAYMENT_PENDING')
       RETURNING *
     `;
     const values = [
@@ -144,6 +146,7 @@ const initiateBooking = async (req, res) => {
       bookingRequest.property_address || null,
       bookingRequest.referral_code ? bookingRequest.referral_code.toUpperCase() : null,
       referralDiscount,
+      referralType,
     ];
 
     const result = await query(insertQuery, values);
@@ -800,7 +803,11 @@ const handleOwnerAction = async (req, res) => {
             [booking.referral_code]
           );
           if (refUser.rows.length > 0) {
-            const commission = Math.round(parseFloat(booking.advance_amount) * 0.05);
+            const refType = booking.referral_type || refUser.rows[0].referral_type || 'public';
+            let commissionRate = 0.15;
+            if (refType === 'owner') commissionRate = 0.25;
+            else if (refType === 'b2b') commissionRate = 0.22;
+            const commission = Math.round(parseFloat(booking.advance_amount) * commissionRate);
             const existingTxn = await query(
               "SELECT id FROM referral_transactions WHERE booking_id = $1",
               [booking.id]
@@ -810,7 +817,7 @@ const handleOwnerAction = async (req, res) => {
                 "INSERT INTO referral_transactions (referral_user_id, booking_id, amount, type, status, source) VALUES ($1, $2, $3, 'earning', 'pending', 'booking')",
                 [refUser.rows[0].id, booking.id, commission]
               );
-              console.log('Referral commission (PENDING) created for booking:', booking.booking_id);
+              console.log(`Referral commission (PENDING, type=${refType}, rate=${commissionRate}) created for booking:`, booking.booking_id);
             }
           }
         } catch (refErr) {
@@ -942,7 +949,11 @@ const handleWhatsAppWebhook = async (req, res) => {
                     [booking.referral_code]
                   );
                   if (refUser.rows.length > 0) {
-                    const commission = Math.round(parseFloat(booking.advance_amount) * 0.05);
+                    const refType = booking.referral_type || refUser.rows[0].referral_type || 'public';
+                    let commissionRate = 0.15;
+                    if (refType === 'owner') commissionRate = 0.25;
+                    else if (refType === 'b2b') commissionRate = 0.22;
+                    const commission = Math.round(parseFloat(booking.advance_amount) * commissionRate);
                     const existingTxn = await query(
                       "SELECT id FROM referral_transactions WHERE booking_id = $1",
                       [booking.id]

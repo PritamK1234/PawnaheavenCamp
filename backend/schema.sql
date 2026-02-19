@@ -150,6 +150,9 @@ CREATE TABLE IF NOT EXISTS referral_users (
   referral_url VARCHAR(500),
   balance DECIMAL(10,2) DEFAULT 0,
   status VARCHAR(20) DEFAULT 'active',
+  referral_type VARCHAR(20) DEFAULT 'public',
+  linked_property_id INTEGER,
+  linked_property_slug VARCHAR(500),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

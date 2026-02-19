@@ -34,8 +34,7 @@ const UserService = {
   },
 
   async getDashboard(userId) {
-    // Get user details
-    const userResult = await require('../db').query('SELECT username, referral_code, status FROM referral_users WHERE id = $1', [userId]);
+    const userResult = await require('../db').query('SELECT username, referral_code, status, referral_type, linked_property_id, linked_property_slug FROM referral_users WHERE id = $1', [userId]);
     const userDetails = userResult.rows[0];
 
     if (!userDetails || userDetails.status === 'blocked') {
@@ -49,9 +48,18 @@ const UserService = {
     const withdrawals = parseFloat(stats.total_withdrawals);
     const pending = parseFloat(stats.pending_withdrawals);
 
+    const referralType = userDetails.referral_type || 'public';
+    let commissionLabel = '15% of advance';
+    if (referralType === 'owner') commissionLabel = '25% of advance';
+    else if (referralType === 'b2b') commissionLabel = '22% of advance';
+
     return {
       username: userDetails.username,
       referral_code: userDetails.referral_code,
+      referral_type: referralType,
+      linked_property_id: userDetails.linked_property_id || null,
+      linked_property_slug: userDetails.linked_property_slug || null,
+      commission_label: commissionLabel,
       total_earnings: earnings,
       total_withdrawals: withdrawals,
       available_balance: earnings - withdrawals,

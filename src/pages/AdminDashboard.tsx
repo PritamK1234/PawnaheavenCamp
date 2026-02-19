@@ -932,28 +932,49 @@ const AdminDashboard = () => {
               className="w-full"
             >
               <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5">
-                <TabsTrigger
-                  value="all"
-                  className="rounded-lg flex-1 text-[10px] data-[state=active]:bg-gold data-[state=active]:text-black"
-                >
-                  All Referrals
-                </TabsTrigger>
-                <TabsTrigger
-                  value="requests"
-                  className="rounded-lg flex-1 text-[10px] data-[state=active]:bg-gold data-[state=active]:text-black"
-                >
-                  Requests
-                </TabsTrigger>
-                <TabsTrigger
-                  value="history"
-                  className="rounded-lg flex-1 text-[10px] data-[state=active]:bg-gold data-[state=active]:text-black"
-                >
-                  History
-                </TabsTrigger>
+                {[
+                  { id: "all", label: "All Referrals" },
+                  { id: "owners", label: "Owners Referrals" },
+                  { id: "b2b", label: "B2B Referrals" },
+                  { id: "public", label: "Public Referrals" },
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="rounded-lg flex-1 text-[10px] data-[state=active]:bg-gold data-[state=active]:text-black"
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
 
-            {referralSubTab === "all" && (
+            <div className="flex gap-2">
+              <Button
+                variant={transactionSubTab === "requests" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTransactionSubTab("requests")}
+                className={cn(
+                  "rounded-full text-[10px] h-7 px-3",
+                  transactionSubTab === "requests" ? "bg-gold text-black" : "border-gold/30 text-gold",
+                )}
+              >
+                Withdraw Request
+              </Button>
+              <Button
+                variant={transactionSubTab === "history" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTransactionSubTab("history")}
+                className={cn(
+                  "rounded-full text-[10px] h-7 px-3",
+                  transactionSubTab === "history" ? "bg-gold text-black" : "border-gold/30 text-gold",
+                )}
+              >
+                Withdraw History
+              </Button>
+            </div>
+
+            {transactionSubTab === "all" && (
               <>
                 <div className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -978,16 +999,28 @@ const AdminDashboard = () => {
                     </div>
                   ) : (
                     referralUsers
-                      .filter(
-                        (u) =>
-                          u.username
+                      .filter((u) => {
+                        const matchesSearch =
+                          (u.username || "")
                             .toLowerCase()
                             .includes(searchTerm.toLowerCase()) ||
-                          u.mobile_number.includes(searchTerm) ||
-                          u.referral_code
+                          (u.mobile_number || "").includes(searchTerm) ||
+                          (u.referral_code || "")
                             .toLowerCase()
-                            .includes(searchTerm.toLowerCase()),
-                      )
+                            .includes(searchTerm.toLowerCase());
+
+                        if (referralSubTab === "all" || referralSubTab === "all referrals") return matchesSearch;
+                        const typeMap: Record<string, string> = {
+                          "owners": "owner",
+                          "owners referrals": "owner",
+                          "b2b": "b2b",
+                          "b2b referrals": "b2b",
+                          "public": "public",
+                          "public referrals": "public"
+                        };
+                        const targetType = typeMap[referralSubTab.toLowerCase()];
+                        return matchesSearch && u.type === targetType;
+                      })
                       .map((referral) => (
                         <div
                           key={referral.id}
@@ -1039,7 +1072,7 @@ const AdminDashboard = () => {
                               </p>
                               <p className="text-xs font-bold text-white">
                                 ₹
-                                {parseFloat(referral.balance).toLocaleString(
+                                {parseFloat(referral.balance || "0").toLocaleString(
                                   "en-IN",
                                 )}
                               </p>
@@ -1049,7 +1082,7 @@ const AdminDashboard = () => {
                                 Referrals
                               </p>
                               <p className="text-xs font-bold text-white">
-                                {referral.total_referrals}
+                                {referral.total_referrals || 0}
                               </p>
                             </div>
                           </div>
@@ -1102,8 +1135,8 @@ const AdminDashboard = () => {
               </>
             )}
 
-            {(referralSubTab === "requests" ||
-              referralSubTab === "history") && (
+            {(transactionSubTab === "requests" ||
+              transactionSubTab === "history") && (
               <div className="space-y-3">
                 <div className="p-8 text-center glass-dark rounded-3xl border border-white/5">
                   <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5 text-white/20">
@@ -1118,6 +1151,18 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "b2b" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 text-center py-20">
+            <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-gold/20 text-gold">
+              <Building2 className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-display font-bold text-white mb-2">B2B Management</h3>
+            <p className="text-muted-foreground max-w-sm mx-auto">
+              This section will contain B2B partner management and enterprise bookings.
+            </p>
           </div>
         )}
 
@@ -1222,6 +1267,7 @@ const AdminDashboard = () => {
             { id: "owners", icon: Users2, label: "Owners" },
             { id: "referrals", icon: Share2, label: "Referrals" },
             { id: "transactions", icon: CreditCard, label: "Transactions" },
+            { id: "b2b", icon: Building2, label: "B2B" },
           ].map((tab) => (
             <button
               key={tab.id}

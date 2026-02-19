@@ -39,7 +39,7 @@ import {
 import AdminPropertyForm from "@/components/AdminPropertyForm";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -1113,14 +1113,60 @@ const AdminDashboard = () => {
         )}
 
         {activeTab === "b2b" && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 text-center py-20">
-            <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-gold/20 text-gold">
-              <Building2 className="w-10 h-10" />
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 font-display italic">
+                <div className="w-1.5 h-6 bg-gold rounded-full" />
+                B2B Management
+              </h3>
             </div>
-            <h3 className="text-2xl font-display font-bold text-white mb-2">B2B Management</h3>
-            <p className="text-muted-foreground max-w-sm mx-auto">
-              This section will contain B2B partner management and enterprise bookings.
-            </p>
+
+            <Tabs defaultValue="b2b" className="w-full">
+              <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5 grid grid-cols-2">
+                <TabsTrigger value="b2b" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                  Generate code for B2B
+                </TabsTrigger>
+                <TabsTrigger value="owners" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                  Generate code for Owners
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="b2b" className="mt-6">
+                <div className="glass-dark rounded-[2.5rem] border border-white/5 p-8 text-center">
+                  <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-gold/20 text-gold">
+                    <Building2 className="w-10 h-10" />
+                  </div>
+                  <h4 className="text-xl font-bold mb-2">B2B Referral Generation</h4>
+                  <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+                    Generate unique referral codes for business partners and agencies.
+                  </p>
+                  <Button 
+                    onClick={() => navigate("/referral/generate")}
+                    className="bg-gradient-gold text-black hover:opacity-90 font-bold px-8 h-12 rounded-2xl shadow-gold"
+                  >
+                    Generate B2B Code
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="owners" className="mt-6">
+                <div className="glass-dark rounded-[2.5rem] border border-white/5 p-8 text-center">
+                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-primary/20 text-primary">
+                    <Users2 className="w-10 h-10" />
+                  </div>
+                  <h4 className="text-xl font-bold mb-2">Owner Referral Generation</h4>
+                  <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+                    Create special referral codes for property owners and hosts.
+                  </p>
+                  <Button 
+                    onClick={() => navigate("/referral/generate")}
+                    className="bg-primary text-white hover:opacity-90 font-bold px-8 h-12 rounded-2xl shadow-lg"
+                  >
+                    Generate Owner Code
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 

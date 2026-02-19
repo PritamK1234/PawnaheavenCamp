@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS properties (
   owner_name VARCHAR(255),
   owner_mobile VARCHAR(20),
   map_link TEXT,
+  referral_code VARCHAR(50),
   amenities TEXT NOT NULL,
   activities TEXT NOT NULL,
   highlights TEXT NOT NULL,

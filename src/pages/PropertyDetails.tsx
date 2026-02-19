@@ -888,7 +888,7 @@ const PropertyDetails = () => {
         {/* Gallery Container */}
         <div className="relative">
           <div className="md:hidden">
-            <div className="h-[75vh] w-full relative">
+            <div className="relative aspect-square w-full">
               <ImageSlider
                 images={
                   propertyData.category === "campings_cottages"
@@ -896,9 +896,10 @@ const PropertyDetails = () => {
                     : propertyData.images
                 }
                 title={propertyData.title}
-                className="h-full rounded-none"
+                className="h-full w-full rounded-none"
+                aspectRatio="1:1"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent pointer-events-none z-20" />
 
               {/* Floating Badges for Mobile */}
               <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 pointer-events-none w-max max-w-[60%] justify-center">

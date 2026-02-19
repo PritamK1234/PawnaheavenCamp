@@ -458,6 +458,7 @@ const updateProperty = async (req, res) => {
       check_out_time,
       owner_name,
       owner_mobile,
+      referral_code,
     } = req.body;
 
     console.log("Update property request received for ID:", id);
@@ -489,6 +490,7 @@ const updateProperty = async (req, res) => {
         check_out_time = COALESCE(NULLIF($21, ''), check_out_time),
         owner_name = COALESCE(NULLIF($22, ''), owner_name),
         owner_mobile = COALESCE(NULLIF($23, ''), owner_mobile),
+        referral_code = COALESCE($24, referral_code),
         updated_at = CURRENT_TIMESTAMP
       WHERE property_id = $13 OR id::text = $13
       RETURNING *
@@ -530,6 +532,7 @@ const updateProperty = async (req, res) => {
         check_out_time || null,
         owner_name || null,
         owner_mobile || null,
+        referral_code || null,
       ],
     );
 

@@ -638,7 +638,7 @@ const AdminPropertyForm = ({
     check_out_time: "11:00 AM",
     owners_otp_number: "",
     status: "Verified",
-    is_top_selling: false,
+    referral_code: "",
     is_active: true,
     is_available: true,
     max_capacity: "4",
@@ -755,7 +755,7 @@ const AdminPropertyForm = ({
         check_out_time: property.check_out_time || "11:00 AM",
         owners_otp_number: property.owners_otp_number || "",
         status: property.status || "Verified",
-        is_top_selling: property.is_top_selling ?? false,
+        referral_code: property.referral_code || "",
         is_active: property.is_active ?? true,
         is_available: property.is_available ?? true,
         max_capacity:
@@ -1006,20 +1006,19 @@ const AdminPropertyForm = ({
                   </Label>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="is_top_selling"
-                    checked={formData.is_top_selling}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, is_top_selling: checked })
-                    }
-                  />
-                  <Label
-                    htmlFor="is_top_selling"
-                    className="text-xs sm:text-sm"
-                  >
-                    Top Selling
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="referral_code" className="text-xs sm:text-sm">
+                    Referral Code
                   </Label>
+                  <Input
+                    id="referral_code"
+                    value={formData.referral_code}
+                    onChange={(e) =>
+                      setFormData({ ...formData, referral_code: e.target.value })
+                    }
+                    placeholder="Enter referral code"
+                    className="h-10 bg-secondary/50 rounded-xl"
+                  />
                 </div>
               </div>
             </div>

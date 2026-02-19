@@ -85,47 +85,46 @@ const Bookings = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6">
-        <h2 className="text-xl font-bold text-gray-400 mb-6 tracking-widest uppercase text-xs">Bookings List</h2>
+      <div className="px-4 py-4">
+        <h2 className="text-[10px] font-bold text-gray-500 mb-4 tracking-widest uppercase">Bookings List</h2>
         
         {/* Booking List - Matching the attached screenshot style */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {MOCK_BOOKINGS.map((booking) => (
-            <Card key={booking.id} className="bg-[#1A1A1A] border border-[#D4AF37]/10 rounded-[2rem] overflow-hidden shadow-2xl">
-              <CardContent className="p-5 flex items-center gap-4">
+            <Card key={booking.id} className="bg-[#1A1A1A] border border-[#D4AF37]/10 rounded-2xl overflow-hidden shadow-xl">
+              <CardContent className="p-3 flex items-center gap-3">
                 {/* ID Badge */}
-                <div className="w-16 h-16 bg-[#261F18] rounded-3xl flex items-center justify-center shrink-0 border border-[#D4AF37]/10">
-                  <span className="text-[#D4AF37] text-xl font-bold">#{booking.id}</span>
+                <div className="w-10 h-10 bg-[#261F18] rounded-xl flex items-center justify-center shrink-0 border border-[#D4AF37]/10">
+                  <span className="text-[#D4AF37] text-sm font-bold">#{booking.id}</span>
                 </div>
 
                 {/* Main Info */}
-                <div className="flex-grow">
-                  <h3 className="text-xl font-bold text-white mb-2 leading-tight">{booking.guestName}</h3>
-                  <div className="flex items-center gap-4 text-gray-400">
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-4 h-4" />
-                      <span className="text-sm">{booking.guests}</span>
+                <div className="flex-grow min-w-0">
+                  <h3 className="text-sm font-bold text-white mb-0.5 leading-tight truncate">{booking.guestName}</h3>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      <span className="text-[10px]">{booking.guests}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 border border-gray-700 rounded px-1.5 py-0.5">
-                      <div className="w-4 h-2.5 border border-gray-400 rounded-sm"></div>
-                      <span className="text-[10px] uppercase font-bold tracking-tighter">{booking.paymentType}</span>
+                    <div className="flex items-center gap-1 border border-gray-800 rounded px-1 py-0.25">
+                      <span className="text-[8px] uppercase font-bold tracking-tighter">{booking.paymentType}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Price & Dates */}
-                <div className="text-right flex flex-col items-end gap-1 px-2">
-                  <span className="text-2xl font-bold text-[#D4AF37]">₹{booking.amount}</span>
-                  <span className="text-[10px] font-medium text-gray-500">{booking.checkIn} - {booking.checkOut}</span>
+                <div className="text-right flex flex-col items-end gap-0.5 shrink-0">
+                  <span className="text-base font-bold text-[#D4AF37]">₹{booking.amount}</span>
+                  <span className="text-[9px] font-medium text-gray-500">{booking.checkIn} - {booking.checkOut}</span>
                 </div>
 
                 {/* Actions Divider & Buttons */}
-                <div className="flex items-center gap-3 border-l border-gray-800 pl-4 py-2">
-                  <button className="text-gray-400 hover:text-white transition-colors">
-                    <Pencil className="w-5 h-5" />
+                <div className="flex items-center gap-2 border-l border-gray-800 pl-3 py-1 shrink-0">
+                  <button className="text-gray-500 hover:text-white transition-colors">
+                    <Pencil className="w-4 h-4" />
                   </button>
-                  <button className="text-gray-400 hover:text-red-500 transition-colors">
-                    <Trash2 className="w-5 h-5" />
+                  <button className="text-gray-500 hover:text-red-500 transition-colors">
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </CardContent>

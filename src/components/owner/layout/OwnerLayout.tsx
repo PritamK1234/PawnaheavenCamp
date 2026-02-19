@@ -52,29 +52,24 @@ const OwnerLayout = () => {
 
   return (
     <div className="min-h-screen bg-black pb-24">
-      <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-4 py-4 sticky top-0 z-40 shadow-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex flex-col">
-            <h1 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37] mb-0.5">Owner Portal</h1>
-            <span className="text-base sm:text-lg font-bold text-white leading-tight truncate max-w-[200px] sm:max-w-none">
+      <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-3 py-3 sticky top-0 z-40 shadow-2xl">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col min-w-0 flex-shrink">
+            <h1 className="text-[8px] font-bold uppercase tracking-[0.1em] text-[#D4AF37] leading-none mb-0.5">Owner Portal</h1>
+            <span className="text-sm font-bold text-white leading-tight truncate">
               {ownerData.propertyName}
             </span>
           </div>
           
-          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-            <div className="flex-1 flex justify-center sm:hidden">
-              <PWAInstallButton />
-            </div>
-            <div className="hidden sm:block">
-              <PWAInstallButton />
-            </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <PWAInstallButton />
             
             <Link 
               to="/owner/referral" 
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(212,175,55,0.2)] group"
+              className="flex items-center gap-1 px-2 py-1.5 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.2)] group"
             >
-              <Share2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-              <span className="text-[11px] font-bold whitespace-nowrap">Check Referral</span>
+              <Share2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold whitespace-nowrap">Referral</span>
             </Link>
           </div>
         </div>

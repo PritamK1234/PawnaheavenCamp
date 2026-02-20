@@ -986,10 +986,14 @@ const AdminDashboard = () => {
                               className="w-full h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10 rounded-xl"
                               onClick={async () => {
                                 try {
+                                  const adminToken = localStorage.getItem("adminToken");
+                                  if (!adminToken) return;
                                   const res = await fetch("/api/referrals/admin/login-as", {
                                     method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    credentials: "include",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${adminToken}`,
+                                    },
                                     body: JSON.stringify({ mobile }),
                                   });
                                   const data = await res.json();

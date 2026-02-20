@@ -173,9 +173,15 @@ const AdminDashboard = () => {
       const result = await response.json();
       if (result.success) {
         toast({ title: `${type === 'b2b' ? 'B2B' : 'Owner'} referral code created!` });
-        if (type === 'b2b') setB2bForm({ username: "", mobile: "", code: "" });
-        else setOwnerRefForm({ username: "", mobile: "", code: "", propertyId: "" });
-        fetchReferralUsers();
+        if (type === 'b2b') {
+          setB2bForm({ username: "", mobile: "", code: "" });
+        } else {
+          setOwnerRefForm({ username: "", mobile: "", code: "", propertyId: "" });
+        }
+        await fetchReferralUsers();
+        if (type === 'owner') {
+          setActiveTab("owners");
+        }
       } else {
         toast({ title: result.error || "Failed to create code", variant: "destructive" });
       }

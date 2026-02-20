@@ -42,7 +42,6 @@ const OwnerInfo = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-o
 const VillaOwnerMain = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Main"));
 const VillaOwnerProfile = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Profile"));
 const VillaOwnerInfo = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Info"));
-const OwnerReferral = lazy(() => import("./pages/owner/dashboard/OwnerReferral"));
 
 const queryClient = new QueryClient();
 
@@ -116,7 +115,7 @@ const App = () => {
               <Route path="/owner/register/otp" element={<PageWrapper><OwnerRegisterOTP /></PageWrapper>} />
               <Route path="/owner/login" element={<PageWrapper><OwnerLogin /></PageWrapper>} />
               <Route path="/owner/dashboard" element={<PageWrapper><DashboardRedirect /></PageWrapper>} />
-              <Route path="/owner/referral" element={<PageWrapper><OwnerReferral /></PageWrapper>} />
+              
               
               <Route element={<OwnerLayout />}>
                 <Route path="/owner/dashboard/villa" element={<PageWrapper><VillaOwnerMain /></PageWrapper>} />

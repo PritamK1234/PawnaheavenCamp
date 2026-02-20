@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Calendar, IndianRupee, User, LayoutGrid, Info, ClipboardList, Share2 } from 'lucide-react';
+import { Calendar, IndianRupee, User, LayoutGrid, Info, ClipboardList, Share2, Phone, MessageCircle, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PWAInstallButton from '../pwa/PWAInstallButton';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const OwnerLayout = () => {
   const navigate = useNavigate();
@@ -10,6 +12,11 @@ const OwnerLayout = () => {
   const isLoggedIn = localStorage.getItem('ownerLoggedIn') === 'true';
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : { propertyName: 'My Property', propertyType: 'Villa' };
+  const ownerMobile = ownerData?.mobileNumber || ownerData?.mobile || '';
+  const ownerPropertyId = ownerData?.property_id || ownerData?.propertyId || '';
+
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [referralLoading, setReferralLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -50,6 +57,42 @@ const OwnerLayout = () => {
     { label: 'Profile', icon: User, path: profilePath },
   ].filter(item => item.showIf === undefined || item.showIf);
 
+  const handleReferralClick = async () => {
+    if (!ownerMobile) {
+      setShowContactModal(true);
+      return;
+    }
+
+    setReferralLoading(true);
+    try {
+      const mobile = ownerMobile.replace(/\D/g, '');
+      const res = await fetch(`/api/referrals/owner-lookup/${mobile}`);
+      const result = await res.json();
+
+      if (result.found && result.data?.referral_code) {
+        const loginRes = await fetch('/api/referrals/owner-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, propertyId: ownerPropertyId }),
+        });
+        const loginData = await loginRes.json();
+        if (loginData.success && loginData.token) {
+          localStorage.setItem('referral_token', loginData.token);
+          navigate('/referral/check?from=owner');
+        } else {
+          setShowContactModal(true);
+        }
+      } else {
+        setShowContactModal(true);
+      }
+    } catch (e) {
+      console.error('Referral lookup failed:', e);
+      setShowContactModal(true);
+    } finally {
+      setReferralLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black pb-24">
       <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-3 py-3 sticky top-0 z-[60] shadow-2xl">
@@ -64,13 +107,18 @@ const OwnerLayout = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <PWAInstallButton />
             
-            <Link 
-              to="/owner/referral" 
-              className="flex items-center gap-1 px-2 py-1.5 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.2)] group"
+            <button 
+              onClick={handleReferralClick}
+              disabled={referralLoading}
+              className="flex items-center gap-1 px-2 py-1.5 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.2)] group disabled:opacity-70"
             >
-              <Share2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
+              {referralLoading ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Share2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
+              )}
               <span className="text-[10px] font-bold whitespace-nowrap">Referral</span>
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -102,6 +150,39 @@ const OwnerLayout = () => {
           );
         })}
       </nav>
+
+      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
+        <DialogContent className="bg-[#1A1A1A] border border-[#D4AF37]/20 rounded-3xl max-w-sm mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white text-center font-display text-lg">
+              Referral Code Not Available
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-gray-400 text-center leading-relaxed">
+              You don't have a referral code generated yet. Please contact admin to generate a referral code and earn more on bookings.
+            </p>
+            <div className="flex gap-3">
+              <a
+                href="tel:8806092609"
+                className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-colors"
+              >
+                <Phone className="w-4 h-4" />
+                <span className="text-sm">Call Admin</span>
+              </a>
+              <a
+                href="https://wa.me/918806092609"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-sm">WhatsApp</span>
+              </a>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

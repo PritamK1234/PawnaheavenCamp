@@ -53,7 +53,9 @@ interface ShareData {
 
 const CheckEarningPage = () => {
   const navigate = useNavigate();
-  const isFromAdmin = new URLSearchParams(window.location.search).get("from") === "admin";
+  const fromParam = new URLSearchParams(window.location.search).get("from");
+  const isFromAdmin = fromParam === "admin";
+  const isFromOwner = fromParam === "owner";
   const [step, setStep] = useState<"verify" | "otp" | "dashboard">("verify");
   const [loading, setLoading] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -255,6 +257,8 @@ ${shareData.referralLink}`;
               onClick={() => {
                 if (isFromAdmin) {
                   window.close();
+                } else if (isFromOwner) {
+                  navigate(-1);
                 } else {
                   navigate("/referral");
                 }

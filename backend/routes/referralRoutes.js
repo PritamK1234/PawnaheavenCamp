@@ -28,6 +28,9 @@ router.post('/withdraw', authenticateReferralUser, WithdrawalController.withdraw
 // Owner dashboard - lookup referral by mobile
 router.get('/owner-lookup/:mobile', ReferralController.ownerLookup);
 
+// Owner self-login (no admin auth needed, generates token for own mobile)
+router.post('/owner-login', UserController.ownerSelfLogin);
+
 // Admin endpoints (Session Protected)
 router.get('/admin/all', authMiddleware, AdminController.getAllReferrals);
 router.post('/admin/update-status', authMiddleware, AdminController.updateReferralStatus);

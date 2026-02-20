@@ -116,8 +116,6 @@ const App = () => {
               <Route path="/owner/register/otp" element={<PageWrapper><OwnerRegisterOTP /></PageWrapper>} />
               <Route path="/owner/login" element={<PageWrapper><OwnerLogin /></PageWrapper>} />
               <Route path="/owner/dashboard" element={<PageWrapper><DashboardRedirect /></PageWrapper>} />
-              <Route path="/owner/referral" element={<PageWrapper><OwnerReferral /></PageWrapper>} />
-              
               <Route element={<OwnerLayout />}>
                 <Route path="/owner/dashboard/villa" element={<PageWrapper><VillaOwnerMain /></PageWrapper>} />
                 <Route path="/owner/dashboard/camping" element={<PageWrapper><OwnerMain /></PageWrapper>} />
@@ -125,6 +123,7 @@ const App = () => {
                 <Route path="/owner/profile/camping" element={<PageWrapper><OwnerProfile /></PageWrapper>} />
                 <Route path="/owner/bookings" element={<PageWrapper><OwnerBookings /></PageWrapper>} />
                 <Route path="/owner/units" element={<PageWrapper><OwnerUnits /></PageWrapper>} />
+                <Route path="/owner/referral" element={<PageWrapper><OwnerReferral /></PageWrapper>} />
               </Route>
 
               <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />

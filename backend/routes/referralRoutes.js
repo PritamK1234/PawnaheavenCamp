@@ -25,8 +25,9 @@ router.get('/dashboard', authenticateReferralUser, UserController.getDashboard);
 router.get('/share', authenticateReferralUser, ReferralController.getShareInfo);
 router.post('/withdraw', authenticateReferralUser, WithdrawalController.withdraw);
 
-// Owner dashboard - lookup referral by mobile
+// Owner dashboard - lookup referral by mobile or property
 router.get('/owner-lookup/:mobile', ReferralController.ownerLookup);
+router.get('/owner-lookup-by-property/:propertyId', ReferralController.ownerLookupByProperty);
 
 // Admin endpoints (Session Protected)
 router.get('/admin/all', authMiddleware, AdminController.getAllReferrals);

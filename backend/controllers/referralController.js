@@ -68,8 +68,25 @@ const ReferralController = {
       const { mobile } = req.params;
       if (!mobile) return res.status(400).json({ error: 'Mobile number is required' });
       const result = await query(
-        "SELECT id, username, referral_code, referral_type, linked_property_id, linked_property_slug, status FROM referral_users WHERE mobile_number = $1 AND referral_type = 'owner'",
+        "SELECT id, username, mobile_number, referral_code, referral_type, linked_property_id, linked_property_slug, status FROM referral_users WHERE mobile_number = $1 AND referral_type = 'owner'",
         [mobile]
+      );
+      if (result.rows.length > 0) {
+        return res.json({ found: true, data: result.rows[0] });
+      }
+      return res.json({ found: false });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  async ownerLookupByProperty(req, res) {
+    try {
+      const { propertyId } = req.params;
+      if (!propertyId) return res.status(400).json({ error: 'Property ID is required' });
+      const result = await query(
+        "SELECT id, username, mobile_number, referral_code, referral_type, linked_property_id, linked_property_slug, status FROM referral_users WHERE linked_property_id = $1 AND referral_type = 'owner'",
+        [propertyId]
       );
       if (result.rows.length > 0) {
         return res.json({ found: true, data: result.rows[0] });

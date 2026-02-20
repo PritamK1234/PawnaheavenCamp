@@ -20,6 +20,7 @@ interface OwnerReferralData {
   data?: {
     id: number;
     username: string;
+    mobile_number: string;
     referral_code: string;
     referral_type: string;
     linked_property_id: number;
@@ -37,24 +38,38 @@ const OwnerReferral = () => {
 
   const ownerDataString = localStorage.getItem("ownerData");
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
-  const ownerMobile = ownerData?.mobileNumber || ownerData?.mobile || "";
+  const ownerMobile = ownerData?.ownerNumber || ownerData?.mobile_number || ownerData?.mobileNumber || ownerData?.mobile || "";
+  const ownerPropertyId = ownerData?.property_id || ownerData?.propertyId || "";
 
   useEffect(() => {
-    if (ownerMobile) {
-      lookupAndFetch();
-    } else {
-      setLoading(false);
-    }
-  }, [ownerMobile]);
+    lookupAndFetch();
+  }, []);
 
   const lookupAndFetch = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`/api/referrals/owner-lookup/${ownerMobile}`);
-      setReferralData(res.data);
-      if (res.data.found) {
+      let res = null;
+      if (ownerMobile) {
+        res = await axios.get(`/api/referrals/owner-lookup/${ownerMobile.replace(/\D/g, "")}`);
+      }
+      if ((!res || !res.data?.found) && ownerPropertyId) {
+        res = await axios.get(`/api/referrals/owner-lookup-by-property/${ownerPropertyId}`);
+      }
+      if (res && res.data) {
+        setReferralData(res.data);
+      } else {
+        setReferralData({ found: false });
+        setLoading(false);
+        return;
+      }
+      if (!res.data.found) {
+        setLoading(false);
+        return;
+      }
+      const mobile = res.data.data?.mobile_number || ownerMobile;
+      if (mobile) {
         const tokenRes = await axios.post("/api/referrals/owner-token", {
-          mobile: ownerMobile,
+          mobile: mobile.replace(/\D/g, ""),
         });
         if (tokenRes.data.success && tokenRes.data.token) {
           const token = tokenRes.data.token;

@@ -33,5 +33,6 @@ router.get('/admin/all', authMiddleware, AdminController.getAllReferrals);
 router.post('/admin/update-status', authMiddleware, AdminController.updateReferralStatus);
 router.post('/admin/create', authMiddleware, AdminController.createReferral);
 router.post('/admin/delete', authMiddleware, AdminController.deleteReferral);
+router.post('/admin/login-as', authMiddleware, AdminController.loginAsReferralUser);
 
 module.exports = router;

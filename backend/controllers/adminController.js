@@ -1,4 +1,5 @@
 const AdminService = require('../services/adminService');
+const UserService = require('../services/userService');
 
 const AdminController = {
   async getAllReferrals(req, res) {
@@ -26,6 +27,17 @@ const AdminController = {
       if (!userId) return res.status(400).json({ error: 'User ID is required' });
       const deleted = await AdminService.deleteReferral(userId);
       res.json({ success: true, data: deleted });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  async loginAsReferralUser(req, res) {
+    try {
+      const { mobile } = req.body;
+      if (!mobile) return res.status(400).json({ error: 'Mobile number is required' });
+      const result = await UserService.login(mobile.replace(/\D/g, ''));
+      res.json({ success: true, token: result.token });
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

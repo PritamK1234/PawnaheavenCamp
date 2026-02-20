@@ -984,9 +984,22 @@ const AdminDashboard = () => {
                               variant="outline"
                               size="sm"
                               className="w-full h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10 rounded-xl"
-                              onClick={() => {
-                                setActiveTab("referrals");
-                                setReferralSubTab("owners");
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch("/api/referrals/admin/login-as", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    credentials: "include",
+                                    body: JSON.stringify({ mobile }),
+                                  });
+                                  const data = await res.json();
+                                  if (data.success && data.token) {
+                                    localStorage.setItem("referral_token", data.token);
+                                    window.open("/referral/check", "_blank");
+                                  }
+                                } catch (e) {
+                                  console.error("Admin login-as failed", e);
+                                }
                               }}
                             >
                               <Share2 className="w-3 h-3 mr-1" />

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Calendar, 
-  User,
   Loader2,
   FileSpreadsheet,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 import { 
   Select, 
@@ -15,7 +14,11 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from 'sonner';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface LedgerEntry {
   id: number;
@@ -35,6 +38,7 @@ interface UnitOption {
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const Bookings = () => {
   const currentYear = new Date().getFullYear();
@@ -51,8 +55,24 @@ const Bookings = () => {
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
   const propertyId = ownerData?.property_id || ownerData?.propertyId || '';
   const ownerMobile = ownerData?.mobile_number || ownerData?.ownerNumber || ownerData?.mobile || '';
+  const propertyName = ownerData?.property_name || ownerData?.propertyName || ownerData?.property_title || 'Property';
 
   const years = Array.from({ length: 5 }, (_, i) => String(currentYear - 2 + i));
+
+  const getSelectedUnitName = () => {
+    if (unit === 'all') return 'All Units';
+    const found = units.find(u => String(u.id) === unit);
+    return found?.name || 'All Units';
+  };
+
+  const getFilterLabel = () => {
+    return `${FULL_MONTHS[parseInt(month) - 1]} ${year} - ${getSelectedUnitName()}`;
+  };
+
+  const formatDateFull = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
 
   const fetchUnits = useCallback(async () => {
     if (!propertyId || !ownerMobile) return;
@@ -106,6 +126,148 @@ const Bookings = () => {
   };
 
   const totalAmount = entries.reduce((sum, e) => sum + (parseFloat(String(e.amount)) || 0), 0);
+
+  const buildExportRows = () => {
+    return entries.map((entry, idx) => ({
+      'Sr.': idx + 1,
+      'Customer': entry.customer_name || 'Guest',
+      'Unit': entry.unit_name || 'N/A',
+      'Check In': formatDateFull(entry.check_in),
+      'Check Out': formatDateFull(entry.check_out),
+      'Source': entry.source === 'website' ? 'Online' : 'Offline',
+      'Payment': entry.source === 'website' ? 'Online' : (entry.payment_mode || 'Cash'),
+      'Amount (₹)': parseFloat(String(entry.amount || 0)),
+    }));
+  };
+
+  const handleExcelExport = () => {
+    if (entries.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    const rows = buildExportRows();
+    rows.push({
+      'Sr.': '' as any,
+      'Customer': '',
+      'Unit': '',
+      'Check In': '',
+      'Check Out': '',
+      'Source': '',
+      'Payment': 'TOTAL',
+      'Amount (₹)': totalAmount,
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+
+    const colWidths = [
+      { wch: 5 },
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 14 },
+    ];
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+
+    const fileName = `Bookings_${propertyName.replace(/\s+/g, '_')}_${MONTHS[parseInt(month) - 1]}_${year}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    toast.success('Excel file downloaded');
+  };
+
+  const handlePdfExport = () => {
+    if (entries.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(propertyName, 14, 18);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    doc.text(`Bookings Ledger - ${getFilterLabel()}`, 14, 25);
+    doc.setTextColor(0);
+
+    const tableData = entries.map((entry, idx) => [
+      idx + 1,
+      entry.customer_name || 'Guest',
+      entry.unit_name || 'N/A',
+      formatDateFull(entry.check_in),
+      formatDateFull(entry.check_out),
+      entry.source === 'website' ? 'Online' : (entry.payment_mode || 'Cash'),
+      `Rs. ${parseFloat(String(entry.amount || 0)).toLocaleString('en-IN')}`,
+    ]);
+
+    tableData.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      'TOTAL',
+      `Rs. ${totalAmount.toLocaleString('en-IN')}`,
+    ]);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [['#', 'Customer', 'Unit', 'Check In', 'Check Out', 'Payment', 'Amount']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [30, 30, 30],
+        textColor: [212, 175, 55],
+        fontStyle: 'bold',
+        fontSize: 8,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: [50, 50, 50],
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      foot: [],
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 10 },
+        6: { halign: 'right', fontStyle: 'bold' },
+      },
+      didParseCell: (data) => {
+        if (data.row.index === tableData.length - 1) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [30, 30, 30];
+          data.cell.styles.textColor = [212, 175, 55];
+        }
+      },
+    });
+
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(150);
+      doc.text(
+        `Generated on ${new Date().toLocaleDateString('en-IN')} | Page ${i} of ${pageCount}`,
+        14,
+        doc.internal.pageSize.height - 8
+      );
+    }
+
+    const fileName = `Bookings_${propertyName.replace(/\s+/g, '_')}_${MONTHS[parseInt(month) - 1]}_${year}.pdf`;
+    doc.save(fileName);
+    toast.success('PDF file downloaded');
+  };
+
+  const hasData = !loading && entries.length > 0;
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pb-32">
@@ -208,12 +370,28 @@ const Bookings = () => {
         )}
       </div>
 
-      <div className="fixed bottom-24 left-0 right-0 px-4 flex gap-3 z-50 pointer-events-none">
-        <button className="flex-1 bg-[#1A1A1A] border border-[#D4AF37]/20 h-14 rounded-2xl flex items-center justify-center gap-3 shadow-2xl opacity-80 cursor-not-allowed">
+      <div className="fixed bottom-24 left-0 right-0 px-4 flex gap-3 z-50">
+        <button
+          onClick={handleExcelExport}
+          disabled={!hasData}
+          className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-3 shadow-2xl transition-all
+            ${hasData
+              ? 'bg-[#1A1A1A] border border-green-500/30 active:scale-95 pointer-events-auto'
+              : 'bg-[#1A1A1A] border border-[#D4AF37]/10 opacity-40 cursor-not-allowed pointer-events-auto'
+            }`}
+        >
           <FileSpreadsheet className="w-6 h-6 text-green-500" />
           <span className="font-bold text-white uppercase tracking-widest text-sm">Excel</span>
         </button>
-        <button className="flex-1 bg-[#1A1A1A] border border-[#D4AF37]/20 h-14 rounded-2xl flex items-center justify-center gap-3 shadow-2xl opacity-80 cursor-not-allowed">
+        <button
+          onClick={handlePdfExport}
+          disabled={!hasData}
+          className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-3 shadow-2xl transition-all
+            ${hasData
+              ? 'bg-[#1A1A1A] border border-red-500/30 active:scale-95 pointer-events-auto'
+              : 'bg-[#1A1A1A] border border-[#D4AF37]/10 opacity-40 cursor-not-allowed pointer-events-auto'
+            }`}
+        >
           <FileText className="w-6 h-6 text-red-500" />
           <span className="font-bold text-white uppercase tracking-widest text-sm">PDF</span>
         </button>

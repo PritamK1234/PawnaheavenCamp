@@ -20,6 +20,17 @@ const AdminController = {
     }
   },
 
+  async deleteReferral(req, res) {
+    try {
+      const { userId } = req.body;
+      if (!userId) return res.status(400).json({ error: 'User ID is required' });
+      const deleted = await AdminService.deleteReferral(userId);
+      res.json({ success: true, data: deleted });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
   async createReferral(req, res) {
     try {
       const { username, mobile_number, referral_code, referral_type, linked_property_id } = req.body;

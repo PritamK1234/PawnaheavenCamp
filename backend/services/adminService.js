@@ -32,6 +32,13 @@ const AdminService = {
     return res.rows[0];
   },
 
+  async deleteReferral(userId) {
+    await query('DELETE FROM referral_transactions WHERE referral_user_id = $1', [userId]);
+    const res = await query('DELETE FROM referral_users WHERE id = $1 RETURNING *', [userId]);
+    if (res.rows.length === 0) throw new Error('Referral user not found');
+    return res.rows[0];
+  },
+
   async createAdminReferral(username, mobileNumber, referralCode, referralType, linkedPropertyId) {
     const code = referralCode.toUpperCase();
     const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN || "pawnahavencamp.com";

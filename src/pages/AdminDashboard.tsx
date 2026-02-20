@@ -75,6 +75,7 @@ const AdminDashboard = () => {
   const [transactionSubTab, setTransactionSubTab] = useState("all");
   const [referralUsers, setReferralUsers] = useState<any[]>([]);
   const [isReferralLoading, setIsReferralLoading] = useState(false);
+  const [b2bSubTab, setB2bSubTab] = useState("b2b");
   const [b2bForm, setB2bForm] = useState({ username: "", mobile: "", code: "" });
   const [ownerRefForm, setOwnerRefForm] = useState({ username: "", mobile: "", code: "", propertyId: "" });
   const [b2bCreating, setB2bCreating] = useState(false);
@@ -183,6 +184,32 @@ const AdminDashboard = () => {
     } finally {
       setCreating(false);
     }
+  };
+
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; referralId: number | null; username: string }>({ open: false, referralId: null, username: "" });
+
+  const handleDeleteReferral = async (userId: number) => {
+    const token = localStorage.getItem("adminToken");
+    try {
+      const response = await fetch("/api/referrals/admin/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast({ title: "Referral deleted successfully" });
+        fetchReferralUsers();
+      } else {
+        toast({ title: result.error || "Failed to delete", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Failed to delete referral", variant: "destructive" });
+    }
+    setDeleteConfirm({ open: false, referralId: null, username: "" });
   };
 
   const handleUpdateReferralStatus = async (userId: number, status: string) => {
@@ -945,6 +972,50 @@ const AdminDashboard = () => {
                         </div>
                       ))}
                     </div>
+
+                    <div className="pt-3 border-t border-white/5">
+                      {(() => {
+                        const ownerReferral = referralUsers.find(
+                          (r) => r.mobile_number === mobile && r.type === "owner"
+                        );
+                        if (ownerReferral) {
+                          return (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10 rounded-xl"
+                              onClick={() => {
+                                setActiveTab("referrals");
+                                setReferralSubTab("owners");
+                              }}
+                            >
+                              <Share2 className="w-3 h-3 mr-1" />
+                              Referral Dashboard ({ownerReferral.referral_code})
+                            </Button>
+                          );
+                        }
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-8 text-[10px] border-primary/30 text-primary hover:bg-primary/10 rounded-xl"
+                            onClick={() => {
+                              setActiveTab("b2b");
+                              setB2bSubTab("owners");
+                              setOwnerRefForm({
+                                username: ownerProp?.owner_name || "",
+                                mobile: mobile || "",
+                                code: "",
+                                propertyId: ownerProperties[0]?.id?.toString() || "",
+                              });
+                            }}
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Generate Referral
+                          </Button>
+                        );
+                      })()}
+                    </div>
                   </div>
                 );
               })}
@@ -1136,6 +1207,15 @@ const AdminDashboard = () => {
                                   Activate
                                 </Button>
                               )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[10px] text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                                onClick={() => setDeleteConfirm({ open: true, referralId: referral.id, username: referral.username })}
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -1173,7 +1253,7 @@ const AdminDashboard = () => {
               </h3>
             </div>
 
-            <Tabs defaultValue="b2b" className="w-full">
+            <Tabs value={b2bSubTab} onValueChange={setB2bSubTab} className="w-full">
               <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5 grid grid-cols-2">
                 <TabsTrigger value="b2b" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
                   Generate code for B2B
@@ -1336,6 +1416,26 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        <Dialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, referralId: null, username: "" })}>
+          <DialogContent className="sm:max-w-[400px] bg-charcoal border-white/10 rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-red-500 font-display">Delete Referral</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Are you sure you want to permanently delete the referral for <span className="font-bold text-white">{deleteConfirm.username}</span>? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-3 mt-4">
+              <Button variant="outline" className="flex-1 rounded-xl border-white/10" onClick={() => setDeleteConfirm({ open: false, referralId: null, username: "" })}>
+                Cancel
+              </Button>
+              <Button className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white" onClick={() => deleteConfirm.referralId && handleDeleteReferral(deleteConfirm.referralId)}>
+                <Trash2 className="w-4 h-4 mr-1" />
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <div className="mt-8 text-center pb-8">
           <Button

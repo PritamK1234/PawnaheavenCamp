@@ -669,6 +669,23 @@ const AdminPropertyForm = ({
     }
   }, [property]);
 
+  useEffect(() => {
+    const fetchOwnerReferral = async () => {
+      const mobile = formData.owner_mobile?.replace(/\D/g, "");
+      if (!mobile || mobile.length < 10) return;
+      try {
+        const response = await fetch(`/api/referrals/owner-lookup/${mobile}`);
+        const result = await response.json();
+        if (result.found && result.data?.referral_code) {
+          setFormData((prev) => ({ ...prev, referral_code: result.data.referral_code }));
+        }
+      } catch (e) {}
+    };
+    if (property && formData.owner_mobile) {
+      fetchOwnerReferral();
+    }
+  }, [formData.owner_mobile, property]);
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;

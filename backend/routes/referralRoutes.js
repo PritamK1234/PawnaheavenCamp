@@ -32,5 +32,6 @@ router.get('/owner-lookup/:mobile', ReferralController.ownerLookup);
 router.get('/admin/all', authMiddleware, AdminController.getAllReferrals);
 router.post('/admin/update-status', authMiddleware, AdminController.updateReferralStatus);
 router.post('/admin/create', authMiddleware, AdminController.createReferral);
+router.post('/admin/delete', authMiddleware, AdminController.deleteReferral);
 
 module.exports = router;

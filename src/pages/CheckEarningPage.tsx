@@ -53,6 +53,7 @@ interface ShareData {
 
 const CheckEarningPage = () => {
   const navigate = useNavigate();
+  const isFromAdmin = new URLSearchParams(window.location.search).get("from") === "admin";
   const [step, setStep] = useState<"verify" | "otp" | "dashboard">("verify");
   const [loading, setLoading] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -250,12 +251,18 @@ ${shareData.referralLink}`;
       <div className="sticky top-0 z-50 bg-black border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link
-              to="/referral"
+            <button
+              onClick={() => {
+                if (isFromAdmin) {
+                  window.close();
+                } else {
+                  navigate("/referral");
+                }
+              }}
               className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all"
             >
               <ChevronLeft className="w-6 h-6" />
-            </Link>
+            </button>
             <h1 className="font-display text-xl font-bold">Check Earning</h1>
           </div>
           {dashboard && (

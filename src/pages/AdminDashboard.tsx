@@ -999,7 +999,7 @@ const AdminDashboard = () => {
                                   const data = await res.json();
                                   if (data.success && data.token) {
                                     localStorage.setItem("referral_token", data.token);
-                                    window.open("/referral/check", "_blank");
+                                    window.open("/referral/check?from=admin", "_blank");
                                   }
                                 } catch (e) {
                                   console.error("Admin login-as failed", e);

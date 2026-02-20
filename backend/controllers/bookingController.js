@@ -1011,6 +1011,139 @@ const handleWhatsAppWebhook = async (req, res) => {
   }
 };
 
+const resolvePropertyIds = async (propertyId) => {
+  const result = await query(
+    'SELECT id, property_id FROM properties WHERE id::text = $1 OR property_id = $1 LIMIT 1',
+    [String(propertyId)]
+  );
+  if (result.rows.length === 0) return null;
+  return { internalId: result.rows[0].id, alphaId: result.rows[0].property_id };
+};
+
+const validateOwnerAccess = async (propertyId, mobile) => {
+  if (!mobile) return false;
+  const cleanMobile = String(mobile).replace(/\D/g, '');
+  const result = await query(
+    `SELECT id FROM referral_users 
+     WHERE mobile_number = $1 AND referral_type = 'owner' AND linked_property_id::text = $2`,
+    [cleanMobile, String(propertyId)]
+  );
+  return result.rows.length > 0;
+};
+
+const getOwnerLedger = async (req, res) => {
+  try {
+    const { property_id, year, month, unit_id, mobile } = req.query;
+    if (!property_id || !year || !month) {
+      return res.status(400).json({ success: false, message: 'property_id, year, and month are required' });
+    }
+
+    const isOwner = await validateOwnerAccess(property_id, mobile);
+    if (!isOwner) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const resolved = await resolvePropertyIds(property_id);
+    if (!resolved) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const m = String(month).padStart(2, '0');
+    const startDate = `${year}-${m}-01`;
+    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+    const endDate = `${year}-${m}-${String(lastDay).padStart(2, '0')}`;
+
+    let bookingsQuery = `
+      SELECT 
+        b.id, b.guest_name AS customer_name, b.checkin_datetime AS check_in, 
+        b.checkout_datetime AS check_out, b.payment_method AS payment_mode, 
+        b.total_amount AS amount, b.unit_id,
+        COALESCE(pu.name, 'N/A') AS unit_name,
+        'website' AS source
+      FROM bookings b
+      LEFT JOIN property_units pu ON b.unit_id = pu.id
+      WHERE (b.property_id = $1 OR b.property_id = $4)
+      AND b.booking_status NOT IN ('CANCELLED', 'PAYMENT_PENDING')
+      AND (
+        (DATE(b.checkin_datetime) BETWEEN $2 AND $3) OR
+        (DATE(b.checkout_datetime) BETWEEN $2 AND $3) OR
+        (DATE(b.checkin_datetime) <= $2 AND DATE(b.checkout_datetime) >= $3)
+      )
+    `;
+    let bookingsParams = [String(resolved.internalId), startDate, endDate, resolved.alphaId || ''];
+
+    if (unit_id && unit_id !== 'all') {
+      bookingsQuery += ` AND b.unit_id = $5`;
+      bookingsParams.push(unit_id);
+    }
+
+    let ledgerQuery = `
+      SELECT 
+        le.id, le.customer_name, le.check_in, le.check_out, 
+        le.payment_mode, le.amount, le.unit_id,
+        COALESCE(pu.name, 'N/A') AS unit_name,
+        'offline' AS source
+      FROM ledger_entries le
+      LEFT JOIN property_units pu ON le.unit_id = pu.id
+      WHERE (le.property_id = $1 OR le.property_id = $4)
+      AND (
+        (le.check_in BETWEEN $2 AND $3) OR
+        (le.check_out BETWEEN $2 AND $3) OR
+        (le.check_in <= $2 AND le.check_out >= $3)
+      )
+    `;
+    let ledgerParams = [String(resolved.internalId), startDate, endDate, resolved.alphaId || ''];
+
+    if (unit_id && unit_id !== 'all') {
+      ledgerQuery += ` AND le.unit_id = $5`;
+      ledgerParams.push(unit_id);
+    }
+
+    const [bookingsResult, ledgerResult] = await Promise.all([
+      query(bookingsQuery, bookingsParams),
+      query(ledgerQuery, ledgerParams),
+    ]);
+
+    const combined = [
+      ...bookingsResult.rows,
+      ...ledgerResult.rows,
+    ].sort((a, b) => new Date(a.check_in) - new Date(b.check_in));
+
+    res.json({ success: true, data: combined });
+  } catch (error) {
+    console.error('Error fetching owner ledger:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+const getOwnerUnits = async (req, res) => {
+  try {
+    const { property_id, mobile } = req.query;
+    if (!property_id) {
+      return res.status(400).json({ success: false, message: 'property_id is required' });
+    }
+
+    const isOwner = await validateOwnerAccess(property_id, mobile);
+    if (!isOwner) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const resolved = await resolvePropertyIds(property_id);
+    if (!resolved) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const result = await query(
+      'SELECT id, name FROM property_units WHERE property_id = $1 ORDER BY name',
+      [resolved.internalId]
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Error fetching owner units:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getLedgerEntries,
   addLedgerEntry,
@@ -1024,4 +1157,6 @@ module.exports = {
   deleteLedgerEntry,
   handleOwnerAction,
   handleWhatsAppWebhook,
+  getOwnerLedger,
+  getOwnerUnits,
 };

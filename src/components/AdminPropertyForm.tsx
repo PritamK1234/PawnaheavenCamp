@@ -677,7 +677,10 @@ const AdminPropertyForm = ({
         const response = await fetch(`/api/referrals/owner-lookup/${mobile}`);
         const result = await response.json();
         if (result.found && result.data?.referral_code) {
-          setFormData((prev) => ({ ...prev, referral_code: result.data.referral_code }));
+          setFormData((prev) => ({
+            ...prev,
+            referral_code: result.data.referral_code,
+          }));
         }
       } catch (e) {}
     };
@@ -1031,7 +1034,10 @@ const AdminPropertyForm = ({
                     id="referral_code"
                     value={formData.referral_code}
                     onChange={(e) =>
-                      setFormData({ ...formData, referral_code: e.target.value })
+                      setFormData({
+                        ...formData,
+                        referral_code: e.target.value,
+                      })
                     }
                     placeholder="Enter referral code"
                     className="h-10 bg-secondary/50 rounded-xl"
@@ -1431,7 +1437,7 @@ const AdminPropertyForm = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="owner_mobile">Owner Mobile Number *</Label>
+                <Label htmlFor="owner_mobile">Owner WhatsApp Number *</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -1447,14 +1453,17 @@ const AdminPropertyForm = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="owners_otp_number">Owners OTP Number</Label>
+                <Label htmlFor="owners_otp_number">Owner OTP Number</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="owners_otp_number"
                     value={formData.owners_otp_number}
                     onChange={(e) =>
-                      setFormData({ ...formData, owners_otp_number: e.target.value })
+                      setFormData({
+                        ...formData,
+                        owners_otp_number: e.target.value,
+                      })
                     }
                     className="h-12 pl-10 bg-secondary/50 rounded-xl"
                     placeholder="Enter OTP Number"

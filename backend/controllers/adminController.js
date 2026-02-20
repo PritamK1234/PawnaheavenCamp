@@ -43,17 +43,6 @@ const AdminController = {
     }
   },
 
-  async getOwnerReferralToken(req, res) {
-    try {
-      const { mobile } = req.body;
-      if (!mobile) return res.status(400).json({ error: 'Mobile number is required' });
-      const result = await UserService.login(mobile.replace(/\D/g, ''));
-      res.json({ success: true, token: result.token });
-    } catch (error) {
-      res.json({ success: false, error: error.message });
-    }
-  },
-
   async createReferral(req, res) {
     try {
       const { username, mobile_number, referral_code, referral_type, linked_property_id } = req.body;

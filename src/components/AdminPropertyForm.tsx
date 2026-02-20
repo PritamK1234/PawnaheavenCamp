@@ -636,7 +636,7 @@ const AdminPropertyForm = ({
     capacity: "4",
     check_in_time: "2:00 PM",
     check_out_time: "11:00 AM",
-    owners_otp_number: "",
+    owner_otp_number: "",
     status: "Verified",
     referral_code: "",
     is_active: true,
@@ -773,7 +773,7 @@ const AdminPropertyForm = ({
         capacity: property.capacity?.toString() || "4",
         check_in_time: property.check_in_time || "2:00 PM",
         check_out_time: property.check_out_time || "11:00 AM",
-        owners_otp_number: property.owners_otp_number || "",
+        owner_otp_number: property.owner_otp_number || "",
         status: property.status || "Verified",
         referral_code: property.referral_code || "",
         is_active: property.is_active ?? true,
@@ -1453,16 +1453,16 @@ const AdminPropertyForm = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="owners_otp_number">Owner OTP Number</Label>
+                <Label htmlFor="owner_otp_number">Owner OTP Number</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    id="owners_otp_number"
-                    value={formData.owners_otp_number}
+                    id="owner_otp_number"
+                    value={formData.owner_otp_number}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        owners_otp_number: e.target.value,
+                        owner_otp_number: e.target.value,
                       })
                     }
                     className="h-12 pl-10 bg-secondary/50 rounded-xl"

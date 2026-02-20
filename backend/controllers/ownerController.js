@@ -13,7 +13,7 @@ exports.registerOwner = async (req, res) => {
 
   try {
     const propertyCheck = await pool.query(
-      'SELECT property_id, title, category, owner_name FROM properties WHERE property_id = $1',
+      'SELECT property_id, title, category, owner_name, owner_mobile FROM properties WHERE property_id = $1',
       [propertyId]
     );
 
@@ -52,10 +52,15 @@ exports.registerOwner = async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO owners 
-       (property_id, property_name, property_type, owner_name, mobile_number) 
-       VALUES ($1, $2, $3, $4, $5) 
-       RETURNING id, property_id, property_name, owner_name, mobile_number`,
-      [propertyId, property.title, property.category, property.owner_name || '', ownerMobile]
+       (property_id, property_name, property_type, owner_name, mobile_number, owner_whatsapp) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING id, property_id, property_name, owner_name, mobile_number, owner_whatsapp`,
+      [propertyId, property.title, property.category, property.owner_name || '', ownerMobile, property.owner_mobile || '']
+    );
+
+    await pool.query(
+      'UPDATE properties SET owner_otp_number = $1 WHERE property_id = $2 AND (owner_otp_number IS NULL OR owner_otp_number = \'\')',
+      [ownerMobile, propertyId]
     );
 
     return res.status(201).json({

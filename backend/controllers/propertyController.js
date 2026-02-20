@@ -458,6 +458,7 @@ const updateProperty = async (req, res) => {
       check_out_time,
       owner_name,
       owner_mobile,
+      owner_otp_number,
       referral_code,
     } = req.body;
 
@@ -491,6 +492,7 @@ const updateProperty = async (req, res) => {
         owner_name = COALESCE(NULLIF($22, ''), owner_name),
         owner_mobile = COALESCE(NULLIF($23, ''), owner_mobile),
         referral_code = COALESCE($24, referral_code),
+        owner_otp_number = COALESCE(NULLIF($25, ''), owner_otp_number),
         updated_at = CURRENT_TIMESTAMP
       WHERE property_id = $13 OR id::text = $13
       RETURNING *
@@ -533,6 +535,7 @@ const updateProperty = async (req, res) => {
         owner_name || null,
         owner_mobile || null,
         referral_code || null,
+        owner_otp_number || null,
       ],
     );
 
@@ -748,6 +751,7 @@ const createProperty = async (req, res) => {
       contact,
       owner_name,
       owner_mobile,
+      owner_otp_number,
       map_link,
       amenities,
       activities,
@@ -814,8 +818,8 @@ const createProperty = async (req, res) => {
       `INSERT INTO properties (
         title, slug, property_id, description, category, location, rating, price, weekday_price, weekend_price, price_note,
         capacity, max_capacity, check_in_time, check_out_time, status, is_top_selling, is_active, is_available,
-        contact, owner_name, owner_mobile, map_link, amenities, activities, highlights, policies, schedule, availability, referral_code, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, CURRENT_TIMESTAMP)
+        contact, owner_name, owner_mobile, map_link, amenities, activities, highlights, policies, schedule, availability, referral_code, owner_otp_number, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, CURRENT_TIMESTAMP)
       RETURNING *`,
       [
         title,
@@ -860,6 +864,7 @@ const createProperty = async (req, res) => {
           ? availability
           : JSON.stringify(availability || []),
         referral_code || null,
+        owner_otp_number || null,
       ],
     );
 

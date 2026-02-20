@@ -59,6 +59,11 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with separate calendar tables
   - `availability_calendar` - Villa property-level availability
   - `unit_calendar` - Camping/cottage unit-level availability
+  - **Owner Number Separation (Feb 2026)**: 
+    - `properties.owner_mobile` = WhatsApp number (for customer contact)
+    - `properties.owner_otp_number` = OTP number (for owner login)
+    - `owners.mobile_number` = OTP number (used for login/authentication)
+    - `owners.owner_whatsapp` = WhatsApp number (copied from properties.owner_mobile on registration)
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript

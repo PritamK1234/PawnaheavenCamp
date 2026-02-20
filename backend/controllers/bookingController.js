@@ -1024,8 +1024,7 @@ const validateOwnerAccess = async (propertyId, mobile) => {
   if (!mobile) return false;
   const cleanMobile = String(mobile).replace(/\D/g, '');
   const result = await query(
-    `SELECT id FROM referral_users 
-     WHERE mobile_number = $1 AND referral_type = 'owner' AND linked_property_id::text = $2`,
+    `SELECT id FROM owners WHERE mobile_number = $1 AND property_id = $2`,
     [cleanMobile, String(propertyId)]
   );
   return result.rows.length > 0;

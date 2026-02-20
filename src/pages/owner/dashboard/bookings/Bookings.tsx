@@ -50,7 +50,7 @@ const Bookings = () => {
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
   const propertyId = ownerData?.property_id || ownerData?.propertyId || '';
-  const ownerMobile = ownerData?.mobile || '';
+  const ownerMobile = ownerData?.mobile_number || ownerData?.ownerNumber || ownerData?.mobile || '';
 
   const years = Array.from({ length: 5 }, (_, i) => String(currentYear - 2 + i));
 
@@ -67,7 +67,10 @@ const Bookings = () => {
   }, [propertyId, ownerMobile]);
 
   const fetchLedger = useCallback(async () => {
-    if (!propertyId || !ownerMobile) return;
+    if (!propertyId || !ownerMobile) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -87,7 +90,7 @@ const Bookings = () => {
     } finally {
       setLoading(false);
     }
-  }, [propertyId, year, month, unit]);
+  }, [propertyId, ownerMobile, year, month, unit]);
 
   useEffect(() => {
     fetchUnits();

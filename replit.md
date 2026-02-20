@@ -62,7 +62,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite with SWC for fast compilation
+- **Build Tool**: Vite with @vitejs/plugin-react (Babel-based, SWC removed due to compatibility)
 - **Routing**: React Router DOM for client-side navigation
 - **State Management**: TanStack React Query for server state management
 - **Styling**: Tailwind CSS with CSS variables for theming

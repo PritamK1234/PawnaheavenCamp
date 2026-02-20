@@ -43,6 +43,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@react-google-maps/api": "^2.20.8",
     "@tanstack/react-query": "^5.83.0",
+    "@vitejs/plugin-react": "^5.1.4",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",

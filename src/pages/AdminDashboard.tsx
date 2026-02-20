@@ -406,7 +406,7 @@ const AdminDashboard = () => {
               variant="ghost"
               size="icon"
               className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
-              onClick={() => window.open("tel:+918806092609")}
+              onClick={() => navigate("/admin/contacts")}
             >
               <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>

@@ -1191,7 +1191,37 @@ const AdminDashboard = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                          <div className="pt-3 border-t border-white/5 space-y-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10 rounded-xl"
+                              onClick={async () => {
+                                try {
+                                  const adminToken = localStorage.getItem("adminToken");
+                                  if (!adminToken) return;
+                                  const res = await fetch("/api/referrals/admin/login-as", {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${adminToken}`,
+                                    },
+                                    body: JSON.stringify({ mobile: referral.mobile_number }),
+                                  });
+                                  const data = await res.json();
+                                  if (data.success && data.token) {
+                                    localStorage.setItem("referral_token", data.token);
+                                    window.open("/referral/check?from=admin", "_blank");
+                                  }
+                                } catch (e) {
+                                  console.error("Admin login-as failed", e);
+                                }
+                              }}
+                            >
+                              <Share2 className="w-3 h-3 mr-1" />
+                              Referral Dashboard ({referral.referral_code})
+                            </Button>
+                            <div className="flex items-center justify-between">
                             <p className="text-[10px] text-muted-foreground">
                               Joined{" "}
                               {new Date(
@@ -1239,6 +1269,7 @@ const AdminDashboard = () => {
                                 <Trash2 className="w-3 h-3 mr-1" />
                                 Delete
                               </Button>
+                            </div>
                             </div>
                           </div>
                         </div>

@@ -1207,7 +1207,10 @@ const getUnitCalendarData = async (req, res) => {
     const { unitId } = req.params;
 
     const unitResult = await query(
-      "SELECT id, total_persons, property_id FROM property_units WHERE id = $1",
+      `SELECT pu.id, pu.total_persons, pu.property_id, p.category 
+       FROM property_units pu 
+       JOIN properties p ON pu.property_id = p.id 
+       WHERE pu.id = $1`,
       [unitId],
     );
     if (unitResult.rows.length === 0) {
@@ -1217,6 +1220,7 @@ const getUnitCalendarData = async (req, res) => {
     }
     const unit = unitResult.rows[0];
     const totalCapacity = unit.total_persons || 0;
+    const isVillaUnit = unit.category === 'villa';
 
     const calResult = await query(
       "SELECT date, price, available_quantity, is_weekend, is_special FROM unit_calendar WHERE unit_id = $1",
@@ -1276,12 +1280,17 @@ const getUnitCalendarData = async (req, res) => {
       while (d < end) {
         const ds = d.toISOString().split("T")[0];
         ensureDate(ds);
-        calendarMap[ds].available_quantity = Math.max(
-          0,
-          calendarMap[ds].available_quantity - (entry.persons || 0),
-        );
-        if (calendarMap[ds].available_quantity <= 0)
+        if (isVillaUnit) {
           calendarMap[ds].is_booked = true;
+          calendarMap[ds].available_quantity = 0;
+        } else {
+          calendarMap[ds].available_quantity = Math.max(
+            0,
+            calendarMap[ds].available_quantity - (entry.persons || 0),
+          );
+          if (calendarMap[ds].available_quantity <= 0)
+            calendarMap[ds].is_booked = true;
+        }
         d.setDate(d.getDate() + 1);
       }
     }
@@ -1292,12 +1301,17 @@ const getUnitCalendarData = async (req, res) => {
       while (d < end) {
         const ds = d.toISOString().split("T")[0];
         ensureDate(ds);
-        calendarMap[ds].available_quantity = Math.max(
-          0,
-          calendarMap[ds].available_quantity - (booking.persons || 0),
-        );
-        if (calendarMap[ds].available_quantity <= 0)
+        if (isVillaUnit) {
           calendarMap[ds].is_booked = true;
+          calendarMap[ds].available_quantity = 0;
+        } else {
+          calendarMap[ds].available_quantity = Math.max(
+            0,
+            calendarMap[ds].available_quantity - (booking.persons || 0),
+          );
+          if (calendarMap[ds].available_quantity <= 0)
+            calendarMap[ds].is_booked = true;
+        }
         d.setDate(d.getDate() + 1);
       }
     }
@@ -1305,7 +1319,7 @@ const getUnitCalendarData = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: Object.values(calendarMap),
-      meta: { totalCapacity },
+      meta: { totalCapacity, isVilla: isVillaUnit },
     });
   } catch (error) {
     console.error("Get unit calendar error:", error);

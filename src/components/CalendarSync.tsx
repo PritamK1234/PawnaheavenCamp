@@ -246,7 +246,7 @@ export const CalendarSync = ({
                       <div className="flex flex-col items-center mt-0.5 sm:mt-1 scale-90 sm:scale-100 font-black text-[8px] sm:text-[10px]">
                         {isVilla ? (
                           <span className={isFullyBooked ? "text-white/80 uppercase" : "text-black/80 uppercase"}>
-                            {isFullyBooked ? "Booked" : "Open"}
+                            {isFullyBooked ? "Booked" : "Available"}
                           </span>
                         ) : (
                           <div className="flex items-center gap-0.5">

@@ -306,8 +306,8 @@ export const CalendarSync = ({
           propertyId={propertyId}
           unitId={unitId}
           unitName={unitName || propertyName}
-          availablePersons={getDayData(selectedLedgerDate || new Date())?.available_quantity ?? (getDayData(new Date())?.available_quantity ?? (propertyPrices.capacity || 0))}
-          totalPersons={getDayData(selectedLedgerDate || new Date())?.total_capacity ?? (getDayData(new Date())?.total_capacity ?? (propertyPrices.maxCapacity || 0))}
+          availablePersons={getDayData(selectedLedgerDate || new Date())?.available_quantity ?? (getDayData(new Date())?.available_quantity ?? (calendarMeta.totalCapacity || propertyPrices.capacity || 0))}
+          totalPersons={calendarMeta.totalCapacity || getDayData(selectedLedgerDate || new Date())?.total_capacity || getDayData(new Date())?.total_capacity || propertyPrices.maxCapacity || 0}
           isVilla={isVilla}
         />
       )}

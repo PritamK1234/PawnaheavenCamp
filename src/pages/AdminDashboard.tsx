@@ -153,7 +153,7 @@ const AdminDashboard = () => {
       return;
     }
     if (type === 'owner' && !(form as any).propertyId) {
-      toast({ title: "Please select a property", variant: "destructive" });
+      toast({ title: "Please enter Property ID", variant: "destructive" });
       return;
     }
 
@@ -167,7 +167,7 @@ const AdminDashboard = () => {
           referral_otp_number: form.mobile,
           referral_code: form.code,
           referral_type: type,
-          linked_property_id: type === 'owner' ? parseInt((form as any).propertyId) : undefined,
+          property_id: type === 'owner' ? (form as any).propertyId : undefined,
         }),
       });
       const result = await response.json();
@@ -1029,7 +1029,7 @@ const AdminDashboard = () => {
                                 username: ownerProp?.owner_name || "",
                                 mobile: mobile || "",
                                 code: "",
-                                propertyId: ownerProperties[0]?.id?.toString() || "",
+                                propertyId: ownerProperties[0]?.property_id || "",
                               });
                             }}
                           >
@@ -1361,25 +1361,45 @@ const AdminDashboard = () => {
                   </div>
                   <div className="space-y-3">
                     <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Property ID</label>
+                      <Input
+                        placeholder="e.g. 74SQF"
+                        value={ownerRefForm.propertyId}
+                        onChange={async (e) => {
+                          const val = e.target.value.toUpperCase().replace(/\s/g, '');
+                          setOwnerRefForm({ ...ownerRefForm, propertyId: val });
+                          if (val.length >= 4) {
+                            try {
+                              const token = localStorage.getItem("adminToken");
+                              const res = await fetch(`/api/referrals/admin/owner-lookup/${val}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              const data = await res.json();
+                              if (data.success && data.data) {
+                                setOwnerRefForm(prev => ({
+                                  ...prev,
+                                  propertyId: val,
+                                  username: data.data.owner_name || prev.username,
+                                  mobile: data.data.owner_otp_number || prev.mobile,
+                                }));
+                              }
+                            } catch (e) {}
+                          }
+                        }}
+                        className="h-11 rounded-xl bg-white/5 border-white/10 uppercase"
+                      />
+                    </div>
+                    <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Owner Name</label>
                       <Input placeholder="Property owner name" value={ownerRefForm.username} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, username: e.target.value })} className="h-11 rounded-xl bg-white/5 border-white/10" />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Mobile Number</label>
-                      <Input placeholder="10-digit mobile" maxLength={10} value={ownerRefForm.mobile} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, mobile: e.target.value.replace(/\D/g, '') })} className="h-11 rounded-xl bg-white/5 border-white/10" />
+                      <label className="text-xs text-muted-foreground mb-1 block">Mobile Number (OTP)</label>
+                      <Input placeholder="Auto-fetched from owner registration" maxLength={10} value={ownerRefForm.mobile} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, mobile: e.target.value.replace(/\D/g, '') })} className="h-11 rounded-xl bg-white/5 border-white/10" />
                     </div>
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Referral Code</label>
                       <Input placeholder="e.g. OWN-PROPERTY1" value={ownerRefForm.code} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, code: e.target.value.toUpperCase().replace(/\s/g, '') })} className="h-11 rounded-xl bg-white/5 border-white/10 uppercase" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Select Property</label>
-                      <select value={ownerRefForm.propertyId} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, propertyId: e.target.value })} className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white px-3 text-sm">
-                        <option value="" className="bg-black">Select a property...</option>
-                        {properties.map((p: any) => (
-                          <option key={p.id} value={p.id} className="bg-black">{p.title} ({p.category})</option>
-                        ))}
-                      </select>
                     </div>
                     <Button onClick={() => handleCreateAdminReferral('owner')} disabled={ownerRefCreating} className="w-full bg-primary text-white hover:opacity-90 font-bold h-12 rounded-2xl shadow-lg">
                       {ownerRefCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate Owner Code"}

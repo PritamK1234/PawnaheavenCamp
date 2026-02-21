@@ -37,5 +37,6 @@ router.post('/admin/update-status', authMiddleware, AdminController.updateReferr
 router.post('/admin/create', authMiddleware, AdminController.createReferral);
 router.post('/admin/delete', authMiddleware, AdminController.deleteReferral);
 router.post('/admin/login-as', authMiddleware, AdminController.loginAsReferralUser);
+router.get('/admin/owner-lookup/:propertyId', authMiddleware, AdminController.lookupOwnerByPropertyId);
 
 module.exports = router;

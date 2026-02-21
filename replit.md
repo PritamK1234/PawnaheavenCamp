@@ -117,6 +117,8 @@ Preferred communication style: Simple, everyday language.
 ### Referral System (Extended Feb 2026)
 - **Three referral types**: Public (15% commission), Owner (25% commission, property-linked), B2B (22% commission)
 - **Commission structure**: No referral = 30% Admin; Public = 15% Referrer + 15% Admin; Owner = 25% Owner + 5% Admin; B2B = 22% B2B + 8% Admin
+- **Admin owner referral creation**: Uses Property ID (e.g., 74SQF) to auto-fetch owner name + OTP number from owners table
+- **Database columns**: `referral_type` (public/owner/b2b), `linked_property_id` (integer FK), `linked_property_slug`, `property_id` (varchar, e.g., 74SQF) on `referral_users` table
 - **Admin-only creation**: Owner and B2B codes are created exclusively from Admin Dashboard > B2B tab
 - **Owner referral links**: Redirect to specific property page (`/property/slug?ref=CODE`) and lock customer to that property via `localStorage.owner_referral_lock`
 - **B2B/Public links**: Redirect to home page (`/?ref=CODE`)

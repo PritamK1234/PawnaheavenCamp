@@ -909,14 +909,14 @@ const AdminDashboard = () => {
                         .toLowerCase()
                         .includes(ownerSearchTerm.toLowerCase()),
                     )
-                    .map((p) => p.owner_whatsapp_number),
+                    .map((p) => p.owner_otp_number || p.owner_whatsapp_number),
                 ),
               ).map((mobile, idx) => {
                 const ownerProp = properties.find(
-                  (p) => p.owner_whatsapp_number === mobile,
+                  (p) => (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
                 );
                 const ownerProperties = properties.filter(
-                  (p) => p.owner_whatsapp_number === mobile,
+                  (p) => (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
                 );
 
                 return (

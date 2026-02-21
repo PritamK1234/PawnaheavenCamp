@@ -287,6 +287,7 @@ const UnitManager = ({
                     unitId={unit.id}
                     isAdmin={true}
                     unitName={unit.name}
+                    isVilla={category === "villa"}
                   />
                 </DialogContent>
               </Dialog>
@@ -709,9 +710,21 @@ const AdminPropertyForm = ({
 
   useEffect(() => {
     const fetchOwnerReferral = async () => {
-      const mobile = formData.owner_whatsapp_number?.replace(/\D/g, "");
-      if (!mobile || mobile.length < 10) return;
       try {
+        const propId = property?.property_id || property?.id;
+        if (propId) {
+          const response = await fetch(`/api/referrals/owner-lookup-property/${propId}`);
+          const result = await response.json();
+          if (result.found && result.data?.referral_code) {
+            setFormData((prev) => ({
+              ...prev,
+              referral_code: result.data.referral_code,
+            }));
+            return;
+          }
+        }
+        const mobile = formData.owner_whatsapp_number?.replace(/\D/g, "");
+        if (!mobile || mobile.length < 10) return;
         const response = await fetch(`/api/referrals/owner-lookup/${mobile}`);
         const result = await response.json();
         if (result.found && result.data?.referral_code) {
@@ -722,10 +735,10 @@ const AdminPropertyForm = ({
         }
       } catch (e) {}
     };
-    if (property && formData.owner_whatsapp_number) {
+    if (property) {
       fetchOwnerReferral();
     }
-  }, [formData.owner_whatsapp_number, property]);
+  }, [property]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -1166,6 +1179,7 @@ const AdminPropertyForm = ({
                   <CalendarSync
                     propertyId={property.property_id || property.id}
                     isAdmin={true}
+                    isVilla={true}
                   />
                 )}
                 {property && (formData.category === "campings_cottages" || formData.category === "villa") && (

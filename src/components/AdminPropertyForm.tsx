@@ -31,6 +31,9 @@ import {
   ImageIcon,
   Calendar,
   Copy,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { propertyAPI } from "@/lib/api";
 import {
@@ -622,6 +625,9 @@ const AdminPropertyForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [propertyUnits, setPropertyUnits] = useState<any[]>([]);
+  const [isOtpEditing, setIsOtpEditing] = useState(false);
+  const [otpEditValue, setOtpEditValue] = useState("");
+  const [isSavingOtp, setIsSavingOtp] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -816,6 +822,49 @@ const AdminPropertyForm = ({
     }
   }, [property]);
 
+  const handleSaveOtp = async () => {
+    const cleaned = otpEditValue.replace(/\D/g, "");
+    if (cleaned.length < 10) {
+      toast({
+        title: "Invalid OTP number",
+        description: "Must be at least 10 digits",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsSavingOtp(true);
+    try {
+      const token = localStorage.getItem("adminToken");
+      const response = await fetch("/api/referrals/admin/update-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          property_id: formData.property_id || String(property?.id || ""),
+          new_otp_number: cleaned,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setFormData((prev) => ({ ...prev, owner_otp_number: cleaned }));
+        setIsOtpEditing(false);
+        toast({ title: "OTP number updated successfully" });
+      } else {
+        toast({
+          title: "Update failed",
+          description: result.error || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({ title: "Error updating OTP number", variant: "destructive" });
+    } finally {
+      setIsSavingOtp(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -828,6 +877,7 @@ const AdminPropertyForm = ({
 
     const payload = {
       ...formData,
+      owner_otp_number: property ? formData.owner_otp_number : "",
       rating: parseFloat(formData.rating) || 4.5,
       capacity: parseInt(formData.capacity) || 4,
       max_capacity:
@@ -1454,21 +1504,83 @@ const AdminPropertyForm = ({
 
               <div className="space-y-2">
                 <Label htmlFor="owner_otp_number">Owner OTP Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="owner_otp_number"
-                    value={formData.owner_otp_number}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        owner_otp_number: e.target.value,
-                      })
-                    }
-                    className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                    placeholder="Enter OTP Number"
-                  />
-                </div>
+                {property ? (
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    {isOtpEditing ? (
+                      <div className="flex gap-2">
+                        <Input
+                          id="owner_otp_number"
+                          value={otpEditValue}
+                          onChange={(e) => setOtpEditValue(e.target.value)}
+                          className="h-12 pl-10 bg-secondary/50 rounded-xl flex-1"
+                          placeholder="Enter new OTP number"
+                          autoFocus
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={handleSaveOtp}
+                          disabled={isSavingOtp}
+                          className="h-12 w-12 text-green-500 hover:text-green-400 hover:bg-green-500/10 shrink-0"
+                        >
+                          {isSavingOtp ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Check className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setIsOtpEditing(false)}
+                          disabled={isSavingOtp}
+                          className="h-12 w-12 text-red-500 hover:text-red-400 hover:bg-red-500/10 shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          id="owner_otp_number"
+                          value={formData.owner_otp_number || "Not registered yet"}
+                          disabled
+                          className="h-12 pl-10 bg-secondary/50 rounded-xl flex-1 disabled:opacity-70"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => {
+                            setOtpEditValue(formData.owner_otp_number || "");
+                            setIsOtpEditing(true);
+                          }}
+                          className="h-12 w-12 text-muted-foreground hover:text-white hover:bg-white/10 shrink-0"
+                          title="Edit OTP Number"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="owner_otp_number"
+                      value=""
+                      disabled
+                      placeholder="Auto-set on owner registration"
+                      className="h-12 pl-10 bg-secondary/50 rounded-xl disabled:opacity-60"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This will be set automatically when the owner registers via "Register Your Property"
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">

@@ -38,5 +38,6 @@ router.post('/admin/create', authMiddleware, AdminController.createReferral);
 router.post('/admin/delete', authMiddleware, AdminController.deleteReferral);
 router.post('/admin/login-as', authMiddleware, AdminController.loginAsReferralUser);
 router.get('/admin/owner-lookup/:propertyId', authMiddleware, AdminController.lookupOwnerByPropertyId);
+router.post('/admin/update-otp', authMiddleware, AdminController.updateOwnerOtpNumber);
 
 module.exports = router;

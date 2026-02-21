@@ -63,6 +63,44 @@ const AdminController = {
     }
   },
 
+  async updateOwnerOtpNumber(req, res) {
+    try {
+      const { property_id, new_otp_number } = req.body;
+      if (!property_id || !new_otp_number) {
+        return res.status(400).json({ success: false, error: 'Property ID and new OTP number are required' });
+      }
+      const cleaned = new_otp_number.replace(/\D/g, '');
+      if (cleaned.length < 10) {
+        return res.status(400).json({ success: false, error: 'OTP number must be at least 10 digits' });
+      }
+
+      const propResult = await query('SELECT id, property_id FROM properties WHERE property_id = $1 OR id::text = $1', [property_id]);
+      if (propResult.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Property not found' });
+      }
+      const prop = propResult.rows[0];
+
+      const dupCheck = await query(
+        'SELECT id FROM owners WHERE owner_otp_number = $1 AND property_id != $2',
+        [cleaned, prop.property_id]
+      );
+      if (dupCheck.rows.length > 0) {
+        return res.status(400).json({ success: false, error: 'This OTP number is already registered with another property owner' });
+      }
+
+      await query('UPDATE properties SET owner_otp_number = $1 WHERE id = $2', [cleaned, prop.id]);
+      await query('UPDATE owners SET owner_otp_number = $1 WHERE property_id = $2', [cleaned, prop.property_id]);
+      await query(
+        'UPDATE referral_users SET referral_otp_number = $1 WHERE linked_property_id = $2 OR property_id = $3',
+        [cleaned, prop.id, prop.property_id]
+      );
+
+      res.json({ success: true, message: 'OTP number updated across all records' });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
   async lookupOwnerByPropertyId(req, res) {
     try {
       const { propertyId } = req.params;

@@ -243,12 +243,21 @@ const UnitManager = ({
               </div>
               <div>
                 <p className="font-bold text-white">{unit.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  <span className="text-[#00FF41]">
-                    {unit.available_persons}
-                  </span>{" "}
-                  / <span className="text-[#FFA500]">{unit.total_persons}</span>
-                </p>
+                {category === "villa" ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-blue-400">Max Capacity: {unit.total_persons || 0}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${unit.has_booking ? 'text-red-400 bg-red-400/10 border border-red-400/20' : 'text-green-400 bg-green-400/10 border border-green-400/20'}`}>
+                      {unit.has_booking ? 'Booked' : 'Available'}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-[#00FF41]">
+                      {unit.available_persons}
+                    </span>{" "}
+                    / <span className="text-[#FFA500]">{unit.total_persons}</span>
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -384,42 +393,65 @@ const UnitManager = ({
                   className="bg-white/5 border-white/10"
                 />
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>
-                  <span className="text-[#00FF41]">Available</span> /{" "}
-                  <span className="text-[#FFA500]">Total persons capacity</span>
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="available-persons"
-                    name="available_persons"
-                    type="number"
-                    placeholder="Available"
-                    value={unitForm.available_persons}
-                    onChange={(e) =>
-                      setUnitForm({
-                        ...unitForm,
-                        available_persons: e.target.value,
-                      })
-                    }
-                    className="bg-white/5 border-white/10 text-[#00FF41] font-bold"
-                  />
+              {category === "villa" ? (
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-blue-400">Max Capacity</span>
+                  </Label>
                   <Input
                     id="total-persons"
                     name="total_persons"
                     type="number"
-                    placeholder="Total"
+                    placeholder="Max number of guests"
                     value={unitForm.total_persons}
                     onChange={(e) =>
                       setUnitForm({
                         ...unitForm,
                         total_persons: e.target.value,
+                        available_persons: e.target.value,
                       })
                     }
-                    className="bg-white/5 border-white/10 text-[#FFA500] font-bold"
+                    className="bg-white/5 border-white/10 text-blue-400 font-bold"
                   />
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-2 md:col-span-2">
+                  <Label>
+                    <span className="text-[#00FF41]">Available</span> /{" "}
+                    <span className="text-[#FFA500]">Total persons capacity</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="available-persons"
+                      name="available_persons"
+                      type="number"
+                      placeholder="Available"
+                      value={unitForm.available_persons}
+                      onChange={(e) =>
+                        setUnitForm({
+                          ...unitForm,
+                          available_persons: e.target.value,
+                        })
+                      }
+                      className="bg-white/5 border-white/10 text-[#00FF41] font-bold"
+                    />
+                    <Input
+                      id="total-persons"
+                      name="total_persons"
+                      type="number"
+                      placeholder="Total"
+                      value={unitForm.total_persons}
+                      onChange={(e) =>
+                        setUnitForm({
+                          ...unitForm,
+                          total_persons: e.target.value,
+                        })
+                      }
+                      className="bg-white/5 border-white/10 text-[#FFA500] font-bold"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4 pt-4 border-t border-white/10">
@@ -1730,8 +1762,8 @@ const AdminPropertyForm = ({
             </Button>
           </div>
 
-          {/* Images */}
-          {formData.category !== "campings_cottages" && (
+          {/* Images - hidden for both campings_cottages and villa (villa images handled in units) */}
+          {formData.category !== "campings_cottages" && formData.category !== "villa" && (
             <div className="glass rounded-2xl border border-border/50 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">

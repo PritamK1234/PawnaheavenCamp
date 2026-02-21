@@ -50,12 +50,14 @@ const OwnerLayout = () => {
   const dashboardPath = isVilla ? '/owner/dashboard/villa' : '/owner/dashboard/camping';
   const profilePath = isVilla ? '/owner/profile/villa' : '/owner/profile/camping';
 
+  const unitsPath = isVilla ? '/owner/units/villa' : '/owner/units';
+
   const navItems = [
     { label: 'Calendar', icon: Calendar, path: dashboardPath },
     { label: 'Bookings', icon: ClipboardList, path: '/owner/bookings' },
-    { label: 'Units', icon: LayoutGrid, path: '/owner/units', showIf: !isVilla },
+    { label: 'Units', icon: LayoutGrid, path: unitsPath },
     { label: 'Profile', icon: User, path: profilePath },
-  ].filter(item => item.showIf === undefined || item.showIf);
+  ];
 
   const handleReferralClick = async () => {
     if (!ownerPropertyId) {

@@ -260,7 +260,7 @@ const OwnerCalendar = () => {
                   }
                   isAdmin={true}
                   propertyName={property?.title}
-                  isVilla={!hasUnits}
+                  isVilla={true}
                 />
               </div>
             )}

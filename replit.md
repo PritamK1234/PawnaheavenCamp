@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 - Images are stored in the `property_images` table (property_id, image_url, display_order)
 - Both `updateProperty` and `updateVilla` functions now sync images to property_images table
 - Frontend components (Profile.tsx, Info.tsx) parse images from API response correctly
-- Villa images: Managed at property level with gallery upload in admin panel
+- Villa images: Managed at unit level (Property Gallery removed from villa Profile/Admin); admin Property Images section hidden for villa category
 - Camping/cottage images: Managed at unit level
 
 #### Cloudinary Image Upload (Feb 2026)

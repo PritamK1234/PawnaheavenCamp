@@ -82,7 +82,7 @@ const Footer = () => {
                 Destinations
               </button>
               <Link
-                to="/about"
+                to="/info/about"
                 className="text-muted-foreground hover:text-primary text-sm transition-colors"
               >
                 About Us
@@ -94,10 +94,10 @@ const Footer = () => {
                 Our Services
               </Link>
               <Link
-                to="/contact"
+                to="/info/contact"
                 className="text-muted-foreground hover:text-primary text-sm transition-colors"
               >
-                Contact
+                Contact Us
               </Link>
             </nav>
           </div>

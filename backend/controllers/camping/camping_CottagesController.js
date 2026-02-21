@@ -189,7 +189,7 @@ const updateCamping = async (req, res) => {
       amenities, activities, highlights, policies, schedule, 
       description, availability, weekday_price, weekend_price, 
       price_note, price, special_dates, special_prices,
-      owner_name, owner_mobile
+      owner_name, owner_whatsapp_number
     } = req.body;
 
     console.log('Update camping request received for ID:', id);

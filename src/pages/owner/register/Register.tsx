@@ -99,7 +99,7 @@ const OwnerRegister = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium text-foreground">
-                Owner Mobile Number
+                Mobile Number (For OTP)
               </Label>
               <Input
                 required
@@ -109,7 +109,7 @@ const OwnerRegister = () => {
                   setFormData({ ...formData, ownerNumber: e.target.value })
                 }
                 className="h-12 bg-secondary/50 border-border/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                placeholder="10-digit mobile number"
+                placeholder="Enter 10-digit mobile number"
               />
             </div>
             <Button

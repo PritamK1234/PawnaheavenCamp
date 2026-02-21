@@ -19,7 +19,7 @@ const authenticateReferralUser = async (req, res, next) => {
 
     // For other purposes (dashboard, withdrawal), fetch user and check status
     const result = await query(
-      'SELECT id, username, mobile_number, status FROM referral_users WHERE id = $1',
+      'SELECT id, username, referral_otp_number, status FROM referral_users WHERE id = $1',
       [decoded.userId]
     );
 

@@ -54,7 +54,7 @@ const Bookings = () => {
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
   const propertyId = ownerData?.property_id || ownerData?.propertyId || '';
-  const ownerMobile = ownerData?.mobile_number || ownerData?.ownerNumber || ownerData?.mobile || '';
+  const ownerMobile = ownerData?.owner_otp_number || ownerData?.ownerNumber || ownerData?.mobile || '';
   const propertyName = ownerData?.property_name || ownerData?.propertyName || ownerData?.property_title || 'Property';
 
   const years = Array.from({ length: 5 }, (_, i) => String(currentYear - 2 + i));

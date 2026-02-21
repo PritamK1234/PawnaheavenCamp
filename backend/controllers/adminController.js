@@ -45,8 +45,8 @@ const AdminController = {
 
   async createReferral(req, res) {
     try {
-      const { username, mobile_number, referral_code, referral_type, linked_property_id } = req.body;
-      if (!username || !mobile_number || !referral_code || !referral_type) {
+      const { username, referral_otp_number, referral_code, referral_type, linked_property_id } = req.body;
+      if (!username || !referral_otp_number || !referral_code || !referral_type) {
         return res.status(400).json({ error: 'All fields are required' });
       }
       if (!['owner', 'b2b'].includes(referral_type)) {
@@ -55,7 +55,7 @@ const AdminController = {
       if (referral_type === 'owner' && !linked_property_id) {
         return res.status(400).json({ error: 'Property ID is required for owner referrals' });
       }
-      const result = await AdminService.createAdminReferral(username, mobile_number, referral_code, referral_type, linked_property_id);
+      const result = await AdminService.createAdminReferral(username, referral_otp_number, referral_code, referral_type, linked_property_id);
       res.json({ success: true, data: result });
     } catch (error) {
       res.status(400).json({ error: error.message });

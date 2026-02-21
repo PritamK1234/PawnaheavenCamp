@@ -6,9 +6,9 @@ const UserRepository = {
     const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN || "pawnahavencamp.com";
     const referralUrl = `https://${domain}?ref=${code}`;
     const text = `
-      INSERT INTO referral_users (username, mobile_number, referral_code, referral_url, status, balance)
+      INSERT INTO referral_users (username, referral_otp_number, referral_code, referral_url, status, balance)
       VALUES ($1, $2, $3, $4, 'active', 0)
-      RETURNING id, username, mobile_number, referral_code, referral_url, status
+      RETURNING id, username, referral_otp_number, referral_code, referral_url, status
     `;
     const res = await query(text, [username.toLowerCase(), mobileNumber, code, referralUrl]);
     return res.rows[0];
@@ -21,7 +21,7 @@ const UserRepository = {
   },
 
   async findByMobile(mobileNumber) {
-    const text = 'SELECT * FROM referral_users WHERE mobile_number = $1';
+    const text = 'SELECT * FROM referral_users WHERE referral_otp_number = $1';
     const res = await query(text, [mobileNumber]);
     return res.rows[0];
   },

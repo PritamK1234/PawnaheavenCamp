@@ -68,7 +68,7 @@ const ReferralController = {
       const { mobile } = req.params;
       if (!mobile) return res.status(400).json({ error: 'Mobile number is required' });
       const result = await query(
-        "SELECT id, username, referral_code, referral_type, linked_property_id, linked_property_slug, status FROM referral_users WHERE mobile_number = $1 AND referral_type = 'owner'",
+        "SELECT id, username, referral_code, referral_type, linked_property_id, linked_property_slug, status FROM referral_users WHERE referral_otp_number = $1 AND referral_type = 'owner'",
         [mobile]
       );
       if (result.rows.length > 0) {

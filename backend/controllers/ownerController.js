@@ -13,7 +13,7 @@ exports.registerOwner = async (req, res) => {
 
   try {
     const propertyCheck = await pool.query(
-      'SELECT property_id, title, category, owner_name, owner_mobile FROM properties WHERE property_id = $1',
+      'SELECT property_id, title, category, owner_name, owner_whatsapp_number FROM properties WHERE property_id = $1',
       [propertyId]
     );
 
@@ -39,7 +39,7 @@ exports.registerOwner = async (req, res) => {
     }
 
     const mobileCheck = await pool.query(
-      'SELECT * FROM owners WHERE mobile_number = $1',
+      'SELECT * FROM owners WHERE owner_otp_number = $1',
       [ownerMobile]
     );
 
@@ -52,10 +52,10 @@ exports.registerOwner = async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO owners 
-       (property_id, property_name, property_type, owner_name, mobile_number, owner_whatsapp) 
+       (property_id, property_name, property_type, owner_name, owner_otp_number, owner_whatsapp_number) 
        VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING id, property_id, property_name, owner_name, mobile_number, owner_whatsapp`,
-      [propertyId, property.title, property.category, property.owner_name || '', ownerMobile, property.owner_mobile || '']
+       RETURNING id, property_id, property_name, owner_name, owner_otp_number, owner_whatsapp_number`,
+      [propertyId, property.title, property.category, property.owner_name || '', ownerMobile, property.owner_whatsapp_number || '']
     );
 
     await pool.query(
@@ -68,7 +68,7 @@ exports.registerOwner = async (req, res) => {
       message: 'Owner registered successfully!',
       data: {
         ...result.rows[0],
-        ownerNumber: result.rows[0].mobile_number,
+        ownerNumber: result.rows[0].owner_otp_number,
         propertyName: result.rows[0].property_name
       }
     });
@@ -89,16 +89,15 @@ exports.sendOTP = async (req, res) => {
 
   try {
     const ownerCheck = await pool.query(
-      'SELECT * FROM owners WHERE mobile_number = $1',
+      'SELECT * FROM owners WHERE owner_otp_number = $1',
       [mobileNumber]
     );
 
     console.log('Owner check result:', ownerCheck.rows.length, 'rows found');
 
     if (ownerCheck.rows.length === 0) {
-      // Log all owners for debugging
-      const allOwners = await pool.query('SELECT mobile_number FROM owners');
-      console.log('All registered mobile numbers:', allOwners.rows.map(r => r.mobile_number));
+      const allOwners = await pool.query('SELECT owner_otp_number FROM owners');
+      console.log('All registered mobile numbers:', allOwners.rows.map(r => r.owner_otp_number));
       
       return res.status(404).json({
         success: false,
@@ -138,7 +137,7 @@ exports.verifyOTP = async (req, res) => {
       `SELECT o.*, p.title as property_title, p.category as property_category 
        FROM owners o 
        JOIN properties p ON o.property_id = p.property_id 
-       WHERE o.mobile_number = $1`,
+       WHERE o.owner_otp_number = $1`,
       [mobileNumber]
     );
 
@@ -157,7 +156,7 @@ exports.verifyOTP = async (req, res) => {
       token,
       data: {
         ...result.rows[0],
-        ownerNumber: result.rows[0].mobile_number,
+        ownerNumber: result.rows[0].owner_otp_number,
         propertyName: result.rows[0].property_name
       }
     });

@@ -2,7 +2,7 @@ const { query } = require('../db');
 
 const ReferralRepository = {
   async findByMobile(mobile) {
-    const text = 'SELECT id, status FROM referral_users WHERE mobile_number = $1';
+    const text = 'SELECT id, status FROM referral_users WHERE referral_otp_number = $1';
     const res = await query(text, [mobile]);
     return res.rows[0];
   },

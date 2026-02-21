@@ -644,7 +644,7 @@ const AdminPropertyForm = ({
     max_capacity: "4",
     contact: "+91 8806092609",
     owner_name: "",
-    owner_mobile: "",
+    owner_whatsapp_number: "",
     property_id: "",
     availability: [] as string[],
     amenities: [""],
@@ -671,7 +671,7 @@ const AdminPropertyForm = ({
 
   useEffect(() => {
     const fetchOwnerReferral = async () => {
-      const mobile = formData.owner_mobile?.replace(/\D/g, "");
+      const mobile = formData.owner_whatsapp_number?.replace(/\D/g, "");
       if (!mobile || mobile.length < 10) return;
       try {
         const response = await fetch(`/api/referrals/owner-lookup/${mobile}`);
@@ -684,10 +684,10 @@ const AdminPropertyForm = ({
         }
       } catch (e) {}
     };
-    if (property && formData.owner_mobile) {
+    if (property && formData.owner_whatsapp_number) {
       fetchOwnerReferral();
     }
-  }, [formData.owner_mobile, property]);
+  }, [formData.owner_whatsapp_number, property]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -784,7 +784,7 @@ const AdminPropertyForm = ({
           "4",
         contact: property.contact || "+91 8806092609",
         owner_name: property.owner_name || "",
-        owner_mobile: property.owner_mobile || "",
+        owner_whatsapp_number: property.owner_whatsapp_number || "",
         property_id: property.property_id || "",
         availability: property.availability || [],
         amenities: property.amenities?.length ? property.amenities : [""],
@@ -1437,14 +1437,14 @@ const AdminPropertyForm = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="owner_mobile">Owner WhatsApp Number *</Label>
+                <Label htmlFor="owner_whatsapp_number">Owner WhatsApp Number *</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    id="owner_mobile"
-                    value={formData.owner_mobile}
+                    id="owner_whatsapp_number"
+                    value={formData.owner_whatsapp_number}
                     onChange={(e) =>
-                      setFormData({ ...formData, owner_mobile: e.target.value })
+                      setFormData({ ...formData, owner_whatsapp_number: e.target.value })
                     }
                     className="h-12 pl-10 bg-secondary/50 rounded-xl"
                     required

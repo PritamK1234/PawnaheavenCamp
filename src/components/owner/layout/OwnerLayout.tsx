@@ -12,7 +12,7 @@ const OwnerLayout = () => {
   const isLoggedIn = localStorage.getItem('ownerLoggedIn') === 'true';
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : { propertyName: 'My Property', propertyType: 'Villa' };
-  const ownerMobile = ownerData?.mobileNumber || ownerData?.mobile || '';
+  const ownerMobile = ownerData?.owner_otp_number || ownerData?.ownerNumber || ownerData?.mobileNumber || ownerData?.mobile || '';
   const ownerPropertyId = ownerData?.property_id || ownerData?.propertyId || '';
 
   const [showContactModal, setShowContactModal] = useState(false);

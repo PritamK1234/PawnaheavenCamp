@@ -318,7 +318,7 @@ const OwnerProfile = () => {
             </h3>
             <p className="text-xs text-gray-400 font-medium capitalize tracking-widest">
               {ownerData?.ownerName || ownerData?.owner_name || "Owner"} •{" "}
-              {ownerData?.ownerNumber || ownerData?.mobile_number || "Contact"}
+              {ownerData?.ownerNumber || ownerData?.owner_otp_number || "Contact"}
             </p>
           </div>
         </CardContent>

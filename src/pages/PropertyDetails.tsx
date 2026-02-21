@@ -128,7 +128,7 @@ interface PropertyDetail {
   policies?: string[];
   schedule?: { time: string; title: string; icon?: string }[];
   contact?: string;
-  owner_mobile?: string;
+  owner_whatsapp_number?: string;
   owner_name?: string;
   map_link?: string;
   is_available: boolean;
@@ -491,7 +491,7 @@ const PropertyDetails = () => {
                         propertyCategory={propertyData.category}
                         maxCapacity={displayCapacityValue}
                         selectedUnitId={selectedUnit?.id}
-                        ownerPhone={propertyData.owner_mobile}
+                        ownerPhone={propertyData.owner_whatsapp_number}
                         ownerName={propertyData.owner_name}
                         initialCheckIn={calendarSelectedDate}
                       />
@@ -746,7 +746,7 @@ const PropertyDetails = () => {
                   propertyCategory={propertyData.category}
                   maxCapacity={displayCapacityValue}
                   selectedUnitId={selectedUnit?.id}
-                  ownerPhone={propertyData.owner_mobile}
+                  ownerPhone={propertyData.owner_whatsapp_number}
                   ownerName={propertyData.owner_name}
                   initialCheckIn={calendarSelectedDate}
                 />

@@ -39,7 +39,7 @@ const OwnerReferral = () => {
 
   const ownerDataString = localStorage.getItem("ownerData");
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
-  const ownerMobile = ownerData?.mobileNumber || ownerData?.mobile || "";
+  const ownerMobile = ownerData?.owner_otp_number || ownerData?.ownerNumber || ownerData?.mobileNumber || ownerData?.mobile || "";
 
   useEffect(() => {
     if (ownerMobile) {

@@ -7,7 +7,7 @@ const AdminService = {
       SELECT 
         u.id, 
         u.username, 
-        u.mobile_number, 
+        u.referral_otp_number, 
         u.referral_code, 
         u.status, 
         u.referral_type,
@@ -46,7 +46,7 @@ const AdminService = {
     const existingCode = await query('SELECT id FROM referral_users WHERE referral_code = $1', [code]);
     if (existingCode.rows.length > 0) throw new Error('Referral code already exists');
 
-    const existingMobile = await query('SELECT id FROM referral_users WHERE mobile_number = $1', [mobileNumber]);
+    const existingMobile = await query('SELECT id FROM referral_users WHERE referral_otp_number = $1', [mobileNumber]);
     if (existingMobile.rows.length > 0) throw new Error('Mobile number already registered');
 
     let referralUrl = `https://${domain}/?ref=${code}`;
@@ -60,7 +60,7 @@ const AdminService = {
     }
 
     const text = `
-      INSERT INTO referral_users (username, mobile_number, referral_code, referral_url, status, balance, referral_type, linked_property_id, linked_property_slug)
+      INSERT INTO referral_users (username, referral_otp_number, referral_code, referral_url, status, balance, referral_type, linked_property_id, linked_property_slug)
       VALUES ($1, $2, $3, $4, 'active', 0, $5, $6, $7)
       RETURNING *
     `;

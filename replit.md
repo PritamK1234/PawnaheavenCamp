@@ -60,10 +60,11 @@ Preferred communication style: Simple, everyday language.
   - `availability_calendar` - Villa property-level availability
   - `unit_calendar` - Camping/cottage unit-level availability
   - **Owner Number Separation (Feb 2026)**: 
-    - `properties.owner_mobile` = WhatsApp number (for customer contact)
-    - `properties.owner_otp_number` = OTP number (for owner login)
-    - `owners.mobile_number` = OTP number (used for login/authentication)
-    - `owners.owner_whatsapp` = WhatsApp number (copied from properties.owner_mobile on registration)
+    - `properties.owner_whatsapp_number` = WhatsApp number (for customer contact, set by admin)
+    - `properties.owner_otp_number` = OTP number (for owner login, set during owner registration)
+    - `owners.owner_otp_number` = OTP number (used for login/authentication)
+    - `owners.owner_whatsapp_number` = WhatsApp number (copied from properties.owner_whatsapp_number on registration)
+    - `referral_users.referral_otp_number` = OTP number for referral user login
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript

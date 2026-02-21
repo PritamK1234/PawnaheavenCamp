@@ -164,7 +164,7 @@ const AdminDashboard = () => {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           username: form.username,
-          mobile_number: form.mobile,
+          referral_otp_number: form.mobile,
           referral_code: form.code,
           referral_type: type,
           linked_property_id: type === 'owner' ? parseInt((form as any).propertyId) : undefined,
@@ -909,14 +909,14 @@ const AdminDashboard = () => {
                         .toLowerCase()
                         .includes(ownerSearchTerm.toLowerCase()),
                     )
-                    .map((p) => p.owner_mobile),
+                    .map((p) => p.owner_whatsapp_number),
                 ),
               ).map((mobile, idx) => {
                 const ownerProp = properties.find(
-                  (p) => p.owner_mobile === mobile,
+                  (p) => p.owner_whatsapp_number === mobile,
                 );
                 const ownerProperties = properties.filter(
-                  (p) => p.owner_mobile === mobile,
+                  (p) => p.owner_whatsapp_number === mobile,
                 );
 
                 return (
@@ -982,7 +982,7 @@ const AdminDashboard = () => {
                     <div className="pt-3 border-t border-white/5">
                       {(() => {
                         const ownerReferral = referralUsers.find(
-                          (r) => r.mobile_number === mobile && r.type === "owner"
+                          (r) => r.referral_otp_number === mobile && r.type === "owner"
                         );
                         if (ownerReferral) {
                           return (
@@ -1108,7 +1108,7 @@ const AdminDashboard = () => {
                           (u.username || "")
                             .toLowerCase()
                             .includes(searchTerm.toLowerCase()) ||
-                          (u.mobile_number || "").includes(searchTerm) ||
+                          (u.referral_otp_number || "").includes(searchTerm) ||
                           (u.referral_code || "")
                             .toLowerCase()
                             .includes(searchTerm.toLowerCase());
@@ -1140,7 +1140,7 @@ const AdminDashboard = () => {
                                   {referral.username}
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
-                                  {referral.mobile_number}
+                                  {referral.referral_otp_number}
                                 </p>
                               </div>
                             </div>
@@ -1206,7 +1206,7 @@ const AdminDashboard = () => {
                                       "Content-Type": "application/json",
                                       Authorization: `Bearer ${adminToken}`,
                                     },
-                                    body: JSON.stringify({ mobile: referral.mobile_number }),
+                                    body: JSON.stringify({ mobile: referral.referral_otp_number }),
                                   });
                                   const data = await res.json();
                                   if (data.success && data.token) {

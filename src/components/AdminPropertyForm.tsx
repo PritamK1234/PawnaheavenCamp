@@ -1130,13 +1130,13 @@ const AdminPropertyForm = ({
                 <Label>
                   Availability Calendar (Syncs with Owner Dashboard)
                 </Label>
-                {property && formData.category === "villa" && (
+                {property && formData.category === "villa" && propertyUnits.length === 0 && (
                   <CalendarSync
                     propertyId={property.property_id || property.id}
                     isAdmin={true}
                   />
                 )}
-                {property && formData.category === "campings_cottages" && (
+                {property && (formData.category === "campings_cottages" || formData.category === "villa") && (
                   <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
                     <UnitManager
                       propertyId={property.id}
@@ -1873,7 +1873,7 @@ const AdminPropertyForm = ({
           </div>
         </form>
 
-        {formData.category === "campings_cottages" && property?.id && (
+        {(formData.category === "campings_cottages" || formData.category === "villa") && property?.id && (
           <div className="mt-8 glass rounded-2xl border border-border/50 p-6 animate-fade-up">
             <UnitManager
               propertyId={property.id}

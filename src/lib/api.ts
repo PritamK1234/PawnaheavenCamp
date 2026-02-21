@@ -40,6 +40,55 @@ export const villaAPI = {
       body: JSON.stringify(data)
     });
     return response.json();
+  },
+  getUnits: async (propertyId: string) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/api/villa/${propertyId}/units`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.json();
+  },
+  createUnit: async (propertyId: string, data: any) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/api/villa/${propertyId}/units`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  },
+  updateUnit: async (unitId: number, data: any) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/api/villa/units/${unitId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  },
+  deleteUnit: async (unitId: number) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/api/villa/units/${unitId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.json();
+  },
+  getUnitCalendar: async (unitId: number) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/api/villa/units/${unitId}/calendar`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.json();
+  },
+  updateUnitCalendar: async (unitId: number, data: any) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/api/villa/units/${unitId}/calendar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(data)
+    });
+    return response.json();
   }
 };
 

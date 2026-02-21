@@ -22,7 +22,6 @@ const Header = () => {
     { name: "Referral Earning", href: "/referral", isExternal: true },
     { name: "Properties", href: "#properties" },
     { name: "Destinations", href: "#destinations" },
-    { name: "About", href: "#about" },
   ];
 
   const scrollToSection = (href: string, isExternal?: boolean) => {

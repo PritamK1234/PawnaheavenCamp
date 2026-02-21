@@ -14,7 +14,7 @@ Preferred communication style: Simple, everyday language.
 - **Port Configuration**: Backend runs on port 5001, Frontend on port 5000 with proxy
 - **Controller Structure**: Separated by property type to prevent cross-contamination
   - `controllers/shared/basePropertyController.js` - Common helper functions (parsePostgresArray, etc.)
-  - `controllers/villa/villaController.js` - Villa-only logic (NO units)
+  - `controllers/villa/villaController.js` - Villa logic (multi-unit support, with legacy fallback for villas without units)
   - `controllers/camping/camping_CottagesController.js` - Camping/cottage logic (unit-based)
   - `controllers/propertyController.js` - SHARED ADMIN FUNCTIONS (keep - not deprecated)
 
@@ -53,12 +53,13 @@ Preferred communication style: Simple, everyday language.
 - `src/lib/cloudinary.ts` - Frontend upload helper (routes through backend API only)
 
 - **API Routes**: 
-  - `/api/villa/*` - Villa-specific endpoints
-  - `/api/camping_Cottages/*` - Camping/cottages-specific endpoints
+  - `/api/villa/*` - Villa-specific endpoints (includes unit CRUD + unit calendar routes)
+  - `/api/camping_Cottages/*` - Camping/cottages-specific endpoints (includes unit CRUD + unit calendar routes)
   - `/api/properties/*` - Shared/admin endpoints (keep for admin panel)
 - **Database**: PostgreSQL with separate calendar tables
-  - `availability_calendar` - Villa property-level availability
-  - `unit_calendar` - Camping/cottage unit-level availability
+  - `availability_calendar` - Villa property-level availability (legacy fallback for villas without units)
+  - `unit_calendar` - Unit-level availability (used by both Camping/Cottages and Villas with units)
+  - `property_units` - Multi-unit support (used by both categories; villas without units use legacy property-level model)
   - **Owner Number Separation (Feb 2026)**: 
     - `properties.owner_whatsapp_number` = WhatsApp number (for customer contact, set by admin)
     - `properties.owner_otp_number` = OTP number (for owner login, set during owner registration)

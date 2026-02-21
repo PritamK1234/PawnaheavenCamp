@@ -157,8 +157,9 @@ const getPublicProperties = async (req, res) => {
             'name', pu.name, 
             'available_persons', pu.available_persons, 
             'total_persons', pu.total_persons,
-            'weekday_price', p.weekday_price,
-            'weekend_price', p.weekend_price,
+            'weekday_price', pu.weekday_price,
+            'weekend_price', pu.weekend_price,
+            'images', pu.images,
             'special_price', p.price,
             'special_dates', p.special_dates
           )) 
@@ -656,43 +657,88 @@ const getPublicPropertyBySlug = async (req, res) => {
       );
       units = unitsResult.rows;
     } else if (propData.category === "villa") {
-      // Add villa-specific calendar logic
-      const villaCalendarResult = await query(
+      const villaUnitsResult = await query(
         `
+        SELECT pu.*,
+          (
             SELECT json_agg(json_build_object(
               'date', d.date,
-              'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
+              'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
               'is_booked', COALESCE((
-          SELECT COUNT(*) 
-          FROM ledger_entries le
-          WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
-          AND le.check_in <= d.date 
-          AND le.check_out > d.date
-        ), 0) > 0,
-              'available_quantity', p.max_capacity - COALESCE((
-                SELECT SUM(persons) 
+                SELECT COUNT(*) 
                 FROM ledger_entries le
-                JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-                WHERE p_inner.id = p.id
+                WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
-              ), 0),
-              'total_capacity', p.max_capacity,
-              'weekday_price', p.weekday_price,
-              'weekend_price', p.weekend_price,
-              'special_dates', p.special_dates
-            ) ORDER BY d.date) as calendar
-            FROM properties p
-            CROSS JOIN (
+              ), 0) > 0,
+              'available_quantity', CASE WHEN COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) > 0 THEN 0 ELSE pu.total_persons END,
+              'total_capacity', pu.total_persons,
+              'is_weekend', d.is_weekend,
+              'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
+            ) ORDER BY d.date)
+            FROM (
               SELECT generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')::date as date,
                      extract(dow from generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')) IN (0, 6) as is_weekend
             ) d
-            LEFT JOIN availability_calendar ac ON ac.property_id = p.id AND ac.date = d.date
-            WHERE p.id = $1
-       `,
+            CROSS JOIN (SELECT p.* FROM properties p WHERE p.id = $1) p
+            LEFT JOIN unit_calendar uc ON uc.unit_id = pu.id AND uc.date = d.date
+          ) as calendar
+        FROM property_units pu
+        WHERE pu.property_id = $1
+        `,
         [propData.id],
       );
-      propData.calendar = villaCalendarResult.rows[0]?.calendar || [];
+
+      if (villaUnitsResult.rows.length > 0) {
+        units = villaUnitsResult.rows.map(unit => ({
+          ...unit,
+          amenities: parsePostgresArray(unit.amenities),
+          images: parsePostgresArray(unit.images),
+        }));
+      } else {
+        const villaCalendarResult = await query(
+          `
+              SELECT json_agg(json_build_object(
+                'date', d.date,
+                'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
+                'is_booked', COALESCE((
+            SELECT COUNT(*) 
+            FROM ledger_entries le
+            WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
+            AND le.check_in <= d.date 
+            AND le.check_out > d.date
+          ), 0) > 0,
+                'available_quantity', p.max_capacity - COALESCE((
+                  SELECT SUM(persons) 
+                  FROM ledger_entries le
+                  JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
+                  WHERE p_inner.id = p.id
+                  AND le.check_in <= d.date 
+                  AND le.check_out > d.date
+                ), 0),
+                'total_capacity', p.max_capacity,
+                'weekday_price', p.weekday_price,
+                'weekend_price', p.weekend_price,
+                'special_dates', p.special_dates
+              ) ORDER BY d.date) as calendar
+              FROM properties p
+              CROSS JOIN (
+                SELECT generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')::date as date,
+                       extract(dow from generate_series(CURRENT_DATE, CURRENT_DATE + interval '30 days', interval '1 day')) IN (0, 6) as is_weekend
+              ) d
+              LEFT JOIN availability_calendar ac ON ac.property_id = p.id AND ac.date = d.date
+              WHERE p.id = $1
+         `,
+          [propData.id],
+        );
+        propData.calendar = villaCalendarResult.rows[0]?.calendar || [];
+      }
     }
 
     const property = {

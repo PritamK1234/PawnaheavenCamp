@@ -222,12 +222,19 @@ const PropertyDetails = () => {
 
           setPropertyData(mappedProperty);
 
-          // Auto-select first unit for campings_cottages
-          if (
-            mappedProperty.category === "campings_cottages" &&
-            mappedProperty.units?.length > 0
-          ) {
-            setSelectedUnit(mappedProperty.units[0]);
+          if (mappedProperty.units?.length > 0) {
+            const params = new URLSearchParams(window.location.search);
+            const unitIdParam = params.get('unit_id');
+            if (unitIdParam) {
+              const targetUnit = mappedProperty.units.find((u: any) => u.id === parseInt(unitIdParam));
+              setSelectedUnit(targetUnit || mappedProperty.units[0]);
+              setTimeout(() => {
+                const el = document.getElementById('stay-options') || document.getElementById('stay-options-desktop');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 500);
+            } else {
+              setSelectedUnit(mappedProperty.units[0]);
+            }
           }
         }
       } catch (error) {
@@ -274,53 +281,61 @@ const PropertyDetails = () => {
   }
 
   const isVilla = propertyData.category === "villa";
+  const hasUnits = propertyData.units && propertyData.units.length > 0;
   const displayPrice =
-    propertyData.category === "campings_cottages" && selectedUnit
-      ? selectedUnit.weekday_price ||
-        selectedUnit.price_per_person ||
-        propertyData.price ||
-        "Price on Selection"
+    selectedUnit
+      ? (isVilla
+          ? selectedUnit.weekday_price || selectedUnit.price_per_person || propertyData.price || "Price on Selection"
+          : selectedUnit.weekday_price || selectedUnit.price_per_person || propertyData.price || "Price on Selection")
       : propertyData.price || "N/A";
   const displayPriceNote =
-    propertyData.category === "campings_cottages" && selectedUnit
-      ? "per person"
+    selectedUnit
+      ? (isVilla ? "villa" : "per person")
       : propertyData.priceNote || "per night";
   const displayCapacityValue =
-    propertyData.category === "campings_cottages" && selectedUnit
+    selectedUnit
       ? selectedUnit.total_persons || 0
       : propertyData.capacity || 0;
 
   const displayCapacity =
-    propertyData.category === "campings_cottages" && selectedUnit ? (
-      <span className="flex items-center gap-2">
-        <span className="text-[#00FF41] font-bold">
-          {selectedUnit.available_persons || 0}
+    selectedUnit ? (
+      isVilla ? (
+        <span className="flex items-center gap-2">
+          <span className="text-blue-400 font-bold">
+            Max Capacity: {selectedUnit.total_persons || 0}
+          </span>
+          <span className="ml-1 text-xs text-gray-400">persons</span>
         </span>
-        <span className="text-gray-500">/</span>
-        <span className="text-[#FFA500] font-bold">
-          {selectedUnit.total_persons || 0}
+      ) : (
+        <span className="flex items-center gap-2">
+          <span className="text-[#00FF41] font-bold">
+            {selectedUnit.available_persons || 0}
+          </span>
+          <span className="text-gray-500">/</span>
+          <span className="text-[#FFA500] font-bold">
+            {selectedUnit.total_persons || 0}
+          </span>
+          <span className="ml-1 text-xs text-gray-400">persons</span>
         </span>
-        <span className="ml-1 text-xs text-gray-400">persons</span>
-      </span>
+      )
     ) : (
       propertyData.capacity
     );
   const displayAvailability =
-    propertyData.category === "campings_cottages" && selectedUnit
-      ? selectedUnit.available_persons > 0
-        ? "Available"
-        : "Booked"
+    selectedUnit
+      ? (isVilla
+          ? (selectedUnit.calendar?.[0]?.is_booked ? "Booked" : "Available")
+          : (selectedUnit.available_persons > 0 ? "Available" : "Booked"))
       : propertyData.is_available
         ? "Available"
         : "Booked";
 
   const BookingSection = ({ isDesktop = false }: { isDesktop?: boolean }) => (
     <div className={cn("space-y-4", isDesktop ? "hidden lg:block" : "")}>
-      {/* Unit Selector for Campings & Cottages */}
-      {propertyData.category === "campings_cottages" &&
-        propertyData.units &&
+      {/* Unit Selector */}
+      {propertyData.units &&
         propertyData.units.length > 0 && (
-          <div className="mb-6">
+          <div id="stay-options" className="mb-6">
             <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-3 block">
               Select Stay Option
             </span>
@@ -647,10 +662,9 @@ const PropertyDetails = () => {
 
         <div className="relative">
           {/* Desktop Unit Selector */}
-          {propertyData.category === "campings_cottages" &&
-            propertyData.units &&
+          {propertyData.units &&
             propertyData.units.length > 0 && (
-              <div className="mb-8">
+              <div id="stay-options-desktop" className="mb-8">
                 <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground mb-4 block">
                   Select Stay Option
                 </span>
@@ -691,10 +705,10 @@ const PropertyDetails = () => {
               </span>
             </div>
 
-            {propertyData.category === "campings_cottages" && (
+            {selectedUnit && (
               <div className="mt-4 p-4 rounded-2xl bg-secondary/30 border border-border/50">
                 <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground block mb-2">
-                  Available Capacity
+                  {isVilla ? "Villa Capacity" : "Available Capacity"}
                 </span>
                 <div className="text-2xl font-bold flex items-center gap-3">
                   {displayCapacity}
@@ -890,11 +904,7 @@ const PropertyDetails = () => {
           <div className="md:hidden">
             <div className="relative aspect-square w-full">
               <ImageSlider
-                images={
-                  propertyData.category === "campings_cottages"
-                    ? selectedUnit?.images || propertyData.images
-                    : propertyData.images
-                }
+                images={selectedUnit?.images?.length ? selectedUnit.images : propertyData.images}
                 title={propertyData.title}
                 className="h-full w-full rounded-none"
                 aspectRatio="1:1"
@@ -940,11 +950,7 @@ const PropertyDetails = () => {
           <div className="hidden md:block">
             <div className="h-auto w-full relative container mx-auto px-6 py-8">
               <ImageSlider
-                images={
-                  propertyData.category === "campings_cottages"
-                    ? selectedUnit?.images || propertyData.images
-                    : propertyData.images
-                }
+                images={selectedUnit?.images?.length ? selectedUnit.images : propertyData.images}
                 title={propertyData.title}
                 className="rounded-3xl shadow-2xl"
               />

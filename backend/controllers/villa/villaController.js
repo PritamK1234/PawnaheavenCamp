@@ -28,19 +28,19 @@ const getVillaById = async (req, res) => {
             'date', d.date,
             'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
             'is_booked', COALESCE((
-              SELECT SUM(persons) 
+              SELECT COUNT(*) 
               FROM ledger_entries le
               WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0) >= pu.total_persons,
-            'available_quantity', pu.total_persons - COALESCE((
-              SELECT SUM(persons) 
+            ), 0) > 0,
+            'available_quantity', CASE WHEN COALESCE((
+              SELECT COUNT(*) 
               FROM ledger_entries le
               WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0),
+            ), 0) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
@@ -155,19 +155,19 @@ const getPublicVillaBySlug = async (req, res) => {
             'date', d.date,
             'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
             'is_booked', COALESCE((
-              SELECT SUM(persons) 
+              SELECT COUNT(*) 
               FROM ledger_entries le
               WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0) >= pu.total_persons,
-            'available_quantity', pu.total_persons - COALESCE((
-              SELECT SUM(persons) 
+            ), 0) > 0,
+            'available_quantity', CASE WHEN COALESCE((
+              SELECT COUNT(*) 
               FROM ledger_entries le
               WHERE le.unit_id = pu.id 
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0),
+            ), 0) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)

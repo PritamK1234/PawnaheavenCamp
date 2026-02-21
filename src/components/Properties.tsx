@@ -63,7 +63,37 @@ const Properties = () => {
     return 'luxury';
   };
 
-  const filteredProperties = properties.filter((p) => {
+  const parseImages = (images: any): any[] => {
+    if (!images) return [];
+    if (Array.isArray(images)) return images;
+    if (typeof images === 'string') {
+      if (images.startsWith('{')) {
+        return images.substring(1, images.length - 1).split(',')
+          .map((s: string) => s.trim().replace(/^"(.*)"$/, '$1')).filter(Boolean);
+      }
+      try { return JSON.parse(images); } catch { return []; }
+    }
+    return [];
+  };
+
+  const expandedProperties = properties.flatMap((p) => {
+    if (p.category === 'villa' && p.units && p.units.length > 0) {
+      return p.units.map((unit: any) => {
+        const unitImages = parseImages(unit.images);
+        return {
+          ...p,
+          _unitId: unit.id,
+          _unitName: unit.name,
+          _isUnitCard: true,
+          price: String(unit.weekday_price || p.price || 'Price on Selection'),
+          images: unitImages.length > 0 ? unitImages : p.images,
+        };
+      });
+    }
+    return [p];
+  });
+
+  const filteredProperties = expandedProperties.filter((p) => {
     if (!p.is_active && !p.isActive) return false;
     
     const categoryMatch = selectedCategory === "all" || p.category === selectedCategory;
@@ -158,29 +188,37 @@ const Properties = () => {
           </div>
         ) : filteredProperties.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-            {filteredProperties.map((property, index) => (
-              <div
-                key={property.id}
-                className="opacity-0 animate-fade-up"
-                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
-              >
-                <PropertyCard
-                  id={property.id}
-                  slug={property.slug}
-                  image={property.image}
-                  images={property.images}
-                  title={property.title}
-                  location={property.location}
-                  price={String(property.unit_starting_price || property.unit_base_starting_price || property.price || 'Price on Selection')}
-                  priceNote={property.category === 'campings_cottages' ? 'person' : (property.price_note || property.priceNote)}
-                  rating={property.rating}
-                  amenities={property.amenities || []}
-                  category={property.category}
-                  isTopSelling={property.is_top_selling}
-                  isAvailable={property.is_available}
-                />
-              </div>
-            ))}
+            {filteredProperties.map((property, index) => {
+              const cardKey = property._isUnitCard ? `${property.id}-unit-${property._unitId}` : property.id;
+              const cardPrice = property._isUnitCard
+                ? String(property.price || 'Price on Selection')
+                : String(property.unit_starting_price || property.unit_base_starting_price || property.price || 'Price on Selection');
+              return (
+                <div
+                  key={cardKey}
+                  className="opacity-0 animate-fade-up"
+                  style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
+                >
+                  <PropertyCard
+                    id={property.id}
+                    slug={property.slug}
+                    image={property.image}
+                    images={property.images}
+                    title={property._isUnitCard ? property._unitName : property.title}
+                    subtitle={property._isUnitCard ? property.title : undefined}
+                    location={property.location}
+                    price={cardPrice}
+                    priceNote={property.category === 'campings_cottages' ? 'person' : (property._isUnitCard ? 'villa' : (property.price_note || property.priceNote))}
+                    rating={property.rating}
+                    amenities={property.amenities || []}
+                    category={property.category}
+                    isTopSelling={property.is_top_selling}
+                    isAvailable={property.is_available}
+                    unitId={property._isUnitCard ? property._unitId : undefined}
+                  />
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-16">

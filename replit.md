@@ -41,6 +41,10 @@ Preferred communication style: Simple, everyday language.
 - Frontend components (Profile.tsx, Info.tsx) parse images from API response correctly
 - Villa images: Managed at unit level (Property Gallery removed from villa Profile/Admin); admin Property Images section hidden for villa category
 - Camping/cottage images: Managed at unit level
+- **Home Page Villa Cards**: Villa properties expanded into unit-level cards (each unit = separate card with unit images, price, name)
+- **Unit URL Param**: `?unit_id=X` on PropertyDetails auto-selects unit and scrolls to stay options
+- **Villa Booking Logic**: Any ledger entry on a date marks the entire villa unit as booked (COUNT > 0, not capacity-based)
+- **Unit Selector**: PropertyDetails shows "Select Stay Option" for both campings_cottages AND villa categories
 
 #### Cloudinary Image Upload (Feb 2026)
 - All image uploads go through backend API (`/api/properties/upload-image`) - NO direct frontend-to-Cloudinary uploads

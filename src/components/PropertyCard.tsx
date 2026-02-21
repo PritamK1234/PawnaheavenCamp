@@ -24,6 +24,7 @@ interface PropertyCardProps {
   image: string;
   images?: string[];
   title: string;
+  subtitle?: string;
   location?: string;
   price: string;
   priceNote?: string;
@@ -32,6 +33,7 @@ interface PropertyCardProps {
   category?: string;
   isTopSelling?: boolean;
   isAvailable?: boolean;
+  unitId?: number;
 }
 
 const PropertyCard = ({
@@ -40,6 +42,7 @@ const PropertyCard = ({
   image,
   images = [],
   title,
+  subtitle,
   location = "Pawna Lake",
   price,
   priceNote = "person",
@@ -48,6 +51,7 @@ const PropertyCard = ({
   category,
   isTopSelling,
   isAvailable = true,
+  unitId,
 }: PropertyCardProps) => {
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -66,12 +70,14 @@ const PropertyCard = ({
 
   const handleNavigate = () => {
     sessionStorage.setItem("homeScrollPosition", window.scrollY.toString());
-    navigate(`/property/${navigationId}`);
+    const unitParam = unitId ? `?unit_id=${unitId}` : '';
+    navigate(`/property/${navigationId}${unitParam}`);
   };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = window.location.origin + `/property/${navigationId}`;
+    const unitParam = unitId ? `?unit_id=${unitId}` : '';
+    const url = window.location.origin + `/property/${navigationId}${unitParam}`;
     if (navigator.share) {
       navigator.share({ title, url });
     } else {
@@ -185,7 +191,10 @@ const PropertyCard = ({
             </div>
           </div>
 
-          <h3 className="font-semibold mb-3">{title}</h3>
+          <h3 className="font-semibold mb-1">{title}</h3>
+          {subtitle && (
+            <p className="text-xs text-primary/80 font-medium mb-2">{subtitle}</p>
+          )}
 
           <div className="flex justify-between items-center border-t pt-3">
             <div>

@@ -58,22 +58,21 @@ const OwnerLayout = () => {
   ].filter(item => item.showIf === undefined || item.showIf);
 
   const handleReferralClick = async () => {
-    if (!ownerMobile) {
+    if (!ownerPropertyId) {
       setShowContactModal(true);
       return;
     }
 
     setReferralLoading(true);
     try {
-      const mobile = ownerMobile.replace(/\D/g, '');
-      const res = await fetch(`/api/referrals/owner-lookup/${mobile}`);
+      const res = await fetch(`/api/referrals/owner-lookup-property/${ownerPropertyId}`);
       const result = await res.json();
 
       if (result.found && result.data?.referral_code) {
         const loginRes = await fetch('/api/referrals/owner-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile, propertyId: ownerPropertyId }),
+          body: JSON.stringify({ propertyId: ownerPropertyId }),
         });
         const loginData = await loginRes.json();
         if (loginData.success && loginData.token) {

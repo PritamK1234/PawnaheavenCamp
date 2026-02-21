@@ -25,8 +25,9 @@ router.get('/dashboard', authenticateReferralUser, UserController.getDashboard);
 router.get('/share', authenticateReferralUser, ReferralController.getShareInfo);
 router.post('/withdraw', authenticateReferralUser, WithdrawalController.withdraw);
 
-// Owner dashboard - lookup referral by mobile
+// Owner dashboard - lookup referral by mobile or property
 router.get('/owner-lookup/:mobile', ReferralController.ownerLookup);
+router.get('/owner-lookup-property/:propertyId', ReferralController.ownerLookupByProperty);
 
 // Owner self-login (no admin auth needed, generates token for own mobile)
 router.post('/owner-login', UserController.ownerSelfLogin);

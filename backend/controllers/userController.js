@@ -39,14 +39,31 @@ const UserController = {
   async ownerSelfLogin(req, res) {
     try {
       const { mobile, propertyId } = req.body;
-      if (!mobile || !propertyId) return res.status(400).json({ error: 'Mobile and property ID are required' });
-      const cleanMobile = mobile.replace(/\D/g, '');
-      const UserRepository = require('../repositories/userRepository');
-      const user = await UserRepository.findByMobile(cleanMobile);
-      if (!user) return res.status(404).json({ success: false, error: 'No referral found for this mobile' });
-      if (user.referral_type !== 'owner') return res.status(403).json({ success: false, error: 'Not an owner referral' });
-      if (String(user.linked_property_id) !== String(propertyId)) return res.status(403).json({ success: false, error: 'Property mismatch' });
-      const result = await UserService.login(cleanMobile);
+      if (!propertyId) return res.status(400).json({ error: 'Property ID is required' });
+
+      const { query: dbQuery } = require('../db');
+      const propResult = await dbQuery(
+        'SELECT id, property_id FROM properties WHERE property_id = $1 OR id::text = $1',
+        [propertyId]
+      );
+      if (propResult.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Property not found' });
+      }
+      const prop = propResult.rows[0];
+
+      const refResult = await dbQuery(
+        "SELECT id, referral_otp_number FROM referral_users WHERE (property_id = $1 OR linked_property_id = $2) AND referral_type = 'owner'",
+        [prop.property_id, prop.id]
+      );
+      if (refResult.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'No owner referral found for this property' });
+      }
+      const refUser = refResult.rows[0];
+      const loginMobile = refUser.referral_otp_number;
+      if (!loginMobile) {
+        return res.status(400).json({ success: false, error: 'Referral user has no OTP number' });
+      }
+      const result = await UserService.login(loginMobile);
       res.json({ success: true, token: result.token });
     } catch (error) {
       res.status(400).json({ error: error.message });

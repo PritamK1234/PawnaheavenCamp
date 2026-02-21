@@ -78,6 +78,31 @@ const ReferralController = {
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
+  },
+
+  async ownerLookupByProperty(req, res) {
+    try {
+      const { propertyId } = req.params;
+      if (!propertyId) return res.status(400).json({ error: 'Property ID is required' });
+      const propResult = await query(
+        'SELECT id, property_id FROM properties WHERE property_id = $1 OR id::text = $1',
+        [propertyId]
+      );
+      if (propResult.rows.length === 0) {
+        return res.json({ found: false });
+      }
+      const prop = propResult.rows[0];
+      const result = await query(
+        "SELECT id, username, referral_code, referral_otp_number, referral_type, linked_property_id, linked_property_slug, status FROM referral_users WHERE (property_id = $1 OR linked_property_id = $2) AND referral_type = 'owner'",
+        [prop.property_id, prop.id]
+      );
+      if (result.rows.length > 0) {
+        return res.json({ found: true, data: result.rows[0] });
+      }
+      return res.json({ found: false });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
 };
 

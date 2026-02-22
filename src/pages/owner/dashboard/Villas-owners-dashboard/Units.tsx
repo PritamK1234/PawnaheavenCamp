@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   LayoutGrid,
   Plus,
@@ -13,6 +14,10 @@ import {
   Sparkles,
   X,
   Users,
+  MapPin,
+  Clock,
+  Star,
+  IndianRupee,
 } from "lucide-react";
 import { toast } from "sonner";
 import { villaAPI } from "@/lib/api";
@@ -24,6 +29,29 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
+const defaultUnitForm = {
+  name: "",
+  title: "",
+  description: "",
+  weekday_price: "0",
+  weekend_price: "0",
+  special_price: "0",
+  max_capacity: "0",
+  check_in_time: "2:00 PM",
+  check_out_time: "11:00 AM",
+  rating: "4.5",
+  price_note: "",
+  location: "",
+  google_maps_link: "",
+  amenities: [""] as string[],
+  activities: [""] as string[],
+  highlights: [""] as string[],
+  policies: [""] as string[],
+  schedule: [{ time: "", title: "" }] as { time: string; title: string }[],
+  images: [] as string[],
+  special_dates: [] as { date: string; price: string }[],
+};
+
 const VillaOwnerUnits = () => {
   const [loading, setLoading] = useState(true);
   const [property, setProperty] = useState<any>(null);
@@ -31,16 +59,7 @@ const VillaOwnerUnits = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingUnit, setEditingUnit] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [unitForm, setUnitForm] = useState({
-    name: "",
-    max_capacity: "0",
-    weekday_price: "0",
-    weekend_price: "0",
-    special_price: "0",
-    amenities: [""],
-    images: [] as string[],
-    special_dates: [] as { date: string; price: string }[],
-  });
+  const [unitForm, setUnitForm] = useState({ ...defaultUnitForm });
 
   const fetchData = async () => {
     const ownerDataString = localStorage.getItem("ownerData");
@@ -70,38 +89,49 @@ const VillaOwnerUnits = () => {
     fetchData();
   }, []);
 
+  const parseJson = (val: any) => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string") {
+      try {
+        return JSON.parse(val);
+      } catch (e) {
+        return [val];
+      }
+    }
+    return [];
+  };
+
   const handleEdit = (unit: any) => {
-    const amenities =
-      typeof unit.amenities === "string"
-        ? JSON.parse(unit.amenities)
-        : Array.isArray(unit.amenities)
-          ? unit.amenities
-          : [];
-
-    const images =
-      typeof unit.images === "string"
-        ? JSON.parse(unit.images)
-        : Array.isArray(unit.images)
-          ? unit.images
-          : [];
-
-    const specialDates =
-      typeof unit.special_dates === "string"
-        ? JSON.parse(unit.special_dates)
-        : Array.isArray(unit.special_dates)
-          ? unit.special_dates
-          : [];
+    const parsedAmenities = parseJson(unit.amenities);
+    const parsedActivities = parseJson(unit.activities);
+    const parsedHighlights = parseJson(unit.highlights);
+    const parsedPolicies = parseJson(unit.policies);
+    const parsedSchedule = parseJson(unit.schedule);
+    const parsedImages = parseJson(unit.images);
+    const parsedSpecialDates = parseJson(unit.special_dates);
 
     setEditingUnit(unit);
     setUnitForm({
       name: unit.name || "",
+      title: unit.title || "",
+      description: unit.description || "",
       max_capacity: (unit.total_persons || unit.max_capacity || 0).toString(),
       weekday_price: (unit.weekday_price || 0).toString(),
       weekend_price: (unit.weekend_price || 0).toString(),
       special_price: (unit.special_price || 0).toString(),
-      special_dates: specialDates,
-      amenities: amenities.length ? amenities : [""],
-      images: images,
+      check_in_time: unit.check_in_time || "2:00 PM",
+      check_out_time: unit.check_out_time || "11:00 AM",
+      rating: (unit.rating || 4.5).toString(),
+      price_note: unit.price_note || "",
+      location: unit.location || "",
+      google_maps_link: unit.google_maps_link || "",
+      amenities: parsedAmenities.length ? parsedAmenities : [""],
+      activities: parsedActivities.length ? parsedActivities : [""],
+      highlights: parsedHighlights.length ? parsedHighlights : [""],
+      policies: parsedPolicies.length ? parsedPolicies : [""],
+      schedule: parsedSchedule.length ? parsedSchedule : [{ time: "", title: "" }],
+      images: parsedImages,
+      special_dates: parsedSpecialDates,
     });
     setIsAdding(true);
   };
@@ -110,12 +140,24 @@ const VillaOwnerUnits = () => {
     try {
       const payload = {
         name: unitForm.name,
+        title: unitForm.title,
+        description: unitForm.description,
         total_persons: parseInt(unitForm.max_capacity),
         available_persons: parseInt(unitForm.max_capacity),
         weekday_price: parseFloat(unitForm.weekday_price),
         weekend_price: parseFloat(unitForm.weekend_price),
         special_price: parseFloat(unitForm.special_price),
+        check_in_time: unitForm.check_in_time,
+        check_out_time: unitForm.check_out_time,
+        rating: parseFloat(unitForm.rating) || 4.5,
+        price_note: unitForm.price_note,
+        location: unitForm.location,
+        google_maps_link: unitForm.google_maps_link,
         amenities: unitForm.amenities.filter((a) => a.trim()),
+        activities: unitForm.activities.filter((a) => a.trim()),
+        highlights: unitForm.highlights.filter((h) => h.trim()),
+        policies: unitForm.policies.filter((p) => p.trim()),
+        schedule: unitForm.schedule.filter((s) => s.time.trim() || s.title.trim()),
         images: unitForm.images.filter((i) => i.trim()),
         special_dates: unitForm.special_dates,
       };
@@ -204,18 +246,6 @@ const VillaOwnerUnits = () => {
     e.target.value = "";
   };
 
-  const parseJson = (val: any) => {
-    if (Array.isArray(val)) return val;
-    if (typeof val === "string") {
-      try {
-        return JSON.parse(val);
-      } catch (e) {
-        return [val];
-      }
-    }
-    return [];
-  };
-
   if (loading)
     return (
       <div className="p-8 text-center text-[#D4AF37]">Loading units...</div>
@@ -232,11 +262,23 @@ const VillaOwnerUnits = () => {
             setEditingUnit(null);
             setUnitForm({
               name: "",
-              max_capacity: "0",
+              title: "",
+              description: "",
               weekday_price: "0",
               weekend_price: "0",
               special_price: "0",
-              amenities: [""],
+              max_capacity: "0",
+              check_in_time: "2:00 PM",
+              check_out_time: "11:00 AM",
+              rating: "4.5",
+              price_note: "",
+              location: "",
+              google_maps_link: "",
+              amenities: [""] as string[],
+              activities: [""] as string[],
+              highlights: [""] as string[],
+              policies: [""] as string[],
+              schedule: [{ time: "", title: "" }] as { time: string; title: string }[],
               images: [] as string[],
               special_dates: [] as { date: string; price: string }[],
             });
@@ -326,7 +368,7 @@ const VillaOwnerUnits = () => {
         }}
       >
         <DialogContent
-          className="bg-charcoal border-white/10 rounded-3xl max-h-[90vh] overflow-y-auto sm:max-w-[600px] w-[95vw] p-0"
+          className="bg-charcoal border-white/10 rounded-3xl max-h-[90vh] overflow-y-auto sm:max-w-[700px] w-[95vw] p-0"
           aria-describedby="villa-unit-form-desc"
         >
           <div className="p-6 sm:p-8">
@@ -359,10 +401,69 @@ const VillaOwnerUnits = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs font-bold">
+                    Property Title *
+                  </Label>
+                  <Input
+                    value={unitForm.title}
+                    onChange={(e) =>
+                      setUnitForm({ ...unitForm, title: e.target.value })
+                    }
+                    placeholder="e.g. Luxury Mountain Villa"
+                    className="bg-white/5 border-white/10 h-11 text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-400 text-xs font-bold">
+                    Description
+                  </Label>
+                  <Textarea
+                    value={unitForm.description}
+                    onChange={(e) =>
+                      setUnitForm({ ...unitForm, description: e.target.value })
+                    }
+                    placeholder="Describe this villa unit..."
+                    className="bg-white/5 border-white/10 text-white min-h-[80px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-400 text-xs capitalize font-bold">
-                      Weekday Price (Base)
+                    <Label className="text-xs font-bold flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-green-400" />
+                      <span className="text-gray-400">Location</span>
+                    </Label>
+                    <Input
+                      value={unitForm.location}
+                      onChange={(e) =>
+                        setUnitForm({ ...unitForm, location: e.target.value })
+                      }
+                      placeholder="e.g. Lonavala, Maharashtra"
+                      className="bg-white/5 border-white/10 h-11 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400 text-xs font-bold">
+                      Google Maps Link
+                    </Label>
+                    <Input
+                      value={unitForm.google_maps_link}
+                      onChange={(e) =>
+                        setUnitForm({ ...unitForm, google_maps_link: e.target.value })
+                      }
+                      placeholder="https://maps.google.com/..."
+                      className="bg-white/5 border-white/10 h-11 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex items-center gap-2">
+                      <IndianRupee className="w-4 h-4 text-[#D4AF37]" />
+                      <span className="text-gray-400">Weekday Price</span>
                     </Label>
                     <Input
                       type="number"
@@ -388,8 +489,9 @@ const VillaOwnerUnits = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-400 text-xs capitalize font-bold">
-                      Weekend Price
+                    <Label className="text-xs font-bold flex items-center gap-2">
+                      <IndianRupee className="w-4 h-4 text-[#D4AF37]" />
+                      <span className="text-gray-400">Weekend Price</span>
                     </Label>
                     <Input
                       type="number"
@@ -416,33 +518,127 @@ const VillaOwnerUnits = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs capitalize font-bold flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-400" />
-                    <span className="text-blue-400">Max Capacity</span>
-                  </Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="Max number of guests"
-                    value={
-                      unitForm.max_capacity === "0"
-                        ? ""
-                        : unitForm.max_capacity
-                    }
-                    onFocus={() => {
-                      if (unitForm.max_capacity === "0") {
-                        setUnitForm({ ...unitForm, max_capacity: "" });
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-gray-400 text-xs font-bold">
+                      Special Price
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="Special price"
+                      value={
+                        unitForm.special_price === "0"
+                          ? ""
+                          : unitForm.special_price
                       }
-                    }}
-                    onChange={(e) =>
-                      setUnitForm({
-                        ...unitForm,
-                        max_capacity: e.target.value.replace(/^-/g, ""),
-                      })
-                    }
-                    className="bg-white/5 border-white/10 text-blue-400 font-bold h-11"
-                  />
+                      onFocus={() => {
+                        if (unitForm.special_price === "0") {
+                          setUnitForm({ ...unitForm, special_price: "" });
+                        }
+                      }}
+                      onChange={(e) =>
+                        setUnitForm({
+                          ...unitForm,
+                          special_price: e.target.value.replace(/^-/g, ""),
+                        })
+                      }
+                      className="bg-white/5 border-white/10 h-11 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs capitalize font-bold flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-400" />
+                      <span className="text-blue-400">Max Capacity</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="Max number of guests"
+                      value={
+                        unitForm.max_capacity === "0"
+                          ? ""
+                          : unitForm.max_capacity
+                      }
+                      onFocus={() => {
+                        if (unitForm.max_capacity === "0") {
+                          setUnitForm({ ...unitForm, max_capacity: "" });
+                        }
+                      }}
+                      onChange={(e) =>
+                        setUnitForm({
+                          ...unitForm,
+                          max_capacity: e.target.value.replace(/^-/g, ""),
+                        })
+                      }
+                      className="bg-white/5 border-white/10 text-blue-400 font-bold h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-purple-400" />
+                      <span className="text-gray-400">Check-in Time</span>
+                    </Label>
+                    <Input
+                      value={unitForm.check_in_time}
+                      onChange={(e) =>
+                        setUnitForm({ ...unitForm, check_in_time: e.target.value })
+                      }
+                      placeholder="e.g. 2:00 PM"
+                      className="bg-white/5 border-white/10 h-11 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-purple-400" />
+                      <span className="text-gray-400">Check-out Time</span>
+                    </Label>
+                    <Input
+                      value={unitForm.check_out_time}
+                      onChange={(e) =>
+                        setUnitForm({ ...unitForm, check_out_time: e.target.value })
+                      }
+                      placeholder="e.g. 11:00 AM"
+                      className="bg-white/5 border-white/10 h-11 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold flex items-center gap-2">
+                      <Star className="w-4 h-4 text-yellow-400" />
+                      <span className="text-gray-400">Rating</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="5"
+                      step="0.1"
+                      value={unitForm.rating}
+                      onChange={(e) =>
+                        setUnitForm({ ...unitForm, rating: e.target.value })
+                      }
+                      placeholder="e.g. 4.5"
+                      className="bg-white/5 border-white/10 h-11 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400 text-xs font-bold">
+                      Price Note
+                    </Label>
+                    <Input
+                      value={unitForm.price_note}
+                      onChange={(e) =>
+                        setUnitForm({ ...unitForm, price_note: e.target.value })
+                      }
+                      placeholder="e.g. Per night, exclusive of taxes"
+                      className="bg-white/5 border-white/10 h-11 text-white"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -451,7 +647,6 @@ const VillaOwnerUnits = () => {
                   <Label className="text-gold text-xs capitalize font-bold">
                     Special Date Prices
                   </Label>
-
                   <Button
                     type="button"
                     size="sm"
@@ -539,58 +734,146 @@ const VillaOwnerUnits = () => {
                 </div>
               </div>
 
+              {[
+                { label: "Amenities", field: "amenities" as const },
+                { label: "Activities", field: "activities" as const },
+                { label: "Highlights", field: "highlights" as const },
+                { label: "Policies", field: "policies" as const },
+              ].map((section) => (
+                <div key={section.field} className="space-y-3">
+                  <Label className="text-gray-400 text-xs capitalize font-bold">
+                    {section.label}
+                  </Label>
+                  <div className="space-y-2">
+                    {(unitForm[section.field] as string[]).map((val, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <Input
+                          value={val}
+                          onChange={(e) => {
+                            const newArr = [...(unitForm[section.field] as string[])];
+                            newArr[idx] = e.target.value;
+                            setUnitForm({ ...unitForm, [section.field]: newArr });
+                          }}
+                          placeholder={`Add ${section.label.toLowerCase()}...`}
+                          className="bg-white/5 border-white/10 h-10 text-white"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 text-red-500/50 hover:text-red-500 hover:bg-red-500/10"
+                          onClick={() => {
+                            const newArr = (unitForm[section.field] as string[]).filter(
+                              (_, i) => i !== idx,
+                            );
+                            setUnitForm({
+                              ...unitForm,
+                              [section.field]: newArr.length ? newArr : [""],
+                            });
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full border border-dashed border-gold/30 text-gold bg-transparent hover:bg-gold hover:text-black hover:border-gold transition-colors h-10"
+                      onClick={() =>
+                        setUnitForm({
+                          ...unitForm,
+                          [section.field]: [...(unitForm[section.field] as string[]), ""],
+                        })
+                      }
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add {section.label}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
               <div className="space-y-3">
-                <Label className="text-gray-400 text-xs capitalize font-bold">
-                  Amenities
-                </Label>
-
+                <div className="flex items-center justify-between">
+                  <Label className="text-gray-400 text-xs capitalize font-bold">
+                    Schedule
+                  </Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      setUnitForm({
+                        ...unitForm,
+                        schedule: [
+                          ...unitForm.schedule,
+                          { time: "", title: "" },
+                        ],
+                      })
+                    }
+                    className="border border-gold/30 text-gold bg-transparent hover:bg-gold hover:text-black hover:border-gold transition-colors h-8"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Schedule
+                  </Button>
+                </div>
                 <div className="space-y-2">
-                  {unitForm.amenities.map((val, idx) => (
-                    <div key={idx} className="flex gap-2">
-                      <Input
-                        value={val}
-                        onChange={(e) => {
-                          const newArr = [...unitForm.amenities];
-                          newArr[idx] = e.target.value;
-                          setUnitForm({ ...unitForm, amenities: newArr });
-                        }}
-                        className="bg-white/5 border-white/10 h-10 text-white"
-                      />
-
+                  {unitForm.schedule.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex gap-2 items-end bg-white/5 p-3 rounded-xl border border-white/5"
+                    >
+                      <div className="flex-1 space-y-2">
+                        <Label className="text-[10px] text-gray-500 capitalize font-bold">
+                          Time
+                        </Label>
+                        <Input
+                          value={item.time}
+                          onChange={(e) => {
+                            const newSchedule = [...unitForm.schedule];
+                            newSchedule[idx].time = e.target.value;
+                            setUnitForm({ ...unitForm, schedule: newSchedule });
+                          }}
+                          placeholder="e.g. 3:00 PM"
+                          className="bg-charcoal border-white/10 h-10 text-white"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Label className="text-[10px] text-gray-500 capitalize font-bold">
+                          Title
+                        </Label>
+                        <Input
+                          value={item.title}
+                          onChange={(e) => {
+                            const newSchedule = [...unitForm.schedule];
+                            newSchedule[idx].title = e.target.value;
+                            setUnitForm({ ...unitForm, schedule: newSchedule });
+                          }}
+                          placeholder="e.g. Welcome drinks"
+                          className="bg-charcoal border-white/10 h-10 text-white"
+                        />
+                      </div>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 text-red-500/50 hover:text-red-500 hover:bg-red-500/10"
                         onClick={() => {
-                          const newArr = unitForm.amenities.filter(
+                          const newSchedule = unitForm.schedule.filter(
                             (_, i) => i !== idx,
                           );
                           setUnitForm({
                             ...unitForm,
-                            amenities: newArr.length ? newArr : [""],
+                            schedule: newSchedule.length
+                              ? newSchedule
+                              : [{ time: "", title: "" }],
                           });
                         }}
+                        className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-10 w-10"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
-
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="w-full border border-dashed border-gold/30 text-gold bg-transparent hover:bg-gold hover:text-black hover:border-gold transition-colors h-10"
-                    onClick={() =>
-                      setUnitForm({
-                        ...unitForm,
-                        amenities: [...unitForm.amenities, ""],
-                      })
-                    }
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add Amenities
-                  </Button>
                 </div>
               </div>
 

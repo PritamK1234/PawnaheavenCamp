@@ -1,0 +1,124 @@
+Implement the following changes ONLY for:
+
+Owner Dashboard → Add/Edit Property
+When Category === "Villa"
+
+DO NOT affect Campings_cottages logic.
+Keep existing functionality intact.
+
+====================================================
+1️⃣ Initial View (When Category = Villa)
+====================================================
+
+When user selects "Villa" in Category:
+
+Initially ONLY show these fields:
+
+SECTION: Status
+- Status dropdown
+- Active toggle
+- Available toggle
+
+- Referral Code field
+- Property ID (Auto-generated)
+- Category selector
+
+NEW COMMON FIELDS (Villa Level – Required):
+- Owner Name * (text)
+- Owner WhatsApp Number * (number)
+- Owner OTP Number (number)
+- Admin Mobile Number * (number)
+
+And below these:
+- "Add Unit" Button
+
+⚠️ IMPORTANT:
+No other property fields should be visible initially.
+Hide all normal property fields until a unit is added.
+
+====================================================
+2️⃣ Add Unit Button Behavior
+====================================================
+
+When clicking "Add Unit":
+
+Open a Villa Unit Form (inline expand or modal).
+
+This form should contain:
+
+✔ All existing Add/Edit Property fields
+   (title, description, price, images, amenities, capacity, etc.)
+
+✔ PLUS the following NEW fields:
+
+- Location (text)
+- Google Maps Link * (text, required)
+
+These fields belong to UNIT level, not property level.
+
+====================================================
+3️⃣ Data Structure Rules
+====================================================
+
+Villa Property Level (Common for all units):
+- ownerName
+- ownerWhatsappNumber
+- ownerOtpNumber
+- adminMobileNumber
+- referralCode
+- status
+- active
+- available
+- propertyId
+- category
+
+Villa Unit Level:
+- unitName
+- title
+- description
+- price
+- amenities
+- capacity
+- images
+- location
+- googleMapsLink
+- and all other existing property fields
+
+====================================================
+4️⃣ UI Behavior
+====================================================
+
+After first unit is created:
+
+- Show unit tabs/buttons at top:
+   [ Unit 1 ] [ Unit 2 ] ...
+
+- Clicking a unit switches form data.
+- Switching units should NOT reset unsaved data.
+- Each unit maintains separate state.
+
+====================================================
+5️⃣ Validation Rules
+====================================================
+
+Required Fields:
+- Owner Name *
+- Owner WhatsApp Number *
+- Admin Mobile Number *
+- Google Maps Link * (inside unit form)
+
+Ensure:
+- Proper validation messages
+- No breaking of existing API
+- Image upload system remains unchanged
+
+====================================================
+6️⃣ Important Conditions
+====================================================
+
+- Apply this logic ONLY when Category === "Villa"
+- Campings_cottages must remain untouched
+- Existing booking logic must not break
+- Editing existing villas must load:
+   - Common property fields
+   - All units with their respective data

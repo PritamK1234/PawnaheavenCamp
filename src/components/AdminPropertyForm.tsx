@@ -35,7 +35,7 @@ import {
   Check,
   X,
 } from "lucide-react";
-import { propertyAPI } from "@/lib/api";
+import { propertyAPI, villaAPI } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -650,6 +650,613 @@ const UnitManager = ({
   );
 };
 
+interface VillaUnitFormState {
+  name: string;
+  description: string;
+  weekday_price: string;
+  weekend_price: string;
+  special_price: string;
+  total_persons: string;
+  check_in_time: string;
+  check_out_time: string;
+  rating: string;
+  price_note: string;
+  amenities: string[];
+  activities: string[];
+  highlights: string[];
+  policies: string[];
+  schedule: { time: string; title: string }[];
+  images: string[];
+  special_dates: { date: string; price: string }[];
+}
+
+const createDefaultVillaUnitForm = (): VillaUnitFormState => ({
+  name: "",
+  description: "",
+  weekday_price: "0",
+  weekend_price: "0",
+  special_price: "0",
+  total_persons: "0",
+  check_in_time: "2:00 PM",
+  check_out_time: "11:00 AM",
+  rating: "4.5",
+  price_note: "",
+  amenities: [""],
+  activities: [""],
+  highlights: [""],
+  policies: [""],
+  schedule: [{ time: "", title: "" }],
+  images: [],
+  special_dates: [],
+});
+
+const VillaUnitManager = ({
+  propertyId,
+  units,
+  onRefresh,
+}: {
+  propertyId: string;
+  units: any[];
+  onRefresh: () => void;
+}) => {
+  const [activeUnitId, setActiveUnitId] = useState<number | null>(null);
+  const [unitFormData, setUnitFormData] = useState<Record<number, VillaUnitFormState>>({});
+  const [isAddingUnit, setIsAddingUnit] = useState(false);
+  const [newUnitName, setNewUnitName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [calendarUnitId, setCalendarUnitId] = useState<number | null>(null);
+  const [calendarUnitName, setCalendarUnitName] = useState("");
+  const { toast } = useToast();
+
+  const parseJson = (val: any): any[] => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string") {
+      try {
+        return JSON.parse(val);
+      } catch (e) {
+        return val.trim() ? [val] : [];
+      }
+    }
+    return [];
+  };
+
+  const loadUnitIntoForm = (unit: any) => {
+    setUnitFormData((prev) => ({
+      ...prev,
+      [unit.id]: {
+        name: unit.name || "",
+        description: unit.description || "",
+        weekday_price: (unit.weekday_price || 0).toString(),
+        weekend_price: (unit.weekend_price || 0).toString(),
+        special_price: (unit.special_price || 0).toString(),
+        total_persons: (unit.total_persons || 0).toString(),
+        check_in_time: unit.check_in_time || "2:00 PM",
+        check_out_time: unit.check_out_time || "11:00 AM",
+        rating: (unit.rating || 4.5).toString(),
+        price_note: unit.price_note || "",
+        amenities: parseJson(unit.amenities).length ? parseJson(unit.amenities) : [""],
+        activities: parseJson(unit.activities).length ? parseJson(unit.activities) : [""],
+        highlights: parseJson(unit.highlights).length ? parseJson(unit.highlights) : [""],
+        policies: parseJson(unit.policies).length ? parseJson(unit.policies) : [""],
+        schedule: parseJson(unit.schedule).length ? parseJson(unit.schedule) : [{ time: "", title: "" }],
+        images: parseJson(unit.images),
+        special_dates: parseJson(unit.special_dates) || [],
+      },
+    }));
+  };
+
+  useEffect(() => {
+    units.forEach((unit) => {
+      if (!unitFormData[unit.id]) {
+        loadUnitIntoForm(unit);
+      }
+    });
+    if (units.length > 0 && !activeUnitId) {
+      setActiveUnitId(units[0].id);
+    }
+  }, [units]);
+
+  const handleCreateUnit = async () => {
+    if (!newUnitName.trim()) return;
+    setIsCreating(true);
+    try {
+      const res = await villaAPI.createUnit(propertyId, { name: newUnitName.trim() });
+      if (res.success) {
+        toast({ title: "Unit created" });
+        setIsAddingUnit(false);
+        setNewUnitName("");
+        onRefresh();
+      } else {
+        toast({ title: res.message || "Failed to create unit", variant: "destructive" });
+      }
+    } catch (e) {
+      toast({ title: "Error creating unit", variant: "destructive" });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteUnit = async (unitId: number) => {
+    if (!confirm("Are you sure you want to delete this unit?")) return;
+    try {
+      const res = await villaAPI.deleteUnit(unitId);
+      if (res.success) {
+        toast({ title: "Unit deleted" });
+        if (activeUnitId === unitId) setActiveUnitId(null);
+        const newData = { ...unitFormData };
+        delete newData[unitId];
+        setUnitFormData(newData);
+        onRefresh();
+      } else {
+        toast({ title: "Failed to delete unit", variant: "destructive" });
+      }
+    } catch (e) {
+      toast({ title: "Error deleting unit", variant: "destructive" });
+    }
+  };
+
+  const handleSaveUnit = async () => {
+    if (!activeUnitId || !unitFormData[activeUnitId]) return;
+    setIsSaving(true);
+    const form = unitFormData[activeUnitId];
+    try {
+      const payload = {
+        name: form.name,
+        description: form.description,
+        weekday_price: String(form.weekday_price),
+        weekend_price: String(form.weekend_price),
+        special_price: String(form.special_price),
+        total_persons: parseInt(form.total_persons) || 0,
+        available_persons: parseInt(form.total_persons) || 0,
+        check_in_time: form.check_in_time,
+        check_out_time: form.check_out_time,
+        rating: parseFloat(form.rating) || 4.5,
+        price_note: form.price_note,
+        amenities: form.amenities.filter((a) => a.trim()),
+        activities: form.activities.filter((a) => a.trim()),
+        highlights: form.highlights.filter((h) => h.trim()),
+        policies: form.policies.filter((p) => p.trim()),
+        schedule: form.schedule.filter((s) => s.time.trim() || s.title.trim()),
+        images: form.images.filter((i) => i.trim()),
+        special_dates: Array.isArray(form.special_dates) ? form.special_dates : [],
+      };
+      const res = await villaAPI.updateUnit(activeUnitId, payload);
+      if (res.success) {
+        toast({ title: "Unit saved successfully" });
+        onRefresh();
+      } else {
+        toast({ title: res.message || "Failed to save unit", variant: "destructive" });
+      }
+    } catch (e) {
+      toast({ title: "Error saving unit", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUnitImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!activeUnitId) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const currentImages = unitFormData[activeUnitId]?.images || [];
+    const remaining = 20 - currentImages.length;
+    if (remaining <= 0) {
+      toast({ title: "Maximum 20 images allowed per unit", variant: "destructive" });
+      return;
+    }
+    const filesToUpload = files.slice(0, remaining);
+    for (const file of filesToUpload) {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "";
+      if (!["jpg", "jpeg", "png", "webp"].includes(ext)) {
+        toast({ title: `"${file.name}" skipped — invalid format`, variant: "destructive" });
+        continue;
+      }
+      setIsUploading(true);
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("ownerToken");
+      const formDataUpload = new FormData();
+      formDataUpload.append("image", file);
+      try {
+        const response = await fetch("/api/properties/upload-image", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formDataUpload,
+        });
+        const result = await response.json();
+        if (result.success) {
+          setUnitFormData((prev) => ({
+            ...prev,
+            [activeUnitId]: {
+              ...prev[activeUnitId],
+              images: [...prev[activeUnitId].images, result.url],
+            },
+          }));
+          toast({ title: "Image uploaded" });
+        } else {
+          toast({ title: result.message || "Upload failed", variant: "destructive" });
+        }
+      } catch (error) {
+        toast({ title: "Upload error", variant: "destructive" });
+      }
+    }
+    setIsUploading(false);
+    e.target.value = "";
+  };
+
+  const updateField = (field: keyof VillaUnitFormState, value: any) => {
+    if (!activeUnitId) return;
+    setUnitFormData((prev) => ({
+      ...prev,
+      [activeUnitId]: { ...prev[activeUnitId], [field]: value },
+    }));
+  };
+
+  const updateArrayItem = (field: "amenities" | "activities" | "highlights" | "policies", index: number, value: string) => {
+    if (!activeUnitId) return;
+    const arr = [...(unitFormData[activeUnitId]?.[field] || [])];
+    arr[index] = value;
+    updateField(field, arr);
+  };
+
+  const addArrayItem = (field: "amenities" | "activities" | "highlights" | "policies") => {
+    if (!activeUnitId) return;
+    updateField(field, [...(unitFormData[activeUnitId]?.[field] || []), ""]);
+  };
+
+  const removeArrayItem = (field: "amenities" | "activities" | "highlights" | "policies", index: number) => {
+    if (!activeUnitId) return;
+    const arr = (unitFormData[activeUnitId]?.[field] || []).filter((_, i) => i !== index);
+    updateField(field, arr.length ? arr : [""]);
+  };
+
+  const activeForm = activeUnitId ? unitFormData[activeUnitId] : null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-foreground font-display italic">Villa Units</h3>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setIsAddingUnit(true)}
+          className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 h-8"
+        >
+          <Plus className="w-4 h-4 mr-1" /> Add Unit
+        </Button>
+      </div>
+
+      {units.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {units.map((unit) => (
+            <div key={unit.id} className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!unitFormData[unit.id]) loadUnitIntoForm(unit);
+                  setActiveUnitId(unit.id);
+                }}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  activeUnitId === unit.id
+                    ? "bg-gold text-black"
+                    : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
+                }`}
+              >
+                {unit.name}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteUnit(unit.id)}
+                className="p-1 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeForm && activeUnitId && (
+        <div className="glass rounded-2xl border border-border/50 p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h4 className="text-gold font-display font-semibold">Editing: {activeForm.name}</h4>
+            <div className="flex items-center gap-2">
+              <Dialog open={calendarUnitId === activeUnitId} onOpenChange={(open) => { if (!open) setCalendarUnitId(null); }}>
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setCalendarUnitId(activeUnitId); setCalendarUnitName(activeForm.name); }}
+                    className="h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10"
+                  >
+                    <Calendar className="w-3 h-3 mr-1" /> Calendar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[450px] bg-charcoal border-white/10 rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-gold font-display">Manage Unit Calendar: {calendarUnitName}</DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground">Select dates to manage availability and pricing for this unit.</DialogDescription>
+                  </DialogHeader>
+                  <CalendarSync propertyId={propertyId} unitId={activeUnitId} isAdmin={true} unitName={calendarUnitName} isVilla={true} />
+                </DialogContent>
+              </Dialog>
+              <Button
+                type="button"
+                onClick={handleSaveUnit}
+                disabled={isSaving}
+                className="bg-gradient-gold text-black font-bold h-8 px-4 rounded-xl"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+                Save Unit
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Unit Name</Label>
+              <Input value={activeForm.name} onChange={(e) => updateField("name", e.target.value)} className="bg-white/5 border-white/10" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Description</Label>
+              <Textarea value={activeForm.description} onChange={(e) => updateField("description", e.target.value)} className="bg-white/5 border-white/10 min-h-[80px]" />
+            </div>
+            <div className="space-y-2">
+              <Label>Weekday Price</Label>
+              <div className="relative">
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input type="number" value={activeForm.weekday_price} onChange={(e) => updateField("weekday_price", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Weekend Price</Label>
+              <div className="relative">
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input type="number" value={activeForm.weekend_price} onChange={(e) => updateField("weekend_price", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Special Price</Label>
+              <Input type="number" value={activeForm.special_price} onChange={(e) => updateField("special_price", e.target.value)} className="bg-white/5 border-white/10" />
+            </div>
+            <div className="space-y-2">
+              <Label>Max Capacity (Total Persons)</Label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input type="number" value={activeForm.total_persons} onChange={(e) => updateField("total_persons", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Check-in Time</Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={activeForm.check_in_time} onChange={(e) => updateField("check_in_time", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Check-out Time</Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={activeForm.check_out_time} onChange={(e) => updateField("check_out_time", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Rating (0-5)</Label>
+              <div className="relative">
+                <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input type="number" step="0.1" min="0" max="5" value={activeForm.rating} onChange={(e) => updateField("rating", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Price Note</Label>
+              <Input value={activeForm.price_note} onChange={(e) => updateField("price_note", e.target.value)} className="bg-white/5 border-white/10" />
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <Label className="text-gold">Special Date Prices</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => updateField("special_dates", [...activeForm.special_dates, { date: "", price: "" }])}
+                className="bg-gold/10 border-gold/20 text-gold hover:bg-gold/20"
+              >
+                + Add Date
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {activeForm.special_dates.map((sd, idx) => (
+                <div key={idx} className="flex gap-3 items-end bg-white/5 p-3 rounded-xl">
+                  <div className="flex-1 space-y-2">
+                    <Label className="text-xs">Date</Label>
+                    <Input
+                      type="date"
+                      value={sd.date}
+                      onChange={(e) => {
+                        const newDates = [...activeForm.special_dates];
+                        newDates[idx] = { ...newDates[idx], date: e.target.value };
+                        updateField("special_dates", newDates);
+                      }}
+                      className="bg-charcoal border-white/10"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <Label className="text-xs">Price</Label>
+                    <Input
+                      type="number"
+                      value={sd.price}
+                      onChange={(e) => {
+                        const newDates = [...activeForm.special_dates];
+                        newDates[idx] = { ...newDates[idx], price: e.target.value };
+                        updateField("special_dates", newDates);
+                      }}
+                      placeholder="₹ 2999"
+                      className="bg-charcoal border-white/10"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => updateField("special_dates", activeForm.special_dates.filter((_, i) => i !== idx))}
+                    className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {(["amenities", "activities", "highlights", "policies"] as const).map((field) => (
+            <div key={field} className="space-y-2">
+              <Label className="capitalize">{field}</Label>
+              <div className="space-y-2">
+                {(activeForm[field] as string[]).map((val, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <Input
+                      value={val}
+                      onChange={(e) => updateArrayItem(field, idx, e.target.value)}
+                      className="bg-white/5 border-white/10 h-9"
+                    />
+                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-red-500/50 hover:text-red-500" onClick={() => removeArrayItem(field, idx)}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" className="w-full border-dashed" onClick={() => addArrayItem(field)}>
+                  <Plus className="w-3 h-3 mr-1" /> Add {field.charAt(0).toUpperCase() + field.slice(1)}
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <div className="space-y-2">
+            <Label>Schedule</Label>
+            <div className="space-y-2">
+              {activeForm.schedule.map((item, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <Input
+                    value={item.time}
+                    onChange={(e) => {
+                      const newSchedule = [...activeForm.schedule];
+                      newSchedule[idx] = { ...newSchedule[idx], time: e.target.value };
+                      updateField("schedule", newSchedule);
+                    }}
+                    placeholder="Time"
+                    className="bg-white/5 border-white/10 h-9 flex-1"
+                  />
+                  <Input
+                    value={item.title}
+                    onChange={(e) => {
+                      const newSchedule = [...activeForm.schedule];
+                      newSchedule[idx] = { ...newSchedule[idx], title: e.target.value };
+                      updateField("schedule", newSchedule);
+                    }}
+                    placeholder="Activity"
+                    className="bg-white/5 border-white/10 h-9 flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-red-500/50 hover:text-red-500"
+                    onClick={() => {
+                      const arr = activeForm.schedule.filter((_, i) => i !== idx);
+                      updateField("schedule", arr.length ? arr : [{ time: "", title: "" }]);
+                    }}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-dashed"
+                onClick={() => updateField("schedule", [...activeForm.schedule, { time: "", title: "" }])}
+              >
+                <Plus className="w-3 h-3 mr-1" /> Add Schedule Item
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Unit Gallery ({activeForm.images.length}/20)</Label>
+              <input
+                type="file"
+                id={`villa-unit-img-${activeUnitId}`}
+                className="hidden"
+                onChange={handleUnitImageUpload}
+                accept=".jpg,.jpeg,.png,.webp"
+                multiple
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => document.getElementById(`villa-unit-img-${activeUnitId}`)?.click()}
+                disabled={isUploading || activeForm.images.length >= 20}
+              >
+                {isUploading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Upload className="w-3 h-3 mr-1" />} Upload
+              </Button>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {activeForm.images.map((img, idx) => (
+                <div key={idx} className="aspect-square rounded-lg overflow-hidden relative group border border-white/10">
+                  <img src={img} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                    onClick={() => updateField("images", activeForm.images.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={isAddingUnit} onOpenChange={(open) => { if (!open) { setIsAddingUnit(false); setNewUnitName(""); } }}>
+        <DialogContent className="bg-charcoal border-white/10 rounded-3xl sm:max-w-[400px]" aria-describedby="villa-add-unit-desc">
+          <DialogHeader>
+            <DialogTitle className="text-gold font-display">Add New Villa Unit</DialogTitle>
+            <p id="villa-add-unit-desc" className="text-xs text-muted-foreground">Enter a name for the new unit.</p>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="villa-unit-name">Unit Name</Label>
+              <Input
+                id="villa-unit-name"
+                value={newUnitName}
+                onChange={(e) => setNewUnitName(e.target.value)}
+                placeholder="e.g. Villa Suite A"
+                className="bg-white/5 border-white/10"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" onClick={handleCreateUnit} disabled={isCreating || !newUnitName.trim()} className="flex-1 bg-gradient-gold text-black font-bold h-10 rounded-xl">
+                {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />} Save
+              </Button>
+              <Button type="button" variant="outline" onClick={() => { setIsAddingUnit(false); setNewUnitName(""); }} className="flex-1 h-10 rounded-xl">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 const AdminPropertyForm = ({
   property,
   onSuccess,
@@ -1171,47 +1778,6 @@ const AdminPropertyForm = ({
                 </div>
               </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <Label>
-                  Availability Calendar (Syncs with Owner Dashboard)
-                </Label>
-                {property && formData.category === "villa" && propertyUnits.length === 0 && (
-                  <CalendarSync
-                    propertyId={property.property_id || property.id}
-                    isAdmin={true}
-                    isVilla={true}
-                  />
-                )}
-                {property && (formData.category === "campings_cottages" || formData.category === "villa") && (
-                  <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                    <UnitManager
-                      propertyId={property.id}
-                      category={formData.category}
-                      units={propertyUnits}
-                      onRefresh={fetchUnits}
-                    />
-                  </div>
-                )}
-                {!property && (
-                  <p className="text-sm text-muted-foreground italic">
-                    Save the property first to enable calendar/unit management.
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="title">Property Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="h-12 bg-secondary/50 rounded-xl"
-                  required
-                />
-              </div>
-
               <div className="space-y-2">
                 <Label>Category *</Label>
                 <Select
@@ -1230,6 +1796,75 @@ const AdminPropertyForm = ({
                     <SelectItem value="villa">Villa</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {formData.category === "villa" && property?.id && (
+                <div className="space-y-2 md:col-span-2">
+                  <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                    <VillaUnitManager
+                      propertyId={property.id}
+                      units={propertyUnits}
+                      onRefresh={fetchUnits}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {formData.category === "villa" && !property && (
+                <div className="space-y-2 md:col-span-2">
+                  <p className="text-sm text-muted-foreground italic">
+                    Save the property first to enable villa unit management.
+                  </p>
+                </div>
+              )}
+
+              {formData.category === "campings_cottages" && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label>
+                    Availability Calendar (Syncs with Owner Dashboard)
+                  </Label>
+                  {property && (
+                    <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                      <UnitManager
+                        propertyId={property.id}
+                        category={formData.category}
+                        units={propertyUnits}
+                        onRefresh={fetchUnits}
+                      />
+                    </div>
+                  )}
+                  {!property && (
+                    <p className="text-sm text-muted-foreground italic">
+                      Save the property first to enable calendar/unit management.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {formData.category === "villa" && property && propertyUnits.length === 0 && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label>
+                    Availability Calendar (Syncs with Owner Dashboard)
+                  </Label>
+                  <CalendarSync
+                    propertyId={property.property_id || property.id}
+                    isAdmin={true}
+                    isVilla={true}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="title">Property Title *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                  className="h-12 bg-secondary/50 rounded-xl"
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -1919,7 +2554,7 @@ const AdminPropertyForm = ({
           </div>
         </form>
 
-        {(formData.category === "campings_cottages" || formData.category === "villa") && property?.id && (
+        {formData.category === "campings_cottages" && property?.id && (
           <div className="mt-8 glass rounded-2xl border border-border/50 p-6 animate-fade-up">
             <UnitManager
               propertyId={property.id}

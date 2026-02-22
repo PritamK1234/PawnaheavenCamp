@@ -444,7 +444,7 @@ const getVillaUnits = async (req, res) => {
 const createVillaUnit = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, schedule, rating, price_note } = req.body;
 
     const propertyCheck = await query(
       `SELECT id FROM properties WHERE (property_id = $1 OR id::text = $1) AND category = 'villa'`,
@@ -459,8 +459,8 @@ const createVillaUnit = async (req, res) => {
     }
 
     const result = await query(
-      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, schedule, rating, price_note)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
        RETURNING *`,
       [
         propertyCheck.rows[0].id, 
@@ -473,7 +473,16 @@ const createVillaUnit = async (req, res) => {
         String(weekday_price || '0'),
         String(weekend_price || '0'),
         String(special_price || '0'),
-        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || '[]')
+        Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || '[]'),
+        description || null,
+        check_in_time || null,
+        check_out_time || null,
+        Array.isArray(highlights) ? JSON.stringify(highlights) : (highlights || '[]'),
+        Array.isArray(activities) ? JSON.stringify(activities) : (activities || '[]'),
+        Array.isArray(policies) ? JSON.stringify(policies) : (policies || '[]'),
+        Array.isArray(schedule) ? JSON.stringify(schedule) : (schedule || '[]'),
+        parseFloat(rating) || 4.5,
+        price_note || null
       ]
     );
 
@@ -491,7 +500,7 @@ const createVillaUnit = async (req, res) => {
 const updateVillaUnit = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, schedule, rating, price_note } = req.body;
 
     const result = await query(
       `UPDATE property_units 
@@ -505,6 +514,15 @@ const updateVillaUnit = async (req, res) => {
            weekend_price = COALESCE($8, weekend_price),
            special_price = COALESCE($9, special_price),
            special_dates = COALESCE($10, special_dates),
+           description = COALESCE($12, description),
+           check_in_time = COALESCE($13, check_in_time),
+           check_out_time = COALESCE($14, check_out_time),
+           highlights = COALESCE($15, highlights),
+           activities = COALESCE($16, activities),
+           policies = COALESCE($17, policies),
+           schedule = COALESCE($18, schedule),
+           rating = COALESCE($19, rating),
+           price_note = COALESCE($20, price_note),
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $11
        RETURNING *`,
@@ -519,7 +537,16 @@ const updateVillaUnit = async (req, res) => {
         weekend_price,
         special_price,
         Array.isArray(special_dates) ? JSON.stringify(special_dates) : (special_dates || null),
-        unitId
+        unitId,
+        description !== undefined ? description : null,
+        check_in_time !== undefined ? check_in_time : null,
+        check_out_time !== undefined ? check_out_time : null,
+        highlights !== undefined ? (Array.isArray(highlights) ? JSON.stringify(highlights) : highlights) : null,
+        activities !== undefined ? (Array.isArray(activities) ? JSON.stringify(activities) : activities) : null,
+        policies !== undefined ? (Array.isArray(policies) ? JSON.stringify(policies) : policies) : null,
+        schedule !== undefined ? (Array.isArray(schedule) ? JSON.stringify(schedule) : schedule) : null,
+        rating !== undefined ? parseFloat(rating) : null,
+        price_note !== undefined ? price_note : null
       ]
     );
 

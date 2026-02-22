@@ -58,7 +58,8 @@ const validateUnitData = (req, res, next) => {
       return sendError(res, errorCodes.MISSING_REQUIRED_FIELD, { field: 'name' });
     }
     
-    if (available_persons === undefined || available_persons === null) {
+    const isVillaRoute = req.baseUrl && req.baseUrl.includes('/villa');
+    if (!isVillaRoute && (available_persons === undefined || available_persons === null)) {
       return sendError(res, errorCodes.MISSING_REQUIRED_FIELD, { field: 'available_persons' });
     }
   }

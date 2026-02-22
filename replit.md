@@ -35,6 +35,14 @@ Preferred communication style: Simple, everyday language.
 - `getPropertyUnits/*` → camping controller
 - `getUnitCalendarData/*` → camping controller
 
+#### Villa Admin Form Restructuring (Feb 2026)
+- **Villa property-level form shows ONLY**: Status dropdown, Active/Available toggles, Referral Code, Property ID, Category selector, Owner Name, Owner WhatsApp Number, Owner OTP Number, Admin Mobile Number, VillaUnitManager (with Add Unit button and tabs), Save/Cancel buttons
+- **Villa property-level form HIDES**: Property Title, Location, Google Maps Link, all Price fields, Max Capacity, Rating, Check-in/out Times, Amenities, Activities, Highlights, Policies, Schedule, Images, Description (all moved to unit level)
+- **Villa unit form fields (23 total)**: name, title, description, location, google_maps_link, weekday_price, weekend_price, special_price, total_persons, check_in_time, check_out_time, rating, price_note, amenities, activities, highlights, policies, schedule, images, special_dates
+- **Database**: property_units table has title, location, google_maps_link columns (added Feb 2026)
+- **Campings_cottages form**: Completely unchanged, all fields remain at property level
+- **Conditional rendering**: `{formData.category !== "villa" && (<>...</>)}` wraps hidden sections
+
 #### Image Sync Architecture (Feb 2026)
 - Images are stored in the `property_images` table (property_id, image_url, display_order)
 - Both `updateProperty` and `updateVilla` functions now sync images to property_images table

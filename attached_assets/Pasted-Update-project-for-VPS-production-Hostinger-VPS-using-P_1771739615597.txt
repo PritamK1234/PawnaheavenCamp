@@ -1,0 +1,368 @@
+Update project for VPS production (Hostinger VPS using PM2 + Nginx).
+
+---
+
+### 1️ Add `.env` Support (Backend)
+
+* Use `dotenv`
+* Load env from `.env`
+* Do NOT commit `.env`
+* Add `.env.example` with:
+
+```
+PORT=5001
+DATABASE_URL=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+* Ensure server uses `process.env.PORT`
+
+---
+
+### 2️ Multi-Domain PWA Setup (3 Domains)
+
+Domains:
+
+* Public → `www.pawnahavencamp.com`
+* Admin → `www.pawnahavencamp.cloud`
+* Owner → `www.pawnahavencamp.shop`
+
+Each domain must:
+
+* Have separate `manifest.json`
+* Separate app name
+* Separate icon
+* Separate `start_url`
+* Separate `scope`
+* Separate service worker scope
+
+---
+
+### 3️ Required PWA Behavior
+
+**Case 1 – Public**
+
+* Install from `.com`
+* Manifest:
+
+  * name: PawnaHavenCamp
+  * start_url: [https://www.pawnahavencamp.com/](https://www.pawnahavencamp.com/)
+  * scope: /
+  * public icon
+
+**Case 2 – Owner**
+
+* Install from `.shop`
+* Manifest:
+
+  * name: PawnaHavenCamp Owner
+  * start_url: [https://www.pawnahavencamp.shop/](https://www.pawnahavencamp.shop/)
+  * scope: /
+  * owner icon
+
+**Case 3 – Admin**
+
+* Install from `.cloud`
+* Manifest:
+
+  * name: PawnaHavenCamp Admin
+  * start_url: [https://www.pawnahavencamp.cloud/](https://www.pawnahavencamp.cloud/)
+  * scope: /
+  * admin icon
+
+---
+
+### 4️ Vite / Proxy Changes
+
+* Use dynamic base URL based on domain
+* Ensure service worker registered per domain
+* Do not mix caches across domains
+* Ensure correct manifest served per hostname
+
+---
+
+### 5️ Production Notes
+
+Project is hosted on:
+
+* Hostinger VPS
+* Nginx reverse proxy
+* PM2 backend
+
+Ensure:
+
+* No hardcoded localhost
+* All URLs use environment variables
+* Works behind Nginx proxy
+
+---
+
+
+
+
+
+
+
+
+Perfect ✅ Below is **production-ready setup** for your 3-domain PWA architecture.
+
+---
+
+# ✅ 1️⃣ Proper Nginx Config (3 Domains → Same App, Different Host Logic)
+
+Assuming:
+
+* Backend running on `http://localhost:5001`
+* Frontend built inside `/var/www/pawnahavencamp/dist`
+
+Create **3 server blocks**
+
+---
+
+## 🌐 1. Public → pawnahavencamp.com
+
+```nginx
+server {
+    server_name www.pawnahavencamp.com pawnahavencamp.com;
+
+    root /var/www/pawnahavencamp/dist;
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://localhost:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /manifest.json {
+        try_files /manifest-public.json =404;
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
+```
+
+---
+
+## 🏪 2. Owner → pawnahavencamp.shop
+
+```nginx
+server {
+    server_name www.pawnahavencamp.shop pawnahavencamp.shop;
+
+    root /var/www/pawnahavencamp/dist;
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://localhost:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /manifest.json {
+        try_files /manifest-owner.json =404;
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
+```
+
+---
+
+## ☁ 3. Admin → pawnahavencamp.cloud
+
+```nginx
+server {
+    server_name www.pawnahavencamp.cloud pawnahavencamp.cloud;
+
+    root /var/www/pawnahavencamp/dist;
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://localhost:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /manifest.json {
+        try_files /manifest-admin.json =404;
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
+```
+
+Then:
+
+```bash
+systemctl restart nginx
+```
+
+---
+
+# ✅ 2️⃣ Exact Manifest Structure (3 Separate Files)
+
+Place inside `/public` folder.
+
+---
+
+## 📁 manifest-public.json
+
+```json
+{
+  "name": "PawnaHavenCamp",
+  "short_name": "PHC",
+  "start_url": "https://www.pawnahavencamp.com/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "public/icons/Public_sites_icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "public/icons/Public_sites_icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+---
+
+## 📁 manifest-owner.json
+
+```json
+{
+  "name": "PawnaHavenCamp Owner",
+  "short_name": "PHC Owner",
+  "start_url": "https://www.pawnahavencamp.shop/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#15803d",
+  "icons": [
+    {
+      "src": "public/icons/Owner_dashboard_icon.ico",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "public/icons/Owner_dashboard_icon.ico",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+---
+
+## 📁 manifest-admin.json
+
+```json
+{
+  "name": "PawnaHavenCamp Admin",
+  "short_name": "PHC Admin",
+  "start_url": "https://www.pawnahavencamp.cloud/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "public/icons/Admin_dashboard_app-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "public/icons/Admin_dashboard_app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+---
+
+# ✅ 3️⃣ Service Worker Isolation (CRITICAL)
+
+In `main.tsx`:
+
+```ts
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+```
+
+Then inside `sw.js`:
+
+```js
+const CACHE_NAME = `phc-cache-${self.location.hostname}`;
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(['/']))
+  );
+});
+```
+
+This ensures:
+
+* `.com` cache separate
+* `.shop` cache separate
+* `.cloud` cache separate
+
+---
+
+# ✅ 4️⃣ Production-Ready Vite PWA Config
+
+Install:
+
+```bash
+npm install vite-plugin-pwa
+```
+
+In `vite.config.ts`:
+
+```ts
+import { VitePWA } from 'vite-plugin-pwa'
+
+export default defineConfig({
+  plugins: [
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: false
+    })
+  ]
+})
+```
+
+We set `manifest: false` because Nginx handles domain-based manifest.
+
+---
+
+# 🚀 FINAL RESULT
+
+| Domain | Installed App Name | Icon        | URL    |
+| ------ | ------------------ | ----------- | ------ |
+| .com   | Public             | public icon | .com   |
+| .shop  | Owner              | owner icon  | .shop  |
+| .cloud | Admin              | admin icon  | .cloud |
+
+All 3 install as **separate apps** on mobile.
+
+---

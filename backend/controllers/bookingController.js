@@ -338,7 +338,7 @@ const processConfirmedBooking = async (req, res) => {
     );
 
     const whatsapp = new WhatsAppService();
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host') || 'pawnahavencamp.com'}`;
     const ticketUrl = `${frontendUrl}/ticket?booking_id=${booking_id}`;
 
     const customerMessage = `🎉 Booking Confirmed!\n\nYour booking has been confirmed.\n\nBooking ID: ${booking_id}\nProperty: ${booking.property_name}\n\nView your e-ticket:\n${ticketUrl}`;

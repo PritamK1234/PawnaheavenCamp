@@ -23,24 +23,11 @@ const OwnerLayout = () => {
       navigate('/owner');
     }
 
-    if ('serviceWorker' in navigator && window.location.pathname.startsWith('/owner')) {
-      navigator.serviceWorker.register('/owner/sw.js', { scope: '/owner' })
-        .then(registration => {
-          console.log('Owner SW registered:', registration);
-        })
-        .catch(error => {
-          console.log('Owner SW registration failed:', error);
-        });
-    }
-
-    const link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-    if (link) {
-      link.href = '/owner/manifest.json';
-    } else {
-      const newLink = document.createElement('link');
-      newLink.rel = 'manifest';
-      newLink.href = '/owner/manifest.json';
-      document.head.appendChild(newLink);
+    if (window.location.hostname.includes('pawnahavencamp.shop')) {
+      const link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+      if (link) {
+        link.href = '/manifest-owner.json';
+      }
     }
   }, [isLoggedIn, navigate]);
 

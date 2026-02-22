@@ -110,14 +110,19 @@ Preferred communication style: Simple, everyday language.
 - **Ticket Page States**: Loading, pending confirmation (auto-refresh 10s), confirmed (full ticket), expired, error
 
 ### PWA (Progressive Web App) - Feb 2026
-- **Multi-domain PWA**: Separate installable apps for public, owner, and admin portals
-  - Public: `manifest-public.json` + `sw-public.js` (scope `/`, domain: pawnahavencamp.com)
-  - Owner: `public/owner/manifest.json` + `public/owner/sw.js` (scope `/owner`, domain: pawnahavencamp.shop)
-  - Admin: `backend/public/admin/manifest.json` + `backend/public/admin/sw.js` (scope `/admin`, domain: pawnahavencamp.cloud)
-- **SW Registration Strategy**: `main.tsx` conditionally registers VitePWA SW only on non-owner paths; OwnerLayout registers owner SW separately
+- **3-Domain PWA Architecture** (production VPS deployment):
+  - Public: `pawnahavencamp.com` → `manifest-public.json` (name: PawnaHavenCamp, theme: #0f172a)
+  - Owner: `pawnahavencamp.shop` → `manifest-owner.json` (name: PawnaHavenCamp Owner, theme: #15803d)
+  - Admin: `pawnahavencamp.cloud` → `manifest-admin.json` (name: PawnaHavenCamp Admin, theme: #7c3aed)
+- **Unified Service Worker**: `public/sw.js` uses `self.location.hostname` for automatic per-domain cache isolation
+- **Manifest Selection**: `main.tsx` detects hostname and sets correct manifest link dynamically
+- **SW Registration**: `main.tsx` registers unified `/sw.js` for all domains
+- **Nginx serves**: `/manifest.json` → domain-specific manifest via `try_files` directive
+- **Icons**: `public/icons/Public_sites_icon.png`, `Owner_dashboard_icon.png`, `Admin_dashboard_app-icon.png`
 - **Install Button**: `src/components/PWAInstallButton.tsx` - unified component with iOS Safari modal support
 - **Install Detection**: Auto-hides when app installed, reappears on uninstall (uses `display-mode: standalone` media query)
-- **VitePWA Config**: `injectRegister: false` to allow manual SW registration control
+- **VPS Deployment**: Hostinger VPS with PM2 (backend) + Nginx (reverse proxy + static files)
+- **Environment Config**: `backend/.env.example` provides template for all required env vars
 
 ### Referral System (Extended Feb 2026)
 - **Three referral types**: Public (15% commission), Owner (25% commission, property-linked), B2B (22% commission)

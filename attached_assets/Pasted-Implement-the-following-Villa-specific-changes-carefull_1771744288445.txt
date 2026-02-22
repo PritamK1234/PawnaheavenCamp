@@ -1,0 +1,156 @@
+Implement the following Villa-specific changes carefully.
+DO NOT break existing Campings_cottages functionality.
+Villa logic must be completely separate.
+
+===========================================
+1️⃣ Change Field Position (Villa Only)
+===========================================
+
+In:
+Admin Dashboard → Villa → "Add New Property"
+
+Move the "Category" selector field 
+BELOW the "Property ID (Auto-generated)" field.
+
+Only change UI order.
+No logic changes required.
+
+===========================================
+2️⃣ Add Units System (Villa Only - New Logic)
+===========================================
+
+Important:
+Villa is DIFFERENT from Campings_cottages.
+
+For Villa:
+Each Unit will have its own FULL property fields 
+(like complete Add/Edit Property form).
+
+-------------------------------------------
+A) Add "Add Unit" Button
+-------------------------------------------
+
+Place a button:
+Below the "Category" selector field.
+
+Button Name: "Add Unit"
+
+-------------------------------------------
+B) Add Unit Popup
+-------------------------------------------
+
+When clicking "Add Unit":
+
+Open a small popup/modal.
+It should ONLY contain:
+
+- Unit Name (text field)
+- Save button
+- Cancel button
+
+No other fields.
+
+When clicking Save:
+- Create a new unit
+- Add it to unit list
+- Close popup
+
+-------------------------------------------
+C) Merge Unit Fields into Property Form
+-------------------------------------------
+
+All fields that currently exist in:
+"Add/Edit Unit" form
+
+Must now be included inside:
+"Add/Edit Property" form (for Villa only).
+
+If any field already exists in Property form:
+Skip duplicate.
+
+Add only missing fields.
+
+Now each Villa unit will store:
+- Title
+- Description
+- Price
+- Capacity
+- Images
+- Amenities
+- etc.
+(Full property details per unit)
+
+-------------------------------------------
+3️⃣ Unit Switching Behavior
+-------------------------------------------
+
+When multiple units exist:
+
+Show them as tabs or buttons at top of form:
+Example:
+[ Unit 1 ]  [ Unit 2 ]  [ Unit 3 ]
+
+When clicking on a unit:
+The form should switch to that unit’s data.
+
+Important:
+- Each unit has separate form state.
+- Switching units should not lose unsaved data.
+- Data must persist properly.
+
+-------------------------------------------
+4️⃣ Database Structure (If Required)
+-------------------------------------------
+
+For Villa:
+
+Property Table:
+- id
+- ownerId
+- category
+- etc.
+
+VillaUnit Table:
+- id
+- propertyId (FK)
+- unitName
+- all property fields
+- images
+- price
+- amenities
+- etc.
+
+Ensure:
+- One Property → Multiple Units
+- Each Unit contains full details.
+
+-------------------------------------------
+5️⃣ Important Conditions
+-------------------------------------------
+
+- DO NOT affect Campings_cottages logic.
+- Only apply this logic when propertyType === "villa".
+- Keep existing booking system intact.
+- Keep image upload system intact.
+- Maintain proper validation.
+- Maintain edit functionality.
+
+-------------------------------------------
+Expected Result:
+-------------------------------------------
+
+Admin → Add Villa
+
+Step 1:
+Property ID
+Category
+Add Unit button
+
+Step 2:
+Create Units (Name only popup)
+
+Step 3:
+Click unit → Full form appears
+Switch between units easily
+
+Each unit acts like an independent mini-property inside one villa.

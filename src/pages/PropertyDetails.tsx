@@ -84,6 +84,10 @@ const getIcon = (amenity: string) => {
 interface PropertyUnit {
   id: number;
   name: string;
+  title?: string;
+  description?: string;
+  location?: string;
+  google_maps_link?: string;
   price_per_person: string;
   weekday_price?: string;
   weekend_price?: string;
@@ -91,7 +95,14 @@ interface PropertyUnit {
   total_persons: number;
   capacity?: number;
   total_quantity?: number;
+  check_in_time?: string;
+  check_out_time?: string;
+  rating?: number;
   amenities?: string[];
+  activities?: string[];
+  highlights?: string[];
+  policies?: string[];
+  schedule?: { time: string; title: string; icon?: string }[];
   images?: string[];
   calendar?: {
     date: string;
@@ -204,6 +215,10 @@ const PropertyDetails = () => {
             ...unit,
             images: ensureArray(unit.images),
             amenities: ensureArray(unit.amenities),
+            activities: ensureArray(unit.activities),
+            highlights: ensureArray(unit.highlights),
+            policies: ensureArray(unit.policies),
+            schedule: ensureArray(unit.schedule),
           }));
 
           const mappedProperty = {
@@ -1004,10 +1019,10 @@ const PropertyDetails = () => {
               {/* Title Section */}
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display text-white">
-                  {propertyData.title}
+                  {(propertyData.category === "villa" && selectedUnit?.title) ? selectedUnit.title : propertyData.title}
                 </h1>
                 <p className="text-gray-400 leading-relaxed font-light text-lg">
-                  {propertyData.description}
+                  {(propertyData.category === "villa" && selectedUnit?.description) ? selectedUnit.description : propertyData.description}
                 </p>
               </div>
 
@@ -1016,17 +1031,17 @@ const PropertyDetails = () => {
                 {[
                   {
                     label: "Check-in",
-                    value: propertyData.check_in_time || "2:00 PM",
+                    value: (propertyData.category === "villa" && selectedUnit?.check_in_time) ? selectedUnit.check_in_time : (propertyData.check_in_time || "2:00 PM"),
                     icon: Clock,
                   },
                   {
                     label: "Check-out",
-                    value: propertyData.check_out_time || "11:00 AM",
+                    value: (propertyData.category === "villa" && selectedUnit?.check_out_time) ? selectedUnit.check_out_time : (propertyData.check_out_time || "11:00 AM"),
                     icon: Clock,
                   },
                   {
                     label: "Capacity",
-                    value: `${propertyData.capacity} Guests`,
+                    value: (propertyData.category === "villa" && selectedUnit) ? `${selectedUnit.total_persons || 0} Guests` : `${propertyData.capacity} Guests`,
                     icon: Users,
                   },
                   {
@@ -1067,15 +1082,10 @@ const PropertyDetails = () => {
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {(Array.isArray(
-                    propertyData.category === "campings_cottages"
-                      ? selectedUnit?.amenities || []
-                      : propertyData.amenities,
-                  )
-                    ? propertyData.category === "campings_cottages"
-                      ? selectedUnit?.amenities || []
-                      : propertyData.amenities
-                    : []
+                  {(
+                    (propertyData.category === "campings_cottages" || propertyData.category === "villa")
+                      ? (selectedUnit?.amenities?.length ? selectedUnit.amenities : propertyData.amenities || [])
+                      : (propertyData.amenities || [])
                   ).map((amenity, index) => (
                     <div
                       key={index}
@@ -1099,8 +1109,12 @@ const PropertyDetails = () => {
                   Activities
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {Array.isArray(propertyData.activities) &&
-                    propertyData.activities.map((activity, index) => (
+                  {(() => {
+                    const acts = (propertyData.category === "villa" && selectedUnit?.activities?.length)
+                      ? selectedUnit.activities
+                      : propertyData.activities;
+                    return Array.isArray(acts) && acts;
+                  })()?.map((activity, index) => (
                       <div
                         key={index}
                         className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all"
@@ -1117,7 +1131,12 @@ const PropertyDetails = () => {
               </section>
 
               {/* Schedule Section */}
-              {propertyData.schedule && propertyData.schedule.length > 0 && (
+              {(() => {
+                const sched = (propertyData.category === "villa" && selectedUnit?.schedule?.length)
+                  ? selectedUnit.schedule
+                  : propertyData.schedule;
+                return sched && sched.length > 0 ? sched : null;
+              })() && (
                 <section className="relative">
                   <h3 className="text-2xl font-bold mb-10 flex items-center gap-3">
                     <Clock className="w-6 h-6 text-[#C5A021]" />
@@ -1128,7 +1147,9 @@ const PropertyDetails = () => {
                     {/* Vertical Line */}
                     <div className="absolute left-[21px] top-2 bottom-0 w-0.5 bg-gradient-to-b from-[#C5A021] via-[#C5A021]/50 to-transparent" />
 
-                    {propertyData.schedule.map((item, idx) => (
+                    {((propertyData.category === "villa" && selectedUnit?.schedule?.length)
+                      ? selectedUnit.schedule
+                      : propertyData.schedule || []).map((item, idx) => (
                       <div
                         key={idx}
                         className="relative flex items-start gap-6 pb-10 group last:pb-0"
@@ -1173,8 +1194,11 @@ const PropertyDetails = () => {
                     </AccordionTrigger>
                     <AccordionContent className="pb-6">
                       <ul className="space-y-4">
-                        {Array.isArray(propertyData.highlights) &&
-                          propertyData.highlights.map((h, i) => (
+                        {(() => {
+                          const hl = (propertyData.category === "villa" && selectedUnit?.highlights?.length)
+                            ? selectedUnit.highlights
+                            : propertyData.highlights;
+                          return Array.isArray(hl) && hl.map((h, i) => (
                             <li
                               key={i}
                               className="text-gray-400 text-sm md:text-base flex items-start gap-3"
@@ -1182,7 +1206,8 @@ const PropertyDetails = () => {
                               <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
                               {h}
                             </li>
-                          ))}
+                          ));
+                        })()}
                       </ul>
                     </AccordionContent>
                   </AccordionItem>
@@ -1199,8 +1224,11 @@ const PropertyDetails = () => {
                     </AccordionTrigger>
                     <AccordionContent className="pb-6">
                       <ul className="space-y-4">
-                        {Array.isArray(propertyData.policies) &&
-                          propertyData.policies.map((p, i) => (
+                        {(() => {
+                          const pol = (propertyData.category === "villa" && selectedUnit?.policies?.length)
+                            ? selectedUnit.policies
+                            : propertyData.policies;
+                          return Array.isArray(pol) && pol.map((p, i) => (
                             <li
                               key={i}
                               className="text-gray-400 text-sm md:text-base flex items-start gap-3"
@@ -1208,7 +1236,8 @@ const PropertyDetails = () => {
                               <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
                               {p}
                             </li>
-                          ))}
+                          ));
+                        })()}
                       </ul>
                     </AccordionContent>
                   </AccordionItem>

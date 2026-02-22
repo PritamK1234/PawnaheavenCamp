@@ -652,6 +652,7 @@ const UnitManager = ({
 
 interface VillaUnitFormState {
   name: string;
+  title: string;
   description: string;
   weekday_price: string;
   weekend_price: string;
@@ -661,6 +662,8 @@ interface VillaUnitFormState {
   check_out_time: string;
   rating: string;
   price_note: string;
+  location: string;
+  google_maps_link: string;
   amenities: string[];
   activities: string[];
   highlights: string[];
@@ -672,6 +675,7 @@ interface VillaUnitFormState {
 
 const createDefaultVillaUnitForm = (): VillaUnitFormState => ({
   name: "",
+  title: "",
   description: "",
   weekday_price: "0",
   weekend_price: "0",
@@ -681,6 +685,8 @@ const createDefaultVillaUnitForm = (): VillaUnitFormState => ({
   check_out_time: "11:00 AM",
   rating: "4.5",
   price_note: "",
+  location: "",
+  google_maps_link: "",
   amenities: [""],
   activities: [""],
   highlights: [""],
@@ -727,6 +733,7 @@ const VillaUnitManager = ({
       ...prev,
       [unit.id]: {
         name: unit.name || "",
+        title: unit.title || "",
         description: unit.description || "",
         weekday_price: (unit.weekday_price || 0).toString(),
         weekend_price: (unit.weekend_price || 0).toString(),
@@ -736,6 +743,8 @@ const VillaUnitManager = ({
         check_out_time: unit.check_out_time || "11:00 AM",
         rating: (unit.rating || 4.5).toString(),
         price_note: unit.price_note || "",
+        location: unit.location || "",
+        google_maps_link: unit.google_maps_link || "",
         amenities: parseJson(unit.amenities).length ? parseJson(unit.amenities) : [""],
         activities: parseJson(unit.activities).length ? parseJson(unit.activities) : [""],
         highlights: parseJson(unit.highlights).length ? parseJson(unit.highlights) : [""],
@@ -804,6 +813,7 @@ const VillaUnitManager = ({
     try {
       const payload = {
         name: form.name,
+        title: form.title,
         description: form.description,
         weekday_price: String(form.weekday_price),
         weekend_price: String(form.weekend_price),
@@ -814,6 +824,8 @@ const VillaUnitManager = ({
         check_out_time: form.check_out_time,
         rating: parseFloat(form.rating) || 4.5,
         price_note: form.price_note,
+        location: form.location,
+        google_maps_link: form.google_maps_link,
         amenities: form.amenities.filter((a) => a.trim()),
         activities: form.activities.filter((a) => a.trim()),
         highlights: form.highlights.filter((h) => h.trim()),
@@ -999,8 +1011,23 @@ const VillaUnitManager = ({
               <Input value={activeForm.name} onChange={(e) => updateField("name", e.target.value)} className="bg-white/5 border-white/10" />
             </div>
             <div className="space-y-2 md:col-span-2">
+              <Label>Property Title *</Label>
+              <Input value={activeForm.title} onChange={(e) => updateField("title", e.target.value)} className="bg-white/5 border-white/10" placeholder="e.g. Luxury Villa with Pool" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
               <Label>Description</Label>
               <Textarea value={activeForm.description} onChange={(e) => updateField("description", e.target.value)} className="bg-white/5 border-white/10 min-h-[80px]" />
+            </div>
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={activeForm.location} onChange={(e) => updateField("location", e.target.value)} className="bg-white/5 border-white/10 pl-10" placeholder="e.g. Near Pawna Lake" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Google Maps Link *</Label>
+              <Input value={activeForm.google_maps_link} onChange={(e) => updateField("google_maps_link", e.target.value)} className="bg-white/5 border-white/10" placeholder="Paste Google Maps URL" />
             </div>
             <div className="space-y-2">
               <Label>Weekday Price</Label>
@@ -1841,19 +1868,7 @@ const AdminPropertyForm = ({
                 </div>
               )}
 
-              {formData.category === "villa" && property && propertyUnits.length === 0 && (
-                <div className="space-y-2 md:col-span-2">
-                  <Label>
-                    Availability Calendar (Syncs with Owner Dashboard)
-                  </Label>
-                  <CalendarSync
-                    propertyId={property.property_id || property.id}
-                    isAdmin={true}
-                    isVilla={true}
-                  />
-                </div>
-              )}
-
+              {formData.category !== "villa" && (<>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="title">Property Title *</Label>
                 <Input
@@ -2150,6 +2165,7 @@ const AdminPropertyForm = ({
                   />
                 </div>
               </div>
+              </>)}
 
               <div className="space-y-2">
                 <Label htmlFor="owner_name">Owner Name *</Label>
@@ -2282,6 +2298,7 @@ const AdminPropertyForm = ({
             </div>
           </div>
 
+          {formData.category !== "villa" && (<>
           {/* Arrays: Amenities, Activities, Highlights, Policies */}
           {[
             {
@@ -2523,6 +2540,7 @@ const AdminPropertyForm = ({
               required
             />
           </div>
+          </>)}
 
           <div className="flex items-center justify-end gap-4 pt-4 animate-fade-up">
             <Button

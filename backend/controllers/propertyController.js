@@ -816,34 +816,28 @@ const createProperty = async (req, res) => {
       referral_code,
     });
 
-    // Validate required fields
-    if (
-      !title ||
-      !description ||
-      !category ||
-      !location ||
-      !price_note ||
-      !capacity
-    ) {
+    // Validate required fields - villa only needs category and owner info (details are at unit level)
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        message: "Category is required.",
+      });
+    }
+
+    if (category !== "villa" && (!title || !description || !location || !price_note || !capacity)) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields.",
       });
     }
 
-    // Ensure price is present for villa, or use a placeholder for campings_cottages if backend requires it
+    // Ensure price is present for non-villa, or use a placeholder
     const finalPrice =
-      price || (category === "campings_cottages" ? "Price on Selection" : null);
+      price || (category === "campings_cottages" ? "Price on Selection" : (category === "villa" ? "See Units" : null));
 
-    if (!finalPrice && category === "villa") {
-      return res.status(400).json({
-        success: false,
-        message: "Price is required for villas.",
-      });
-    }
-
-    // Generate slug
-    const slug = generateSlug(title);
+    // Generate slug - for villa without title, use owner_name or property_id
+    const slugSource = title || (owner_name ? `${owner_name} villa` : `villa-${Date.now()}`);
+    const slug = generateSlug(slugSource);
 
     // Generate unique 5-digit property ID (e.g., AD75C) only if not provided by frontend
     const generatePropertyId = () => {

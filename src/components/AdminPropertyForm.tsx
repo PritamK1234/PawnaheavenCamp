@@ -1580,9 +1580,13 @@ const AdminPropertyForm = ({
       delete (payload as any).weekday_price;
       delete (payload as any).weekend_price;
     } else if (formData.category === "villa") {
-      // Include weekday and weekend prices for villas
       (payload as any).weekday_price = formData.weekday_price;
       (payload as any).weekend_price = formData.weekend_price;
+      if (!payload.title) (payload as any).title = formData.owner_name ? `${formData.owner_name} Villa` : "Villa Property";
+      if (!payload.description) (payload as any).description = "Villa property - details managed at unit level";
+      if (!payload.location) (payload as any).location = "See unit details";
+      if (!payload.price_note) (payload as any).price_note = "See unit details";
+      if (!(payload as any).price) (payload as any).price = "See Units";
     }
 
     try {

@@ -9,7 +9,7 @@
     "build": "vite build",
     "build:public": "vite build --config vite.config.public.ts",
     "build:owner": "vite build --config vite.config.owner.ts && cp dist/owner/owner.html dist/owner/index.html",
-    "build:admin": "cd admin && npm install --legacy-peer-deps && npm run build",
+    "build:admin": "cd admin && npm install --legacy-peer-deps && BUILD_PATH=../dist/admin npm run build",
     "build:all": "npm run build:public && npm run build:owner && npm run build:admin",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

@@ -143,7 +143,7 @@ Preferred communication style: Simple, everyday language.
 - **VPS NGINX Config**: 3 separate server blocks, each pointing to its own build folder:
   - `pawnahavencamp.com` → `dist/public/`
   - `pawnahavencamp.shop` → `dist/owner/`
-  - `pawnahavencamp.cloud` → `admin/build/`
+  - `pawnahavencamp.cloud` → `dist/admin/`
 - **Unified Service Worker**: `public/sw.js` uses `self.location.hostname` for automatic per-domain cache isolation
 - **Icons**: `public/icons/Public_sites_icon.png`, `Owner_dashboard_icon.png`, `Admin_dashboard_app-icon.png` (also copied to `admin/public/icons/`)
 - **Install Button**: `src/components/PWAInstallButton.tsx` - unified component with iOS Safari modal support

@@ -6,7 +6,7 @@ const UserController = {
       // req.user is set by referralAuth middleware from the OTP verification token
       const { mobile, purpose } = req.user;
       
-      if (purpose !== 'register') {
+      if (purpose !== 'register' && purpose !== 'referral_register') {
         return res.status(400).json({ error: 'Invalid token for registration' });
       }
 

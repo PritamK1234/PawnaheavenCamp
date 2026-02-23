@@ -12,7 +12,7 @@ const authenticateReferralUser = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_fallback_secret');
 
     // If purpose is register or login, we only need to verify the OTP purpose
-    if (decoded.purpose === 'register' || decoded.purpose === 'login' || decoded.purpose === 'referral_login') {
+    if (decoded.purpose === 'register' || decoded.purpose === 'login' || decoded.purpose === 'referral_login' || decoded.purpose === 'referral_register') {
       req.user = decoded;
       return next();
     }

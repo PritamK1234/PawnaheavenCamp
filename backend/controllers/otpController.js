@@ -43,7 +43,7 @@ const OtpController = {
         return res.status(result.status || 401).json({ success: false, message: result.message });
       }
 
-      if (purpose === "referral_login") {
+      if (purpose === "referral_login" || purpose === "referral_register") {
         const cleanMobile = mobile.replace(/\s+/g, "").replace(/^(\+91|91)/, "");
         const user = await ReferralRepository.findByMobile(cleanMobile);
 

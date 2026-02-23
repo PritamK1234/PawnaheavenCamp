@@ -44,7 +44,7 @@ const GenerateCodePage = () => {
     try {
       const res = await axios.post("/api/referrals/request-otp", {
         mobile: formData.mobile,
-        purpose: "referral_login",
+        purpose: "referral_register",
       });
       toast.success("OTP sent to your mobile");
 
@@ -66,7 +66,7 @@ const GenerateCodePage = () => {
       const verifyRes = await axios.post("/api/referrals/verify-otp", {
         mobile: formData.mobile,
         otp: otp,
-        purpose: "referral_login",
+        purpose: "referral_register",
       });
 
       const token = verifyRes.data.token;

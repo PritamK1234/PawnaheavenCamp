@@ -27,8 +27,8 @@ const OtpService = {
       return { success: false, status: 400, message: "Invalid mobile number. Please enter a valid 10-digit Indian mobile number." };
     }
 
-    if (!["owner_login", "referral_login"].includes(purpose)) {
-      return { success: false, status: 400, message: "Invalid login type." };
+    if (!["owner_login", "referral_login", "referral_register"].includes(purpose)) {
+      return { success: false, status: 400, message: "Invalid request type." };
     }
 
     if (purpose === "owner_login") {
@@ -46,6 +46,11 @@ const OtpService = {
       }
       if (user.status === "blocked") {
         return { success: false, status: 403, message: "Account is blocked." };
+      }
+    } else if (purpose === "referral_register") {
+      const existingUser = await ReferralRepository.findByMobile(cleanMobile);
+      if (existingUser) {
+        return { success: false, status: 400, message: "This mobile number is already registered. Please login instead." };
       }
     }
 
@@ -89,8 +94,8 @@ const OtpService = {
       return { success: false, status: 400, message: "Invalid OTP format." };
     }
 
-    if (!["owner_login", "referral_login"].includes(purpose)) {
-      return { success: false, status: 400, message: "Invalid login type." };
+    if (!["owner_login", "referral_login", "referral_register"].includes(purpose)) {
+      return { success: false, status: 400, message: "Invalid request type." };
     }
 
     if (IS_TEST_MODE && otp === TEST_OTP) {

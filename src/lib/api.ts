@@ -220,10 +220,12 @@ export const propertyAPI = {
   },
   update: async (id: string, data: any) => {
     try {
+      const token = getAuthToken();
       const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });

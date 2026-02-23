@@ -1,0 +1,74 @@
+I compared it with your current VPS schema (based on what you showed earlier).
+
+Below are the exact safe production migration commands you must run on VPS to fully match Replit schema.
+
+These are ONLY ALTER + missing indexes (no drops, no data loss).
+
+✅ STEP 1 — Connect to VPS PostgreSQL
+psql -U pawnauser -d pawnahavencamp -h localhost
+
+✅ STEP 2 — Run These Migration Commands
+
+Copy-paste everything below inside psql:
+
+-- ==============================
+-- PROPERTIES TABLE FIXES
+-- ==============================
+
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS owner_whatsapp_number VARCHAR(255);
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS owner_otp_number VARCHAR(255);
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS referral_code VARCHAR(50);
+
+-- ==============================
+-- OWNERS TABLE FIXES
+-- ==============================
+
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS owner_whatsapp_number VARCHAR(255);
+
+-- ==============================
+-- REFERRAL_USERS TABLE FIXES
+-- ==============================
+
+ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS property_id VARCHAR(50);
+
+-- ==============================
+-- PROPERTY_UNITS TABLE FIXES
+-- ==============================
+
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS check_in_time VARCHAR(50);
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS check_out_time VARCHAR(50);
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS highlights TEXT;
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS activities TEXT;
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS policies TEXT;
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS schedule TEXT;
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS rating DECIMAL(2,1) DEFAULT 4.5;
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS price_note VARCHAR(255);
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS location VARCHAR(255);
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS google_maps_link TEXT;
+ALTER TABLE property_units ADD COLUMN IF NOT EXISTS title VARCHAR(500);
+
+-- ==============================
+-- INDEXES (SAFE TO RUN MULTIPLE TIMES)
+-- ==============================
+
+CREATE INDEX IF NOT EXISTS idx_property_units_property_id ON property_units(property_id);
+CREATE INDEX IF NOT EXISTS idx_unit_calendar_unit_id ON unit_calendar(unit_id);
+CREATE INDEX IF NOT EXISTS idx_unit_calendar_date ON unit_calendar(date);
+CREATE INDEX IF NOT EXISTS idx_properties_slug ON properties(slug);
+CREATE INDEX IF NOT EXISTS idx_properties_category ON properties(category);
+CREATE INDEX IF NOT EXISTS idx_properties_is_active ON properties(is_active);
+CREATE INDEX IF NOT EXISTS idx_property_images_property_id ON property_images(property_id);
+CREATE INDEX IF NOT EXISTS idx_referral_users_code ON referral_users(referral_code);
+CREATE INDEX IF NOT EXISTS idx_referral_transactions_user ON referral_transactions(referral_user_id);
+CREATE INDEX IF NOT EXISTS idx_otp_verifications_mobile ON otp_verifications(mobile_number);
+CREATE INDEX IF NOT EXISTS idx_bookings_booking_id ON bookings(booking_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_order_id ON bookings(order_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_guest_phone ON bookings(guest_phone);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(booking_status);
+CREATE INDEX IF NOT EXISTS idx_bookings_action_token ON bookings(action_token);
+CREATE INDEX IF NOT EXISTS idx_ledger_entries_property_id ON ledger_entries(property_id);
+CREATE INDEX IF NOT EXISTS idx_ledger_entries_check_in ON ledger_entries(check_in);
+
+✅ STEP 3 — Exit
+\q

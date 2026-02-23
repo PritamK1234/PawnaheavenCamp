@@ -959,14 +959,28 @@ const deleteProperty = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await query("DELETE FROM properties WHERE id = $1", [id]);
-
-    if (result.rowCount === 0) {
+    const propResult = await query("SELECT id, property_id FROM properties WHERE id = $1", [id]);
+    if (propResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Property not found.",
       });
     }
+
+    const property = propResult.rows[0];
+    const numericId = property.id;
+    const varcharPropertyId = property.property_id;
+
+    await query(
+      "DELETE FROM referral_users WHERE referral_type = 'owner' AND (linked_property_id = $1 OR property_id = $2)",
+      [numericId, varcharPropertyId]
+    );
+
+    if (varcharPropertyId) {
+      await query("DELETE FROM owners WHERE property_id = $1", [varcharPropertyId]);
+    }
+
+    await query("DELETE FROM properties WHERE id = $1", [numericId]);
 
     return res.status(200).json({
       success: true,

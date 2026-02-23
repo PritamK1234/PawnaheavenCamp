@@ -2,7 +2,7 @@
   "name": "PawnaHavenCamp",
   "short_name": "PHC",
   "description": "Luxury Resort & Cottage Booking near Pawna Lake",
-  "start_url": "https://www.pawnahavencamp.com/",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",

@@ -2,7 +2,7 @@
   "name": "PawnaHavenCamp Admin",
   "short_name": "PHC Admin",
   "description": "Pawna Haven Camp - Admin Dashboard",
-  "start_url": "https://www.pawnahavencamp.cloud/",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",

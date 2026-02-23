@@ -2,7 +2,7 @@
   "name": "looncamp-admin",
   "version": "1.0.0",
   "private": true,
-  "homepage": "/admin",
+  "homepage": "/",
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
     "axios": "^1.6.2",

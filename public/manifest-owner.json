@@ -2,7 +2,7 @@
   "name": "PawnaHavenCamp Owner",
   "short_name": "PHC Owner",
   "description": "Pawna Haven Camp - Owner Dashboard",
-  "start_url": "https://www.pawnahavencamp.shop/",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",

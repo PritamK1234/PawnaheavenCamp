@@ -1,5 +1,6 @@
 const { pool, query } = require('../db');
 const { generateToken } = require('../utils/jwt');
+const OtpService = require('../services/otpService');
 
 exports.registerOwner = async (req, res) => {
   const { propertyId, ownerMobile } = req.body;
@@ -74,7 +75,6 @@ exports.registerOwner = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Owner registration error:', error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error during registration.'
@@ -85,35 +85,21 @@ exports.registerOwner = async (req, res) => {
 exports.sendOTP = async (req, res) => {
   const { mobileNumber } = req.body;
 
-  console.log('sendOTP called with mobileNumber:', mobileNumber);
-
   try {
-    const ownerCheck = await pool.query(
-      'SELECT * FROM owners WHERE owner_otp_number = $1',
-      [mobileNumber]
-    );
+    const result = await OtpService.sendOtp(mobileNumber, "owner_login");
 
-    console.log('Owner check result:', ownerCheck.rows.length, 'rows found');
-
-    if (ownerCheck.rows.length === 0) {
-      const allOwners = await pool.query('SELECT owner_otp_number FROM owners');
-      console.log('All registered mobile numbers:', allOwners.rows.map(r => r.owner_otp_number));
-      
-      return res.status(404).json({
+    if (!result.success) {
+      return res.status(result.status || 400).json({
         success: false,
-        message: 'This number is not registered to any property.'
+        message: result.message
       });
     }
-
-    // For now, we use a mock OTP: 123456
-    console.log(`OTP for ${mobileNumber}: 123456`);
 
     return res.status(200).json({
       success: true,
       message: 'OTP sent successfully!'
     });
   } catch (error) {
-    console.error('Send OTP error:', error);
     return res.status(500).json({
       success: false,
       message: 'Error sending OTP.'
@@ -125,20 +111,23 @@ exports.verifyOTP = async (req, res) => {
   const { mobileNumber, otp } = req.body;
 
   try {
-    // Basic verification logic
-    if (otp !== '123456') {
-      return res.status(400).json({
+    const verifyResult = await OtpService.verifyOtp(mobileNumber, otp, "owner_login");
+
+    if (!verifyResult.success) {
+      return res.status(verifyResult.status || 401).json({
         success: false,
-        message: 'Invalid OTP'
+        message: verifyResult.message
       });
     }
+
+    const cleanMobile = mobileNumber.replace(/\s+/g, "").replace(/^(\+91|91)/, "");
 
     const result = await pool.query(
       `SELECT o.*, p.title as property_title, p.category as property_category 
        FROM owners o 
        JOIN properties p ON o.property_id = p.property_id 
        WHERE o.owner_otp_number = $1`,
-      [mobileNumber]
+      [cleanMobile]
     );
 
     if (result.rows.length === 0) {
@@ -148,7 +137,7 @@ exports.verifyOTP = async (req, res) => {
       });
     }
 
-    const token = generateToken({ id: result.rows[0].id, mobile: mobileNumber, role: 'owner' });
+    const token = generateToken({ id: result.rows[0].id, mobile: cleanMobile, role: 'owner' });
 
     return res.status(200).json({
       success: true,
@@ -161,7 +150,6 @@ exports.verifyOTP = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Verify OTP error:', error);
     return res.status(500).json({
       success: false,
       message: 'Error verifying OTP.'
@@ -217,7 +205,6 @@ exports.getOwnerProperty = async (req, res) => {
       data: property
     });
   } catch (error) {
-    console.error('Get owner property error:', error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error fetching property.'

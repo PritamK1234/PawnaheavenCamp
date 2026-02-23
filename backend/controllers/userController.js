@@ -25,7 +25,7 @@ const UserController = {
     try {
       const { mobile, purpose } = req.user;
       
-      if (purpose !== 'login') {
+      if (purpose !== 'login' && purpose !== 'referral_login') {
         return res.status(400).json({ error: 'Invalid token for login' });
       }
 

@@ -26,6 +26,12 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      input: {
+        public: path.resolve(__dirname, 'index.html'),
+        owner: path.resolve(__dirname, 'owner.html'),
+      },
+    },
   },
   plugins: [
     react(),

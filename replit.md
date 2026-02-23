@@ -132,13 +132,21 @@ Preferred communication style: Simple, everyday language.
   - Public: `pawnahavencamp.com` → `manifest-public.json` (name: PawnaHavenCamp, theme: #0f172a)
   - Owner: `pawnahavencamp.shop` → `manifest-owner.json` (name: PawnaHavenCamp Owner, theme: #15803d)
   - Admin: `pawnahavencamp.cloud` → `manifest-admin.json` (name: PawnaHavenCamp Admin, theme: #7c3aed)
+- **Multi-Build Architecture** (Feb 2026):
+  - `index.html` → Public site entry point (references `manifest-public.json`)
+  - `owner.html` → Owner dashboard entry point (references `manifest-owner.json`)
+  - `admin/public/index.html` → Admin panel entry point (references `manifest-admin.json`)
+  - `vite.config.public.ts` → Builds public site to `dist/public/`
+  - `vite.config.owner.ts` → Builds owner dashboard to `dist/owner/`
+  - `src/main-owner.tsx` + `src/AppOwner.tsx` → Owner-only React app entry
+  - Build scripts: `npm run build:public`, `npm run build:owner`, `npm run build:admin`, `npm run build:all`
+- **VPS NGINX Config**: 3 separate server blocks, each pointing to its own build folder:
+  - `pawnahavencamp.com` → `dist/public/`
+  - `pawnahavencamp.shop` → `dist/owner/`
+  - `pawnahavencamp.cloud` → `admin/build/`
 - **Unified Service Worker**: `public/sw.js` uses `self.location.hostname` for automatic per-domain cache isolation
-- **Manifest Selection**: `main.tsx` detects hostname and sets correct manifest link dynamically
-- **SW Registration**: `main.tsx` registers unified `/sw.js` for all domains
-- **Nginx serves**: `/manifest.json` → domain-specific manifest via `try_files` directive
-- **Icons**: `public/icons/Public_sites_icon.png`, `Owner_dashboard_icon.png`, `Admin_dashboard_app-icon.png`
+- **Icons**: `public/icons/Public_sites_icon.png`, `Owner_dashboard_icon.png`, `Admin_dashboard_app-icon.png` (also copied to `admin/public/icons/`)
 - **Install Button**: `src/components/PWAInstallButton.tsx` - unified component with iOS Safari modal support
-- **Install Detection**: Auto-hides when app installed, reappears on uninstall (uses `display-mode: standalone` media query)
 - **VPS Deployment**: Hostinger VPS with PM2 (backend) + Nginx (reverse proxy + static files)
 - **Environment Config**: `backend/.env.example` provides template for all required env vars
 

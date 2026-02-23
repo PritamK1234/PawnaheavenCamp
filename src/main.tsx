@@ -5,7 +5,6 @@ import "./index.css";
 const getManifestForHost = () => {
   const hostname = window.location.hostname;
   if (hostname.includes('pawnahavencamp.shop')) return '/manifest-owner.json';
-  if (hostname.includes('pawnahavencamp.cloud')) return '/manifest-admin.json';
   return '/manifest-public.json';
 };
 

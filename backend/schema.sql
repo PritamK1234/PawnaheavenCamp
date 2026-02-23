@@ -1,5 +1,6 @@
--- LoonCamp PostgreSQL Database Schema
--- Production-ready schema for property booking admin panel
+-- PawnaHavenCamp PostgreSQL Database Schema
+-- Updated: Feb 2026
+-- Production-ready schema for property booking platform
 
 -- Create admins table
 CREATE TABLE IF NOT EXISTS admins (
@@ -33,7 +34,8 @@ CREATE TABLE IF NOT EXISTS properties (
   is_available BOOLEAN DEFAULT true,
   contact VARCHAR(255) DEFAULT '+91 8806092609',
   owner_name VARCHAR(255),
-  owner_mobile VARCHAR(20),
+  owner_whatsapp_number VARCHAR(255),
+  owner_otp_number VARCHAR(255),
   map_link TEXT,
   referral_code VARCHAR(50),
   amenities TEXT NOT NULL,
@@ -95,7 +97,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   utr_number VARCHAR(100)
 );
 
--- Create availability_calendar table for real-time sync (Villa calendar)
+-- Create availability_calendar table (Villa property-level legacy fallback)
 CREATE TABLE IF NOT EXISTS availability_calendar (
   id SERIAL PRIMARY KEY,
   calendar_id VARCHAR(50) UNIQUE,
@@ -123,8 +125,9 @@ CREATE TABLE IF NOT EXISTS owners (
   property_name VARCHAR(255) NOT NULL,
   property_type VARCHAR(50) NOT NULL,
   owner_name VARCHAR(255) NOT NULL,
-  mobile_number VARCHAR(20) UNIQUE NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  owner_otp_number VARCHAR(20) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  owner_whatsapp_number VARCHAR(255)
 );
 
 -- Create category_settings table
@@ -145,7 +148,7 @@ CREATE TABLE IF NOT EXISTS category_settings (
 CREATE TABLE IF NOT EXISTS referral_users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(255) NOT NULL,
-  mobile_number VARCHAR(20) UNIQUE NOT NULL,
+  referral_otp_number VARCHAR(20) NOT NULL,
   referral_code VARCHAR(50) UNIQUE NOT NULL,
   referral_url VARCHAR(500),
   balance DECIMAL(10,2) DEFAULT 0,
@@ -153,7 +156,8 @@ CREATE TABLE IF NOT EXISTS referral_users (
   referral_type VARCHAR(20) DEFAULT 'public',
   linked_property_id INTEGER,
   linked_property_slug VARCHAR(500),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  property_id VARCHAR(50)
 );
 
 -- Create referral_transactions table
@@ -162,14 +166,14 @@ CREATE TABLE IF NOT EXISTS referral_transactions (
   referral_user_id INTEGER NOT NULL REFERENCES referral_users(id),
   booking_id INTEGER,
   amount DECIMAL(10,2) NOT NULL,
-  type VARCHAR(20) NOT NULL, -- 'earning', 'withdrawal'
-  status VARCHAR(20) DEFAULT 'completed', -- 'pending', 'completed', 'failed'
-  source VARCHAR(50), -- 'booking', 'manual', 'adjustment'
+  type VARCHAR(20) NOT NULL,
+  status VARCHAR(20) DEFAULT 'completed',
+  source VARCHAR(50),
   upi_id VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create property_units table
+-- Create property_units table (used by both villa and campings_cottages)
 CREATE TABLE IF NOT EXISTS property_units (
   id SERIAL PRIMARY KEY,
   property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
@@ -184,7 +188,19 @@ CREATE TABLE IF NOT EXISTS property_units (
   special_price VARCHAR(50),
   special_dates JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  description TEXT,
+  check_in_time VARCHAR(50),
+  check_out_time VARCHAR(50),
+  highlights TEXT,
+  activities TEXT,
+  policies TEXT,
+  schedule TEXT,
+  rating DECIMAL(2,1) DEFAULT 4.5,
+  price_note VARCHAR(255),
+  location VARCHAR(255),
+  google_maps_link TEXT,
+  title VARCHAR(500)
 );
 
 -- Create otp_verifications table
@@ -192,7 +208,7 @@ CREATE TABLE IF NOT EXISTS otp_verifications (
   id SERIAL PRIMARY KEY,
   mobile_number VARCHAR(20) NOT NULL,
   otp_code VARCHAR(6) NOT NULL,
-  purpose VARCHAR(20) NOT NULL, -- 'register', 'login'
+  purpose VARCHAR(20) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   attempts INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -205,7 +221,7 @@ VALUES
   ('villa', true, '₹8,999', 'Luxury private villa stays')
 ON CONFLICT (category) DO NOTHING;
 
--- Create unit_calendar table (Camping/Cottages calendar)
+-- Create unit_calendar table (unit-level availability for both categories)
 CREATE TABLE IF NOT EXISTS unit_calendar (
   id SERIAL PRIMARY KEY,
   calendar_id VARCHAR(50) UNIQUE,
@@ -218,27 +234,6 @@ CREATE TABLE IF NOT EXISTS unit_calendar (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(unit_id, date)
 );
-
--- Create indexes for unit management
-CREATE INDEX IF NOT EXISTS idx_property_units_property_id ON property_units(property_id);
-CREATE INDEX IF NOT EXISTS idx_unit_calendar_unit_id ON unit_calendar(unit_id);
-CREATE INDEX IF NOT EXISTS idx_unit_calendar_date ON unit_calendar(date);
-
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_properties_slug ON properties(slug);
-CREATE INDEX IF NOT EXISTS idx_properties_category ON properties(category);
-CREATE INDEX IF NOT EXISTS idx_properties_is_active ON properties(is_active);
-CREATE INDEX IF NOT EXISTS idx_property_images_property_id ON property_images(property_id);
-CREATE INDEX IF NOT EXISTS idx_referral_users_mobile ON referral_users(mobile_number);
-CREATE INDEX IF NOT EXISTS idx_referral_users_code ON referral_users(referral_code);
-CREATE INDEX IF NOT EXISTS idx_referral_transactions_user ON referral_transactions(referral_user_id);
-CREATE INDEX IF NOT EXISTS idx_otp_verifications_mobile ON otp_verifications(mobile_number);
-
-CREATE INDEX IF NOT EXISTS idx_bookings_booking_id ON bookings(booking_id);
-CREATE INDEX IF NOT EXISTS idx_bookings_order_id ON bookings(order_id);
-CREATE INDEX IF NOT EXISTS idx_bookings_guest_phone ON bookings(guest_phone);
-CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(booking_status);
-CREATE INDEX IF NOT EXISTS idx_bookings_action_token ON bookings(action_token);
 
 -- Create ledger_entries table for booking records
 CREATE TABLE IF NOT EXISTS ledger_entries (
@@ -254,7 +249,26 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create indexes for ledger_entries
+-- Create indexes for unit management
+CREATE INDEX IF NOT EXISTS idx_property_units_property_id ON property_units(property_id);
+CREATE INDEX IF NOT EXISTS idx_unit_calendar_unit_id ON unit_calendar(unit_id);
+CREATE INDEX IF NOT EXISTS idx_unit_calendar_date ON unit_calendar(date);
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_properties_slug ON properties(slug);
+CREATE INDEX IF NOT EXISTS idx_properties_category ON properties(category);
+CREATE INDEX IF NOT EXISTS idx_properties_is_active ON properties(is_active);
+CREATE INDEX IF NOT EXISTS idx_property_images_property_id ON property_images(property_id);
+CREATE INDEX IF NOT EXISTS idx_referral_users_code ON referral_users(referral_code);
+CREATE INDEX IF NOT EXISTS idx_referral_transactions_user ON referral_transactions(referral_user_id);
+CREATE INDEX IF NOT EXISTS idx_otp_verifications_mobile ON otp_verifications(mobile_number);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_booking_id ON bookings(booking_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_order_id ON bookings(order_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_guest_phone ON bookings(guest_phone);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(booking_status);
+CREATE INDEX IF NOT EXISTS idx_bookings_action_token ON bookings(action_token);
+
 CREATE INDEX IF NOT EXISTS idx_ledger_entries_property_id ON ledger_entries(property_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_entries_check_in ON ledger_entries(check_in);
 

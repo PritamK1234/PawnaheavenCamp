@@ -1,0 +1,474 @@
+_____________________________________________
+
+NGINX PROBLEM :- 
+
+ROOT CAUSE (Why all 3 domains show PUBLIC site)
+Your current NGINX config has ONE server block like this:
+server {
+    server_name
+        pawnahavencamp.com
+        www.pawnahavencamp.com
+        pawnahavencamp.cloud
+        www.pawnahavencamp.cloud
+        pawnahavencamp.shop
+        www.pawnahavencamp.shop;
+
+    root /var/www/pawnahavencamp/dist;
+}
+
+⚠️ Problem
+All 3 domains are pointing to the same root directory:
+
+/var/www/pawnahavencamp/dist
+
+➡️ That directory is your PUBLIC site build
+
+So NGINX has no way to know:
+
+which domain is public
+
+which is owner
+
+which is admin
+
+Hence:
+
+❌ All domains load the public website
+
+
+
+
+
+NGINX FIXES :  
+
+
+✅ CORRECT SOLUTION (Proper Architecture)
+
+You MUST have 3 separate server blocks, each with its own root.
+
+Recommended folder structure
+/var/www/pawnahavencamp/
+├── public-dist/    → Public site build
+├── owner-dist/     → Owner dashboard build
+├── admin-dist/     → Admin dashboard build
+
+Each domain → its own build folder.
+
+✅ FIX: PROPER NGINX CONFIG (COPY–PASTE)
+1️⃣ PUBLIC SITE — pawnahavencamp.com
+server {
+    server_name pawnahavencamp.com www.pawnahavencamp.com;
+
+    root /var/www/pawnahavencamp/public-dist;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/pawnahavencamp.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pawnahavencamp.com/privkey.pem;
+}
+2️⃣ OWNER DASHBOARD — pawnahavencamp.shop
+server {
+    server_name pawnahavencamp.shop www.pawnahavencamp.shop;
+
+    root /var/www/pawnahavencamp/owner-dist;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/pawnahavencamp.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pawnahavencamp.com/privkey.pem;
+}
+3️⃣ ADMIN DASHBOARD — pawnahavencamp.cloud
+server {
+    server_name pawnahavencamp.cloud www.pawnahavencamp.cloud;
+
+    root /var/www/pawnahavencamp/admin-dist;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/pawnahavencamp.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pawnahavencamp.com/privkey.pem;
+}
+🔁 HTTP → HTTPS Redirect (Single Block)
+server {
+    listen 80;
+    server_name
+        pawnahavencamp.com www.pawnahavencamp.com
+        pawnahavencamp.shop www.pawnahavencamp.shop
+        pawnahavencamp.cloud www.pawnahavencamp.cloud;
+
+    return 301 https://$host$request_uri;
+}
+🛠 APPLY CHANGES (COMMANDS)
+nano /etc/nginx/sites-available/pawnahavencamp
+nginx -t
+systemctl reload nginx
+🧪 FINAL EXPECTED RESULT
+Domain	What loads
+pawnahavencamp.com	✅ Public site
+pawnahavencamp.shop	✅ Owner dashboard
+pawnahavencamp.cloud	✅ Admin dashboard
+
+Each will also:
+
+Have its own PWA
+
+Have its own manifest & service worker
+
+Install as separate apps
+
+⚠️ IMPORTANT (Build Step Reminder)
+
+Make sure you build 3 different outputs:
+
+npm run build:public
+npm run build:owner
+npm run build:admin
+
+(or equivalent)
+
+✅ CONCLUSION
+
+Your DNS and SSL are correct
+Your NGINX root mapping is wrong
+Splitting server blocks fixes everything
+
+
+
+
+
+
+_____________________________________________
+
+
+ our all 3 domia s pointing to public website that is pawnahavencamp.com Check and analyse the problem but we want Domains: 1) pawnahavencamp.com → Public site 2) pawnahavencamp.shop → Owner dashboard 3) pawnahavencamp.cloud → Admin dashboard
+
+
+ANSWER : -->
+
+Perfect ✅ I’ve read everything carefully.
+
+Right now your **main problem is NOT NGINX**.
+NGINX is behaving correctly.
+
+The real issue is this:
+
+> Your build output only contains ONE frontend (`dist/`)
+> So even if you split NGINX, all domains will still load the same app.
+
+---
+
+# 🎯 WHAT YOU MUST FIX FIRST (IN REPLIT)
+
+Before touching NGINX again, you MUST fix the **frontend build structure**.
+
+Right now:
+
+```
+dist/
+  index.html   ← only one app
+```
+
+But you need:
+
+```
+dist/
+  public/
+    index.html
+  owner/
+    index.html
+  admin/
+    index.html
+```
+
+Until this exists, NGINX cannot serve different apps.
+
+---
+
+# ✅ WHAT YOU MUST DO IN REPLIT (FIRST)
+
+We will NOT create multiple build scripts.
+We will modify routing + Vite config so one build generates 3 folders.
+
+---
+
+# 🟢 STEP 1 — Separate Entry Points
+
+You must ensure:
+
+### Public routes
+
+Example:
+
+```
+/ → Public site
+```
+
+### Owner routes
+
+```
+/owner/*
+```
+
+### Admin routes
+
+```
+/admin/*
+```
+
+Your router must already separate these.
+
+If not, you must restructure routes like:
+
+```tsx
+<Route path="/" element={<PublicLayout />} />
+<Route path="/owner/*" element={<OwnerLayout />} />
+<Route path="/admin/*" element={<AdminLayout />} />
+```
+
+---
+
+# 🟢 STEP 2 — Modify `vite.config.ts`
+
+You need to enable **multi-page build**.
+
+In `vite.config.ts`, change build config like this:
+
+```ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        public: resolve(__dirname, 'public.html'),
+        owner: resolve(__dirname, 'owner.html'),
+        admin: resolve(__dirname, 'admin.html'),
+      },
+    },
+    outDir: 'dist',
+  },
+})
+```
+
+---
+
+# 🟢 STEP 3 — Create 3 HTML Entry Files (IMPORTANT)
+
+In project root:
+
+### `public.html`
+
+```html
+<script type="module" src="/src/main-public.tsx"></script>
+```
+
+### `owner.html`
+
+```html
+<script type="module" src="/src/main-owner.tsx"></script>
+```
+
+### `admin.html`
+
+```html
+<script type="module" src="/src/main-admin.tsx"></script>
+```
+
+---
+
+# 🟢 STEP 4 — Create 3 Main Entry Files
+
+Inside `src/`:
+
+### `main-public.tsx`
+
+Render only Public app.
+
+### `main-owner.tsx`
+
+Render only Owner layout.
+
+### `main-admin.tsx`
+
+Render only Admin layout.
+
+Each must mount React separately.
+
+---
+
+# 🟢 STEP 5 — PWA Separation
+
+Make sure:
+
+```
+public/
+  manifest.json
+  sw.js
+
+owner/
+  manifest.json
+  sw.js
+
+admin/
+  manifest.json
+  sw.js
+```
+
+And each entry HTML references its own manifest.
+
+Example:
+
+Public:
+
+```html
+<link rel="manifest" href="/public/manifest.json" />
+```
+
+Owner:
+
+```html
+<link rel="manifest" href="/owner/manifest.json" />
+```
+
+Admin:
+
+```html
+<link rel="manifest" href="/admin/manifest.json" />
+```
+
+---
+
+# 🟢 STEP 6 — TEST BUILD IN REPLIT
+
+Run:
+
+```bash
+npm run build
+```
+
+Now check:
+
+```bash
+ls dist
+```
+
+You MUST see:
+
+```
+public
+owner
+admin
+```
+
+Each must contain its own `index.html`.
+
+---
+
+# 🟢 ONLY AFTER THIS — Push to GitHub
+
+```bash
+git add .
+git commit -m "Multi-domain build structure"
+git push origin main
+```
+
+---
+
+# 🟢 THEN ON VPS
+
+```bash
+git pull origin main
+npm install
+npm run build
+```
+
+Now your folders exist:
+
+```
+/var/www/pawnahavencamp/dist/public
+/var/www/pawnahavencamp/dist/owner
+/var/www/pawnahavencamp/dist/admin
+```
+
+---
+
+# 🟢 THEN FIX NGINX ROOTS
+
+Change to:
+
+```
+root /var/www/pawnahavencamp/dist/public;
+root /var/www/pawnahavencamp/dist/owner;
+root /var/www/pawnahavencamp/dist/admin;
+```
+
+Reload nginx.
+
+---
+
+# 🚨 VERY IMPORTANT REALITY CHECK
+
+Right now your build generates only ONE app.
+
+Even if NGINX is perfect, all domains will load the same frontend.
+
+So:
+
+> 🔥 FIRST fix build structure in Replit
+> 🔥 THEN deploy
+> 🔥 THEN configure NGINX
+
+---
+
+# 🟢 Clean Architecture After Fix
+
+| Domain               | NGINX Root  |
+| -------------------- | ----------- |
+| pawnahavencamp.com   | dist/public |
+| pawnahavencamp.shop  | dist/owner  |
+| pawnahavencamp.cloud | dist/admin  |
+
+Each installs separate PWA
+Each has separate scope
+Each is isolated
+
+---

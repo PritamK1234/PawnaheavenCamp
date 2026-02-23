@@ -73,6 +73,15 @@ Preferred communication style: Simple, everyday language.
   - `availability_calendar` - Villa property-level availability (legacy fallback for villas without units)
   - `unit_calendar` - Unit-level availability (used by both Camping/Cottages and Villas with units)
   - `property_units` - Multi-unit support (used by both categories; villas without units use legacy property-level model)
+  - **OTP Authentication (Feb 2026)**:
+    - Unified OTP service: `backend/services/otpService.js` handles both owner_login and referral_login
+    - MSG91 integration: POST `/api/v5/otp` (send), GET `/api/v5/otp/verify` (verify), authkey from `MSG91_AUTH_KEY` secret
+    - No template_id or sender_id (uses MSG91 default OTP product)
+    - Test mode: `OTP_TEST_MODE=true` env var enables fallback OTP `123456` (for pre-DLT testing)
+    - Rate limiting: 4 OTPs per mobile per purpose per hour (tracked in `otp_verifications` table)
+    - Mobile validation: 10-digit Indian numbers, auto-strips +91/91 prefix
+    - DB presence check before sending: owners table (owner_login), referral_users (referral_login)
+    - No OTP values logged or exposed in any API response
   - **Owner Number Separation (Feb 2026)**: 
     - `properties.owner_whatsapp_number` = WhatsApp number (for customer contact, set by admin)
     - `properties.owner_otp_number` = OTP number (for owner login, set during owner registration)

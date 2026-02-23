@@ -156,19 +156,13 @@ ${shareData.referralLink}`;
       // as per standard OTP flows. I'll update the UI to ask for mobile.
 
       const res = await axios.post("/api/referrals/request-otp", {
-        mobile: formData.code, // Treating the input as mobile for now
-        purpose: "login",
+        mobile: formData.code,
+        purpose: "referral_login",
       });
-      if (res.data.debug_otp) {
-        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, {
-          duration: 10000,
-        });
-      } else {
-        toast.success("OTP sent to your registered mobile");
-      }
+      toast.success("OTP sent to your registered mobile");
       setStep("otp");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to send OTP");
+      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -180,7 +174,7 @@ ${shareData.referralLink}`;
       const verifyRes = await axios.post("/api/referrals/verify-otp", {
         mobile: formData.code,
         otp: formData.otp,
-        purpose: "login",
+        purpose: "referral_login",
       });
 
       const otpToken = verifyRes.data.token;
@@ -198,7 +192,7 @@ ${shareData.referralLink}`;
       setToken(finalToken);
       fetchDashboard(finalToken);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Login failed");
+      toast.error(error.response?.data?.message || error.response?.data?.error || "Login failed");
     } finally {
       setLoading(false);
     }

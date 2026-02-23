@@ -44,20 +44,13 @@ const GenerateCodePage = () => {
     try {
       const res = await axios.post("/api/referrals/request-otp", {
         mobile: formData.mobile,
-        purpose: "register",
+        purpose: "referral_login",
       });
-
-      if (res.data.debug_otp) {
-        toast.success(`OTP sent! For testing: ${res.data.debug_otp}`, {
-          duration: 10000,
-        });
-      } else {
-        toast.success("OTP sent to your mobile");
-      }
+      toast.success("OTP sent to your mobile");
 
       setStep("otp");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to send OTP");
+      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -73,7 +66,7 @@ const GenerateCodePage = () => {
       const verifyRes = await axios.post("/api/referrals/verify-otp", {
         mobile: formData.mobile,
         otp: otp,
-        purpose: "register",
+        purpose: "referral_login",
       });
 
       const token = verifyRes.data.token;

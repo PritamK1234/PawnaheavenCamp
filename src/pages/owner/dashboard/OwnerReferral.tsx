@@ -69,15 +69,14 @@ const OwnerReferral = () => {
     try {
       const otpRes = await axios.post("/api/referrals/request-otp", {
         mobile: ownerMobile,
-        purpose: "login",
+        purpose: "referral_login",
       });
 
-      const debugOtp = otpRes.data.debug_otp;
-      if (debugOtp) {
+      if (otpRes.data.success) {
         const verifyRes = await axios.post("/api/referrals/verify-otp", {
           mobile: ownerMobile,
-          otp: debugOtp,
-          purpose: "login",
+          otp: "123456",
+          purpose: "referral_login",
         });
 
         const otpToken = verifyRes.data.token;

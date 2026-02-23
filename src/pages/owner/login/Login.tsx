@@ -30,7 +30,7 @@ const OwnerLogin = () => {
 
       if (data.success) {
         setShowOTP(true);
-        toast.success("OTP sent successfully! (Demo: 123456)");
+        toast.success("OTP sent successfully!");
       } else {
         toast.error(data.message || "Failed to send OTP");
       }

@@ -245,7 +245,7 @@ const AdminDashboard = () => {
       const adminData = localStorage.getItem("adminUser");
 
       if (!token || !adminData) {
-        navigate("/admin/login");
+        navigate("/login");
         return;
       }
 
@@ -264,7 +264,7 @@ const AdminDashboard = () => {
       title: "Logged out",
       description: "You have been signed out successfully.",
     });
-    navigate("/admin/login");
+    navigate("/login");
   };
 
   const handleToggleCategory = async (category: string, isClosed: boolean) => {
@@ -428,7 +428,7 @@ const AdminDashboard = () => {
                   variant="ghost"
                   size="icon"
                   className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10 relative"
-                  onClick={() => navigate("/admin/requests")}
+                  onClick={() => navigate("/requests")}
                 >
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-charcoal animate-pulse" />
@@ -439,7 +439,7 @@ const AdminDashboard = () => {
               variant="ghost"
               size="icon"
               className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
-              onClick={() => navigate("/admin/contacts")}
+              onClick={() => navigate("/contacts")}
             >
               <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
@@ -447,7 +447,7 @@ const AdminDashboard = () => {
               variant="ghost"
               size="icon"
               className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
-              onClick={() => navigate("/admin/revenue")}
+              onClick={() => navigate("/revenue")}
             >
               <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>

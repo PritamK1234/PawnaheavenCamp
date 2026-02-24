@@ -50,7 +50,7 @@ const AdminContactsPage = () => {
     <div className="min-h-screen bg-black text-white pb-10">
       <div className="sticky top-0 z-50 bg-[#0A0A0A] border-b border-gold/10">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-3">
-          <Link to="/admin" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gold hover:bg-gold/10 transition-all border border-gold/10">
+          <Link to="/dashboard" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gold hover:bg-gold/10 transition-all border border-gold/10">
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <h1 className="font-display text-lg font-bold italic text-gold tracking-wide">Contacts</h1>

@@ -47,12 +47,12 @@ const AppAdmin = () => {
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <ScrollRestoration />
             <Routes>
-              <Route path="/" element={<Navigate to="/admin/login" replace />} />
-              <Route path="/admin/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
-              <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
-              <Route path="/admin/requests" element={<PageWrapper><RequestsPage /></PageWrapper>} />
-              <Route path="/admin/revenue" element={<PageWrapper><AdminRevenuePage /></PageWrapper>} />
-              <Route path="/admin/contacts" element={<PageWrapper><AdminContactsPage /></PageWrapper>} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
+              <Route path="/dashboard" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
+              <Route path="/requests" element={<PageWrapper><RequestsPage /></PageWrapper>} />
+              <Route path="/revenue" element={<PageWrapper><AdminRevenuePage /></PageWrapper>} />
+              <Route path="/contacts" element={<PageWrapper><AdminContactsPage /></PageWrapper>} />
               <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
             </Routes>
           </BrowserRouter>

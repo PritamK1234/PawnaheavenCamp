@@ -13,17 +13,12 @@ import axios from "axios";
 const Index = lazy(() => import("./pages/Index"));
 const PropertyDetails = lazy(() => import("./pages/PropertyDetails"));
 const VideoGallery = lazy(() => import("./pages/VideoGallery"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const DemoPayment = lazy(() => import("./pages/DemoPayment"));
 const TicketPage = lazy(() => import("./pages/TicketPage"));
 const InformationPage = lazy(() => import("./pages/InformationPage"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
 const GenerateCodePage = lazy(() => import("./pages/GenerateCodePage"));
 const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
-const RequestsPage = lazy(() => import("./pages/RequestsPage"));
-const AdminRevenuePage = lazy(() => import("./pages/AdminRevenuePage"));
-const AdminContactsPage = lazy(() => import("./pages/AdminContactsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Owner Dashboard Pages
@@ -97,8 +92,6 @@ const App = () => {
               <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
               <Route path="/property/:propertyId" element={<PageWrapper><PropertyDetails /></PageWrapper>} />
               <Route path="/videos" element={<PageWrapper><VideoGallery /></PageWrapper>} />
-              <Route path="/admin/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
-              <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
               <Route path="/payment/demo" element={<PageWrapper><DemoPayment /></PageWrapper>} />
               <Route path="/ticket" element={<PageWrapper><TicketPage /></PageWrapper>} />
               <Route path="/ticket/:ticketId" element={<PageWrapper><TicketPage /></PageWrapper>} />
@@ -106,9 +99,6 @@ const App = () => {
               <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />
               <Route path="/referral/generate" element={<PageWrapper><GenerateCodePage /></PageWrapper>} />
               <Route path="/referral/check" element={<PageWrapper><CheckEarningPage /></PageWrapper>} />
-              <Route path="/admin/requests" element={<PageWrapper><RequestsPage /></PageWrapper>} />
-              <Route path="/admin/revenue" element={<PageWrapper><AdminRevenuePage /></PageWrapper>} />
-              <Route path="/admin/contacts" element={<PageWrapper><AdminContactsPage /></PageWrapper>} />
               
               {/* Owner Routes */}
               <Route path="/owner" element={<PageWrapper><OwnerEntry /></PageWrapper>} />

@@ -18,7 +18,7 @@ const AdminLogin = () => {
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (token) {
-      navigate("/admin");
+      navigate("/dashboard");
     }
     setIsCheckingAuth(false);
   }, [navigate]);
@@ -56,7 +56,7 @@ const AdminLogin = () => {
           title: "Welcome back!",
           description: "Login successful.",
         });
-        navigate("/admin");
+        navigate("/dashboard");
       } else {
         toast({
           title: "Login Failed",

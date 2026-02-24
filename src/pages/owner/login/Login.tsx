@@ -17,6 +17,12 @@ const OwnerLogin = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (mobile.length !== 10) {
+      toast.error("Mobile number must be exactly 10 digits");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/owners/send-otp", {
         method: "POST",
@@ -118,9 +124,15 @@ const OwnerLogin = () => {
               </div>
               <Input
                 type="tel"
-                placeholder="Enter registred mobile number"
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                maxLength={10}
+                placeholder="Enter registered mobile number"
                 value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ""); // allow only digits
+                  setMobile(value.slice(0, 10)); // limit to 10 digits
+                }}
                 className="h-12 bg-secondary/50 border-border/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                 required
               />

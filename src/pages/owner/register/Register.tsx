@@ -18,6 +18,12 @@ const OwnerRegister = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (formData.ownerNumber.length !== 10) {
+      toast.error("Mobile number must be exactly 10 digits");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/owners/register", {
         method: "POST",
@@ -104,10 +110,17 @@ const OwnerRegister = () => {
               <Input
                 required
                 type="tel"
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                maxLength={10}
                 value={formData.ownerNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, ownerNumber: e.target.value })
-                }
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ""); // allow only digits
+                  setFormData({
+                    ...formData,
+                    ownerNumber: value.slice(0, 10), // limit to 10 digits
+                  });
+                }}
                 className="h-12 bg-secondary/50 border-border/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                 placeholder="Enter 10-digit mobile number"
               />

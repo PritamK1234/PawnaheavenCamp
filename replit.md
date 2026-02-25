@@ -135,11 +135,18 @@ Preferred communication style: Simple, everyday language.
 - **Multi-Build Architecture** (Feb 2026):
   - `index.html` → Public site entry point (references `manifest-public.json`)
   - `owner.html` → Owner dashboard entry point (references `manifest-owner.json`)
-  - `admin/public/index.html` → Admin panel entry point (references `manifest-admin.json`)
+  - `admin.html` → Admin panel entry point (references `manifest-admin.json`)
   - `vite.config.public.ts` → Builds public site to `dist/public/`
   - `vite.config.owner.ts` → Builds owner dashboard to `dist/owner/`
+  - `vite.config.admin.ts` → Builds admin panel to `dist/admin/` (defines `VITE_ADMIN_BASE=""` for clean routes)
   - `src/main-owner.tsx` + `src/AppOwner.tsx` → Owner-only React app entry
+  - `src/main-admin.tsx` + `src/AppAdmin.tsx` → Admin-only React app entry
+  - `src/lib/adminPaths.ts` → Centralized admin route paths, reads `VITE_ADMIN_BASE` env var
   - Build scripts: `npm run build:public`, `npm run build:owner`, `npm run build:admin`, `npm run build:all`
+- **Admin Route Environment Variable** (`VITE_ADMIN_BASE`):
+  - `vite.config.ts` (Replit dev): defines as `/admin` → routes are `/admin/login`, `/admin/dashboard`, etc.
+  - `vite.config.admin.ts` (VPS admin build): defines as `""` → routes are `/login`, `/dashboard`, etc.
+  - Same code, same git repo — build config determines route prefix. No divergent code needed.
 - **VPS NGINX Config**: 3 separate server blocks, each pointing to its own build folder:
   - `pawnahavencamp.com` → `dist/public/`
   - `pawnahavencamp.shop` → `dist/owner/`

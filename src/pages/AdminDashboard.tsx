@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { adminPaths } from "@/lib/adminPaths";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -245,7 +246,7 @@ const AdminDashboard = () => {
       const adminData = localStorage.getItem("adminUser");
 
       if (!token || !adminData) {
-        navigate("/login");
+        navigate(adminPaths.login);
         return;
       }
 
@@ -264,7 +265,7 @@ const AdminDashboard = () => {
       title: "Logged out",
       description: "You have been signed out successfully.",
     });
-    navigate("/login");
+    navigate(adminPaths.login);
   };
 
   const handleToggleCategory = async (category: string, isClosed: boolean) => {
@@ -428,7 +429,7 @@ const AdminDashboard = () => {
                   variant="ghost"
                   size="icon"
                   className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10 relative"
-                  onClick={() => navigate("/requests")}
+                  onClick={() => navigate(adminPaths.requests)}
                 >
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-charcoal animate-pulse" />
@@ -439,7 +440,7 @@ const AdminDashboard = () => {
               variant="ghost"
               size="icon"
               className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
-              onClick={() => navigate("/contacts")}
+              onClick={() => navigate(adminPaths.contacts)}
             >
               <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
@@ -447,7 +448,7 @@ const AdminDashboard = () => {
               variant="ghost"
               size="icon"
               className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
-              onClick={() => navigate("/revenue")}
+              onClick={() => navigate(adminPaths.revenue)}
             >
               <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>

@@ -13,6 +13,7 @@ import {
 import { HelmetProvider } from "react-helmet-async";
 import ScrollRestoration from "./components/ScrollRestoration";
 import LogoLoader from "./components/LogoLoader";
+import { adminPaths } from "./lib/adminPaths";
 
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -53,9 +54,9 @@ const AppAdmin = () => {
           >
             <ScrollRestoration />
             <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/" element={<Navigate to={adminPaths.login} replace />} />
               <Route
-                path="/admin/login"
+                path={adminPaths.login}
                 element={
                   <PageWrapper>
                     <AdminLogin />
@@ -63,7 +64,7 @@ const AppAdmin = () => {
                 }
               />
               <Route
-                path="/admin/dashboard"
+                path={adminPaths.dashboard}
                 element={
                   <PageWrapper>
                     <AdminDashboard />
@@ -71,7 +72,7 @@ const AppAdmin = () => {
                 }
               />
               <Route
-                path="/admin/requests"
+                path={adminPaths.requests}
                 element={
                   <PageWrapper>
                     <RequestsPage />
@@ -79,7 +80,7 @@ const AppAdmin = () => {
                 }
               />
               <Route
-                path="/admin/revenue"
+                path={adminPaths.revenue}
                 element={
                   <PageWrapper>
                     <AdminRevenuePage />
@@ -87,7 +88,7 @@ const AppAdmin = () => {
                 }
               />
               <Route
-                path="/admin/contacts"
+                path={adminPaths.contacts}
                 element={
                   <PageWrapper>
                     <AdminContactsPage />

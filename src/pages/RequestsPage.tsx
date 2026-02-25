@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { adminPaths } from "@/lib/adminPaths";
 import { 
   ChevronLeft, 
   Clock, 
@@ -52,7 +53,7 @@ const RequestsPage = () => {
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate(adminPaths.dashboard)}
             className="w-10 h-10 rounded-full bg-white/5 hover:bg-gold/20 hover:text-gold transition-all"
           >
             <ChevronLeft className="w-6 h-6" />

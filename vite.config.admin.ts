@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_ADMIN_BASE': JSON.stringify(''),
+  },
   plugins: [react()],
   build: {
     outDir: 'dist/admin',

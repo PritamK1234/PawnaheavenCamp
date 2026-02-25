@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import ScrollRestoration from "./components/ScrollRestoration";
 import LogoLoader from "./components/LogoLoader";
+import { adminPaths } from "./lib/adminPaths";
 import axios from "axios";
 
 // Lazy load pages for transition effect
@@ -19,6 +20,11 @@ const InformationPage = lazy(() => import("./pages/InformationPage"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
 const GenerateCodePage = lazy(() => import("./pages/GenerateCodePage"));
 const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const RequestsPage = lazy(() => import("./pages/RequestsPage"));
+const AdminRevenuePage = lazy(() => import("./pages/AdminRevenuePage"));
+const AdminContactsPage = lazy(() => import("./pages/AdminContactsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Owner Dashboard Pages
@@ -99,6 +105,13 @@ const App = () => {
               <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />
               <Route path="/referral/generate" element={<PageWrapper><GenerateCodePage /></PageWrapper>} />
               <Route path="/referral/check" element={<PageWrapper><CheckEarningPage /></PageWrapper>} />
+
+              {/* Admin Routes */}
+              <Route path={adminPaths.login} element={<PageWrapper><AdminLogin /></PageWrapper>} />
+              <Route path={adminPaths.dashboard} element={<PageWrapper><AdminDashboard /></PageWrapper>} />
+              <Route path={adminPaths.requests} element={<PageWrapper><RequestsPage /></PageWrapper>} />
+              <Route path={adminPaths.revenue} element={<PageWrapper><AdminRevenuePage /></PageWrapper>} />
+              <Route path={adminPaths.contacts} element={<PageWrapper><AdminContactsPage /></PageWrapper>} />
               
               {/* Owner Routes */}
               <Route path="/owner" element={<PageWrapper><OwnerEntry /></PageWrapper>} />

@@ -33,6 +33,9 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  define: {
+    'import.meta.env.VITE_ADMIN_BASE': JSON.stringify('/admin'),
+  },
   plugins: [react()].filter(Boolean),
   resolve: {
     alias: {

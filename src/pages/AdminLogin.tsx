@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { LogIn, Eye, EyeOff, Loader2, Sparkles, Shield } from "lucide-react";
+import { adminPaths } from "@/lib/adminPaths";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ const AdminLogin = () => {
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (token) {
-      navigate("/dashboard");
+      navigate(adminPaths.dashboard);
     }
     setIsCheckingAuth(false);
   }, [navigate]);
@@ -56,7 +57,7 @@ const AdminLogin = () => {
           title: "Welcome back!",
           description: "Login successful.",
         });
-        navigate("/dashboard");
+        navigate(adminPaths.dashboard);
       } else {
         toast({
           title: "Login Failed",

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bell, CreditCard } from 'lucide-react';
+import { adminPaths } from '@/lib/adminPaths';
 import {
   Popover,
   PopoverContent,
@@ -34,7 +35,7 @@ const AdminFloatingActions = () => {
         variant="outline" 
         size="icon" 
         className="w-12 h-12 rounded-full bg-charcoal border-white/10 shadow-gold transition-all hover:scale-110 active:scale-95 text-gold relative"
-        onClick={() => window.location.href = "/requests"}
+        onClick={() => window.location.href = adminPaths.requests}
       >
         <Bell className="w-5 h-5" />
         <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-black animate-pulse" />

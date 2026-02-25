@@ -1,0 +1,148 @@
+Now they just want **strong legal protection clauses** on your:
+
+* ✅ Terms & Conditions page
+* ✅ Privacy Policy page
+
+Since you are a **marketplace intermediary**, you must clearly state:
+
+* You are NOT the property owner
+* You are NOT responsible for on-ground incidents
+* You only facilitate booking & payment collection
+
+I’ll now give you **ready-to-copy legal clauses** you can paste into your website.
+
+---
+
+# ✅ ADD THIS TO YOUR TERMS & CONDITIONS PAGE
+
+(You can create a separate section called “Limitation of Liability & Marketplace Disclaimer”)
+
+---
+
+## 1. Marketplace Intermediary Disclaimer
+
+PawnaHavenCamp ([www.pawnahavancamp.com](http://www.pawnahavancamp.com)) operates solely as an online marketplace platform that connects customers with independent villa owners, camping operators, and cottage owners near Lonavala and Pawna Lake.
+
+PawnaHavenCamp is not the owner, operator, or manager of any listed property. All properties listed on the Platform are owned and operated by independent third-party property owners.
+
+---
+
+## 2. Limitation of Liability
+
+PawnaHavenCamp shall not be held responsible or liable for:
+
+* Any injury, death, accident, violence, illegal activity, or misconduct occurring at the property.
+* Any dispute between customer and property owner.
+* Theft, loss of belongings, or property damage.
+* Quality of stay, hygiene, safety standards, or service deficiencies.
+* Cancellation or denial of entry by property owner.
+* Any local law violations by property owner or guest.
+
+All responsibility related to on-site safety, security, services, and compliance lies solely with the respective Property Owner.
+
+---
+
+## 3. Payment Collection Authorization
+
+PawnaHavenCamp is authorized by listed property owners to collect 30% advance booking payment through its online payment gateway.
+
+The remaining amount (70%) shall be paid directly to the property owner at check-in unless otherwise specified.
+
+The Platform is not responsible for offline payment disputes between customer and property owner.
+
+---
+
+## 4. User Conduct & Prohibited Activities
+
+Customers agree that:
+
+* They shall not engage in illegal activities, violence, drug abuse, or unlawful behavior at the property.
+* They are solely responsible for their conduct during the stay.
+* Any legal consequences arising from guest behavior shall be borne by the guest.
+
+---
+
+## 5. Indemnification Clause
+
+Users and Property Owners agree to indemnify and hold harmless PawnaHavenCamp, its founders, employees, and affiliates from any claims, legal actions, damages, or losses arising out of:
+
+* Property-related incidents
+* Customer misconduct
+* Violation of local laws
+* Breach of agreement by Property Owner
+
+---
+
+## 6. Force Majeure
+
+PawnaHavenCamp shall not be liable for failure or delay in performance due to events beyond reasonable control including natural disasters, government restrictions, pandemics, or civil disturbances.
+
+---
+
+# ✅ NOW ADD THIS TO PRIVACY POLICY PAGE
+
+(Keep it simple but compliant)
+
+---
+
+## Privacy Policy – PawnaHavenCamp
+
+### 1. Information We Collect
+
+We may collect:
+
+* Name
+* Contact number
+* Email address
+* Booking details
+* Payment confirmation details
+
+We do not store debit/credit card details. Payments are processed securely via authorized payment gateway providers.
+
+---
+
+### 2. Use of Information
+
+Information is used only for:
+
+* Booking confirmation
+* Customer support
+* Communication with property owners
+* Legal compliance
+
+We do not sell, rent, or misuse user data.
+
+---
+
+### 3. Data Sharing
+
+We may share booking details with the respective Property Owner only for booking fulfillment.
+
+---
+
+### 4. Data Security
+
+We implement reasonable technical and organizational measures to protect personal data.
+
+---
+
+### 5. Third-Party Services
+
+Payments are processed through secure third-party payment gateway providers. PawnaHavenCamp is not responsible for third-party technical failures.
+
+---
+
+# 🔥 VERY IMPORTANT (For Paytm Compliance)
+
+Add this one line clearly:
+
+> PawnaHavenCamp operates as a marketplace intermediary platform and does not own or control the listed properties.
+
+This is the line compliance teams look for.
+
+---
+
+
+---
+
+Since you are building a serious tourism marketplace in Lonavala–Pawna region, this structure is correct and professional.

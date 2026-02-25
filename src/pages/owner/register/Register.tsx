@@ -40,7 +40,7 @@ const OwnerRegister = () => {
 
       if (data.success) {
         toast.success("Registration successful!");
-        localStorage.setItem("tempOwnerData", JSON.stringify(data.data));
+        localStorage.setItem("ownerMobile", formData.ownerNumber);
         navigate("/owner/login");
       } else {
         toast.error(data.message || "Registration failed");

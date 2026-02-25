@@ -3,7 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import ScrollRestoration from "./components/ScrollRestoration";
 import LogoLoader from "./components/LogoLoader";
@@ -30,9 +36,7 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {!showChildren && <LogoLoader />}
-      <Suspense fallback={<LogoLoader />}>
-        {showChildren && children}
-      </Suspense>
+      <Suspense fallback={<LogoLoader />}>{showChildren && children}</Suspense>
     </>
   );
 };
@@ -44,16 +48,60 @@ const AppAdmin = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <BrowserRouter
+            future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+          >
             <ScrollRestoration />
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
-              <Route path="/dashboard" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
-              <Route path="/requests" element={<PageWrapper><RequestsPage /></PageWrapper>} />
-              <Route path="/revenue" element={<PageWrapper><AdminRevenuePage /></PageWrapper>} />
-              <Route path="/contacts" element={<PageWrapper><AdminContactsPage /></PageWrapper>} />
-              <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
+              <Route
+                path="/admin/login"
+                element={
+                  <PageWrapper>
+                    <AdminLogin />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <PageWrapper>
+                    <AdminDashboard />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="/admin/requests"
+                element={
+                  <PageWrapper>
+                    <RequestsPage />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="/admin/revenue"
+                element={
+                  <PageWrapper>
+                    <AdminRevenuePage />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="/admin/contacts"
+                element={
+                  <PageWrapper>
+                    <AdminContactsPage />
+                  </PageWrapper>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <PageWrapper>
+                    <NotFound />
+                  </PageWrapper>
+                }
+              />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

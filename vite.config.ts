@@ -11,31 +11,29 @@ export default defineConfig(({ mode }) => ({
       clientPort: 443,
     },
     proxy: {
-      '/api': {
-        target: 'http://localhost:5001',
+      "/api": {
+        target: "http://localhost:5001",
         changeOrigin: true,
         secure: false,
       },
-      '/attached_assets': {
-        target: 'http://localhost:5001',
+      "/attached_assets": {
+        target: "http://localhost:5001",
         changeOrigin: true,
         secure: false,
-      }
-    }
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: false,
-    rollupOptions: {
-      input: {
-        public: path.resolve(__dirname, 'index.html'),
-        owner: path.resolve(__dirname, 'owner.html'),
       },
     },
   },
-  plugins: [
-    react(),
-  ].filter(Boolean),
+  build: {
+    outDir: "dist",
+    sourcemap: false,
+    rollupOptions: {
+      input: {
+        public: path.resolve(__dirname, "index.html"),
+        owner: path.resolve(__dirname, "owner.html"),
+      },
+    },
+  },
+  plugins: [react()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

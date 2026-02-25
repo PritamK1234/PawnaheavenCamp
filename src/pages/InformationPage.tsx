@@ -65,32 +65,66 @@ const policyContent: Record<string, ContentType> = {
   terms: {
     title: "Terms & Conditions",
     intro:
-      "Welcome to PawnaHavenCamp. By accessing or using our website, you agree to the following terms:",
+      "Welcome to PawnaHavenCamp. By accessing or using our website (www.pawnahavencamp.com), you agree to the following terms. PawnaHavenCamp operates as a marketplace intermediary platform and does not own or control the listed properties.",
     sections: [
       {
-        heading: "1. Platform Role",
+        heading: "1. Marketplace Intermediary Disclaimer",
         content:
-          "PawnaHavenCamp acts as an intermediary platform connecting customers with property owners. We do not own the listed properties unless explicitly mentioned.",
+          "PawnaHavenCamp (www.pawnahavencamp.com) operates solely as an online marketplace platform that connects customers with independent villa owners, camping operators, and cottage owners near Lonavala and Pawna Lake. PawnaHavenCamp is not the owner, operator, or manager of any listed property. All properties listed on the Platform are owned and operated by independent third-party property owners.",
       },
       {
-        heading: "2. Booking & Payments",
+        heading: "2. Limitation of Liability",
         content:
-          "All bookings are subject to availability. Full or partial payment may be required to confirm booking. Prices may vary based on season and availability.",
+          "PawnaHavenCamp shall not be held responsible or liable for any of the following:",
+        list: [
+          "Any injury, death, accident, violence, illegal activity, or misconduct occurring at the property",
+          "Any dispute between customer and property owner",
+          "Theft, loss of belongings, or property damage",
+          "Quality of stay, hygiene, safety standards, or service deficiencies",
+          "Cancellation or denial of entry by property owner",
+          "Any local law violations by property owner or guest",
+        ],
       },
       {
-        heading: "3. User Responsibility",
+        heading: "",
         content:
-          "Users must provide accurate information while booking. Guests must follow property rules during their stay. Any damage caused will be the guest's responsibility.",
+          "All responsibility related to on-site safety, security, services, and compliance lies solely with the respective Property Owner.",
       },
       {
-        heading: "4. Cancellations",
+        heading: "3. Payment Collection Authorization",
         content:
-          "Cancellation policies may vary by property. Please check the cancellation terms before booking.",
+          "PawnaHavenCamp is authorized by listed property owners to collect 30% advance booking payment through its online payment gateway. The remaining amount (70%) shall be paid directly to the property owner at check-in unless otherwise specified. The Platform is not responsible for offline payment disputes between customer and property owner.",
       },
       {
-        heading: "5. Limitation of Liability",
+        heading: "4. User Conduct & Prohibited Activities",
         content:
-          "PawnaHavenCamp is not responsible for natural disasters, property-level service issues, or delays due to third-party services. We reserve the right to update these terms anytime.",
+          "Customers agree to the following terms regarding their conduct:",
+        list: [
+          "They shall not engage in illegal activities, violence, drug abuse, or unlawful behavior at the property",
+          "They are solely responsible for their conduct during the stay",
+          "Any legal consequences arising from guest behavior shall be borne by the guest",
+        ],
+      },
+      {
+        heading: "5. Indemnification Clause",
+        content:
+          "Users and Property Owners agree to indemnify and hold harmless PawnaHavenCamp, its founders, employees, and affiliates from any claims, legal actions, damages, or losses arising out of:",
+        list: [
+          "Property-related incidents",
+          "Customer misconduct",
+          "Violation of local laws",
+          "Breach of agreement by Property Owner",
+        ],
+      },
+      {
+        heading: "6. Force Majeure",
+        content:
+          "PawnaHavenCamp shall not be liable for failure or delay in performance due to events beyond reasonable control including natural disasters, government restrictions, pandemics, or civil disturbances.",
+      },
+      {
+        heading: "7. Booking & Availability",
+        content:
+          "All bookings are subject to availability. Prices may vary based on season and availability. Cancellation policies may vary by property. Please check the cancellation terms before booking.",
       },
     ],
   },
@@ -149,28 +183,54 @@ const policyContent: Record<string, ContentType> = {
   "privacy-policy": {
     title: "Privacy Policy",
     intro:
-      "We respect your privacy and are committed to protecting your personal information.",
+      "We respect your privacy and are committed to protecting your personal information. PawnaHavenCamp operates as a marketplace intermediary platform and does not own or control the listed properties.",
     sections: [
       {
-        heading: "Information We Collect",
+        heading: "1. Information We Collect",
         content:
-          "We collect the following information when you use our platform:",
-        list: ["Name", "Mobile Number", "Email Address", "Booking details"],
-      },
-      {
-        heading: "How We Use Information",
-        content: "Your information is used for the following purposes:",
+          "We may collect the following information when you use our platform:",
         list: [
-          "To confirm bookings",
-          "To communicate regarding reservations",
-          "To improve services",
-          "For legal compliance",
+          "Name",
+          "Contact number",
+          "Email address",
+          "Booking details",
+          "Payment confirmation details",
         ],
       },
       {
-        heading: "Data Protection",
+        heading: "",
         content:
-          "We do not sell or rent your personal information to third parties. All payment transactions are processed securely through authorized payment gateways.",
+          "We do not store debit/credit card details. Payments are processed securely via authorized payment gateway providers.",
+      },
+      {
+        heading: "2. Use of Information",
+        content: "Information is used only for:",
+        list: [
+          "Booking confirmation",
+          "Customer support",
+          "Communication with property owners",
+          "Legal compliance",
+        ],
+      },
+      {
+        heading: "",
+        content:
+          "We do not sell, rent, or misuse user data.",
+      },
+      {
+        heading: "3. Data Sharing",
+        content:
+          "We may share booking details with the respective Property Owner only for booking fulfillment.",
+      },
+      {
+        heading: "4. Data Security",
+        content:
+          "We implement reasonable technical and organizational measures to protect personal data.",
+      },
+      {
+        heading: "5. Third-Party Services",
+        content:
+          "Payments are processed through secure third-party payment gateway providers. PawnaHavenCamp is not responsible for third-party technical failures.",
       },
       {
         heading: "Contact for Privacy Concerns",
@@ -279,9 +339,11 @@ const InformationPage = () => {
                       key={idx}
                       className="p-6 bg-secondary/10 rounded-2xl border border-border/20"
                     >
-                      <h2 className="text-xl font-bold text-foreground mb-3">
-                        {section.heading}
-                      </h2>
+                      {section.heading && (
+                        <h2 className="text-xl font-bold text-foreground mb-3">
+                          {section.heading}
+                        </h2>
+                      )}
                       <p className="leading-relaxed">{section.content}</p>
                       {section.list && (
                         <ul className="mt-3 space-y-2">

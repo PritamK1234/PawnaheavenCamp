@@ -70,6 +70,10 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/etickets', eticketRoutes);
 app.use('/api/referrals', referralRoutes);
 
+const bookingController = require('./controllers/bookingController');
+app.get('/webhook', bookingController.handleWhatsAppWebhook);
+app.post('/webhook', bookingController.handleWhatsAppWebhook);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({

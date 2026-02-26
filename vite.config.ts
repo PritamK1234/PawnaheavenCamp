@@ -21,6 +21,11 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
       },
+      "/webhook": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   build: {

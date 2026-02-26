@@ -1,4 +1,11 @@
-import { MapPin, Phone, Mail, Instagram, Facebook, Youtube } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Instagram,
+  Facebook,
+  Youtube,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -18,24 +25,28 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-6 group">
-              <div 
+              <div
                 className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:scale-110 shadow-lg"
                 style={{
-                  background: 'linear-gradient(145deg, #1a1a1a, #0d0d0d)',
-                  border: '2px solid rgba(212, 175, 55, 0.8)',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.1)',
+                  background: "linear-gradient(145deg, #1a1a1a, #0d0d0d)",
+                  border: "2px solid rgba(212, 175, 55, 0.8)",
+                  boxShadow:
+                    "0 4px 10px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.1)",
                 }}
               >
-                <img 
-                  src="/assets/logo.png" 
-                  alt="Pawna Haven Camp" 
+                <img
+                  src="/assets/logo.png"
+                  alt="Pawna Haven Camp"
                   className="w-10 h-10 object-contain"
                 />
               </div>
-              <span className="font-display text-2xl font-bold text-foreground">PawnaHavenCamp</span>
+              <span className="font-display text-2xl font-bold text-foreground">
+                PawnaHavenCamp
+              </span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-              Curating extraordinary stays for discerning travelers. Experience luxury in nature's embrace.
+              Curating extraordinary stays for discerning travelers. Experience
+              luxury in nature's embrace.
             </p>
             <div className="flex gap-3">
               <a
@@ -67,7 +78,9 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-display text-lg font-semibold text-foreground mb-6">Quick Links</h4>
+            <h4 className="font-display text-lg font-semibold text-foreground mb-6">
+              Quick Links
+            </h4>
             <nav className="flex flex-col gap-3">
               <button
                 onClick={() => scrollToSection("#properties")}
@@ -104,23 +117,33 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h4 className="font-display text-lg font-semibold text-foreground mb-6">Contact</h4>
+            <h4 className="font-display text-lg font-semibold text-foreground mb-6">
+              Contact
+            </h4>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-muted-foreground text-sm">
-                  Pawna Lake, Lonavala,<br />Maharashtra, India
+                  Pawna Lake, Lonavala,
+                  <br />
+                  Maharashtra, India
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />
-                <a href="tel:+918806092609" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+                <a
+                  href="tel:+918806092609"
+                  className="text-muted-foreground text-sm hover:text-primary transition-colors"
+                >
                   +91 88060 92609
                 </a>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary shrink-0" />
-                <a href="mailto:hrushikeshmore2609@gmail.com" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+                <a
+                  href="mailto:hrushikeshmore2609@gmail.com"
+                  className="text-muted-foreground text-sm hover:text-primary transition-colors"
+                >
                   hrushikeshmore2609@gmail.com
                 </a>
               </div>
@@ -129,7 +152,9 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div>
-            <h4 className="font-display text-lg font-semibold text-foreground mb-6">Newsletter</h4>
+            <h4 className="font-display text-lg font-semibold text-foreground mb-6">
+              Newsletter
+            </h4>
             <p className="text-muted-foreground text-sm mb-4">
               Subscribe for exclusive offers and travel inspiration.
             </p>
@@ -151,16 +176,25 @@ const Footer = () => {
       <div className="border-t border-border/30">
         <div className="container mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © 2024 PawnaHavenCamp. All rights reserved.
+            © 2026 PawnaHavenCamp. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-6">
-            <Link to="/info/privacy-policy" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+            <Link
+              to="/info/privacy-policy"
+              className="text-muted-foreground text-sm hover:text-primary transition-colors"
+            >
               Privacy Policy
             </Link>
-            <Link to="/info/terms" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+            <Link
+              to="/info/terms"
+              className="text-muted-foreground text-sm hover:text-primary transition-colors"
+            >
               Terms & Conditions
             </Link>
-            <Link to="/info/refund-policy" className="text-muted-foreground text-sm hover:text-primary transition-colors">
+            <Link
+              to="/info/refund-policy"
+              className="text-muted-foreground text-sm hover:text-primary transition-colors"
+            >
               Refund Policy
             </Link>
           </div>

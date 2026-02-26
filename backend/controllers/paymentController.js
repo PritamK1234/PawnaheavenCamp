@@ -32,7 +32,7 @@ function getPaytmBaseUrl() {
   ) {
     return "https://securegw.paytm.in";
   }
-  return "https://securegw-stage.paytm.in";
+  return "https://securestage.paytmpayments.com";
 }
 
 const initiatePaytmPayment = async (req, res) => {

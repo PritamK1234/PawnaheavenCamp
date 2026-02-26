@@ -14,7 +14,7 @@ export class PaytmPaymentService {
   static redirectToPaytm(bookingId: string): void {
     const redirectUrl = this.getRedirectUrl(bookingId);
     console.log("Redirecting to Paytm payment via:", redirectUrl);
-    window.open(redirectUrl, "_blank");
+    window.location.href = redirectUrl;
   }
 
   static async initiateAndRedirect(

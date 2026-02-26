@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   property_address TEXT,
   referral_code VARCHAR(50),
   referral_discount DECIMAL(10,2) DEFAULT 0,
+  referral_type TEXT,
   payment_status VARCHAR(50) DEFAULT 'INITIATED',
   booking_status VARCHAR(50) DEFAULT 'PAYMENT_PENDING',
   order_id VARCHAR(100),

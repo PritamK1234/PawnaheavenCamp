@@ -187,6 +187,7 @@ export function BookingForm({
         advance_amount: advanceAmount,
         total_amount: totalPrice,
         referral_code: referralCode || undefined,
+        unit_id: selectedUnitId || undefined,
       };
 
       if (isVilla) {

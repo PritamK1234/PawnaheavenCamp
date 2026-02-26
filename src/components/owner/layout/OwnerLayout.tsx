@@ -33,7 +33,7 @@ const OwnerLayout = () => {
 
   if (!isLoggedIn) return null;
 
-  const isVilla = ownerData.propertyType?.toLowerCase() === 'villa' || ownerData.propertyName?.toLowerCase().includes('villa');
+  const isVilla = ownerData.property_type === 'villa';
   const dashboardPath = isVilla ? '/owner/dashboard/villa' : '/owner/dashboard/camping';
   const profilePath = isVilla ? '/owner/profile/villa' : '/owner/profile/camping';
 

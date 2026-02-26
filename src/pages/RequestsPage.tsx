@@ -1,16 +1,15 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { adminPaths } from "@/lib/adminPaths";
 import { 
   ChevronLeft, 
   Clock, 
-  CheckCircle2, 
-  XCircle, 
   History, 
   Loader2,
   ArrowUpRight,
   ArrowDownLeft,
-  Bell
+  Bell,
+  AlertTriangle
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,26 +19,198 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Helmet } from "react-helmet-async";
 
+interface RefundRequest {
+  booking_id: string;
+  guest_name: string;
+  guest_phone: string;
+  property_name: string;
+  advance_amount: number;
+  refund_status: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface WithdrawalRequest {
+  id: number;
+  username: string;
+  referral_otp_number: string;
+  referral_code: string;
+  amount: number;
+  upi_id: string | null;
+  created_at: string;
+}
+
+interface HistoryItem {
+  id: string;
+  type: "Refund" | "Withdrawal";
+  user: string;
+  property?: string;
+  amount: number;
+  date: string;
+  status: string;
+}
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("adminToken");
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 const RequestsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("withdrawals");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Mock data for demonstration - in a real app, this would be fetched from API
-  const withdrawRequests = [
-    { id: 1, user: "John Doe", amount: 5000, date: "2026-02-18", status: "pending" },
-    { id: 2, user: "Jane Smith", amount: 3500, date: "2026-02-19", status: "pending" },
-  ];
+  const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
+  const [withdrawRequests, setWithdrawRequests] = useState<WithdrawalRequest[]>([]);
+  const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
 
-  const refundRequests = [
-    { id: 1, property: "Lakeview Camping", amount: 2000, date: "2026-02-17", status: "pending" },
-  ];
+  const fetchAllData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [refundRes, withdrawRes, historyRes] = await Promise.all([
+        fetch("/api/payments/refund/requests", { headers: getAuthHeaders() }),
+        fetch("/api/payments/withdrawal/requests", { headers: getAuthHeaders() }),
+        fetch("/api/payments/requests/history", { headers: getAuthHeaders() }),
+      ]);
 
-  const historyData = [
-    { id: 101, type: "Withdrawal", user: "Mike Ross", amount: 4500, date: "2026-02-15", status: "paid" },
-    { id: 102, type: "Refund", user: "Sarah Connor", amount: 1200, date: "2026-02-14", status: "refunded" },
-  ];
+      if (refundRes.status === 401 || withdrawRes.status === 401 || historyRes.status === 401) {
+        toast({ title: "Session Expired", description: "Please log in again.", variant: "destructive" });
+        navigate(adminPaths.login);
+        return;
+      }
+
+      if (refundRes.ok) {
+        const data = await refundRes.json();
+        setRefundRequests(data.refund_requests || []);
+      }
+      if (withdrawRes.ok) {
+        const data = await withdrawRes.json();
+        setWithdrawRequests(data.withdrawal_requests || []);
+      }
+      if (historyRes.ok) {
+        const data = await historyRes.json();
+        setHistoryData(data.history || []);
+      }
+    } catch (error) {
+      console.error("Error fetching requests data:", error);
+      toast({ title: "Error", description: "Failed to load requests data", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  const handleProcessRefund = async (bookingId: string) => {
+    if (!confirm(`Are you sure you want to process a refund for booking ${bookingId}? This will initiate a Paytm refund to the customer.`)) return;
+
+    setActionLoading(`refund-${bookingId}`);
+    try {
+      const res = await fetch("/api/payments/refund/initiate", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ booking_id: bookingId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast({ title: "Refund Initiated", description: `Refund of ₹${data.amount} initiated. ID: ${data.refund_id}` });
+        fetchAllData();
+      } else {
+        toast({ title: "Refund Failed", description: data.error || data.details || "Failed to process refund", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Network error processing refund", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDenyRefund = async (bookingId: string) => {
+    if (!confirm(`Are you sure you want to deny the refund for booking ${bookingId}? The customer will NOT receive a refund.`)) return;
+
+    setActionLoading(`deny-${bookingId}`);
+    try {
+      const res = await fetch("/api/payments/refund/deny", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ booking_id: bookingId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast({ title: "Refund Denied", description: "The refund request has been denied." });
+        fetchAllData();
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to deny refund", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Network error denying refund", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleApproveWithdrawal = async (txnId: number) => {
+    if (!confirm("Are you sure you want to approve this withdrawal? Make sure you have completed the bank transfer.")) return;
+
+    setActionLoading(`approve-${txnId}`);
+    try {
+      const res = await fetch("/api/payments/withdrawal/process", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ transaction_id: txnId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast({ title: "Withdrawal Approved", description: "The withdrawal has been marked as completed." });
+        fetchAllData();
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to approve withdrawal", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Network error approving withdrawal", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRejectWithdrawal = async (txnId: number) => {
+    if (!confirm("Are you sure you want to reject this withdrawal request?")) return;
+
+    setActionLoading(`reject-${txnId}`);
+    try {
+      const res = await fetch("/api/payments/withdrawal/reject", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ transaction_id: txnId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast({ title: "Withdrawal Rejected", description: "The withdrawal request has been rejected." });
+        fetchAllData();
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to reject withdrawal", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Network error rejecting withdrawal", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-charcoal text-white pb-20">
@@ -47,7 +218,6 @@ const RequestsPage = () => {
         <title>Requests Management - Admin</title>
       </Helmet>
 
-      {/* Header */}
       <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-6 py-4 flex items-center gap-4">
           <Button 
@@ -66,101 +236,160 @@ const RequestsPage = () => {
       </div>
 
       <div className="container mx-auto px-6 pt-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white/5 p-1 rounded-2xl w-full border border-white/10 grid grid-cols-3">
-            <TabsTrigger value="withdrawals" className="rounded-xl flex items-center gap-2 py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
-              Withdrawals
-              <Badge className="bg-red-500 text-white border-none h-5 px-1.5 text-[10px]">
-                {withdrawRequests.length}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="refunds" className="rounded-xl flex items-center gap-2 py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
-              Refunds
-              <Badge className="bg-red-500 text-white border-none h-5 px-1.5 text-[10px]">
-                {refundRequests.length}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="history" className="rounded-xl flex items-center gap-2 py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
-              <History className="w-4 h-4" />
-              History
-            </TabsTrigger>
-          </TabsList>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-gold mb-4" />
+            <p className="text-white/50">Loading requests...</p>
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="bg-white/5 p-1 rounded-2xl w-full border border-white/10 grid grid-cols-3">
+              <TabsTrigger value="withdrawals" className="rounded-xl flex items-center gap-2 py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                Withdrawals
+                {withdrawRequests.length > 0 && (
+                  <Badge className="bg-red-500 text-white border-none h-5 px-1.5 text-[10px]">
+                    {withdrawRequests.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="refunds" className="rounded-xl flex items-center gap-2 py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                Refunds
+                {refundRequests.length > 0 && (
+                  <Badge className="bg-red-500 text-white border-none h-5 px-1.5 text-[10px]">
+                    {refundRequests.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="history" className="rounded-xl flex items-center gap-2 py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                <History className="w-4 h-4" />
+                History
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="withdrawals" className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-            {withdrawRequests.length > 0 ? (
-              withdrawRequests.map((req) => (
-                <Card key={req.id} className="p-5 bg-white/5 border-white/10 rounded-2xl hover:border-gold/30 transition-all group">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-lg">{req.user}</h3>
-                      <p className="text-xs text-white/50">{req.date}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-2xl font-bold text-gold">₹{req.amount}</span>
-                        <Badge variant="outline" className="border-gold/20 text-gold bg-gold/5 uppercase text-[9px] tracking-widest">Withdrawal</Badge>
+            <TabsContent value="withdrawals" className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+              {withdrawRequests.length > 0 ? (
+                withdrawRequests.map((req) => (
+                  <Card key={req.id} className="p-5 bg-white/5 border-white/10 rounded-2xl hover:border-gold/30 transition-all group">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-lg">{req.username}</h3>
+                        <p className="text-xs text-white/50">{formatDate(req.created_at)}</p>
+                        <p className="text-xs text-white/40">Code: {req.referral_code}</p>
+                        {req.upi_id && <p className="text-xs text-white/40">UPI: {req.upi_id}</p>}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-2xl font-bold text-gold">₹{req.amount}</span>
+                          <Badge variant="outline" className="border-gold/20 text-gold bg-gold/5 uppercase text-[9px] tracking-widest">Withdrawal</Badge>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button 
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 text-xs font-bold"
+                          onClick={() => handleApproveWithdrawal(req.id)}
+                          disabled={actionLoading === `approve-${req.id}`}
+                        >
+                          {actionLoading === `approve-${req.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve"}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="text-red-400 hover:bg-red-500/10 h-9 rounded-xl text-xs"
+                          onClick={() => handleRejectWithdrawal(req.id)}
+                          disabled={actionLoading === `reject-${req.id}`}
+                        >
+                          {actionLoading === `reject-${req.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reject"}
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Button className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 text-xs font-bold">Approve</Button>
-                      <Button variant="ghost" className="text-red-400 hover:bg-red-500/10 h-9 rounded-xl text-xs">Reject</Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={Clock} title="No Pending Withdrawals" />
-            )}
-          </TabsContent>
+                  </Card>
+                ))
+              ) : (
+                <EmptyState icon={Clock} title="No Pending Withdrawals" />
+              )}
+            </TabsContent>
 
-          <TabsContent value="refunds" className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-            {refundRequests.length > 0 ? (
-              refundRequests.map((req) => (
-                <Card key={req.id} className="p-5 bg-white/5 border-white/10 rounded-2xl hover:border-gold/30 transition-all group">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-lg">{req.property}</h3>
-                      <p className="text-xs text-white/50">{req.date}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-2xl font-bold text-gold">₹{req.amount}</span>
-                        <Badge variant="outline" className="border-amber-500/20 text-amber-500 bg-amber-500/5 uppercase text-[9px] tracking-widest">Refund</Badge>
+            <TabsContent value="refunds" className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+              {refundRequests.length > 0 ? (
+                refundRequests.map((req) => (
+                  <Card key={req.booking_id} className="p-5 bg-white/5 border-white/10 rounded-2xl hover:border-gold/30 transition-all group">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-lg">{req.property_name}</h3>
+                        <p className="text-xs text-white/50">{formatDate(req.updated_at)}</p>
+                        <p className="text-xs text-white/40">Guest: {req.guest_name} ({req.guest_phone})</p>
+                        <p className="text-xs text-white/40">ID: {req.booking_id}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-2xl font-bold text-gold">₹{req.advance_amount}</span>
+                          <Badge variant="outline" className="border-amber-500/20 text-amber-500 bg-amber-500/5 uppercase text-[9px] tracking-widest">Refund</Badge>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button 
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 text-xs font-bold"
+                          onClick={() => handleProcessRefund(req.booking_id)}
+                          disabled={actionLoading === `refund-${req.booking_id}`}
+                        >
+                          {actionLoading === `refund-${req.booking_id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Process Refund"}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="text-red-400 hover:bg-red-500/10 h-9 rounded-xl text-xs"
+                          onClick={() => handleDenyRefund(req.booking_id)}
+                          disabled={actionLoading === `deny-${req.booking_id}`}
+                        >
+                          {actionLoading === `deny-${req.booking_id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Deny"}
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Button className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 text-xs font-bold">Process Refund</Button>
-                      <Button variant="ghost" className="text-red-400 hover:bg-red-500/10 h-9 rounded-xl text-xs">Deny</Button>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={Clock} title="No Pending Refunds" />
-            )}
-          </TabsContent>
+                  </Card>
+                ))
+              ) : (
+                <EmptyState icon={Clock} title="No Pending Refunds" />
+              )}
+            </TabsContent>
 
-          <TabsContent value="history" className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-             {historyData.map((item) => (
-               <Card key={item.id} className="p-4 bg-white/5 border-white/10 rounded-2xl flex items-center justify-between">
-                 <div className="flex items-center gap-4">
-                   <div className={cn(
-                     "w-10 h-10 rounded-xl flex items-center justify-center",
-                     item.type === "Withdrawal" ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
-                   )}>
-                     {item.type === "Withdrawal" ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
-                   </div>
-                   <div>
-                     <h4 className="font-bold text-sm">{item.user}</h4>
-                     <p className="text-[10px] text-white/40">{item.date} • {item.type}</p>
-                   </div>
-                 </div>
-                 <div className="text-right">
-                   <p className={cn("font-bold", item.type === "Withdrawal" ? "text-red-500" : "text-emerald-500")}>
-                     ₹{item.amount}
-                   </p>
-                   <Badge variant="outline" className="text-[9px] border-white/10 text-white/40 h-5">COMPLETED</Badge>
-                 </div>
-               </Card>
-             ))}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="history" className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+              {historyData.length > 0 ? (
+                historyData.map((item) => (
+                  <Card key={item.id} className="p-4 bg-white/5 border-white/10 rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center",
+                        item.type === "Withdrawal" 
+                          ? (item.status === "paid" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")
+                          : (item.status === "refunded" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")
+                      )}>
+                        {item.type === "Withdrawal" ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm">{item.user}</h4>
+                        <p className="text-[10px] text-white/40">
+                          {formatDate(item.date)} {item.type === "Refund" && item.property ? `• ${item.property}` : ""} • {item.type}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={cn(
+                        "font-bold",
+                        (item.status === "paid" || item.status === "refunded") ? "text-emerald-500" : "text-red-500"
+                      )}>
+                        ₹{item.amount}
+                      </p>
+                      <Badge variant="outline" className={cn(
+                        "text-[9px] h-5",
+                        item.status === "denied" || item.status === "rejected" 
+                          ? "border-red-500/20 text-red-400" 
+                          : "border-white/10 text-white/40"
+                      )}>
+                        {item.status === "refunded" ? "REFUNDED" : item.status === "paid" ? "PAID" : item.status === "denied" ? "DENIED" : "REJECTED"}
+                      </Badge>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <EmptyState icon={History} title="No History Yet" />
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

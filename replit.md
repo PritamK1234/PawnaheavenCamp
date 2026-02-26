@@ -127,6 +127,8 @@ Preferred communication style: Simple, everyday language.
 - **Referral System**: 5% discount on advance amount, PENDING commission created on booking confirmation
 - **E-Ticket**: Generated after owner confirms, shows QR code, property details, payment summary
 - **Ticket Page States**: Loading, pending confirmation (auto-refresh 10s), confirmed (full ticket), expired, error
+- **Refund Flow** (Feb 2026): Owner cancels → booking_status=CANCELLED_BY_OWNER, refund_status=REFUND_INITIATED → Admin sees in Requests Center Refunds tab → Process Refund (Paytm API) or Deny → moves to History tab. Statuses: REFUND_INITIATED, REFUND_SUCCESSFUL, REFUND_FAILED, REFUND_DENIED
+- **Admin Requests Center** (Feb 2026): `src/pages/RequestsPage.tsx` — 3 tabs (Withdrawals, Refunds, History) wired to real backend APIs. Endpoints: `/api/payments/refund/requests`, `/api/payments/refund/initiate`, `/api/payments/refund/deny`, `/api/payments/withdrawal/requests`, `/api/payments/withdrawal/process`, `/api/payments/withdrawal/reject`, `/api/payments/requests/history`
 
 ### PWA (Progressive Web App) - Feb 2026
 - **3-Domain PWA Architecture** (production VPS deployment):

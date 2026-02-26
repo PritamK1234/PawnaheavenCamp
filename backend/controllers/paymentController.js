@@ -1151,6 +1151,235 @@ const verifyPaymentStatus = async (req, res) => {
   }
 };
 
+const denyRefund = async (req, res) => {
+  try {
+    const { booking_id } = req.body;
+
+    if (!booking_id) {
+      return res.status(400).json({ error: "Booking ID is required" });
+    }
+
+    const result = await query("SELECT * FROM bookings WHERE booking_id = $1", [
+      booking_id,
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    const booking = result.rows[0];
+
+    if (booking.refund_status === "REFUND_SUCCESSFUL") {
+      return res.status(400).json({ error: "Refund already processed" });
+    }
+
+    if (booking.refund_status === "REFUND_DENIED") {
+      return res.status(400).json({ error: "Refund already denied" });
+    }
+
+    if (booking.refund_status !== "REFUND_INITIATED") {
+      return res.status(400).json({ error: "No pending refund to deny" });
+    }
+
+    if (booking.booking_status !== "CANCELLED_BY_OWNER") {
+      return res.status(400).json({ error: "Booking is not in a cancellable state" });
+    }
+
+    await query(
+      `UPDATE bookings SET 
+        refund_status = 'REFUND_DENIED', 
+        booking_status = 'CANCELLED_NO_REFUND', 
+        updated_at = NOW() 
+      WHERE booking_id = $1 AND refund_status = 'REFUND_INITIATED'`,
+      [booking_id],
+    );
+
+    try {
+      const whatsapp = new WhatsAppService();
+      await whatsapp.sendTextMessage(
+        booking.admin_phone,
+        `🚫 Refund Denied\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAmount: ₹${booking.advance_amount}\n\nRefund has been denied by admin.`,
+      );
+    } catch (whatsappErr) {
+      console.error("WhatsApp error on refund deny:", whatsappErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Refund denied successfully",
+      booking_id: booking_id,
+    });
+  } catch (error) {
+    console.error("Error denying refund:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getRequestHistory = async (req, res) => {
+  try {
+    const refundResult = await query(`
+      SELECT booking_id, guest_name, guest_phone, property_name,
+        advance_amount, refund_amount, refund_status, refund_id,
+        booking_status, updated_at, created_at
+      FROM bookings 
+      WHERE refund_status IN ('REFUND_SUCCESSFUL', 'REFUND_DENIED')
+      ORDER BY updated_at DESC
+    `);
+
+    const withdrawalResult = await query(`
+      SELECT rt.id, rt.amount, rt.status, rt.created_at, rt.upi_id,
+        ru.username, ru.referral_otp_number
+      FROM referral_transactions rt
+      JOIN referral_users ru ON rt.referral_user_id = ru.id
+      WHERE rt.type = 'withdrawal' AND rt.status IN ('completed', 'rejected')
+      ORDER BY rt.created_at DESC
+    `);
+
+    const history = [];
+
+    for (const r of refundResult.rows) {
+      history.push({
+        id: r.booking_id,
+        type: "Refund",
+        user: r.guest_name,
+        property: r.property_name,
+        amount: parseFloat(r.refund_amount || r.advance_amount),
+        date: r.updated_at,
+        status: r.refund_status === "REFUND_SUCCESSFUL" ? "refunded" : "denied",
+        refund_id: r.refund_id,
+      });
+    }
+
+    for (const w of withdrawalResult.rows) {
+      history.push({
+        id: `WD-${w.id}`,
+        type: "Withdrawal",
+        user: w.username,
+        amount: parseFloat(w.amount),
+        date: w.created_at,
+        status: w.status === "completed" ? "paid" : "rejected",
+        upi_id: w.upi_id,
+      });
+    }
+
+    history.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    return res.status(200).json({ success: true, history });
+  } catch (error) {
+    console.error("Error fetching request history:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getWithdrawalRequests = async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT rt.id, rt.amount, rt.status, rt.created_at, rt.upi_id,
+        ru.username, ru.referral_otp_number, ru.referral_code
+      FROM referral_transactions rt
+      JOIN referral_users ru ON rt.referral_user_id = ru.id
+      WHERE rt.type = 'withdrawal' AND rt.status = 'pending'
+      ORDER BY rt.created_at ASC
+    `);
+
+    return res.status(200).json({
+      success: true,
+      withdrawal_requests: result.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching withdrawal requests:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const processWithdrawal = async (req, res) => {
+  try {
+    const { transaction_id } = req.body;
+
+    if (!transaction_id) {
+      return res.status(400).json({ error: "Transaction ID is required" });
+    }
+
+    const result = await query(
+      "SELECT rt.*, ru.username, ru.referral_otp_number FROM referral_transactions rt JOIN referral_users ru ON rt.referral_user_id = ru.id WHERE rt.id = $1",
+      [transaction_id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    const txn = result.rows[0];
+
+    if (txn.status === "completed") {
+      return res.status(400).json({ error: "Withdrawal already processed" });
+    }
+
+    if (txn.status !== "pending") {
+      return res.status(400).json({ error: "Withdrawal is not in pending state" });
+    }
+
+    await query(
+      "UPDATE referral_transactions SET status = 'completed' WHERE id = $1 AND status = 'pending'",
+      [transaction_id],
+    );
+
+    try {
+      const whatsapp = new WhatsAppService();
+      await whatsapp.sendTextMessage(
+        txn.referral_otp_number,
+        `💰 Withdrawal Successful!\n\nAmount: ₹${txn.amount}\nUPI: ${txn.upi_id || "N/A"}\n\nYour withdrawal has been processed successfully.`,
+      );
+    } catch (whatsappErr) {
+      console.error("WhatsApp error on withdrawal process:", whatsappErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Withdrawal processed successfully",
+    });
+  } catch (error) {
+    console.error("Error processing withdrawal:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const rejectWithdrawal = async (req, res) => {
+  try {
+    const { transaction_id } = req.body;
+
+    if (!transaction_id) {
+      return res.status(400).json({ error: "Transaction ID is required" });
+    }
+
+    const result = await query(
+      "SELECT * FROM referral_transactions WHERE id = $1",
+      [transaction_id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    if (result.rows[0].status !== "pending") {
+      return res.status(400).json({ error: "Withdrawal is not in pending state" });
+    }
+
+    await query(
+      "UPDATE referral_transactions SET status = 'rejected' WHERE id = $1 AND status = 'pending'",
+      [transaction_id],
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Withdrawal rejected",
+    });
+  } catch (error) {
+    console.error("Error rejecting withdrawal:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   initiatePaytmPayment,
   paytmRedirect,
@@ -1160,4 +1389,9 @@ module.exports = {
   getRefundRequests,
   getAllBookings,
   verifyPaymentStatus,
+  denyRefund,
+  getRequestHistory,
+  getWithdrawalRequests,
+  processWithdrawal,
+  rejectWithdrawal,
 };

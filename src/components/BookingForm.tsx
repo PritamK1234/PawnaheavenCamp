@@ -217,6 +217,9 @@ export function BookingForm({
         throw new Error("Invalid booking response");
       }
 
+      localStorage.setItem("pending_booking_id", bookingData.booking.booking_id);
+      localStorage.setItem("pending_booking_time", Date.now().toString());
+
       await PaytmPaymentService.initiateAndRedirect(
         bookingData.booking.booking_id,
         "WEB",

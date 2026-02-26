@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,8 +8,12 @@ import { QRCodeSVG } from "qrcode.react";
 const TicketPage = () => {
   const [searchParams] = useSearchParams();
   const bookingId = searchParams.get("booking_id");
+  const hasPendingBooking = bookingId ? localStorage.getItem("pending_booking_id") === bookingId : false;
+  const [verifyingPayment, setVerifyingPayment] = useState(hasPendingBooking);
+  const verifyAttempts = useRef(0);
+  const maxVerifyAttempts = 12;
 
-  const { data: ticket, isLoading, error } = useQuery({
+  const { data: ticket, isLoading, error, refetch } = useQuery({
     queryKey: ["ticket", bookingId],
     queryFn: async () => {
       const response = await fetch(
@@ -38,6 +42,64 @@ const TicketPage = () => {
     },
   });
 
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const isPending = localStorage.getItem("pending_booking_id") === bookingId;
+    if (!isPending) return;
+
+    if (ticket && (ticket.payment_status === 'SUCCESS' || ticket.booking_status === 'PENDING_OWNER_CONFIRMATION' || ticket.booking_status === 'OWNER_CONFIRMED' || ticket.booking_status === 'TICKET_GENERATED')) {
+      localStorage.removeItem("pending_booking_id");
+      localStorage.removeItem("pending_booking_time");
+      return;
+    }
+
+    setVerifyingPayment(true);
+    const verifyPayment = async () => {
+      try {
+        const response = await fetch(`/api/payments/verify/${bookingId}`);
+        const data = await response.json();
+        console.log("Payment verification result:", data);
+
+        if (data.success && data.payment_status === "SUCCESS") {
+          localStorage.removeItem("pending_booking_id");
+          localStorage.removeItem("pending_booking_time");
+          setVerifyingPayment(false);
+          refetch();
+          return;
+        }
+
+        if (data.payment_status === "FAILED") {
+          localStorage.removeItem("pending_booking_id");
+          localStorage.removeItem("pending_booking_time");
+          setVerifyingPayment(false);
+          refetch();
+          return;
+        }
+      } catch (err) {
+        console.error("Payment verification error:", err);
+      }
+
+      verifyAttempts.current++;
+      if (verifyAttempts.current >= maxVerifyAttempts) {
+        setVerifyingPayment(false);
+        localStorage.removeItem("pending_booking_id");
+        localStorage.removeItem("pending_booking_time");
+      }
+    };
+
+    verifyPayment();
+    const interval = setInterval(() => {
+      if (verifyAttempts.current >= maxVerifyAttempts) {
+        clearInterval(interval);
+        return;
+      }
+      verifyPayment();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [bookingId, ticket, refetch]);
+
   if (!bookingId) {
     return (
       <div className="flex flex-col justify-center items-center h-screen space-y-4 bg-[#0a0a0a] px-4">
@@ -48,11 +110,14 @@ const TicketPage = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || verifyingPayment) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-[#0a0a0a] space-y-4">
         <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
-        <p className="text-gray-400">Loading your ticket...</p>
+        <p className="text-gray-400">{verifyingPayment ? "Verifying your payment..." : "Loading your ticket..."}</p>
+        {verifyingPayment && (
+          <p className="text-gray-500 text-sm">This may take a few seconds. Please don't close this page.</p>
+        )}
       </div>
     );
   }

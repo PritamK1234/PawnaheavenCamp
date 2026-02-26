@@ -12,13 +12,24 @@ const Index = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
+    const pendingBookingId = localStorage.getItem("pending_booking_id");
+    const pendingBookingTime = localStorage.getItem("pending_booking_time");
+    if (pendingBookingId && pendingBookingTime) {
+      const elapsed = Date.now() - parseInt(pendingBookingTime);
+      if (elapsed < 30 * 60 * 1000) {
+        window.location.href = `/ticket?booking_id=${pendingBookingId}`;
+        return;
+      } else {
+        localStorage.removeItem("pending_booking_id");
+        localStorage.removeItem("pending_booking_time");
+      }
+    }
+
     const savedPosition = sessionStorage.getItem("homeScrollPosition");
     
-    // Set a 0.5s timer for the loader
     const loaderTimer = setTimeout(() => {
       setIsInitialLoading(false);
       
-      // Use requestAnimationFrame to ensure the DOM is painted before scrolling
       if (savedPosition) {
         requestAnimationFrame(() => {
           window.scrollTo({

@@ -11,6 +11,22 @@ export default defineConfig(({ mode }) => ({
       clientPort: 443,
     },
     proxy: {
+      "/api/payments/paytm/callback": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq, req) => {
+            console.log(`[Vite Proxy] Paytm callback: ${req.method} ${req.url} Content-Type: ${req.headers["content-type"]}`);
+          });
+          proxy.on("proxyRes", (proxyRes, req) => {
+            console.log(`[Vite Proxy] Paytm callback response: ${proxyRes.statusCode} for ${req.url}`);
+          });
+          proxy.on("error", (err, req) => {
+            console.error(`[Vite Proxy] Paytm callback error: ${err.message} for ${req.url}`);
+          });
+        },
+      },
       "/api": {
         target: "http://localhost:5001",
         changeOrigin: true,

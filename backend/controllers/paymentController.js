@@ -987,6 +987,170 @@ const getAllBookings = async (req, res) => {
   }
 };
 
+const verifyPaymentStatus = async (req, res) => {
+  try {
+    const { booking_id } = req.params;
+
+    if (!booking_id) {
+      return res.status(400).json({ error: "Booking ID is required" });
+    }
+
+    const result = await query("SELECT * FROM bookings WHERE booking_id = $1", [
+      booking_id,
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    const booking = result.rows[0];
+
+    if (booking.payment_status === "SUCCESS") {
+      return res.json({
+        success: true,
+        payment_status: "SUCCESS",
+        booking_status: booking.booking_status,
+        booking_id: booking.booking_id,
+      });
+    }
+
+    if (!booking.order_id) {
+      return res.json({
+        success: false,
+        payment_status: booking.payment_status,
+        booking_status: booking.booking_status,
+        message: "No payment initiated yet",
+      });
+    }
+
+    const mid = process.env.PAYTM_MID;
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY;
+
+    if (!mid || !merchantKey) {
+      return res.json({
+        success: false,
+        payment_status: booking.payment_status,
+        booking_status: booking.booking_status,
+        message: "Payment gateway not configured",
+      });
+    }
+
+    const paytmBody = {
+      mid: mid,
+      orderId: booking.order_id,
+    };
+
+    const checksum = await PaytmChecksum.generateSignature(
+      JSON.stringify(paytmBody),
+      merchantKey,
+    );
+
+    const paytmBaseUrl = getPaytmBaseUrl();
+    const statusResponse = await axios.post(
+      `${paytmBaseUrl}/v3/order/status`,
+      { body: paytmBody, head: { signature: checksum } },
+      { headers: { "Content-Type": "application/json" } },
+    );
+
+    const statusBody = statusResponse.data?.body;
+    const txnStatus = statusBody?.resultInfo?.resultStatus;
+    const paytmStatus = statusBody?.resultInfo?.resultCode;
+
+    console.log("Paytm status check for", booking_id, ":", statusBody?.resultInfo);
+
+    if (txnStatus === "TXN_SUCCESS" && booking.payment_status !== "SUCCESS") {
+      const txnId = statusBody.txnId || "";
+      const txnAmount = statusBody.txnAmount || booking.advance_amount;
+      const paymentMode = statusBody.paymentMode || "";
+
+      const hasReferral = !!booking.referral_code;
+      const advanceAmt = parseFloat(booking.advance_amount);
+      let adminComm = 0;
+      let referrerComm = 0;
+      let commStatus = null;
+
+      if (hasReferral) {
+        adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+        referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+      } else {
+        adminComm = Math.round(advanceAmt * 0.3 * 100) / 100;
+      }
+      commStatus = "PENDING";
+
+      const actionToken = generateActionToken();
+      const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
+      await query(
+        `UPDATE bookings SET 
+          payment_status = 'SUCCESS', booking_status = 'PENDING_OWNER_CONFIRMATION', 
+          transaction_id = $1, payment_method = $2, webhook_processed = true,
+          admin_commission = $3, referrer_commission = $4, commission_status = $5,
+          action_token = $6, action_token_used = false,
+          action_token_expires_at = $7, updated_at = NOW()
+        WHERE booking_id = $8`,
+        [txnId, paymentMode, adminComm, referrerComm, commStatus, actionToken, tokenExpiry, booking.booking_id],
+      );
+
+      console.log("Payment verified via status API for booking:", booking.booking_id);
+
+      try {
+        const whatsapp = new WhatsAppService();
+        const checkinDate = new Date(booking.checkin_datetime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+        const checkoutDate = new Date(booking.checkout_datetime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+        const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
+        const frontendUrl = `https://${process.env.REPLIT_DOMAINS?.split(",")[0] || "pawnahavencamp.com"}`;
+        const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
+        const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
+
+        await whatsapp.sendTextMessage(
+          booking.guest_phone,
+          `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${txnAmount}\n\nYour booking is received. You will get confirmation within 1 hour.`,
+        );
+
+        await whatsapp.sendInteractiveButtons(booking.owner_phone,
+          `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || 0}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel this booking:`,
+          [
+            { id: JSON.stringify({ token: actionToken, action: "CONFIRM" }), title: "✅ Confirm" },
+            { id: JSON.stringify({ token: actionToken, action: "CANCEL" }), title: "❌ Cancel" },
+          ],
+        );
+
+        await whatsapp.sendTextMessage(
+          booking.admin_phone,
+          `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`,
+        );
+      } catch (whatsappErr) {
+        console.error("WhatsApp notification error during status verify:", whatsappErr.message);
+      }
+
+      return res.json({
+        success: true,
+        payment_status: "SUCCESS",
+        booking_status: "PENDING_OWNER_CONFIRMATION",
+        booking_id: booking.booking_id,
+      });
+    }
+
+    if (txnStatus === "TXN_FAILURE" && booking.payment_status !== "FAILED") {
+      await query(
+        "UPDATE bookings SET payment_status = 'FAILED', booking_status = 'PAYMENT_FAILED', updated_at = NOW() WHERE booking_id = $1",
+        [booking.booking_id],
+      );
+    }
+
+    return res.json({
+      success: txnStatus === "TXN_SUCCESS",
+      payment_status: txnStatus === "TXN_SUCCESS" ? "SUCCESS" : txnStatus === "PENDING" ? "PENDING" : "FAILED",
+      booking_status: booking.booking_status,
+      booking_id: booking.booking_id,
+      paytm_status: paytmStatus,
+    });
+  } catch (error) {
+    console.error("Error verifying payment status:", error.message);
+    return res.status(500).json({ error: "Failed to verify payment status" });
+  }
+};
+
 module.exports = {
   initiatePaytmPayment,
   paytmRedirect,
@@ -995,4 +1159,5 @@ module.exports = {
   initiateRefund,
   getRefundRequests,
   getAllBookings,
+  verifyPaymentStatus,
 };

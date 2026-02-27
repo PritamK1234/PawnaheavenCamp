@@ -128,6 +128,7 @@ Preferred communication style: Simple, everyday language.
 - **Owner Action Endpoints**: GET /api/bookings/owner-action?token=...&action=CONFIRM|CANCEL
 - **WhatsApp Webhook**: GET/POST /api/bookings/webhook/whatsapp for Meta webhook verification and button responses
 - **Referral System**: 5% discount on advance amount, PENDING commission created on booking confirmation
+- **Date Soft-Lock** (Feb 2026): After payment success (PENDING_OWNER_CONFIRMATION), booked dates are soft-locked in the calendar — other customers see them as unavailable. Lock releases automatically if owner cancels. Updated in ALL availability queries: propertyController.js (4 instances), villaController.js (2 unit + 2 legacy), camping_CottagesController.js (2 instances). Statuses that lock: PENDING_OWNER_CONFIRMATION, OWNER_CONFIRMED, TICKET_GENERATED.
 - **E-Ticket**: Generated after owner confirms, shows QR code, property details, payment summary
 - **Ticket Page States**: Loading, pending confirmation (auto-refresh 10s), confirmed (full ticket), expired, error
 - **Refund Flow** (Feb 2026): Owner cancels → booking_status=CANCELLED_BY_OWNER, refund_status=REFUND_INITIATED → Admin sees in Requests Center Refunds tab → Process Refund (Paytm API) or Deny → moves to History tab. Statuses: REFUND_INITIATED, REFUND_SUCCESSFUL, REFUND_FAILED, REFUND_DENIED

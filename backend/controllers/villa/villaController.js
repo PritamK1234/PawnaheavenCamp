@@ -27,20 +27,38 @@ const getVillaById = async (req, res) => {
           SELECT json_agg(json_build_object(
             'date', d.date,
             'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
-            'is_booked', COALESCE((
-              SELECT COUNT(*) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0) > 0,
-            'available_quantity', CASE WHEN COALESCE((
-              SELECT COUNT(*) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0) > 0 THEN 0 ELSE pu.total_persons END,
+            'is_booked', (
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT COUNT(*)
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ) > 0,
+            'available_quantity', CASE WHEN (
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT COUNT(*)
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
@@ -62,21 +80,39 @@ const getVillaById = async (req, res) => {
         SELECT json_agg(json_build_object(
           'date', d.date,
           'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
-          'is_booked', COALESCE((
-            SELECT COUNT(*) 
-            FROM ledger_entries le
-            WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
-            AND le.check_in <= d.date 
-            AND le.check_out > d.date
-          ), 0) > 0,
-          'available_quantity', p.max_capacity - COALESCE((
-            SELECT SUM(persons) 
-            FROM ledger_entries le
-            JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-            WHERE p_inner.id = p.id
-            AND le.check_in <= d.date 
-            AND le.check_out > d.date
-          ), 0),
+          'is_booked', (
+            COALESCE((
+              SELECT COUNT(*) 
+              FROM ledger_entries le
+              WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) + COALESCE((
+              SELECT COUNT(*)
+              FROM bookings b
+              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
+              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+              AND b.checkin_datetime::date <= d.date
+              AND b.checkout_datetime::date > d.date
+            ), 0)
+          ) > 0,
+          'available_quantity', p.max_capacity - (
+            COALESCE((
+              SELECT SUM(persons) 
+              FROM ledger_entries le
+              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
+              WHERE p_inner.id = p.id
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) + COALESCE((
+              SELECT SUM(COALESCE(b.persons, 1))
+              FROM bookings b
+              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
+              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+              AND b.checkin_datetime::date <= d.date
+              AND b.checkout_datetime::date > d.date
+            ), 0)
+          ),
           'total_capacity', p.max_capacity,
           'weekday_price', p.weekday_price,
           'weekend_price', p.weekend_price,
@@ -154,20 +190,38 @@ const getPublicVillaBySlug = async (req, res) => {
           SELECT json_agg(json_build_object(
             'date', d.date,
             'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
-            'is_booked', COALESCE((
-              SELECT COUNT(*) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0) > 0,
-            'available_quantity', CASE WHEN COALESCE((
-              SELECT COUNT(*) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0) > 0 THEN 0 ELSE pu.total_persons END,
+            'is_booked', (
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT COUNT(*)
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ) > 0,
+            'available_quantity', CASE WHEN (
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT COUNT(*)
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
@@ -189,21 +243,39 @@ const getPublicVillaBySlug = async (req, res) => {
         SELECT json_agg(json_build_object(
           'date', d.date,
           'price', COALESCE(ac.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
-          'is_booked', COALESCE((
-            SELECT COUNT(*) 
-            FROM ledger_entries le
-            WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
-            AND le.check_in <= d.date 
-            AND le.check_out > d.date
-          ), 0) > 0,
-          'available_quantity', p.max_capacity - COALESCE((
-            SELECT SUM(persons) 
-            FROM ledger_entries le
-            JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-            WHERE p_inner.id = p.id
-            AND le.check_in <= d.date 
-            AND le.check_out > d.date
-          ), 0),
+          'is_booked', (
+            COALESCE((
+              SELECT COUNT(*) 
+              FROM ledger_entries le
+              WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) + COALESCE((
+              SELECT COUNT(*)
+              FROM bookings b
+              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
+              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+              AND b.checkin_datetime::date <= d.date
+              AND b.checkout_datetime::date > d.date
+            ), 0)
+          ) > 0,
+          'available_quantity', p.max_capacity - (
+            COALESCE((
+              SELECT SUM(persons) 
+              FROM ledger_entries le
+              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
+              WHERE p_inner.id = p.id
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) + COALESCE((
+              SELECT SUM(COALESCE(b.persons, 1))
+              FROM bookings b
+              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
+              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+              AND b.checkin_datetime::date <= d.date
+              AND b.checkout_datetime::date > d.date
+            ), 0)
+          ),
           'total_capacity', p.max_capacity,
           'weekday_price', p.weekday_price,
           'weekend_price', p.weekend_price,

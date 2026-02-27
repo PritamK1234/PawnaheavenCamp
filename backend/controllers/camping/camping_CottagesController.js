@@ -27,20 +27,38 @@ const getCampingById = async (req, res) => {
           SELECT json_agg(json_build_object(
             'date', d.date,
             'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
-            'is_booked', COALESCE((
-              SELECT SUM(persons) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0) >= pu.total_persons,
-            'available_quantity', pu.total_persons - COALESCE((
-              SELECT SUM(persons) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0),
+            'is_booked', (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ) >= pu.total_persons,
+            'available_quantity', pu.total_persons - (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ),
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)
@@ -118,20 +136,38 @@ const getPublicCampingBySlug = async (req, res) => {
           SELECT json_agg(json_build_object(
             'date', d.date,
             'price', COALESCE(uc.price, CASE WHEN d.is_weekend THEN p.weekend_price ELSE p.weekday_price END),
-            'is_booked', COALESCE((
-              SELECT SUM(persons) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0) >= pu.total_persons,
-            'available_quantity', pu.total_persons - COALESCE((
-              SELECT SUM(persons) 
-              FROM ledger_entries le
-              WHERE le.unit_id = pu.id 
-              AND le.check_in <= d.date 
-              AND le.check_out > d.date
-            ), 0),
+            'is_booked', (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ) >= pu.total_persons,
+            'available_quantity', pu.total_persons - (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) + COALESCE((
+                SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
+                FROM bookings b
+                WHERE b.unit_id = pu.id
+                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND b.checkin_datetime::date <= d.date
+                AND b.checkout_datetime::date > d.date
+              ), 0)
+            ),
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date)

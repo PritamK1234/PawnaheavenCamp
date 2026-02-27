@@ -217,12 +217,13 @@ export function BookingForm({
       localStorage.setItem("pending_booking_id", bookingId);
       localStorage.setItem("pending_booking_time", Date.now().toString());
 
+      if (onClose) onClose();
+
       const result = await PaytmPaymentService.openCheckout(bookingId);
 
       if (result.success && result.payment_status === "SUCCESS") {
         localStorage.removeItem("pending_booking_id");
         localStorage.removeItem("pending_booking_time");
-        if (onClose) onClose();
         window.location.href = `/ticket?booking_id=${bookingId}`;
       } else {
         throw new Error(result.message || "Payment was not successful. Please try again.");

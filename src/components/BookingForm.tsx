@@ -157,10 +157,6 @@ export function BookingForm({
     setIsLoading(true);
 
     try {
-      if (onClose) onClose();
-
-      const apiBaseUrl = "";
-
       const checkInDateTime = new Date(formData.checkIn);
       checkInDateTime.setHours(14, 0, 0, 0);
 
@@ -217,16 +213,26 @@ export function BookingForm({
         throw new Error("Invalid booking response");
       }
 
-      localStorage.setItem("pending_booking_id", bookingData.booking.booking_id);
+      const bookingId = bookingData.booking.booking_id;
+      localStorage.setItem("pending_booking_id", bookingId);
       localStorage.setItem("pending_booking_time", Date.now().toString());
 
-      await PaytmPaymentService.initiateAndRedirect(
-        bookingData.booking.booking_id,
-        "WEB",
-      );
-    } catch (error) {
-      console.error("Booking error:", error);
-      alert(`Booking failed: ${error.message}. Please try again.`);
+      const result = await PaytmPaymentService.openCheckout(bookingId);
+
+      if (result.success && result.payment_status === "SUCCESS") {
+        localStorage.removeItem("pending_booking_id");
+        localStorage.removeItem("pending_booking_time");
+        if (onClose) onClose();
+        window.location.href = `/ticket?booking_id=${bookingId}`;
+      } else {
+        throw new Error(result.message || "Payment was not successful. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Booking/Payment error:", error);
+      const msg = error.message || "Something went wrong";
+      if (!msg.includes("cancelled by user")) {
+        alert(`Payment failed: ${msg}`);
+      }
       setIsLoading(false);
     }
   };

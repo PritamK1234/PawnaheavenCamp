@@ -81,6 +81,8 @@ const AdminDashboard = () => {
   const [ownerRefForm, setOwnerRefForm] = useState({ username: "", mobile: "", code: "", propertyId: "" });
   const [b2bCreating, setB2bCreating] = useState(false);
   const [ownerRefCreating, setOwnerRefCreating] = useState(false);
+  const [bookingsData, setBookingsData] = useState<any[]>([]);
+  const [isBookingsLoading, setIsBookingsLoading] = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -104,6 +106,25 @@ const AdminDashboard = () => {
       setReferralUsers([]);
     } finally {
       setIsReferralLoading(false);
+    }
+  };
+
+  const fetchBookings = async () => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) return;
+    setIsBookingsLoading(true);
+    try {
+      const response = await fetch("/api/payments/bookings", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.status === 401) { handleLogout(); return; }
+      const result = await response.json();
+      setBookingsData(Array.isArray(result.bookings) ? result.bookings : []);
+    } catch (error) {
+      console.error("Fetch bookings error:", error);
+      setBookingsData([]);
+    } finally {
+      setIsBookingsLoading(false);
     }
   };
 
@@ -257,6 +278,12 @@ const AdminDashboard = () => {
 
     checkAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    if (activeTab === "transactions") {
+      fetchBookings();
+    }
+  }, [activeTab]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
@@ -1440,54 +1467,61 @@ const AdminDashboard = () => {
             </Tabs>
 
             <div className="space-y-3">
-              {/* Mock transactions based on layout requirements */}
-              {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className="glass-dark rounded-2xl border border-white/5 p-4 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center border border-white/5",
-                        item === 2
-                          ? "bg-red-500/10 text-red-500"
-                          : "bg-emerald-500/10 text-emerald-500",
-                      )}
-                    >
-                      {item === 2 ? (
-                        <ArrowUpRight className="w-5 h-5" />
-                      ) : (
-                        <ArrowDownLeft className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">
-                        {item === 2 ? "Refund Issued" : "Booking Payment"}
-                      </h4>
-                      <p className="text-[10px] text-muted-foreground">
-                        Jan 20, 2026 • #TXN-00{item}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={cn(
-                        "font-bold text-sm",
-                        item === 2 ? "text-red-500" : "text-emerald-500",
-                      )}
-                    >
-                      {item === 2 ? "-" : "+"}₹{1499 * item}
-                    </p>
-                    <Badge
-                      variant="outline"
-                      className="text-[8px] h-4 border-white/10 text-white/40"
-                    >
-                      Success
-                    </Badge>
-                  </div>
+              {isBookingsLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-gold" />
                 </div>
-              ))}
+              ) : (() => {
+                const filtered = bookingsData.filter(b => {
+                  if (transactionSubTab === "bookings") return b.booking_status === "TICKET_GENERATED" && b.payment_status === "SUCCESS";
+                  if (transactionSubTab === "refunds") return b.booking_status === "CANCELLED_BY_OWNER";
+                  if (transactionSubTab === "withdrawals") return false;
+                  return b.payment_status === "SUCCESS";
+                });
+                if (filtered.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/10 text-white/30">
+                      <CreditCard className="w-12 h-12 mb-3 opacity-20" />
+                      <p className="font-display text-base font-bold">No {transactionSubTab === "all" ? "" : transactionSubTab} records yet</p>
+                    </div>
+                  );
+                }
+                return filtered.map((booking) => {
+                  const isCancelled = booking.booking_status === "CANCELLED_BY_OWNER" || booking.booking_status === "CANCELLED_NO_REFUND";
+                  const isConfirmed = booking.booking_status === "TICKET_GENERATED" || booking.booking_status === "OWNER_CONFIRMED";
+                  const checkin = booking.checkin_datetime ? new Date(booking.checkin_datetime).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+                  return (
+                    <div key={booking.booking_id} className="glass-dark rounded-2xl border border-white/5 p-4 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 flex-shrink-0",
+                          isCancelled ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500",
+                        )}>
+                          {isCancelled ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-white truncate">{booking.property_name}</h4>
+                          <p className="text-[10px] text-muted-foreground truncate">{booking.guest_name} • {checkin}</p>
+                          <p className="text-[9px] text-white/30 font-mono">{booking.booking_id}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className={cn("font-bold text-sm", isCancelled ? "text-red-500" : "text-emerald-500")}>
+                          {isCancelled ? "-" : "+"}₹{parseFloat(booking.advance_amount || 0).toLocaleString("en-IN")}
+                        </p>
+                        <Badge variant="outline" className={cn(
+                          "text-[8px] h-4 mt-0.5",
+                          isConfirmed ? "border-emerald-500/20 text-emerald-400" :
+                          isCancelled ? "border-red-500/20 text-red-400" :
+                          "border-white/10 text-white/40"
+                        )}>
+                          {isConfirmed ? "CONFIRMED" : isCancelled ? "CANCELLED" : booking.booking_status?.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         )}

@@ -22,6 +22,8 @@ const TicketPage = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         e.key === "PrintScreen" ||
+        (e.ctrlKey && (e.key === "p" || e.key === "P")) ||
+        (e.ctrlKey && (e.key === "s" || e.key === "S")) ||
         (e.ctrlKey && e.shiftKey && (e.key === "i" || e.key === "I"))
       ) {
         e.preventDefault();
@@ -270,17 +272,50 @@ const TicketPage = () => {
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#f0f0f0] py-6"
-      style={{
-        filter: isBlurred ? "blur(12px)" : "none",
-        transition: "filter 0.2s ease",
-        userSelect: "none",
-        WebkitUserSelect: "none",
-      }}
-    >
-      <ETicket bookingData={bookingData} paymentInfo={paymentInfo} />
-    </div>
+    <>
+      <style>{`@media print { body { display: none !important; } }`}</style>
+      <div
+        className="min-h-screen bg-[#f0f0f0] py-6 relative print:hidden"
+        style={{
+          filter: isBlurred ? "blur(12px)" : "none",
+          transition: "filter 0.2s ease",
+          userSelect: "none",
+          WebkitUserSelect: "none",
+        }}
+      >
+        <div
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: "rotate(-30deg)",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "clamp(14px, 3vw, 22px)",
+              color: "rgba(0,0,0,0.06)",
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+              whiteSpace: "nowrap",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+            }}
+          >
+            CONFIDENTIAL &mdash; {ticket.booking_id}
+          </span>
+        </div>
+        <ETicket bookingData={bookingData} paymentInfo={paymentInfo} />
+      </div>
+    </>
   );
 };
 

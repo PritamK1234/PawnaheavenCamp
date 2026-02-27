@@ -841,8 +841,8 @@ const initiateRefund = async (req, res) => {
         [refundId, refundStatus, refundAmount, booking_id],
       );
 
+      const whatsapp = new WhatsAppService();
       if (refundStatus === "REFUND_SUCCESSFUL") {
-        const whatsapp = new WhatsAppService();
         await whatsapp.sendTextMessage(
           booking.guest_phone,
           `💰 Refund Successful!\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${refundAmount}\n\nYour refund has been successfully credited to your account.`,
@@ -850,6 +850,11 @@ const initiateRefund = async (req, res) => {
         await whatsapp.sendTextMessage(
           booking.admin_phone,
           `✅ Refund Completed\n\nBooking ID: ${booking.booking_id}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nRefund Amount: ₹${refundAmount}\nRefund ID: ${refundId}`,
+        );
+      } else {
+        await whatsapp.sendTextMessage(
+          booking.guest_phone,
+          `Your refund of ₹${refundAmount} for booking ${booking.booking_id} has been initiated and is being processed. You will receive it within 5–7 business days.`,
         );
       }
 
@@ -898,7 +903,7 @@ const getRefundRequests = async (req, res) => {
       FROM bookings 
       WHERE booking_status = 'CANCELLED_BY_OWNER' 
         AND payment_status = 'SUCCESS'
-        AND (refund_status IS NULL OR refund_status NOT IN ('REFUND_SUCCESSFUL'))
+        AND (refund_status IS NULL OR refund_status NOT IN ('REFUND_SUCCESSFUL', 'REFUND_INITIATED', 'REFUND_DENIED'))
       ORDER BY updated_at DESC
     `);
 
@@ -1152,7 +1157,7 @@ const denyRefund = async (req, res) => {
       return res.status(400).json({ error: "Refund already denied" });
     }
 
-    if (booking.refund_status !== "REFUND_INITIATED") {
+    if (!['REFUND_PENDING', 'REFUND_INITIATED'].includes(booking.refund_status)) {
       return res.status(400).json({ error: "No pending refund to deny" });
     }
 
@@ -1165,15 +1170,19 @@ const denyRefund = async (req, res) => {
         refund_status = 'REFUND_DENIED', 
         booking_status = 'CANCELLED_NO_REFUND', 
         updated_at = NOW() 
-      WHERE booking_id = $1 AND refund_status = 'REFUND_INITIATED'`,
+      WHERE booking_id = $1`,
       [booking_id],
     );
 
     try {
       const whatsapp = new WhatsAppService();
       await whatsapp.sendTextMessage(
+        booking.guest_phone,
+        `We regret to inform you that the refund for your booking ${booking.booking_id} has been reviewed and could not be processed at this time. Please contact us for further assistance.`,
+      );
+      await whatsapp.sendTextMessage(
         booking.admin_phone,
-        `🚫 Refund Denied\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAmount: ₹${booking.advance_amount}\n\nRefund has been denied by admin.`,
+        `🚫 Refund Denied\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAmount: ₹${booking.advance_amount}\n\nRefund has been denied. Customer notified.`,
       );
     } catch (whatsappErr) {
       console.error("WhatsApp error on refund deny:", whatsappErr.message);
@@ -1197,7 +1206,7 @@ const getRequestHistory = async (req, res) => {
         advance_amount, refund_amount, refund_status, refund_id,
         booking_status, updated_at, created_at
       FROM bookings 
-      WHERE refund_status IN ('REFUND_SUCCESSFUL', 'REFUND_DENIED')
+      WHERE refund_status IN ('REFUND_SUCCESSFUL', 'REFUND_DENIED', 'REFUND_INITIATED')
       ORDER BY updated_at DESC
     `);
 
@@ -1220,7 +1229,7 @@ const getRequestHistory = async (req, res) => {
         property: r.property_name,
         amount: parseFloat(r.refund_amount || r.advance_amount),
         date: r.updated_at,
-        status: r.refund_status === "REFUND_SUCCESSFUL" ? "refunded" : "denied",
+        status: r.refund_status === "REFUND_SUCCESSFUL" ? "refunded" : r.refund_status === "REFUND_INITIATED" ? "processing" : "denied",
         refund_id: r.refund_id,
       });
     }

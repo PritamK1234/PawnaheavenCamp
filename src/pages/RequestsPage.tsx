@@ -355,7 +355,7 @@ const RequestsPage = () => {
                         "w-10 h-10 rounded-xl flex items-center justify-center",
                         item.type === "Withdrawal" 
                           ? (item.status === "paid" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")
-                          : (item.status === "refunded" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")
+                          : (item.status === "refunded" ? "bg-emerald-500/10 text-emerald-500" : item.status === "processing" ? "bg-amber-500/10 text-amber-500" : "bg-red-500/10 text-red-500")
                       )}>
                         {item.type === "Withdrawal" ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
                       </div>
@@ -369,17 +369,19 @@ const RequestsPage = () => {
                     <div className="text-right">
                       <p className={cn(
                         "font-bold",
-                        (item.status === "paid" || item.status === "refunded") ? "text-emerald-500" : "text-red-500"
+                        (item.status === "paid" || item.status === "refunded") ? "text-emerald-500" : item.status === "processing" ? "text-amber-500" : "text-red-500"
                       )}>
                         ₹{item.amount}
                       </p>
                       <Badge variant="outline" className={cn(
                         "text-[9px] h-5",
                         item.status === "denied" || item.status === "rejected" 
-                          ? "border-red-500/20 text-red-400" 
+                          ? "border-red-500/20 text-red-400"
+                          : item.status === "processing"
+                          ? "border-amber-500/20 text-amber-400"
                           : "border-white/10 text-white/40"
                       )}>
-                        {item.status === "refunded" ? "REFUNDED" : item.status === "paid" ? "PAID" : item.status === "denied" ? "DENIED" : "REJECTED"}
+                        {item.status === "refunded" ? "REFUNDED" : item.status === "paid" ? "PAID" : item.status === "denied" ? "DENIED" : item.status === "processing" ? "PROCESSING" : "REJECTED"}
                       </Badge>
                     </div>
                   </Card>

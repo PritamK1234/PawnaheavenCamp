@@ -778,22 +778,28 @@ const handleOwnerAction = async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
 
     if (action === 'CONFIRM') {
+      const ticketToken = generateTicketToken();
+      const checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+      const checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+      const dueAmount = (parseFloat(booking.total_amount) || 0) - parseFloat(booking.advance_amount);
+
       await query(
-        "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CONFIRMED' ELSE commission_status END, updated_at = NOW() WHERE booking_id = $1",
-        [booking.booking_id]
+        `UPDATE bookings SET booking_status = 'TICKET_GENERATED', ticket_token = $1, action_token_used = true,
+         commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CONFIRMED' ELSE commission_status END,
+         updated_at = NOW() WHERE booking_id = $2`,
+        [ticketToken, booking.booking_id]
       );
 
-      const ticketUrl = `${frontendUrl}/ticket?booking_id=${booking.booking_id}`;
+      const ticketUrl = `${frontendUrl}/ticket?token=${ticketToken}`;
 
       await whatsapp.sendTextMessage(
         booking.guest_phone,
-        `🎉 Booking Confirmed!\n\nYour booking has been confirmed by the property owner.\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\n\nView your e-ticket:\n${ticketUrl}`
+        `🎉 Your Booking is Confirmed!\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance Paid: ₹${booking.advance_amount}\nDue at Property: ₹${dueAmount}\n\nView your secure e-ticket:\n${ticketUrl}\n\nThis link is unique to your booking. Please do not share it.`
       );
 
-      const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
       await whatsapp.sendTextMessage(
         booking.admin_phone,
-        `✅ Booking Confirmed & Ticket Generated\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\n\nE-ticket: ${ticketUrl}`
+        `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance: ₹${booking.advance_amount}\n\nTicket: ${ticketUrl}`
       );
 
       if (booking.referral_code) {
@@ -833,21 +839,31 @@ const handleOwnerAction = async (req, res) => {
       `);
     } else {
       await query(
-        "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END, refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_INITIATED' ELSE refund_status END, refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END, updated_at = NOW() WHERE booking_id = $1",
+        `UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true,
+         commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END,
+         refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_PENDING' ELSE refund_status END,
+         refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END,
+         updated_at = NOW() WHERE booking_id = $1`,
         [booking.booking_id]
       );
+
+      const ownerName = booking.owner_name || 'The owner';
 
       if (booking.payment_status === 'SUCCESS') {
         await whatsapp.sendTextMessage(
           booking.guest_phone,
-          `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${booking.advance_amount}\n\nYour refund will be processed shortly.`
-        );
-
-        await whatsapp.sendTextMessage(
-          booking.admin_phone,
-          `❌ Booking Cancelled by Owner - Refund Required\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nRefund Amount: ₹${booking.advance_amount}\n\nPlease process refund from Admin Panel → Referrals → Requests.`
+          `Extremely sorry for the inconvenience, but your booking has been cancelled due to unavoidable circumstances. You will get your refund in next 24 hours.`
         );
       }
+
+      await whatsapp.sendInteractiveButtons(
+        booking.admin_phone,
+        `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\n${ownerName} owner cancelled booking of ${booking.guest_name} customer. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
+        [
+          { id: `call_owner_${booking.booking_id}`.substring(0, 20), title: 'Call Owner' },
+          { id: `call_cust_${booking.booking_id}`.substring(0, 20), title: 'Call Customer' },
+        ]
+      );
 
       if (booking.referral_code) {
         try {
@@ -938,13 +954,24 @@ const handleWhatsAppWebhook = async (req, res) => {
 
     if (buttonResponse) {
       try {
-        const payload = JSON.parse(buttonResponse.buttonId);
-        const { token, action } = payload;
+        // Button ID format: "C:{first14hex}" (Confirm) or "X:{first14hex}" (Cancel)
+        // This short format respects WhatsApp's 20-character button ID limit.
+        const buttonId = buttonResponse.buttonId;
+        let action = null;
+        let tokenPrefix = null;
 
-        if (token && action) {
+        if (buttonId && buttonId.startsWith('C:')) {
+          action = 'CONFIRM';
+          tokenPrefix = buttonId.slice(2);
+        } else if (buttonId && buttonId.startsWith('X:')) {
+          action = 'CANCEL';
+          tokenPrefix = buttonId.slice(2);
+        }
+
+        if (action && tokenPrefix) {
           const result = await query(
-            'SELECT * FROM bookings WHERE action_token = $1',
-            [token]
+            "SELECT * FROM bookings WHERE action_token LIKE $1 || '%'",
+            [tokenPrefix]
           );
 
           if (result.rows.length > 0) {

@@ -142,11 +142,14 @@ class WhatsAppService {
     console.log('Guest result:', guestResult);
 
     console.log('--- Owner notification ---');
+    // WhatsApp button reply IDs have a 20-character limit.
+    // Use a short prefix of the action token as the lookup key.
+    const shortToken = actionToken.substring(0, 14);
     const ownerResult = await this.sendInteractiveButtons(booking.owner_phone,
       `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || (booking.veg_guest_count || 0) + (booking.nonveg_guest_count || 0)}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel this booking:`,
       [
-        { id: JSON.stringify({ token: actionToken, action: 'CONFIRM' }), title: '✅ Confirm' },
-        { id: JSON.stringify({ token: actionToken, action: 'CANCEL' }), title: '❌ Cancel' },
+        { id: `C:${shortToken}`, title: 'Confirm' },
+        { id: `X:${shortToken}`, title: 'Cancel' },
       ],
     );
     console.log('Owner result:', ownerResult);

@@ -22,16 +22,15 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use('/attached_assets', express.static(path.join(__dirname, '../attached_assets')));
 
-// Capture raw body for WhatsApp webhook signature verification
-app.use('/webhook', express.raw({ type: 'application/json', limit: '10mb' }), (req, res, next) => {
-  if (Buffer.isBuffer(req.body)) {
-    req.rawBody = req.body;
-    try { req.body = JSON.parse(req.rawBody.toString()); } catch (_) { req.body = {}; }
+// Capture raw body for WhatsApp webhook signature verification (via verify callback — non-interfering)
+app.use(express.json({
+  limit: '50mb',
+  verify: (req, res, buf) => {
+    if (req.path && req.path.startsWith('/webhook')) {
+      req.rawBody = buf;
+    }
   }
-  next();
-});
-
-app.use(express.json({ limit: '50mb' }));
+}));
 app.use(express.urlencoded({ extended: true, limit: '50mb', parameterLimit: 50000 }));
 
 // Request logging middleware

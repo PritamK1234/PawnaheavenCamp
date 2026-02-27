@@ -24,6 +24,7 @@ interface ETicketProps {
     checkOut: string;
     totalPrice: number;
     advanceAmount: number;
+    mapLink?: string;
   };
   paymentInfo: {
     orderId: string;
@@ -168,7 +169,7 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
           <Button 
             variant="outline" 
             className="w-full h-10 rounded-xl border-dashed border-primary/30 text-primary font-bold text-xs gap-2 hover:bg-primary/5"
-            onClick={() => window.open('https://maps.app.goo.gl/PawnaLake', '_blank')}
+            onClick={() => window.open(bookingData.mapLink || 'https://maps.app.goo.gl/PawnaLake', '_blank')}
           >
             <MapPin className="w-3.5 h-3.5" />
             Get Map Location

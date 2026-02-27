@@ -2,6 +2,18 @@ const crypto = require('crypto');
 const { query } = require('../db');
 const { WhatsAppService } = require('../utils/whatsappService');
 
+function getFrontendUrl(req) {
+  if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL;
+  const replitDomain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+  const domain = replitDomain.includes(',') ? replitDomain.split(',')[0] : replitDomain;
+  if (domain) return `https://${domain}`;
+  if (req) {
+    const host = req.get('x-forwarded-host') || req.get('host');
+    if (host) return `https://${host}`;
+  }
+  return 'https://pawnahavencamp.com';
+}
+
 const VALID_TRANSITIONS = {
   'PAYMENT_PENDING': ['PAYMENT_SUCCESS', 'PAYMENT_FAILED'],
   'PAYMENT_SUCCESS': ['PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER'],
@@ -338,7 +350,7 @@ const processConfirmedBooking = async (req, res) => {
     );
 
     const whatsapp = new WhatsAppService();
-    const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host') || 'pawnahavencamp.com'}`;
+    const frontendUrl = getFrontendUrl(req);
     const ticketUrl = `${frontendUrl}/ticket?booking_id=${booking_id}`;
 
     const customerMessage = `🎉 Booking Confirmed!\n\nYour booking has been confirmed.\n\nBooking ID: ${booking_id}\nProperty: ${booking.property_name}\n\nView your e-ticket:\n${ticketUrl}`;
@@ -775,7 +787,7 @@ const handleOwnerAction = async (req, res) => {
     }
 
     const whatsapp = new WhatsAppService();
-    const frontendUrl = process.env.FRONTEND_URL || `https://${req.get('x-forwarded-host') || req.get('host')}`;
+    const frontendUrl = getFrontendUrl(req);
 
     if (action === 'CONFIRM') {
       const ticketToken = generateTicketToken();
@@ -988,7 +1000,7 @@ const handleWhatsAppWebhook = async (req, res) => {
               return res.status(200).json({ status: 'ok' });
             }
 
-            const frontendUrl = process.env.FRONTEND_URL || 'https://pawnahavencamp.com';
+            const frontendUrl = getFrontendUrl(req);
 
             if (booking.payment_status !== 'SUCCESS') {
               await whatsapp.sendTextMessage(buttonResponse.from, '⚠️ Cannot process - payment not confirmed for this booking.');

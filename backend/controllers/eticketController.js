@@ -205,6 +205,9 @@ const getBookingETicket = async (req, res) => {
       property_address: booking.property_address,
       persons: booking.persons,
       booking_status: booking.booking_status,
+      payment_status: booking.payment_status,
+      transaction_id: booking.transaction_id,
+      order_id: booking.order_id,
       created_at: booking.created_at,
     };
 

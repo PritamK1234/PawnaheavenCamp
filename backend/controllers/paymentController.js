@@ -447,55 +447,13 @@ const paytmCallback = async (req, res) => {
     });
 
     if (status === "TXN_SUCCESS") {
-      const whatsapp = new WhatsAppService();
-
-      await whatsapp.sendTextMessage(
-        booking.guest_phone,
-        `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${txnAmount}\n\nYour booking is received. You will get confirmation within 1 hour.`,
-      );
-
-      const checkinDate = new Date(booking.checkin_datetime).toLocaleString(
-        "en-IN",
-        {
-          dateStyle: "medium",
-          timeStyle: "short",
-        },
-      );
-      const checkoutDate = new Date(booking.checkout_datetime).toLocaleString(
-        "en-IN",
-        {
-          dateStyle: "medium",
-          timeStyle: "short",
-        },
-      );
-
-      const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
-      const frontendUrl = `https://${getPublicDomain(req)}`;
-      const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
-      const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
-
-      const ownerMessage = `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || 0}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel this booking:`;
-
-      await whatsapp.sendInteractiveButtons(booking.owner_phone, ownerMessage, [
-        {
-          id: JSON.stringify({ token: actionToken, action: "CONFIRM" }),
-          title: "✅ Confirm",
-        },
-        {
-          id: JSON.stringify({ token: actionToken, action: "CANCEL" }),
-          title: "❌ Cancel",
-        },
-      ]);
-
-      await whatsapp.sendTextMessage(
-        booking.admin_phone,
-        `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nOwner: ${booking.owner_phone}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`,
-      );
-
-      console.log(
-        "WhatsApp notifications sent for booking:",
-        booking.booking_id,
-      );
+      try {
+        const whatsapp = new WhatsAppService();
+        const frontendUrl = `https://${getPublicDomain(req)}`;
+        await whatsapp.sendBookingNotifications(booking, actionToken, frontendUrl);
+      } catch (whatsappErr) {
+        console.error("WhatsApp notification error in callback:", whatsappErr.message, whatsappErr.stack);
+      }
     }
 
     const frontendUrl = `https://${getPublicDomain(req)}`;
@@ -1053,21 +1011,53 @@ const verifyPaymentStatus = async (req, res) => {
     );
 
     const statusBody = statusResponse.data?.body;
-    const txnStatus = statusBody?.resultInfo?.resultStatus;
+    let txnStatus = statusBody?.resultInfo?.resultStatus;
     const paytmStatus = statusBody?.resultInfo?.resultCode;
 
     console.log("=== PAYTM STATUS CHECK ===");
     console.log("Booking ID:", booking_id);
     console.log("Order ID:", booking.order_id);
-    console.log("Paytm Response:", JSON.stringify(statusBody?.resultInfo));
+    console.log("Paytm Status API Response:", JSON.stringify(statusBody?.resultInfo));
     console.log("TXN Status:", txnStatus, "| Result Code:", paytmStatus);
     console.log("Current DB payment_status:", booking.payment_status);
+
+    const clientTxnResponse = req.body?.txnResponse || {};
+    const clientStatus = clientTxnResponse.STATUS;
+    console.log("Client SDK txnResponse STATUS:", clientStatus);
+
+    if (txnStatus !== "TXN_SUCCESS" && clientStatus === "TXN_SUCCESS") {
+      const isStaging = getPaytmBaseUrl().includes("stage");
+      console.log("Status API returned", txnStatus, "but SDK callback says TXN_SUCCESS. Staging:", isStaging);
+
+      if (clientTxnResponse.CHECKSUMHASH) {
+        try {
+          const { CHECKSUMHASH, ...txnDataWithoutChecksum } = clientTxnResponse;
+          const isValid = await PaytmChecksum.verifySignature(
+            txnDataWithoutChecksum,
+            merchantKey,
+            CHECKSUMHASH,
+          );
+          if (isValid) {
+            console.log("SDK callback checksum VALID - trusting SDK result");
+            txnStatus = "TXN_SUCCESS";
+          } else {
+            console.log("SDK callback checksum INVALID - ignoring SDK result");
+          }
+        } catch (checksumErr) {
+          console.error("Checksum verification error:", checksumErr.message);
+        }
+      } else if (isStaging) {
+        console.log("No checksum in SDK callback (staging mode) - trusting SDK result for testing");
+        txnStatus = "TXN_SUCCESS";
+      }
+    }
+    console.log("Final resolved TXN Status:", txnStatus);
     console.log("========================");
 
     if (txnStatus === "TXN_SUCCESS" && booking.payment_status !== "SUCCESS") {
-      const txnId = statusBody.txnId || "";
-      const txnAmount = statusBody.txnAmount || booking.advance_amount;
-      const paymentMode = statusBody.paymentMode || "";
+      const txnId = statusBody.txnId || clientTxnResponse.TXNID || "";
+      const txnAmount = statusBody.txnAmount || clientTxnResponse.TXNAMOUNT || booking.advance_amount;
+      const paymentMode = statusBody.paymentMode || clientTxnResponse.PAYMENTMODE || "";
 
       const hasReferral = !!booking.referral_code;
       const advanceAmt = parseFloat(booking.advance_amount);
@@ -1100,40 +1090,9 @@ const verifyPaymentStatus = async (req, res) => {
       console.log("Payment verified via status API for booking:", booking.booking_id);
 
       try {
-        console.log("=== SENDING WHATSAPP NOTIFICATIONS ===");
         const whatsapp = new WhatsAppService();
-        console.log("WhatsApp configured:", whatsapp.isConfigured);
-        const checkinDate = new Date(booking.checkin_datetime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
-        const checkoutDate = new Date(booking.checkout_datetime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
-        const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
         const frontendUrl = `https://${process.env.REPLIT_DOMAINS?.split(",")[0] || "pawnahavencamp.com"}`;
-        const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
-        const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
-
-        console.log("Sending to guest:", booking.guest_phone);
-        const guestResult = await whatsapp.sendTextMessage(
-          booking.guest_phone,
-          `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${txnAmount}\n\nYour booking is received. You will get confirmation within 1 hour.`,
-        );
-        console.log("Guest WhatsApp result:", guestResult);
-
-        console.log("Sending to owner:", booking.owner_phone);
-        const ownerResult = await whatsapp.sendInteractiveButtons(booking.owner_phone,
-          `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || 0}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel this booking:`,
-          [
-            { id: JSON.stringify({ token: actionToken, action: "CONFIRM" }), title: "✅ Confirm" },
-            { id: JSON.stringify({ token: actionToken, action: "CANCEL" }), title: "❌ Cancel" },
-          ],
-        );
-        console.log("Owner WhatsApp result:", ownerResult);
-
-        console.log("Sending to admin:", booking.admin_phone);
-        const adminResult = await whatsapp.sendTextMessage(
-          booking.admin_phone,
-          `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`,
-        );
-        console.log("Admin WhatsApp result:", adminResult);
-        console.log("=== WHATSAPP NOTIFICATIONS COMPLETE ===");
+        await whatsapp.sendBookingNotifications(booking, actionToken, frontendUrl);
       } catch (whatsappErr) {
         console.error("WhatsApp notification error during status verify:", whatsappErr.message, whatsappErr.stack);
       }
@@ -1146,7 +1105,8 @@ const verifyPaymentStatus = async (req, res) => {
       });
     }
 
-    if (txnStatus === "TXN_FAILURE" && booking.payment_status !== "FAILED") {
+    const originalApiStatus = statusBody?.resultInfo?.resultStatus;
+    if (originalApiStatus === "TXN_FAILURE" && txnStatus !== "TXN_SUCCESS" && booking.payment_status !== "FAILED") {
       await query(
         "UPDATE bookings SET payment_status = 'FAILED', booking_status = 'PAYMENT_FAILED', updated_at = NOW() WHERE booking_id = $1",
         [booking.booking_id],

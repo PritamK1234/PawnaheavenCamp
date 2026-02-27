@@ -9,25 +9,26 @@ class WhatsAppService {
     }
   }
 
+  formatPhone(phone) {
+    let cleaned = (phone || '').replace(/[\s\-\(\)]/g, '').replace(/^\+/, '');
+    if (cleaned.length === 10) {
+      cleaned = '91' + cleaned;
+    }
+    return cleaned;
+  }
+
   logMessage(type, to, payload) {
     console.log(`[WhatsApp ${type}] Would send to ${to}:`, JSON.stringify(payload, null, 2));
   }
 
-  async sendTextMessage(to, text) {
-    const payload = {
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      to: to.replace(/^\+/, ''),
-      type: 'text',
-      text: { body: text },
-    };
-
+  async callWhatsAppAPI(payload, label) {
     if (!this.isConfigured) {
-      this.logMessage('TEXT', to, payload);
-      return true;
+      this.logMessage(label, payload.to, payload);
+      return { success: true, simulated: true };
     }
 
     try {
+      console.log(`[WhatsApp ${label}] Sending to ${payload.to}...`);
       const response = await fetch(
         `https://graph.facebook.com/v21.0/${this.phoneNumberId}/messages`,
         {
@@ -40,22 +41,105 @@ class WhatsAppService {
         }
       );
 
+      const responseText = await response.text();
+      let responseData;
+      try { responseData = JSON.parse(responseText); } catch (_) { responseData = responseText; }
+
       if (!response.ok) {
-        const error = await response.text();
-        console.error('WhatsApp API error:', error);
-        return false;
+        console.error(`[WhatsApp ${label}] API ERROR (HTTP ${response.status}):`, JSON.stringify(responseData, null, 2));
+        const errorCode = responseData?.error?.code;
+        const errorMsg = responseData?.error?.message;
+        console.error(`[WhatsApp ${label}] Error code: ${errorCode}, Message: ${errorMsg}`);
+        return { success: false, error: responseData, httpStatus: response.status };
       }
 
-      const result = await response.json();
-      console.log('WhatsApp message sent:', result);
-      return true;
+      console.log(`[WhatsApp ${label}] SUCCESS:`, JSON.stringify(responseData));
+      return { success: true, data: responseData };
     } catch (error) {
-      console.error('Failed to send WhatsApp message:', error);
-      return false;
+      console.error(`[WhatsApp ${label}] NETWORK ERROR:`, error.message);
+      return { success: false, error: error.message };
     }
   }
 
+  async sendTextMessage(to, text) {
+    const phone = this.formatPhone(to);
+    const payload = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: phone,
+      type: 'text',
+      text: { body: text },
+    };
+    const result = await this.callWhatsAppAPI(payload, 'TEXT');
+    return result.success;
+  }
+
+  async sendTemplateMessage(to, templateName, languageCode = 'en_US', components = []) {
+    const phone = this.formatPhone(to);
+    const payload = {
+      messaging_product: 'whatsapp',
+      to: phone,
+      type: 'template',
+      template: {
+        name: templateName,
+        language: { code: languageCode },
+      },
+    };
+    if (components.length > 0) {
+      payload.template.components = components;
+    }
+    const result = await this.callWhatsAppAPI(payload, `TEMPLATE:${templateName}`);
+    return result;
+  }
+
+  async sendBookingNotifications(booking, actionToken, frontendUrl) {
+    const checkinDate = new Date(booking.checkin_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    const checkoutDate = new Date(booking.checkout_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
+    const confirmUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CONFIRM`;
+    const cancelUrl = `${frontendUrl}/api/bookings/owner-action?token=${actionToken}&action=CANCEL`;
+
+    console.log('=== SENDING WHATSAPP NOTIFICATIONS ===');
+    console.log('WhatsApp configured:', this.isConfigured);
+    console.log('Phone Number ID:', this.phoneNumberId ? `${this.phoneNumberId.substring(0, 5)}...` : 'MISSING');
+    console.log('Access Token:', this.accessToken ? `${this.accessToken.substring(0, 10)}...` : 'MISSING');
+
+    console.log('--- Guest notification ---');
+    console.log('Guest phone (raw):', booking.guest_phone);
+    console.log('Guest phone (formatted):', this.formatPhone(booking.guest_phone));
+    const guestResult = await this.sendTextMessage(
+      booking.guest_phone,
+      `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${booking.advance_amount}\n\nYour booking is received. You will get confirmation within 1 hour.`,
+    );
+    console.log('Guest result:', guestResult);
+
+    console.log('--- Owner notification ---');
+    console.log('Owner phone (raw):', booking.owner_phone);
+    console.log('Owner phone (formatted):', this.formatPhone(booking.owner_phone));
+    const ownerResult = await this.sendInteractiveButtons(booking.owner_phone,
+      `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || (booking.veg_guest_count || 0) + (booking.nonveg_guest_count || 0)}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel this booking:`,
+      [
+        { id: JSON.stringify({ token: actionToken, action: 'CONFIRM' }), title: '✅ Confirm' },
+        { id: JSON.stringify({ token: actionToken, action: 'CANCEL' }), title: '❌ Cancel' },
+      ],
+    );
+    console.log('Owner result:', ownerResult);
+
+    console.log('--- Admin notification ---');
+    console.log('Admin phone (raw):', booking.admin_phone);
+    console.log('Admin phone (formatted):', this.formatPhone(booking.admin_phone));
+    const adminResult = await this.sendTextMessage(
+      booking.admin_phone,
+      `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`,
+    );
+    console.log('Admin result:', adminResult);
+    console.log('=== WHATSAPP NOTIFICATIONS COMPLETE ===');
+
+    return { guest: guestResult, owner: ownerResult, admin: adminResult };
+  }
+
   async sendInteractiveButtons(to, bodyText, buttons) {
+    const phone = this.formatPhone(to);
     const interactiveButtons = buttons.map((btn) => ({
       type: 'reply',
       reply: {
@@ -67,7 +151,7 @@ class WhatsAppService {
     const payload = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
-      to: to.replace(/^\+/, ''),
+      to: phone,
       type: 'interactive',
       interactive: {
         type: 'button',
@@ -78,37 +162,8 @@ class WhatsAppService {
       },
     };
 
-    if (!this.isConfigured) {
-      this.logMessage('INTERACTIVE', to, payload);
-      return true;
-    }
-
-    try {
-      const response = await fetch(
-        `https://graph.facebook.com/v21.0/${this.phoneNumberId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('WhatsApp API error:', error);
-        return false;
-      }
-
-      const result = await response.json();
-      console.log('WhatsApp interactive message sent:', result);
-      return true;
-    } catch (error) {
-      console.error('Failed to send WhatsApp interactive message:', error);
-      return false;
-    }
+    const result = await this.callWhatsAppAPI(payload, 'INTERACTIVE');
+    return result.success;
   }
 
   extractButtonResponse(webhookPayload) {

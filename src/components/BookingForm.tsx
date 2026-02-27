@@ -218,6 +218,7 @@ export function BookingForm({
       localStorage.setItem("pending_booking_time", Date.now().toString());
 
       if (onClose) onClose();
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       const result = await PaytmPaymentService.openCheckout(bookingId);
 

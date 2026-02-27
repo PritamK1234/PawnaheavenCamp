@@ -524,6 +524,7 @@ const PropertyDetails = () => {
                         ownerPhone={propertyData.owner_whatsapp_number}
                         ownerName={propertyData.owner_name}
                         initialCheckIn={calendarSelectedDate}
+                        onClose={() => setBookingDialogOpen(false)}
                       />
                     </DialogContent>
                   </Dialog>
@@ -778,6 +779,7 @@ const PropertyDetails = () => {
                   ownerPhone={propertyData.owner_whatsapp_number}
                   ownerName={propertyData.owner_name}
                   initialCheckIn={calendarSelectedDate}
+                  onClose={() => setBookingDialogOpen(false)}
                 />
               </DialogContent>
             </Dialog>

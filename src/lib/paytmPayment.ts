@@ -64,8 +64,12 @@ function loadPaytmScript(mid: string): Promise<void> {
   });
 }
 
-async function verifyPayment(bookingId: string): Promise<VerifyResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/payments/verify/${bookingId}`);
+async function verifyPayment(bookingId: string, txnResponse?: any): Promise<VerifyResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/payments/verify/${bookingId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ txnResponse: txnResponse || {} }),
+  });
   if (!response.ok) {
     throw new Error("Payment verification failed");
   }
@@ -115,7 +119,7 @@ export class PaytmPaymentService {
             } catch (_e) {}
 
             try {
-              const verifyResult = await verifyPayment(bookingId);
+              const verifyResult = await verifyPayment(bookingId, txnResponse);
               resolve(verifyResult);
             } catch (_verifyErr) {
               reject(new Error("Payment completed but verification failed. Please check your booking status."));

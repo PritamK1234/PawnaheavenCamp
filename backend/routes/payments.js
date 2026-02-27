@@ -8,6 +8,7 @@ router.get('/paytm/redirect/:booking_id', paymentController.paytmRedirect);
 router.post('/paytm/callback', paymentController.paytmCallback);
 router.post('/paytm/webhook', paymentController.paytmWebhook);
 router.get('/verify/:booking_id', paymentController.verifyPaymentStatus);
+router.post('/verify/:booking_id', paymentController.verifyPaymentStatus);
 router.post('/refund/initiate', authMiddleware, paymentController.initiateRefund);
 router.post('/refund/deny', authMiddleware, paymentController.denyRefund);
 router.get('/refund/requests', authMiddleware, paymentController.getRefundRequests);

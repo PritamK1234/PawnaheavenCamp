@@ -245,9 +245,13 @@ const UnitManager = ({
                 <p className="font-bold text-white">{unit.name}</p>
                 {category === "villa" ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-blue-400">Max Capacity: {unit.total_persons || 0}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${unit.has_booking ? 'text-red-400 bg-red-400/10 border border-red-400/20' : 'text-green-400 bg-green-400/10 border border-green-400/20'}`}>
-                      {unit.has_booking ? 'Booked' : 'Available'}
+                    <span className="text-xs text-blue-400">
+                      Max Capacity: {unit.total_persons || 0}
+                    </span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${unit.has_booking ? "text-red-400 bg-red-400/10 border border-red-400/20" : "text-green-400 bg-green-400/10 border border-green-400/20"}`}
+                    >
+                      {unit.has_booking ? "Booked" : "Available"}
                     </span>
                   </div>
                 ) : (
@@ -255,7 +259,8 @@ const UnitManager = ({
                     <span className="text-[#00FF41]">
                       {unit.available_persons}
                     </span>{" "}
-                    / <span className="text-[#FFA500]">{unit.total_persons}</span>
+                    /{" "}
+                    <span className="text-[#FFA500]">{unit.total_persons}</span>
                   </p>
                 )}
               </div>
@@ -419,7 +424,9 @@ const UnitManager = ({
                 <div className="space-y-2 md:col-span-2">
                   <Label>
                     <span className="text-[#00FF41]">Available</span> /{" "}
-                    <span className="text-[#FFA500]">Total persons capacity</span>
+                    <span className="text-[#FFA500]">
+                      Total persons capacity
+                    </span>
                   </Label>
                   <div className="flex gap-2">
                     <Input
@@ -706,7 +713,9 @@ const VillaUnitManager = ({
   onRefresh: () => void;
 }) => {
   const [activeUnitId, setActiveUnitId] = useState<number | null>(null);
-  const [unitFormData, setUnitFormData] = useState<Record<number, VillaUnitFormState>>({});
+  const [unitFormData, setUnitFormData] = useState<
+    Record<number, VillaUnitFormState>
+  >({});
   const [isAddingUnit, setIsAddingUnit] = useState(false);
   const [newUnitName, setNewUnitName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -745,11 +754,21 @@ const VillaUnitManager = ({
         price_note: unit.price_note || "",
         location: unit.location || "",
         google_maps_link: unit.google_maps_link || "",
-        amenities: parseJson(unit.amenities).length ? parseJson(unit.amenities) : [""],
-        activities: parseJson(unit.activities).length ? parseJson(unit.activities) : [""],
-        highlights: parseJson(unit.highlights).length ? parseJson(unit.highlights) : [""],
-        policies: parseJson(unit.policies).length ? parseJson(unit.policies) : [""],
-        schedule: parseJson(unit.schedule).length ? parseJson(unit.schedule) : [{ time: "", title: "" }],
+        amenities: parseJson(unit.amenities).length
+          ? parseJson(unit.amenities)
+          : [""],
+        activities: parseJson(unit.activities).length
+          ? parseJson(unit.activities)
+          : [""],
+        highlights: parseJson(unit.highlights).length
+          ? parseJson(unit.highlights)
+          : [""],
+        policies: parseJson(unit.policies).length
+          ? parseJson(unit.policies)
+          : [""],
+        schedule: parseJson(unit.schedule).length
+          ? parseJson(unit.schedule)
+          : [{ time: "", title: "" }],
         images: parseJson(unit.images),
         special_dates: parseJson(unit.special_dates) || [],
       },
@@ -771,14 +790,19 @@ const VillaUnitManager = ({
     if (!newUnitName.trim()) return;
     setIsCreating(true);
     try {
-      const res = await villaAPI.createUnit(propertyId, { name: newUnitName.trim() });
+      const res = await villaAPI.createUnit(propertyId, {
+        name: newUnitName.trim(),
+      });
       if (res.success) {
         toast({ title: "Unit created" });
         setIsAddingUnit(false);
         setNewUnitName("");
         onRefresh();
       } else {
-        toast({ title: res.message || "Failed to create unit", variant: "destructive" });
+        toast({
+          title: res.message || "Failed to create unit",
+          variant: "destructive",
+        });
       }
     } catch (e) {
       toast({ title: "Error creating unit", variant: "destructive" });
@@ -832,14 +856,19 @@ const VillaUnitManager = ({
         policies: form.policies.filter((p) => p.trim()),
         schedule: form.schedule.filter((s) => s.time.trim() || s.title.trim()),
         images: form.images.filter((i) => i.trim()),
-        special_dates: Array.isArray(form.special_dates) ? form.special_dates : [],
+        special_dates: Array.isArray(form.special_dates)
+          ? form.special_dates
+          : [],
       };
       const res = await villaAPI.updateUnit(activeUnitId, payload);
       if (res.success) {
         toast({ title: "Unit saved successfully" });
         onRefresh();
       } else {
-        toast({ title: res.message || "Failed to save unit", variant: "destructive" });
+        toast({
+          title: res.message || "Failed to save unit",
+          variant: "destructive",
+        });
       }
     } catch (e) {
       toast({ title: "Error saving unit", variant: "destructive" });
@@ -848,25 +877,35 @@ const VillaUnitManager = ({
     }
   };
 
-  const handleUnitImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUnitImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (!activeUnitId) return;
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     const currentImages = unitFormData[activeUnitId]?.images || [];
     const remaining = 20 - currentImages.length;
     if (remaining <= 0) {
-      toast({ title: "Maximum 20 images allowed per unit", variant: "destructive" });
+      toast({
+        title: "Maximum 20 images allowed per unit",
+        variant: "destructive",
+      });
       return;
     }
     const filesToUpload = files.slice(0, remaining);
     for (const file of filesToUpload) {
       const ext = file.name.split(".").pop()?.toLowerCase() || "";
       if (!["jpg", "jpeg", "png", "webp"].includes(ext)) {
-        toast({ title: `"${file.name}" skipped — invalid format`, variant: "destructive" });
+        toast({
+          title: `"${file.name}" skipped — invalid format`,
+          variant: "destructive",
+        });
         continue;
       }
       setIsUploading(true);
-      const token = localStorage.getItem("adminToken") || localStorage.getItem("ownerToken");
+      const token =
+        localStorage.getItem("adminToken") ||
+        localStorage.getItem("ownerToken");
       const formDataUpload = new FormData();
       formDataUpload.append("image", file);
       try {
@@ -886,7 +925,10 @@ const VillaUnitManager = ({
           }));
           toast({ title: "Image uploaded" });
         } else {
-          toast({ title: result.message || "Upload failed", variant: "destructive" });
+          toast({
+            title: result.message || "Upload failed",
+            variant: "destructive",
+          });
         }
       } catch (error) {
         toast({ title: "Upload error", variant: "destructive" });
@@ -904,21 +946,32 @@ const VillaUnitManager = ({
     }));
   };
 
-  const updateArrayItem = (field: "amenities" | "activities" | "highlights" | "policies", index: number, value: string) => {
+  const updateArrayItem = (
+    field: "amenities" | "activities" | "highlights" | "policies",
+    index: number,
+    value: string,
+  ) => {
     if (!activeUnitId) return;
     const arr = [...(unitFormData[activeUnitId]?.[field] || [])];
     arr[index] = value;
     updateField(field, arr);
   };
 
-  const addArrayItem = (field: "amenities" | "activities" | "highlights" | "policies") => {
+  const addArrayItem = (
+    field: "amenities" | "activities" | "highlights" | "policies",
+  ) => {
     if (!activeUnitId) return;
     updateField(field, [...(unitFormData[activeUnitId]?.[field] || []), ""]);
   };
 
-  const removeArrayItem = (field: "amenities" | "activities" | "highlights" | "policies", index: number) => {
+  const removeArrayItem = (
+    field: "amenities" | "activities" | "highlights" | "policies",
+    index: number,
+  ) => {
     if (!activeUnitId) return;
-    const arr = (unitFormData[activeUnitId]?.[field] || []).filter((_, i) => i !== index);
+    const arr = (unitFormData[activeUnitId]?.[field] || []).filter(
+      (_, i) => i !== index,
+    );
     updateField(field, arr.length ? arr : [""]);
   };
 
@@ -927,7 +980,9 @@ const VillaUnitManager = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground font-display italic">Villa Units</h3>
+        <h3 className="text-lg font-semibold text-foreground font-display italic">
+          Villa Units
+        </h3>
         <Button
           type="button"
           size="sm"
@@ -971,15 +1026,25 @@ const VillaUnitManager = ({
       {activeForm && activeUnitId && (
         <div className="glass rounded-2xl border border-border/50 p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h4 className="text-gold font-display font-semibold">Editing: {activeForm.name}</h4>
+            <h4 className="text-gold font-display font-semibold">
+              Editing: {activeForm.name}
+            </h4>
             <div className="flex items-center gap-2">
-              <Dialog open={calendarUnitId === activeUnitId} onOpenChange={(open) => { if (!open) setCalendarUnitId(null); }}>
+              <Dialog
+                open={calendarUnitId === activeUnitId}
+                onOpenChange={(open) => {
+                  if (!open) setCalendarUnitId(null);
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => { setCalendarUnitId(activeUnitId); setCalendarUnitName(activeForm.name); }}
+                    onClick={() => {
+                      setCalendarUnitId(activeUnitId);
+                      setCalendarUnitName(activeForm.name);
+                    }}
                     className="h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10"
                   >
                     <Calendar className="w-3 h-3 mr-1" /> Calendar
@@ -987,10 +1052,21 @@ const VillaUnitManager = ({
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[450px] bg-charcoal border-white/10 rounded-3xl">
                   <DialogHeader>
-                    <DialogTitle className="text-gold font-display">Manage Unit Calendar: {calendarUnitName}</DialogTitle>
-                    <DialogDescription className="text-xs text-muted-foreground">Select dates to manage availability and pricing for this unit.</DialogDescription>
+                    <DialogTitle className="text-gold font-display">
+                      Manage Unit Calendar: {calendarUnitName}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground">
+                      Select dates to manage availability and pricing for this
+                      unit.
+                    </DialogDescription>
                   </DialogHeader>
-                  <CalendarSync propertyId={propertyId} unitId={activeUnitId} isAdmin={true} unitName={calendarUnitName} isVilla={true} />
+                  <CalendarSync
+                    propertyId={propertyId}
+                    unitId={activeUnitId}
+                    isAdmin={true}
+                    unitName={calendarUnitName}
+                    isVilla={true}
+                  />
                 </DialogContent>
               </Dialog>
               <Button
@@ -999,7 +1075,11 @@ const VillaUnitManager = ({
                 disabled={isSaving}
                 className="bg-gradient-gold text-black font-bold h-8 px-4 rounded-xl"
               >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                ) : (
+                  <Save className="w-4 h-4 mr-1" />
+                )}
                 Save Unit
               </Button>
             </div>
@@ -1008,76 +1088,157 @@ const VillaUnitManager = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 md:col-span-2">
               <Label>Unit Name</Label>
-              <Input value={activeForm.name} onChange={(e) => updateField("name", e.target.value)} className="bg-white/5 border-white/10" />
+              <Input
+                value={activeForm.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                className="bg-white/5 border-white/10"
+              />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Property Title *</Label>
-              <Input value={activeForm.title} onChange={(e) => updateField("title", e.target.value)} className="bg-white/5 border-white/10" placeholder="e.g. Luxury Villa with Pool" />
+              <Input
+                value={activeForm.title}
+                onChange={(e) => updateField("title", e.target.value)}
+                className="bg-white/5 border-white/10"
+                placeholder="e.g. Luxury Villa with Pool"
+              />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Description</Label>
-              <Textarea value={activeForm.description} onChange={(e) => updateField("description", e.target.value)} className="bg-white/5 border-white/10 min-h-[80px]" />
+              <Textarea
+                value={activeForm.description}
+                onChange={(e) => updateField("description", e.target.value)}
+                className="bg-white/5 border-white/10 min-h-[80px]"
+              />
             </div>
             <div className="space-y-2">
               <Label>Location</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={activeForm.location} onChange={(e) => updateField("location", e.target.value)} className="bg-white/5 border-white/10 pl-10" placeholder="e.g. Near Pawna Lake" />
+                <Input
+                  value={activeForm.location}
+                  onChange={(e) => updateField("location", e.target.value)}
+                  className="bg-white/5 border-white/10 pl-10"
+                  placeholder="e.g. Near Pawna Lake"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Google Maps Link *</Label>
-              <Input value={activeForm.google_maps_link} onChange={(e) => updateField("google_maps_link", e.target.value)} className="bg-white/5 border-white/10" placeholder="Paste Google Maps URL" />
+              <Input
+                value={activeForm.google_maps_link}
+                onChange={(e) =>
+                  updateField("google_maps_link", e.target.value)
+                }
+                className="bg-white/5 border-white/10"
+                placeholder="Paste Google Maps URL"
+              />
             </div>
             <div className="space-y-2">
               <Label>Weekday Price</Label>
               <div className="relative">
                 <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="number" value={activeForm.weekday_price} onChange={(e) => updateField("weekday_price", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+                <Input
+                  type="number"
+                  value={activeForm.weekday_price}
+                  onChange={(e) => updateField("weekday_price", e.target.value)}
+                  className="bg-white/5 border-white/10 pl-10"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Weekend Price</Label>
               <div className="relative">
                 <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="number" value={activeForm.weekend_price} onChange={(e) => updateField("weekend_price", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+                <Input
+                  type="number"
+                  value={activeForm.weekend_price}
+                  onChange={(e) => updateField("weekend_price", e.target.value)}
+                  className="bg-white/5 border-white/10 pl-10"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Special Price</Label>
-              <Input type="number" value={activeForm.special_price} onChange={(e) => updateField("special_price", e.target.value)} className="bg-white/5 border-white/10" />
+              <Input
+                type="number"
+                value={activeForm.special_price}
+                onChange={(e) => updateField("special_price", e.target.value)}
+                className="bg-white/5 border-white/10"
+              />
             </div>
             <div className="space-y-2">
               <Label>Max Capacity (Total Persons)</Label>
               <div className="relative">
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="number" value={activeForm.total_persons} onChange={(e) => updateField("total_persons", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+                <Input
+                  type="number"
+                  value={activeForm.total_persons}
+                  onChange={(e) => updateField("total_persons", e.target.value)}
+                  className="bg-white/5 border-white/10 pl-10"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Check-in Time</Label>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={activeForm.check_in_time} onChange={(e) => updateField("check_in_time", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+                <Input
+                  value={activeForm.check_in_time}
+                  onChange={(e) => updateField("check_in_time", e.target.value)}
+                  className="bg-white/5 border-white/10 pl-10"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Check-out Time</Label>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={activeForm.check_out_time} onChange={(e) => updateField("check_out_time", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+                <Input
+                  value={activeForm.check_out_time}
+                  onChange={(e) =>
+                    updateField("check_out_time", e.target.value)
+                  }
+                  className="bg-white/5 border-white/10 pl-10"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Rating (0-5)</Label>
               <div className="relative">
                 <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="number" step="0.1" min="0" max="5" value={activeForm.rating} onChange={(e) => updateField("rating", e.target.value)} className="bg-white/5 border-white/10 pl-10" />
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={activeForm.rating}
+                  onChange={(e) => updateField("rating", e.target.value)}
+                  className="bg-white/5 border-white/10 pl-10"
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Price Note</Label>
-              <Input value={activeForm.price_note} onChange={(e) => updateField("price_note", e.target.value)} className="bg-white/5 border-white/10" />
+              <Label>Price Note *</Label>
+
+              <Select
+                value={activeForm.price_note}
+                onValueChange={(value) => updateField("price_note", value)}
+              >
+                <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-xl">
+                  <SelectValue placeholder="Select Price Note" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="per person with meal">
+                    Per person with meal
+                  </SelectItem>
+
+                  <SelectItem value="per person without meal">
+                    Per person without meal
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -1088,7 +1249,12 @@ const VillaUnitManager = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => updateField("special_dates", [...activeForm.special_dates, { date: "", price: "" }])}
+                onClick={() =>
+                  updateField("special_dates", [
+                    ...activeForm.special_dates,
+                    { date: "", price: "" },
+                  ])
+                }
                 className="bg-gold/10 border-gold/20 text-gold hover:bg-gold/20"
               >
                 + Add Date
@@ -1096,7 +1262,10 @@ const VillaUnitManager = ({
             </div>
             <div className="space-y-3">
               {activeForm.special_dates.map((sd, idx) => (
-                <div key={idx} className="flex gap-3 items-end bg-white/5 p-3 rounded-xl">
+                <div
+                  key={idx}
+                  className="flex gap-3 items-end bg-white/5 p-3 rounded-xl"
+                >
                   <div className="flex-1 space-y-2">
                     <Label className="text-xs">Date</Label>
                     <Input
@@ -1104,7 +1273,10 @@ const VillaUnitManager = ({
                       value={sd.date}
                       onChange={(e) => {
                         const newDates = [...activeForm.special_dates];
-                        newDates[idx] = { ...newDates[idx], date: e.target.value };
+                        newDates[idx] = {
+                          ...newDates[idx],
+                          date: e.target.value,
+                        };
                         updateField("special_dates", newDates);
                       }}
                       className="bg-charcoal border-white/10"
@@ -1117,7 +1289,10 @@ const VillaUnitManager = ({
                       value={sd.price}
                       onChange={(e) => {
                         const newDates = [...activeForm.special_dates];
-                        newDates[idx] = { ...newDates[idx], price: e.target.value };
+                        newDates[idx] = {
+                          ...newDates[idx],
+                          price: e.target.value,
+                        };
                         updateField("special_dates", newDates);
                       }}
                       placeholder="₹ 2999"
@@ -1128,7 +1303,12 @@ const VillaUnitManager = ({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => updateField("special_dates", activeForm.special_dates.filter((_, i) => i !== idx))}
+                    onClick={() =>
+                      updateField(
+                        "special_dates",
+                        activeForm.special_dates.filter((_, i) => i !== idx),
+                      )
+                    }
                     className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1138,28 +1318,45 @@ const VillaUnitManager = ({
             </div>
           </div>
 
-          {(["amenities", "activities", "highlights", "policies"] as const).map((field) => (
-            <div key={field} className="space-y-2">
-              <Label className="capitalize">{field}</Label>
-              <div className="space-y-2">
-                {(activeForm[field] as string[]).map((val, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <Input
-                      value={val}
-                      onChange={(e) => updateArrayItem(field, idx, e.target.value)}
-                      className="bg-white/5 border-white/10 h-9"
-                    />
-                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-red-500/50 hover:text-red-500" onClick={() => removeArrayItem(field, idx)}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" className="w-full border-dashed" onClick={() => addArrayItem(field)}>
-                  <Plus className="w-3 h-3 mr-1" /> Add {field.charAt(0).toUpperCase() + field.slice(1)}
-                </Button>
+          {(["amenities", "activities", "highlights", "policies"] as const).map(
+            (field) => (
+              <div key={field} className="space-y-2">
+                <Label className="capitalize">{field}</Label>
+                <div className="space-y-2">
+                  {(activeForm[field] as string[]).map((val, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <Input
+                        value={val}
+                        onChange={(e) =>
+                          updateArrayItem(field, idx, e.target.value)
+                        }
+                        className="bg-white/5 border-white/10 h-9"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-red-500/50 hover:text-red-500"
+                        onClick={() => removeArrayItem(field, idx)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-dashed"
+                    onClick={() => addArrayItem(field)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add{" "}
+                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
 
           <div className="space-y-2">
             <Label>Schedule</Label>
@@ -1170,7 +1367,10 @@ const VillaUnitManager = ({
                     value={item.time}
                     onChange={(e) => {
                       const newSchedule = [...activeForm.schedule];
-                      newSchedule[idx] = { ...newSchedule[idx], time: e.target.value };
+                      newSchedule[idx] = {
+                        ...newSchedule[idx],
+                        time: e.target.value,
+                      };
                       updateField("schedule", newSchedule);
                     }}
                     placeholder="Time"
@@ -1180,7 +1380,10 @@ const VillaUnitManager = ({
                     value={item.title}
                     onChange={(e) => {
                       const newSchedule = [...activeForm.schedule];
-                      newSchedule[idx] = { ...newSchedule[idx], title: e.target.value };
+                      newSchedule[idx] = {
+                        ...newSchedule[idx],
+                        title: e.target.value,
+                      };
                       updateField("schedule", newSchedule);
                     }}
                     placeholder="Activity"
@@ -1192,8 +1395,13 @@ const VillaUnitManager = ({
                     size="icon"
                     className="h-9 w-9 text-red-500/50 hover:text-red-500"
                     onClick={() => {
-                      const arr = activeForm.schedule.filter((_, i) => i !== idx);
-                      updateField("schedule", arr.length ? arr : [{ time: "", title: "" }]);
+                      const arr = activeForm.schedule.filter(
+                        (_, i) => i !== idx,
+                      );
+                      updateField(
+                        "schedule",
+                        arr.length ? arr : [{ time: "", title: "" }],
+                      );
                     }}
                   >
                     <Trash2 className="w-3 h-3" />
@@ -1205,7 +1413,12 @@ const VillaUnitManager = ({
                 variant="outline"
                 size="sm"
                 className="w-full border-dashed"
-                onClick={() => updateField("schedule", [...activeForm.schedule, { time: "", title: "" }])}
+                onClick={() =>
+                  updateField("schedule", [
+                    ...activeForm.schedule,
+                    { time: "", title: "" },
+                  ])
+                }
               >
                 <Plus className="w-3 h-3 mr-1" /> Add Schedule Item
               </Button>
@@ -1227,20 +1440,37 @@ const VillaUnitManager = ({
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => document.getElementById(`villa-unit-img-${activeUnitId}`)?.click()}
+                onClick={() =>
+                  document
+                    .getElementById(`villa-unit-img-${activeUnitId}`)
+                    ?.click()
+                }
                 disabled={isUploading || activeForm.images.length >= 20}
               >
-                {isUploading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Upload className="w-3 h-3 mr-1" />} Upload
+                {isUploading ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                ) : (
+                  <Upload className="w-3 h-3 mr-1" />
+                )}{" "}
+                Upload
               </Button>
             </div>
             <div className="grid grid-cols-4 gap-2">
               {activeForm.images.map((img, idx) => (
-                <div key={idx} className="aspect-square rounded-lg overflow-hidden relative group border border-white/10">
+                <div
+                  key={idx}
+                  className="aspect-square rounded-lg overflow-hidden relative group border border-white/10"
+                >
                   <img src={img} className="w-full h-full object-cover" />
                   <button
                     type="button"
                     className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                    onClick={() => updateField("images", activeForm.images.filter((_, i) => i !== idx))}
+                    onClick={() =>
+                      updateField(
+                        "images",
+                        activeForm.images.filter((_, i) => i !== idx),
+                      )
+                    }
                   >
                     <Trash2 className="w-4 h-4 text-red-500" />
                   </button>
@@ -1251,11 +1481,29 @@ const VillaUnitManager = ({
         </div>
       )}
 
-      <Dialog open={isAddingUnit} onOpenChange={(open) => { if (!open) { setIsAddingUnit(false); setNewUnitName(""); } }}>
-        <DialogContent className="bg-charcoal border-white/10 rounded-3xl sm:max-w-[400px]" aria-describedby="villa-add-unit-desc">
+      <Dialog
+        open={isAddingUnit}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsAddingUnit(false);
+            setNewUnitName("");
+          }
+        }}
+      >
+        <DialogContent
+          className="bg-charcoal border-white/10 rounded-3xl sm:max-w-[400px]"
+          aria-describedby="villa-add-unit-desc"
+        >
           <DialogHeader>
-            <DialogTitle className="text-gold font-display">Add New Villa Unit</DialogTitle>
-            <p id="villa-add-unit-desc" className="text-xs text-muted-foreground">Enter a name for the new unit.</p>
+            <DialogTitle className="text-gold font-display">
+              Add New Villa Unit
+            </DialogTitle>
+            <p
+              id="villa-add-unit-desc"
+              className="text-xs text-muted-foreground"
+            >
+              Enter a name for the new unit.
+            </p>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -1270,10 +1518,28 @@ const VillaUnitManager = ({
               />
             </div>
             <div className="flex gap-2">
-              <Button type="button" onClick={handleCreateUnit} disabled={isCreating || !newUnitName.trim()} className="flex-1 bg-gradient-gold text-black font-bold h-10 rounded-xl">
-                {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />} Save
+              <Button
+                type="button"
+                onClick={handleCreateUnit}
+                disabled={isCreating || !newUnitName.trim()}
+                className="flex-1 bg-gradient-gold text-black font-bold h-10 rounded-xl"
+              >
+                {isCreating ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                ) : (
+                  <Save className="w-4 h-4 mr-1" />
+                )}{" "}
+                Save
               </Button>
-              <Button type="button" variant="outline" onClick={() => { setIsAddingUnit(false); setNewUnitName(""); }} className="flex-1 h-10 rounded-xl">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsAddingUnit(false);
+                  setNewUnitName("");
+                }}
+                className="flex-1 h-10 rounded-xl"
+              >
                 Cancel
               </Button>
             </div>
@@ -1347,7 +1613,9 @@ const AdminPropertyForm = ({
       try {
         const propId = property?.property_id || property?.id;
         if (propId) {
-          const response = await fetch(`/api/referrals/owner-lookup-property/${propId}`);
+          const response = await fetch(
+            `/api/referrals/owner-lookup-property/${propId}`,
+          );
           const result = await response.json();
           if (result.found && result.data?.referral_code) {
             setFormData((prev) => ({
@@ -1582,8 +1850,13 @@ const AdminPropertyForm = ({
     } else if (formData.category === "villa") {
       (payload as any).weekday_price = formData.weekday_price;
       (payload as any).weekend_price = formData.weekend_price;
-      if (!payload.title) (payload as any).title = formData.owner_name ? `${formData.owner_name} Villa` : "Villa Property";
-      if (!payload.description) (payload as any).description = "Villa property - details managed at unit level";
+      if (!payload.title)
+        (payload as any).title = formData.owner_name
+          ? `${formData.owner_name} Villa`
+          : "Villa Property";
+      if (!payload.description)
+        (payload as any).description =
+          "Villa property - details managed at unit level";
       if (!payload.location) (payload as any).location = "See unit details";
       if (!payload.price_note) (payload as any).price_note = "See unit details";
       if (!(payload as any).price) (payload as any).price = "See Units";
@@ -1866,310 +2139,325 @@ const AdminPropertyForm = ({
                   )}
                   {!property && (
                     <p className="text-sm text-muted-foreground italic">
-                      Save the property first to enable calendar/unit management.
+                      Save the property first to enable calendar/unit
+                      management.
                     </p>
                   )}
                 </div>
               )}
 
-              {formData.category !== "villa" && (<>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="title">Property Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="h-12 bg-secondary/50 rounded-xl"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location">Location *</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="map_link">Google Maps Link *</Label>
-                <Input
-                  id="map_link"
-                  value={formData.map_link}
-                  onChange={(e) =>
-                    setFormData({ ...formData, map_link: e.target.value })
-                  }
-                  className="h-12 bg-secondary/50 rounded-xl"
-                  placeholder="Paste Google Maps URL here"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="price">
-                  {formData.category === "villa"
-                    ? "Base Price (Displayed) *"
-                    : "Starting Price (Auto-calculated)"}
-                </Label>
-                <div className="relative">
-                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="price"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                    placeholder={
-                      formData.category === "campings_cottages"
-                        ? "Price from units will be used"
-                        : "e.g. ₹15,000"
-                    }
-                    disabled={formData.category === "campings_cottages"}
-                    required={formData.category === "villa"}
-                  />
-                </div>
-                {formData.category === "campings_cottages" && (
-                  <p className="text-[10px] text-primary mt-1 italic">
-                    * Minimum price from available units will be displayed
-                    automatically.
-                  </p>
-                )}
-              </div>
-
-              {formData.category === "villa" && (
-                <div className="md:col-span-2 space-y-4 pt-4 border-t border-white/10">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-gold flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Special Day Prices
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          special_dates: [
-                            ...formData.special_dates,
-                            { date: "", price: "" },
-                          ],
-                        })
-                      }
-                      className="bg-gold/10 border-gold/20 text-gold hover:bg-gold/20"
-                    >
-                      <Plus className="w-3 h-3 mr-1" /> Add Special Day
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {formData.special_dates.map((sd, idx) => (
-                      <div
-                        key={idx}
-                        className="flex gap-2 items-center bg-white/5 p-3 rounded-xl border border-white/10"
-                      >
-                        <Input
-                          type="date"
-                          value={sd.date}
-                          onChange={(e) => {
-                            const newDates = [...formData.special_dates];
-                            newDates[idx].date = e.target.value;
-                            setFormData({
-                              ...formData,
-                              special_dates: newDates,
-                            });
-                          }}
-                          className="flex-1 bg-charcoal border-white/10 text-xs"
-                        />
-                        <div className="relative flex-1">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gold text-xs">
-                            ₹
-                          </span>
-                          <Input
-                            type="number"
-                            value={sd.price}
-                            onChange={(e) => {
-                              const newDates = [...formData.special_dates];
-                              newDates[idx].price = e.target.value;
-                              setFormData({
-                                ...formData,
-                                special_dates: newDates,
-                              });
-                            }}
-                            placeholder="Price"
-                            className="pl-5 bg-charcoal border-white/10 text-xs"
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newDates = formData.special_dates.filter(
-                              (_, i) => i !== idx,
-                            );
-                            setFormData({
-                              ...formData,
-                              special_dates: newDates,
-                            });
-                          }}
-                          className="text-red-500 hover:text-red-400 h-8 w-8"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="price_note">Price Note *</Label>
-                <Input
-                  id="price_note"
-                  value={formData.price_note}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price_note: e.target.value })
-                  }
-                  className="h-12 bg-secondary/50 rounded-xl"
-                  required
-                />
-              </div>
-
-              {formData.category === "villa" && (
+              {formData.category !== "villa" && (
                 <>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="title">Property Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                      className="h-12 bg-secondary/50 rounded-xl"
+                      required
+                    />
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="weekday_price">
-                      Weekday Price (Base Price)
+                    <Label htmlFor="location">Location *</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="location"
+                        value={formData.location}
+                        onChange={(e) =>
+                          setFormData({ ...formData, location: e.target.value })
+                        }
+                        className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="map_link">Google Maps Link *</Label>
+                    <Input
+                      id="map_link"
+                      value={formData.map_link}
+                      onChange={(e) =>
+                        setFormData({ ...formData, map_link: e.target.value })
+                      }
+                      className="h-12 bg-secondary/50 rounded-xl"
+                      placeholder="Paste Google Maps URL here"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="price">
+                      {formData.category === "villa"
+                        ? "Base Price (Displayed) *"
+                        : "Starting Price (Auto-calculated)"}
                     </Label>
                     <div className="relative">
                       <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        id="weekday_price"
-                        value={formData.weekday_price}
+                        id="price"
+                        value={formData.price}
                         onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            weekday_price: e.target.value,
-                          })
+                          setFormData({ ...formData, price: e.target.value })
                         }
                         className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                        placeholder="e.g., ₹7,499"
+                        placeholder={
+                          formData.category === "campings_cottages"
+                            ? "Price from units will be used"
+                            : "e.g. ₹15,000"
+                        }
+                        disabled={formData.category === "campings_cottages"}
+                        required={formData.category === "villa"}
+                      />
+                    </div>
+                    {formData.category === "campings_cottages" && (
+                      <p className="text-[10px] text-primary mt-1 italic">
+                        * Minimum price from available units will be displayed
+                        automatically.
+                      </p>
+                    )}
+                  </div>
+
+                  {formData.category === "villa" && (
+                    <div className="md:col-span-2 space-y-4 pt-4 border-t border-white/10">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-gold flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          Special Day Prices
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              special_dates: [
+                                ...formData.special_dates,
+                                { date: "", price: "" },
+                              ],
+                            })
+                          }
+                          className="bg-gold/10 border-gold/20 text-gold hover:bg-gold/20"
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Add Special Day
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {formData.special_dates.map((sd, idx) => (
+                          <div
+                            key={idx}
+                            className="flex gap-2 items-center bg-white/5 p-3 rounded-xl border border-white/10"
+                          >
+                            <Input
+                              type="date"
+                              value={sd.date}
+                              onChange={(e) => {
+                                const newDates = [...formData.special_dates];
+                                newDates[idx].date = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  special_dates: newDates,
+                                });
+                              }}
+                              className="flex-1 bg-charcoal border-white/10 text-xs"
+                            />
+                            <div className="relative flex-1">
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gold text-xs">
+                                ₹
+                              </span>
+                              <Input
+                                type="number"
+                                value={sd.price}
+                                onChange={(e) => {
+                                  const newDates = [...formData.special_dates];
+                                  newDates[idx].price = e.target.value;
+                                  setFormData({
+                                    ...formData,
+                                    special_dates: newDates,
+                                  });
+                                }}
+                                placeholder="Price"
+                                className="pl-5 bg-charcoal border-white/10 text-xs"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const newDates = formData.special_dates.filter(
+                                  (_, i) => i !== idx,
+                                );
+                                setFormData({
+                                  ...formData,
+                                  special_dates: newDates,
+                                });
+                              }}
+                              className="text-red-500 hover:text-red-400 h-8 w-8"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="price_note">Price Note *</Label>
+
+                    <Select
+                      value={formData.price_note}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, price_note: value })
+                      }
+                    >
+                      <SelectTrigger className="h-12 bg-secondary/50 rounded-xl">
+                        <SelectValue placeholder="Select Price Note" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="per person with meal">
+                          Per person with meal
+                        </SelectItem>
+
+                        <SelectItem value="per person without meal">
+                          Per person without meal
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.category === "villa" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="weekday_price">
+                          Weekday Price (Base Price)
+                        </Label>
+                        <div className="relative">
+                          <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="weekday_price"
+                            value={formData.weekday_price}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                weekday_price: e.target.value,
+                              })
+                            }
+                            className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                            placeholder="e.g., ₹7,499"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="weekend_price">Weekend Price</Label>
+                        <div className="relative">
+                          <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="weekend_price"
+                            value={formData.weekend_price}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                weekend_price: e.target.value,
+                              })
+                            }
+                            className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                            placeholder="e.g., ₹9,999"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {formData.category === "villa" ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="max_capacity">Max Capacity *</Label>
+                      <div className="relative">
+                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="max_capacity"
+                          type="number"
+                          value={formData.max_capacity}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              max_capacity: e.target.value,
+                              capacity: e.target.value,
+                            })
+                          }
+                          className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                          required
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="rating">Rating (0-5) *</Label>
+                    <div className="relative">
+                      <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="rating"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="5"
+                        value={formData.rating}
+                        onChange={(e) =>
+                          setFormData({ ...formData, rating: e.target.value })
+                        }
+                        className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="weekend_price">Weekend Price</Label>
+                    <Label htmlFor="check_in_time">Check-in Time</Label>
                     <div className="relative">
-                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        id="weekend_price"
-                        value={formData.weekend_price}
+                        id="check_in_time"
+                        value={formData.check_in_time}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            weekend_price: e.target.value,
+                            check_in_time: e.target.value,
                           })
                         }
                         className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                        placeholder="e.g., ₹9,999"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="check_out_time">Check-out Time</Label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="check_out_time"
+                        value={formData.check_out_time}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            check_out_time: e.target.value,
+                          })
+                        }
+                        className="h-12 pl-10 bg-secondary/50 rounded-xl"
                       />
                     </div>
                   </div>
                 </>
               )}
-
-              {formData.category === "villa" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="max_capacity">Max Capacity *</Label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="max_capacity"
-                      type="number"
-                      value={formData.max_capacity}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          max_capacity: e.target.value,
-                          capacity: e.target.value,
-                        })
-                      }
-                      className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                      required
-                    />
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="space-y-2">
-                <Label htmlFor="rating">Rating (0-5) *</Label>
-                <div className="relative">
-                  <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="rating"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="5"
-                    value={formData.rating}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rating: e.target.value })
-                    }
-                    className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="check_in_time">Check-in Time</Label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="check_in_time"
-                    value={formData.check_in_time}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        check_in_time: e.target.value,
-                      })
-                    }
-                    className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="check_out_time">Check-out Time</Label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="check_out_time"
-                    value={formData.check_out_time}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        check_out_time: e.target.value,
-                      })
-                    }
-                    className="h-12 pl-10 bg-secondary/50 rounded-xl"
-                  />
-                </div>
-              </div>
-              </>)}
 
               <div className="space-y-2">
                 <Label htmlFor="owner_name">Owner Name *</Label>
@@ -2188,16 +2476,32 @@ const AdminPropertyForm = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="owner_whatsapp_number">Owner WhatsApp Number *</Label>
+                <Label htmlFor="owner_whatsapp_number">
+                  Owner WhatsApp Number *
+                </Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="owner_whatsapp_number"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
                     value={formData.owner_whatsapp_number}
-                    onChange={(e) =>
-                      setFormData({ ...formData, owner_whatsapp_number: e.target.value })
-                    }
+                    onChange={(e) => {
+                      // Allow numbers only
+                      const cleaned = e.target.value.replace(/\D/g, "");
+
+                      // Limit to 10 digits
+                      if (cleaned.length <= 10) {
+                        setFormData({
+                          ...formData,
+                          owner_whatsapp_number: cleaned,
+                        });
+                      }
+                    }}
                     className="h-12 pl-10 bg-secondary/50 rounded-xl"
+                    placeholder="Enter 10 digit WhatsApp number"
                     required
                   />
                 </div>
@@ -2247,7 +2551,9 @@ const AdminPropertyForm = ({
                       <div className="flex gap-2">
                         <Input
                           id="owner_otp_number"
-                          value={formData.owner_otp_number || "Not registered yet"}
+                          value={
+                            formData.owner_otp_number || "Not registered yet"
+                          }
                           disabled
                           className="h-12 pl-10 bg-secondary/50 rounded-xl flex-1 disabled:opacity-70"
                         />
@@ -2278,7 +2584,8 @@ const AdminPropertyForm = ({
                       className="h-12 pl-10 bg-secondary/50 rounded-xl disabled:opacity-60"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      This will be set automatically when the owner registers via "Register Your Property"
+                      This will be set automatically when the owner registers
+                      via "Register Your Property"
                     </p>
                   </div>
                 )}
@@ -2302,61 +2609,121 @@ const AdminPropertyForm = ({
             </div>
           </div>
 
-          {formData.category !== "villa" && (<>
-          {/* Arrays: Amenities, Activities, Highlights, Policies */}
-          {[
-            {
-              label: "Amenities",
-              field: "amenities" as const,
-              icon: Star,
-              hide: formData.category === "campings_cottages",
-            },
-            {
-              label: "Activities",
-              field: "activities" as const,
-              icon: Sparkles,
-            },
-            {
-              label: "Highlights (What You'll Love)",
-              field: "highlights" as const,
-              icon: Star,
-            },
-            {
-              label: "Rules & Policies",
-              field: "policies" as const,
-              icon: Clock,
-            },
-          ]
-            .filter((s) => !s.hide)
-            .map((section) => (
-              <div
-                key={section.field}
-                className="glass rounded-2xl border border-border/50 p-6"
-              >
+          {formData.category !== "villa" && (
+            <>
+              {/* Arrays: Amenities, Activities, Highlights, Policies */}
+              {[
+                {
+                  label: "Amenities",
+                  field: "amenities" as const,
+                  icon: Star,
+                  hide: formData.category === "campings_cottages",
+                },
+                {
+                  label: "Activities",
+                  field: "activities" as const,
+                  icon: Sparkles,
+                },
+                {
+                  label: "Highlights (What You'll Love)",
+                  field: "highlights" as const,
+                  icon: Star,
+                },
+                {
+                  label: "Rules & Policies",
+                  field: "policies" as const,
+                  icon: Clock,
+                },
+              ]
+                .filter((s) => !s.hide)
+                .map((section) => (
+                  <div
+                    key={section.field}
+                    className="glass rounded-2xl border border-border/50 p-6"
+                  >
+                    <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+                      <section.icon className="w-5 h-5 text-primary" />
+                      {section.label} *
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {formData[section.field].map((item, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <Input
+                            value={item}
+                            onChange={(e) =>
+                              handleArrayChange(
+                                section.field,
+                                index,
+                                e.target.value,
+                              )
+                            }
+                            placeholder={section.label.slice(0, -1)}
+                            className="h-12 bg-secondary/50 rounded-xl"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              removeArrayItem(section.field, index)
+                            }
+                            className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl flex-shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => addArrayItem(section.field)}
+                      className="mt-3 h-10 rounded-xl border-dashed hover:border-primary hover:bg-primary/5 transition-all"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add {section.label.slice(0, -1)}
+                    </Button>
+                  </div>
+                ))}
+
+              {/* Schedule */}
+              <div className="glass rounded-2xl border border-border/50 p-6">
                 <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-                  <section.icon className="w-5 h-5 text-primary" />
-                  {section.label} *
+                  <Clock className="w-5 h-5 text-primary" />
+                  Property Schedule
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {formData[section.field].map((item, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <Input
-                        value={item}
-                        onChange={(e) =>
-                          handleArrayChange(
-                            section.field,
-                            index,
-                            e.target.value,
-                          )
-                        }
-                        placeholder={section.label.slice(0, -1)}
-                        className="h-12 bg-secondary/50 rounded-xl"
-                      />
+                <div className="space-y-4">
+                  {formData.schedule.map((item: any, index: number) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                        <Input
+                          value={item.time}
+                          onChange={(e) =>
+                            handleArrayChange("schedule", index, {
+                              ...item,
+                              time: e.target.value,
+                            })
+                          }
+                          placeholder="Time (e.g. 4:30 PM)"
+                          className="h-12 bg-secondary/50 rounded-xl"
+                        />
+                        <Input
+                          value={item.title}
+                          onChange={(e) =>
+                            handleArrayChange("schedule", index, {
+                              ...item,
+                              title: e.target.value,
+                            })
+                          }
+                          placeholder="Activity (e.g. Tea & Snacks)"
+                          className="h-12 bg-secondary/50 rounded-xl"
+                        />
+                      </div>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeArrayItem(section.field, index)}
+                        onClick={() => removeArrayItem("schedule", index)}
                         className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl flex-shrink-0"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -2367,184 +2734,134 @@ const AdminPropertyForm = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => addArrayItem(section.field)}
-                  className="mt-3 h-10 rounded-xl border-dashed hover:border-primary hover:bg-primary/5 transition-all"
+                  onClick={() => addArrayItem("schedule")}
+                  className="mt-4 h-10 rounded-xl border-dashed hover:border-primary hover:bg-primary/5 transition-all"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add {section.label.slice(0, -1)}
+                  Add Schedule Item
                 </Button>
               </div>
-            ))}
 
-          {/* Schedule */}
-          <div className="glass rounded-2xl border border-border/50 p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              Property Schedule
-            </h2>
-            <div className="space-y-4">
-              {formData.schedule.map((item: any, index: number) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-                    <Input
-                      value={item.time}
-                      onChange={(e) =>
-                        handleArrayChange("schedule", index, {
-                          ...item,
-                          time: e.target.value,
-                        })
-                      }
-                      placeholder="Time (e.g. 4:30 PM)"
-                      className="h-12 bg-secondary/50 rounded-xl"
-                    />
-                    <Input
-                      value={item.title}
-                      onChange={(e) =>
-                        handleArrayChange("schedule", index, {
-                          ...item,
-                          title: e.target.value,
-                        })
-                      }
-                      placeholder="Activity (e.g. Tea & Snacks)"
-                      className="h-12 bg-secondary/50 rounded-xl"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeArrayItem("schedule", index)}
-                    className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl flex-shrink-0"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => addArrayItem("schedule")}
-              className="mt-4 h-10 rounded-xl border-dashed hover:border-primary hover:bg-primary/5 transition-all"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Schedule Item
-            </Button>
-          </div>
-
-          {/* Images - hidden for both campings_cottages and villa (villa images handled in units) */}
-          {formData.category !== "campings_cottages" && formData.category !== "villa" && (
-            <div className="glass rounded-2xl border border-border/50 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Star className="w-5 h-5 text-primary" />
-                  Property Images * (
-                  {formData.images.filter((img) => img.trim()).length}/20)
-                </h2>
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="image-upload"
-                    className="hidden"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    onChange={handleImageUpload}
-                    disabled={isUploading}
-                    multiple
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl gap-2"
-                    disabled={
-                      isUploading ||
-                      formData.images.filter((img) => img.trim()).length >= 20
-                    }
-                    onClick={() =>
-                      document.getElementById("image-upload")?.click()
-                    }
-                  >
-                    {isUploading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Upload className="w-4 h-4" />
-                    )}
-                    Upload Image
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {formData.images
-                  .filter((img) => img.trim())
-                  .map((image, index) => (
-                    <div key={index} className="flex items-center gap-3 group">
-                      <div className="flex-1 relative">
-                        <Input
-                          value={image}
-                          readOnly
-                          className="h-12 bg-secondary/30 rounded-xl pr-12 text-muted-foreground"
+              {/* Images - hidden for both campings_cottages and villa (villa images handled in units) */}
+              {formData.category !== "campings_cottages" &&
+                formData.category !== "villa" && (
+                  <div className="glass rounded-2xl border border-border/50 p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Star className="w-5 h-5 text-primary" />
+                        Property Images * (
+                        {formData.images.filter((img) => img.trim()).length}/20)
+                      </h2>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          id="image-upload"
+                          className="hidden"
+                          accept=".jpg,.jpeg,.png,.webp"
+                          onChange={handleImageUpload}
+                          disabled={isUploading}
+                          multiple
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg overflow-hidden bg-secondary">
-                          <img
-                            src={image}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            onError={(e) =>
-                              (e.currentTarget.style.display = "none")
-                            }
-                          />
-                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl gap-2"
+                          disabled={
+                            isUploading ||
+                            formData.images.filter((img) => img.trim())
+                              .length >= 20
+                          }
+                          onClick={() =>
+                            document.getElementById("image-upload")?.click()
+                          }
+                        >
+                          {isUploading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4" />
+                          )}
+                          Upload Image
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const newImages = formData.images.filter(
-                            (_, i) => i !== index,
-                          );
-                          setFormData((prev) => ({
-                            ...prev,
-                            images: newImages,
-                          }));
-                        }}
-                        className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
                     </div>
-                  ))}
-                {formData.images.filter((img) => img.trim()).length === 0 && (
-                  <div className="text-center py-8 border-2 border-dashed border-border/50 rounded-2xl bg-secondary/10">
-                    <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-20" />
-                    <p className="text-sm text-muted-foreground">
-                      No images uploaded yet
-                    </p>
+                    <div className="space-y-3">
+                      {formData.images
+                        .filter((img) => img.trim())
+                        .map((image, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-3 group"
+                          >
+                            <div className="flex-1 relative">
+                              <Input
+                                value={image}
+                                readOnly
+                                className="h-12 bg-secondary/30 rounded-xl pr-12 text-muted-foreground"
+                              />
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg overflow-hidden bg-secondary">
+                                <img
+                                  src={image}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                  onError={(e) =>
+                                    (e.currentTarget.style.display = "none")
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const newImages = formData.images.filter(
+                                  (_, i) => i !== index,
+                                );
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  images: newImages,
+                                }));
+                              }}
+                              className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      {formData.images.filter((img) => img.trim()).length ===
+                        0 && (
+                        <div className="text-center py-8 border-2 border-dashed border-border/50 rounded-2xl bg-secondary/10">
+                          <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-20" />
+                          <p className="text-sm text-muted-foreground">
+                            No images uploaded yet
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
 
-          <div className="glass rounded-2xl border border-border/50 p-6">
-            <Label
-              htmlFor="description"
-              className="text-lg font-semibold mb-6 block"
-            >
-              Description *
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              className="min-h-[150px] bg-secondary/50 rounded-xl resize-none"
-              placeholder="Provide a detailed description of the property..."
-              required
-            />
-          </div>
-          </>)}
+              <div className="glass rounded-2xl border border-border/50 p-6">
+                <Label
+                  htmlFor="description"
+                  className="text-lg font-semibold mb-6 block"
+                >
+                  Description *
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  className="min-h-[150px] bg-secondary/50 rounded-xl resize-none"
+                  placeholder="Provide a detailed description of the property..."
+                  required
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex items-center justify-end gap-4 pt-4 animate-fade-up">
             <Button

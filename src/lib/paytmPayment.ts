@@ -7,6 +7,7 @@ declare global {
         init(config: any): Promise<void>;
         invoke(): Promise<any>;
         close(): void;
+        onLoad(callback: () => void): void;
       };
     };
   }
@@ -31,17 +32,14 @@ interface VerifyResponse {
 
 function loadPaytmScript(mid: string): Promise<void> {
   return new Promise((resolve, reject) => {
+    if (window.Paytm?.CheckoutJS?.init) {
+      resolve();
+      return;
+    }
+
     const existingScript = document.getElementById("paytm-checkout-js");
     if (existingScript) {
-      if (window.Paytm?.CheckoutJS) {
-        resolve();
-      } else {
-        existingScript.addEventListener("load", () => resolve());
-        existingScript.addEventListener("error", () =>
-          reject(new Error("Failed to load Paytm SDK"))
-        );
-      }
-      return;
+      existingScript.remove();
     }
 
     const script = document.createElement("script");
@@ -49,9 +47,20 @@ function loadPaytmScript(mid: string): Promise<void> {
     script.type = "application/javascript";
     script.crossOrigin = "anonymous";
     script.src = `https://securestage.paytmpayments.com/merchantpgpui/checkoutjs/merchants/${mid}.js`;
-    script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load Paytm SDK"));
-    document.head.appendChild(script);
+    document.body.appendChild(script);
+
+    const timeout = setTimeout(() => {
+      reject(new Error("Paytm SDK load timed out"));
+    }, 15000);
+
+    const checkReady = setInterval(() => {
+      if (window.Paytm?.CheckoutJS?.init) {
+        clearInterval(checkReady);
+        clearTimeout(timeout);
+        resolve();
+      }
+    }, 200);
   });
 }
 
@@ -80,11 +89,9 @@ export class PaytmPaymentService {
 
     await loadPaytmScript(data.mid);
 
-    if (!window.Paytm?.CheckoutJS) {
-      throw new Error("Paytm SDK failed to initialize");
-    }
-
     return new Promise<VerifyResponse>((resolve, reject) => {
+      let settled = false;
+
       const config = {
         root: "",
         flow: "DEFAULT",
@@ -100,6 +107,8 @@ export class PaytmPaymentService {
         },
         handler: {
           transactionStatus: async function (txnResponse: any) {
+            if (settled) return;
+            settled = true;
             console.log("Paytm txn response:", txnResponse);
             try {
               window.Paytm?.CheckoutJS.close();
@@ -108,13 +117,14 @@ export class PaytmPaymentService {
             try {
               const verifyResult = await verifyPayment(bookingId);
               resolve(verifyResult);
-            } catch (verifyErr) {
+            } catch (_verifyErr) {
               reject(new Error("Payment completed but verification failed. Please check your booking status."));
             }
           },
-          notifyMerchant: function (eventName: string, data: any) {
-            console.log("Paytm event:", eventName, data);
-            if (eventName === "APP_CLOSED") {
+          notifyMerchant: function (eventName: string, _data: any) {
+            console.log("Paytm event:", eventName);
+            if (eventName === "APP_CLOSED" && !settled) {
+              settled = true;
               reject(new Error("Payment cancelled by user"));
             }
           },
@@ -127,7 +137,10 @@ export class PaytmPaymentService {
         })
         .catch((initErr: any) => {
           console.error("Paytm init error:", initErr);
-          reject(new Error("Failed to open payment gateway"));
+          if (!settled) {
+            settled = true;
+            reject(new Error("Failed to open payment gateway"));
+          }
         });
     });
   }

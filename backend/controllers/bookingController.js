@@ -873,6 +873,35 @@ const handleOwnerAction = async (req, res) => {
   }
 };
 
+function generateTicketToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+async function logWebhookEvent(eventType, bookingId, payload) {
+  try {
+    await query(
+      'INSERT INTO webhook_events (event_type, booking_id, payload, processed) VALUES ($1, $2, $3, true)',
+      [eventType, bookingId || null, JSON.stringify(payload)]
+    );
+  } catch (err) {
+    console.error('[WebhookEvent] Failed to log event:', err.message);
+  }
+}
+
+async function mergeMessageIds(bookingId, newIds) {
+  try {
+    await query(
+      `UPDATE bookings
+       SET whatsapp_message_ids = COALESCE(whatsapp_message_ids, '{}'::jsonb) || $1::jsonb,
+           updated_at = NOW()
+       WHERE booking_id = $2`,
+      [JSON.stringify(newIds), bookingId]
+    );
+  } catch (err) {
+    console.error('[WhatsApp] Failed to persist message IDs:', err.message);
+  }
+}
+
 const handleWhatsAppWebhook = async (req, res) => {
   try {
     const whatsapp = new WhatsAppService();
@@ -888,6 +917,22 @@ const handleWhatsAppWebhook = async (req, res) => {
       }
       return res.status(403).send('Forbidden');
     }
+
+    // Verify signature on POST requests
+    if (req.method === 'POST') {
+      const signature = req.headers['x-hub-signature-256'];
+      const rawBody = req.rawBody;
+      if (rawBody) {
+        const valid = whatsapp.verifySignature(rawBody, signature);
+        if (!valid) {
+          console.error('[Webhook] Invalid x-hub-signature-256 — rejecting request');
+          return res.status(403).json({ error: 'Invalid signature' });
+        }
+      }
+    }
+
+    // Log the raw incoming webhook event
+    await logWebhookEvent('WEBHOOK_RECEIVED', null, req.body);
 
     const buttonResponse = whatsapp.extractButtonResponse(req.body);
 
@@ -905,6 +950,7 @@ const handleWhatsAppWebhook = async (req, res) => {
           if (result.rows.length > 0) {
             const booking = result.rows[0];
 
+            // Idempotency: check if already actioned via token
             if (booking.action_token_used) {
               await whatsapp.sendTextMessage(buttonResponse.from, '⚠️ This action has already been taken.');
               return res.status(200).json({ status: 'ok' });
@@ -923,24 +969,56 @@ const handleWhatsAppWebhook = async (req, res) => {
             }
 
             if (action === 'CONFIRM') {
+              // Idempotency: already confirmed
+              if (booking.booking_status === 'TICKET_GENERATED' || booking.booking_status === 'CONFIRMED') {
+                await whatsapp.sendTextMessage(buttonResponse.from, `✅ Booking ${booking.booking_id} is already confirmed.`);
+                return res.status(200).json({ status: 'ok' });
+              }
+
+              const ticketToken = generateTicketToken();
+
               await query(
-                "UPDATE bookings SET booking_status = 'TICKET_GENERATED', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CONFIRMED' ELSE commission_status END, updated_at = NOW() WHERE booking_id = $1",
-                [booking.booking_id]
+                `UPDATE bookings
+                 SET booking_status = 'TICKET_GENERATED',
+                     ticket_token = $1,
+                     action_token_used = true,
+                     commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CONFIRMED' ELSE commission_status END,
+                     updated_at = NOW()
+                 WHERE booking_id = $2`,
+                [ticketToken, booking.booking_id]
               );
 
-              const ticketUrl = `${frontendUrl}/ticket?booking_id=${booking.booking_id}`;
+              const ticketUrl = `${frontendUrl}/ticket?token=${ticketToken}`;
+              const checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+              const checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+              const dueAmount = (parseFloat(booking.total_amount) || 0) - parseFloat(booking.advance_amount);
 
-              await whatsapp.sendTextMessage(
+              const guestResult = await whatsapp.sendTextMessage(
                 booking.guest_phone,
-                `🎉 Booking Confirmed!\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\n\nView your e-ticket:\n${ticketUrl}`
+                `🎉 Your Booking is Confirmed!\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance Paid: ₹${booking.advance_amount}\nDue at Property: ₹${dueAmount}\n\nView your secure e-ticket:\n${ticketUrl}\n\nThis link is unique to your booking. Please do not share it.`
               );
 
-              await whatsapp.sendTextMessage(
+              const adminResult = await whatsapp.sendTextMessage(
                 booking.admin_phone,
-                `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name}\n\nE-ticket: ${ticketUrl}`
+                `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance: ₹${booking.advance_amount}\n\nTicket: ${ticketUrl}`
               );
 
-              await whatsapp.sendTextMessage(buttonResponse.from, `✅ Booking ${booking.booking_id} confirmed! Guest has been notified.`);
+              const ownerAckResult = await whatsapp.sendTextMessage(
+                buttonResponse.from,
+                `✅ Booking ${booking.booking_id} confirmed! Guest and admin have been notified with the ticket link.`
+              );
+
+              await mergeMessageIds(booking.booking_id, {
+                guest_confirm: guestResult.messageId,
+                admin_confirm: adminResult.messageId,
+                owner_ack_confirm: ownerAckResult.messageId,
+              });
+
+              await logWebhookEvent('OWNER_CONFIRM', booking.booking_id, {
+                from: buttonResponse.from,
+                inboundMessageId: buttonResponse.messageId,
+                ticketToken,
+              });
 
               if (booking.referral_code) {
                 try {
@@ -955,7 +1033,7 @@ const handleWhatsAppWebhook = async (req, res) => {
                     else if (refType === 'b2b') commissionRate = 0.22;
                     const commission = Math.round(parseFloat(booking.advance_amount) * commissionRate);
                     const existingTxn = await query(
-                      "SELECT id FROM referral_transactions WHERE booking_id = $1",
+                      'SELECT id FROM referral_transactions WHERE booking_id = $1',
                       [booking.id]
                     );
                     if (existingTxn.rows.length === 0) {
@@ -969,25 +1047,59 @@ const handleWhatsAppWebhook = async (req, res) => {
                   console.error('Error creating referral commission:', refErr);
                 }
               }
+
             } else if (action === 'CANCEL') {
+              // Idempotency: already cancelled
+              if (booking.booking_status === 'CANCELLED_BY_OWNER') {
+                await whatsapp.sendTextMessage(buttonResponse.from, `❌ Booking ${booking.booking_id} is already cancelled.`);
+                return res.status(200).json({ status: 'ok' });
+              }
+
               await query(
-                "UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true, commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END, refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_INITIATED' ELSE refund_status END, refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END, updated_at = NOW() WHERE booking_id = $1",
+                `UPDATE bookings
+                 SET booking_status = 'CANCELLED_BY_OWNER',
+                     action_token_used = true,
+                     commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END,
+                     refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_PENDING' ELSE refund_status END,
+                     refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END,
+                     updated_at = NOW()
+                 WHERE booking_id = $1`,
                 [booking.booking_id]
               );
 
+              const ownerName = booking.owner_name || 'The owner';
+              const messageIds = {};
+
               if (booking.payment_status === 'SUCCESS') {
-                await whatsapp.sendTextMessage(
+                const guestResult = await whatsapp.sendTextMessage(
                   booking.guest_phone,
-                  `❌ Booking Cancelled\n\nYour booking for ${booking.property_name} has been cancelled.\nRefund of ₹${booking.advance_amount} will be processed shortly.`
+                  `Extremely sorry for the inconvenience, but your booking has been cancelled due to unavoidable circumstances. You will get your refund in next 24 hours.`
                 );
+                messageIds.guest_cancel = guestResult.messageId;
               }
 
-              await whatsapp.sendTextMessage(
+              const adminResult = await whatsapp.sendInteractiveButtons(
                 booking.admin_phone,
-                `❌ Booking Cancelled by Owner - Refund Required\n\nBooking ID: ${booking.booking_id}\nGuest: ${booking.guest_name}\nRefund: ₹${booking.advance_amount}\n\nPlease process from Admin Panel → Referrals → Requests.`
+                `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\n${ownerName} owner cancelled booking of ${booking.guest_name} customer. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
+                [
+                  { id: `call_owner_${booking.booking_id}`, title: '📞 Call Owner' },
+                  { id: `call_customer_${booking.booking_id}`, title: '📞 Call Customer' },
+                ]
               );
+              messageIds.admin_cancel = adminResult.messageId;
 
-              await whatsapp.sendTextMessage(buttonResponse.from, `❌ Booking ${booking.booking_id} cancelled. Customer notified.`);
+              const ownerAckResult = await whatsapp.sendTextMessage(
+                buttonResponse.from,
+                `❌ Booking ${booking.booking_id} cancelled. Customer notified. Refund will be processed within 24 hours.`
+              );
+              messageIds.owner_ack_cancel = ownerAckResult.messageId;
+
+              await mergeMessageIds(booking.booking_id, messageIds);
+
+              await logWebhookEvent('OWNER_CANCEL', booking.booking_id, {
+                from: buttonResponse.from,
+                inboundMessageId: buttonResponse.messageId,
+              });
 
               if (booking.referral_code) {
                 try {

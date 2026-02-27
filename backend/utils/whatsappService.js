@@ -1,7 +1,10 @@
+const crypto = require('crypto');
+
 class WhatsAppService {
   constructor() {
     this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
     this.accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+    this.appSecret = process.env.WHATSAPP_APP_SECRET;
     this.isConfigured = !!(this.phoneNumberId && this.accessToken);
 
     if (!this.isConfigured) {
@@ -21,10 +24,36 @@ class WhatsAppService {
     console.log(`[WhatsApp ${type}] Would send to ${to}:`, JSON.stringify(payload, null, 2));
   }
 
+  verifySignature(rawBody, signatureHeader) {
+    if (!this.appSecret) {
+      console.warn('[WhatsApp] WHATSAPP_APP_SECRET not set — skipping signature verification');
+      return true;
+    }
+
+    if (!signatureHeader) {
+      console.warn('[WhatsApp] No x-hub-signature-256 header present');
+      return false;
+    }
+
+    const expected = 'sha256=' + crypto
+      .createHmac('sha256', this.appSecret)
+      .update(rawBody)
+      .digest('hex');
+
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(signatureHeader),
+        Buffer.from(expected)
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
   async callWhatsAppAPI(payload, label) {
     if (!this.isConfigured) {
       this.logMessage(label, payload.to, payload);
-      return { success: true, simulated: true };
+      return { success: true, simulated: true, messageId: null };
     }
 
     try {
@@ -50,14 +79,15 @@ class WhatsAppService {
         const errorCode = responseData?.error?.code;
         const errorMsg = responseData?.error?.message;
         console.error(`[WhatsApp ${label}] Error code: ${errorCode}, Message: ${errorMsg}`);
-        return { success: false, error: responseData, httpStatus: response.status };
+        return { success: false, error: responseData, httpStatus: response.status, messageId: null };
       }
 
-      console.log(`[WhatsApp ${label}] SUCCESS:`, JSON.stringify(responseData));
-      return { success: true, data: responseData };
+      const messageId = responseData?.messages?.[0]?.id || null;
+      console.log(`[WhatsApp ${label}] SUCCESS — messageId: ${messageId}`);
+      return { success: true, data: responseData, messageId };
     } catch (error) {
       console.error(`[WhatsApp ${label}] NETWORK ERROR:`, error.message);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, messageId: null };
     }
   }
 
@@ -71,7 +101,7 @@ class WhatsAppService {
       text: { body: text },
     };
     const result = await this.callWhatsAppAPI(payload, 'TEXT');
-    return result.success;
+    return { success: result.success, messageId: result.messageId };
   }
 
   async sendTemplateMessage(to, templateName, languageCode = 'en_US', components = []) {
@@ -105,8 +135,6 @@ class WhatsAppService {
     console.log('Access Token:', this.accessToken ? `${this.accessToken.substring(0, 10)}...` : 'MISSING');
 
     console.log('--- Guest notification ---');
-    console.log('Guest phone (raw):', booking.guest_phone);
-    console.log('Guest phone (formatted):', this.formatPhone(booking.guest_phone));
     const guestResult = await this.sendTextMessage(
       booking.guest_phone,
       `✅ Payment Successful!\n\nBooking ID: ${booking.booking_id}\nAmount Paid: ₹${booking.advance_amount}\n\nYour booking is received. You will get confirmation within 1 hour.`,
@@ -114,8 +142,6 @@ class WhatsAppService {
     console.log('Guest result:', guestResult);
 
     console.log('--- Owner notification ---');
-    console.log('Owner phone (raw):', booking.owner_phone);
-    console.log('Owner phone (formatted):', this.formatPhone(booking.owner_phone));
     const ownerResult = await this.sendInteractiveButtons(booking.owner_phone,
       `🔔 New Booking Request\n\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinDate}\nCheck-out: ${checkoutDate}\nPersons: ${booking.persons || (booking.veg_guest_count || 0) + (booking.nonveg_guest_count || 0)}\nAdvance Paid: ₹${booking.advance_amount}\nDue Amount: ₹${dueAmount}\n\nPlease confirm or cancel this booking:`,
       [
@@ -126,8 +152,6 @@ class WhatsAppService {
     console.log('Owner result:', ownerResult);
 
     console.log('--- Admin notification ---');
-    console.log('Admin phone (raw):', booking.admin_phone);
-    console.log('Admin phone (formatted):', this.formatPhone(booking.admin_phone));
     const adminResult = await this.sendTextMessage(
       booking.admin_phone,
       `📋 New Booking Alert\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\nStatus: Waiting for owner confirmation\n\nConfirm: ${confirmUrl}\nCancel: ${cancelUrl}`,
@@ -163,7 +187,7 @@ class WhatsAppService {
     };
 
     const result = await this.callWhatsAppAPI(payload, 'INTERACTIVE');
-    return result.success;
+    return { success: result.success, messageId: result.messageId };
   }
 
   extractButtonResponse(webhookPayload) {
@@ -184,6 +208,7 @@ class WhatsAppService {
       return {
         from: message.from,
         buttonId: buttonReply.id,
+        messageId: message.id,
       };
     } catch (error) {
       console.error('Failed to extract button response:', error);

@@ -91,6 +91,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   action_token_used BOOLEAN DEFAULT false,
   action_token_expires_at TIMESTAMP,
   webhook_processed BOOLEAN DEFAULT false,
+  ticket_token VARCHAR(100) UNIQUE,
+  whatsapp_message_ids JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   commission_paid BOOLEAN DEFAULT false,
@@ -272,6 +274,19 @@ CREATE INDEX IF NOT EXISTS idx_bookings_action_token ON bookings(action_token);
 
 CREATE INDEX IF NOT EXISTS idx_ledger_entries_property_id ON ledger_entries(property_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_entries_check_in ON ledger_entries(check_in);
+
+-- Create webhook_events table for logging all incoming webhook events
+CREATE TABLE IF NOT EXISTS webhook_events (
+  id SERIAL PRIMARY KEY,
+  event_type VARCHAR(100),
+  payload JSONB,
+  processed BOOLEAN DEFAULT false,
+  booking_id VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_webhook_events_booking_id ON webhook_events(booking_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_ticket_token ON bookings(ticket_token);
 
 -- Insert initial admin user
 INSERT INTO admins (email, password_hash)

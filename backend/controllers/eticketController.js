@@ -92,19 +92,44 @@ const getETicketById = async (req, res) => {
   }
 };
 
+// Check if the request carries a valid admin JWT
+function isAdminRequest(req) {
+  try {
+    const authHeader = req.headers['authorization'] || '';
+    if (!authHeader.startsWith('Bearer ')) return false;
+    const token = authHeader.slice(7);
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const decoded = jwt.verify(token, secret);
+    return decoded && (decoded.role === 'admin' || decoded.email);
+  } catch (_) {
+    return false;
+  }
+}
+
 // Get booking e-ticket (for the new booking flow)
+// Supports both ?booking_id=... and ?token=... (secure tokenized URL)
 const getBookingETicket = async (req, res) => {
   try {
     const bookingId = req.query.booking_id;
+    const ticketToken = req.query.token;
 
-    if (!bookingId) {
-      return res.status(400).json({ error: 'booking_id is required' });
+    if (!bookingId && !ticketToken) {
+      return res.status(400).json({ error: 'booking_id or token is required' });
     }
 
-    const result = await query(
-      'SELECT * FROM bookings WHERE booking_id = $1',
-      [bookingId]
-    );
+    let result;
+    if (ticketToken) {
+      result = await query(
+        'SELECT * FROM bookings WHERE ticket_token = $1',
+        [ticketToken]
+      );
+    } else {
+      result = await query(
+        'SELECT * FROM bookings WHERE booking_id = $1',
+        [bookingId]
+      );
+    }
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Booking not found' });
@@ -112,15 +137,17 @@ const getBookingETicket = async (req, res) => {
 
     const booking = result.rows[0];
 
+    // Expiry check — admin users bypass this
     const now = new Date();
     const checkoutDate = new Date(booking.checkout_datetime);
     const isExpired = now > checkoutDate;
+    const adminAccess = isAdminRequest(req);
 
-    if (isExpired) {
+    if (isExpired && !adminAccess) {
       return res.status(410).json({
         error: 'Booking expired',
         message: 'This booking has expired',
-        booking_id: bookingId,
+        booking_id: booking.booking_id,
         checkout_datetime: booking.checkout_datetime,
       });
     }
@@ -143,8 +170,8 @@ const getBookingETicket = async (req, res) => {
     if (failedStatuses.includes(booking.booking_status)) {
       return res.status(403).json({
         error: 'Ticket not available',
-        message: booking.booking_status === 'CANCELLED_BY_OWNER' 
-          ? 'This booking was cancelled by the property owner' 
+        message: booking.booking_status === 'CANCELLED_BY_OWNER'
+          ? 'This booking was cancelled by the property owner'
           : 'E-ticket is not available for this booking',
         current_status: booking.booking_status,
       });

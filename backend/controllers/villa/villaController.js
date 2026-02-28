@@ -742,25 +742,30 @@ const getVillaUnitCalendarData = async (req, res) => {
     const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     const endDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
 
+    const propertyInternalId = unit.property_id;
+
     const ledgerResult = await query(
       `SELECT check_in, check_out, persons FROM ledger_entries
-       WHERE unit_id = $1 AND check_out >= $2 AND check_in <= $3`,
-      [unitId, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]
+       WHERE (unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))
+         AND check_out >= $2 AND check_in <= $3`,
+      [unitId, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0], propertyInternalId]
     );
 
     const bookingResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, 1) as persons FROM bookings
-       WHERE unit_id = $1 AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-       AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
-      [unitId, startDate.toISOString(), endDate.toISOString()]
+       WHERE (unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))
+         AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+         AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
+      [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
     );
 
     const softLockResult = await query(
       `SELECT checkin_datetime, checkout_datetime FROM bookings
-       WHERE unit_id = $1 AND booking_status = 'PAYMENT_PENDING'
+       WHERE (unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))
+         AND booking_status = 'PAYMENT_PENDING'
          AND created_at > NOW() - INTERVAL '30 minutes'
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
-      [unitId, startDate.toISOString(), endDate.toISOString()]
+      [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
     );
 
     const calendarMap = {};

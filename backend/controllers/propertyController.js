@@ -1457,33 +1457,47 @@ const getUnitCalendarData = async (req, res) => {
     const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     const endDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
 
+    const propertyInternalId = unit.property_id;
+    const ledgerWhereClause = isVillaUnit
+      ? `(unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))`
+      : `unit_id = $1`;
+
     const ledgerResult = await query(
       `SELECT check_in, check_out, persons FROM ledger_entries
-       WHERE unit_id = $1 AND check_out >= $2 AND check_in <= $3`,
-      [
-        unitId,
-        startDate.toISOString().split("T")[0],
-        endDate.toISOString().split("T")[0],
-      ],
+       WHERE ${ledgerWhereClause} AND check_out >= $2 AND check_in <= $3`,
+      isVillaUnit
+        ? [unitId, startDate.toISOString().split("T")[0], endDate.toISOString().split("T")[0], propertyInternalId]
+        : [unitId, startDate.toISOString().split("T")[0], endDate.toISOString().split("T")[0]],
     );
 
     const hardLockStatuses = isVillaUnit
       ? "('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')"
       : "('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')";
 
+    const bookingWhereClause = isVillaUnit
+      ? `(unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))`
+      : `unit_id = $1`;
+
     const bookingResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, veg_guest_count + nonveg_guest_count, 1) as persons FROM bookings
-       WHERE unit_id = $1 AND booking_status IN ${hardLockStatuses}
+       WHERE ${bookingWhereClause} AND booking_status IN ${hardLockStatuses}
        AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
-      [unitId, startDate.toISOString(), endDate.toISOString()],
+      isVillaUnit
+        ? [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
+        : [unitId, startDate.toISOString(), endDate.toISOString()],
     );
 
     const softLockResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, veg_guest_count + nonveg_guest_count, 1) as persons FROM bookings
-       WHERE unit_id = $1 AND booking_status = 'PAYMENT_PENDING'
+       WHERE ${isVillaUnit
+         ? `(unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))`
+         : `unit_id = $1`}
+         AND booking_status = 'PAYMENT_PENDING'
          AND created_at > NOW() - INTERVAL '30 minutes'
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
-      [unitId, startDate.toISOString(), endDate.toISOString()],
+      isVillaUnit
+        ? [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
+        : [unitId, startDate.toISOString(), endDate.toISOString()],
     );
 
     const calendarMap = {};

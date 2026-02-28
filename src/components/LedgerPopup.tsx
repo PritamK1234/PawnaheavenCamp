@@ -739,7 +739,7 @@ export const LedgerPopup = ({
                 <div className="space-y-3">
                   {entries.map((entry, i) => (
                     <div
-                      key={entry.id}
+                      key={entry.id ?? `b-${i}`}
                       className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between"
                     >
                       <div className="flex items-center gap-4">
@@ -758,6 +758,11 @@ export const LedgerPopup = ({
                               <CreditCard className="w-3 h-3" />{" "}
                               {entry.payment_mode}
                             </span>
+                            {entry.source === 'website' && (
+                              <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full font-bold tracking-wider">
+                                ONLINE
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -771,20 +776,22 @@ export const LedgerPopup = ({
                             {format(new Date(entry.check_out), "dd MMM")}
                           </p>
                         </div>
-                        <div className="flex flex-col gap-2 border-l border-white/10 pl-3">
-                          <button
-                            onClick={() => handleEdit(entry)}
-                            className="text-white/60 hover:text-gold transition-colors"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(entry.id)}
-                            className="text-white/60 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                        {entry.source !== 'website' && (
+                          <div className="flex flex-col gap-2 border-l border-white/10 pl-3">
+                            <button
+                              onClick={() => handleEdit(entry)}
+                              className="text-white/60 hover:text-gold transition-colors"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(entry.id)}
+                              className="text-white/60 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

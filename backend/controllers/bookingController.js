@@ -468,23 +468,53 @@ const processCancelledBooking = async (req, res) => {
 const getLedgerEntries = async (req, res) => {
   try {
     const { property_id, unit_id, date } = req.query;
-    // Join with properties to match against either the auto-increment ID or the alphanumeric property_id
-    let queryText = `
-      SELECT le.* 
+    const hasUnit = unit_id && unit_id !== 'null' && unit_id !== 'undefined';
+
+    let ledgerQuery = `
+      SELECT le.id, le.customer_name, le.persons, le.check_in, le.check_out,
+             le.payment_mode, le.amount, le.unit_id, le.booking_id, 'offline' AS source
       FROM ledger_entries le
       JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id)
       WHERE (p.id::text = $1 OR p.property_id = $1)
       AND le.check_in <= $2 AND le.check_out > $2
     `;
-    let params = [property_id, date];
-
-    if (unit_id && unit_id !== 'null' && unit_id !== 'undefined') {
-      queryText += ' AND le.unit_id = $3';
-      params.push(unit_id);
+    let ledgerParams = [property_id, date];
+    if (hasUnit) {
+      ledgerQuery += ' AND (le.unit_id = $3 OR le.unit_id IS NULL)';
+      ledgerParams.push(unit_id);
     }
 
-    const result = await query(queryText, params);
-    res.json({ success: true, data: result.rows });
+    let bookingsQuery = `
+      SELECT b.id, b.guest_name AS customer_name,
+             COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1) AS persons,
+             b.checkin_datetime::date AS check_in, b.checkout_datetime::date AS check_out,
+             b.payment_method AS payment_mode, b.advance_amount AS amount,
+             b.unit_id, b.booking_id, 'website' AS source
+      FROM bookings b
+      JOIN properties p ON (p.id::text = b.property_id OR p.property_id = b.property_id)
+      WHERE (p.id::text = $1 OR p.property_id = $1)
+      AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+      AND b.checkin_datetime::date <= $2 AND b.checkout_datetime::date > $2
+      AND NOT EXISTS (
+        SELECT 1 FROM ledger_entries le2
+        WHERE le2.booking_id = b.booking_id
+      )
+    `;
+    let bookingsParams = [property_id, date];
+    if (hasUnit) {
+      bookingsQuery += ' AND (b.unit_id = $3 OR b.unit_id IS NULL)';
+      bookingsParams.push(unit_id);
+    }
+
+    const [ledgerResult, bookingsResult] = await Promise.all([
+      query(ledgerQuery, ledgerParams),
+      query(bookingsQuery, bookingsParams),
+    ]);
+
+    const combined = [...ledgerResult.rows, ...bookingsResult.rows]
+      .sort((a, b) => new Date(a.check_in) - new Date(b.check_in));
+
+    res.json({ success: true, data: combined });
   } catch (error) {
     console.error('Error fetching ledger entries:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -1043,6 +1073,23 @@ const handleWhatsAppWebhook = async (req, res) => {
                  WHERE booking_id = $2`,
                 [ticketToken, booking.booking_id]
               );
+
+              try {
+                const totalPersons = booking.persons ||
+                  (booking.veg_guest_count || 0) + (booking.nonveg_guest_count || 0) || 1;
+                const checkinDate = new Date(booking.checkin_datetime).toISOString().split('T')[0];
+                const checkoutDate = new Date(booking.checkout_datetime).toISOString().split('T')[0];
+                await query(
+                  `INSERT INTO ledger_entries
+                     (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount, booking_id)
+                   VALUES ($1, $2, $3, $4, $5, $6, 'online', $7, $8)
+                   ON CONFLICT DO NOTHING`,
+                  [booking.property_id, booking.unit_id || null, booking.guest_name,
+                   totalPersons, checkinDate, checkoutDate, booking.advance_amount, booking.booking_id]
+                );
+              } catch (ledgerErr) {
+                console.error('[WhatsApp CONFIRM] Failed to create ledger entry:', ledgerErr.message);
+              }
 
               const ticketUrl = `${frontendUrl}/ticket?token=${ticketToken}`;
               const checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });

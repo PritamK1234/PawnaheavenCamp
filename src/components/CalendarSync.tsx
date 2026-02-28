@@ -111,10 +111,23 @@ export const CalendarSync = ({
       fetchCalendar();
     };
     window.addEventListener('calendarUpdate', handleCalendarUpdate);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') fetchCalendar();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    if (isOwnerOrAdmin) {
+      pollInterval = setInterval(() => fetchCalendar(), 30000);
+    }
+
     return () => {
       window.removeEventListener('calendarUpdate', handleCalendarUpdate);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (pollInterval) clearInterval(pollInterval);
     };
-  }, [propertyId, unitId]);
+  }, [propertyId, unitId, isOwnerOrAdmin]);
 
   const getPriceForDate = (date: Date) => {
     const data = getDayData(date);

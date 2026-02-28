@@ -217,6 +217,8 @@ export function BookingForm({
       localStorage.setItem("pending_booking_id", bookingId);
       localStorage.setItem("pending_booking_time", Date.now().toString());
 
+      window.dispatchEvent(new CustomEvent("calendarUpdate"));
+
       if (onClose) onClose();
       await new Promise(resolve => setTimeout(resolve, 200));
 

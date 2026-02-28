@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   webhook_processed BOOLEAN DEFAULT false,
   ticket_token VARCHAR(100) UNIQUE,
   whatsapp_message_ids JSONB DEFAULT '{}'::jsonb,
+  soft_lock_expires_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   commission_paid BOOLEAN DEFAULT false,

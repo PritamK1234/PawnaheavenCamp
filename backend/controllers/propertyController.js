@@ -363,8 +363,8 @@ const getPropertyById = async (req, res) => {
                     SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                     FROM bookings b WHERE b.unit_id = pu.id
                     AND (
-                      b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                      OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                      b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                      AND b.soft_lock_expires_at > NOW()
                     )
                     AND b.checkin_datetime::date <= d.date AND b.checkout_datetime::date > d.date
                   ), 0)
@@ -378,8 +378,8 @@ const getPropertyById = async (req, res) => {
                   SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                   FROM bookings b WHERE b.unit_id = pu.id
                   AND (
-                    b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                    b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b.soft_lock_expires_at > NOW()
                   )
                   AND b.checkin_datetime::date <= d.date AND b.checkout_datetime::date > d.date
                 ), 0)
@@ -416,7 +416,7 @@ const getPropertyById = async (req, res) => {
             SELECT COUNT(*)
             FROM bookings b
             WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
-            AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+            AND b.booking_status = 'TICKET_GENERATED'
             AND b.checkin_datetime::date <= d.date
             AND b.checkout_datetime::date > d.date
           ), 0)
@@ -433,7 +433,7 @@ const getPropertyById = async (req, res) => {
                   SELECT SUM(COALESCE(b.persons, 1))
                   FROM bookings b
                   WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
-                  AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                  AND b.booking_status = 'TICKET_GENERATED'
                   AND b.checkin_datetime::date <= d.date
                   AND b.checkout_datetime::date > d.date
                 ), 0)
@@ -445,8 +445,8 @@ const getPropertyById = async (req, res) => {
               'is_soft_locked', (
                 SELECT COUNT(*) > 0 FROM bookings b2
                 WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
-                  AND b2.booking_status = 'PAYMENT_PENDING'
-                  AND b2.created_at > NOW() - INTERVAL '30 minutes'
+                  AND b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  AND b2.soft_lock_expires_at > NOW()
                   AND b2.checkin_datetime::date <= d.date
                   AND b2.checkout_datetime::date > d.date
               )
@@ -723,8 +723,8 @@ const getPublicPropertyBySlug = async (req, res) => {
                     SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                     FROM bookings b WHERE b.unit_id = pu.id
                     AND (
-                      b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                      OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                      b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                      AND b.soft_lock_expires_at > NOW()
                     )
                     AND b.checkin_datetime::date <= d.date AND b.checkout_datetime::date > d.date
                   ), 0)
@@ -738,8 +738,8 @@ const getPublicPropertyBySlug = async (req, res) => {
                   SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                   FROM bookings b WHERE b.unit_id = pu.id
                   AND (
-                    b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                    b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b.soft_lock_expires_at > NOW()
                   )
                   AND b.checkin_datetime::date <= d.date AND b.checkout_datetime::date > d.date
                 ), 0)
@@ -796,8 +796,8 @@ const getPublicPropertyBySlug = async (req, res) => {
                   SELECT 1 FROM bookings b2
                   WHERE b2.unit_id = pu.id
                     AND (
-                      b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                      OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                      b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                      AND b2.soft_lock_expires_at > NOW()
                     )
                     AND b2.checkin_datetime::date <= d.date
                     AND b2.checkout_datetime::date > d.date
@@ -812,8 +812,8 @@ const getPublicPropertyBySlug = async (req, res) => {
                   SELECT 1 FROM bookings b2
                   WHERE b2.unit_id = pu.id
                     AND (
-                      b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                      OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                      b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                      AND b2.soft_lock_expires_at > NOW()
                     )
                     AND b2.checkin_datetime::date <= d.date
                     AND b2.checkout_datetime::date > d.date
@@ -877,8 +877,8 @@ const getPublicPropertyBySlug = async (req, res) => {
                     SELECT 1 FROM bookings b2
                     WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
                       AND (
-                        b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                        OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                        b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                        AND b2.soft_lock_expires_at > NOW()
                       )
                       AND b2.checkin_datetime::date <= d.date
                       AND b2.checkout_datetime::date > d.date
@@ -1470,10 +1470,8 @@ const getUnitCalendarData = async (req, res) => {
     const softLockResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, veg_guest_count + nonveg_guest_count, 1) as persons FROM bookings
        WHERE unit_id = $1
-         AND (
-           booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-           OR (booking_status = 'PAYMENT_PENDING' AND created_at > NOW() - INTERVAL '30 minutes')
-         )
+         AND booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+         AND soft_lock_expires_at > NOW()
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString()],
     );
@@ -1672,13 +1670,9 @@ const getCalendarData = async (req, res) => {
       ],
     );
 
-    const hardLockStatusesCal = isVilla
-      ? "('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')"
-      : "('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')";
-
     const bookingResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, 1) as persons FROM bookings
-       WHERE property_id = $1 AND booking_status IN ${hardLockStatusesCal}
+       WHERE property_id = $1 AND booking_status = 'TICKET_GENERATED'
        AND unit_id IS NULL
        AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [prop.property_id, startDate.toISOString(), endDate.toISOString()],
@@ -1686,8 +1680,9 @@ const getCalendarData = async (req, res) => {
 
     const softLockResultCal = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, 1) as persons FROM bookings
-       WHERE property_id = $1 AND booking_status = 'PAYMENT_PENDING'
-         AND created_at > NOW() - INTERVAL '30 minutes'
+       WHERE property_id = $1
+         AND booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+         AND soft_lock_expires_at > NOW()
          AND unit_id IS NULL
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [prop.property_id, startDate.toISOString(), endDate.toISOString()],

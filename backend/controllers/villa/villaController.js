@@ -60,8 +60,8 @@ const getVillaById = async (req, res) => {
                 SELECT 1 FROM bookings b2
                 WHERE b2.unit_id = pu.id
                   AND (
-                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                    b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b2.soft_lock_expires_at > NOW()
                   )
                   AND b2.checkin_datetime::date <= d.date
                   AND b2.checkout_datetime::date > d.date
@@ -79,8 +79,8 @@ const getVillaById = async (req, res) => {
                 SELECT 1 FROM bookings b2
                 WHERE b2.unit_id = pu.id
                   AND (
-                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                    b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b2.soft_lock_expires_at > NOW()
                   )
                   AND b2.checkin_datetime::date <= d.date
                   AND b2.checkout_datetime::date > d.date
@@ -138,8 +138,8 @@ const getVillaById = async (req, res) => {
               SELECT 1 FROM bookings b2
               WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
                 AND (
-                  b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                  OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                  b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  AND b2.soft_lock_expires_at > NOW()
                 )
                 AND b2.checkin_datetime::date <= d.date
                 AND b2.checkout_datetime::date > d.date
@@ -251,8 +251,8 @@ const getPublicVillaBySlug = async (req, res) => {
                 SELECT 1 FROM bookings b2
                 WHERE b2.unit_id = pu.id
                   AND (
-                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                    b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b2.soft_lock_expires_at > NOW()
                   )
                   AND b2.checkin_datetime::date <= d.date
                   AND b2.checkout_datetime::date > d.date
@@ -270,8 +270,8 @@ const getPublicVillaBySlug = async (req, res) => {
                 SELECT 1 FROM bookings b2
                 WHERE b2.unit_id = pu.id
                   AND (
-                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                    b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b2.soft_lock_expires_at > NOW()
                   )
                   AND b2.checkin_datetime::date <= d.date
                   AND b2.checkout_datetime::date > d.date
@@ -329,8 +329,8 @@ const getPublicVillaBySlug = async (req, res) => {
               SELECT 1 FROM bookings b2
               WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
                 AND (
-                  b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                  OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                  b2.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  AND b2.soft_lock_expires_at > NOW()
                 )
                 AND b2.checkin_datetime::date <= d.date
                 AND b2.checkout_datetime::date > d.date
@@ -770,10 +770,8 @@ const getVillaUnitCalendarData = async (req, res) => {
     const softLockResult = await query(
       `SELECT checkin_datetime, checkout_datetime FROM bookings
        WHERE unit_id = $1
-         AND (
-           booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-           OR (booking_status = 'PAYMENT_PENDING' AND created_at > NOW() - INTERVAL '30 minutes')
-         )
+         AND booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+         AND soft_lock_expires_at > NOW()
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString()]
     );

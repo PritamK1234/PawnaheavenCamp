@@ -417,14 +417,18 @@ const paytmCallback = async (req, res) => {
     const actionToken = generateActionToken();
     const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
+    const softLockExpiry = status === "TXN_SUCCESS"
+      ? new Date(Date.now() + 60 * 60 * 1000)
+      : new Date();
+
     await query(
       `UPDATE bookings SET 
         payment_status = $1, booking_status = $2, transaction_id = $3,
         payment_method = $4, webhook_processed = true, 
         admin_commission = $5, referrer_commission = $6, commission_status = $7,
         action_token = $8, action_token_used = false, 
-        action_token_expires_at = $9, updated_at = NOW()
-      WHERE booking_id = $10`,
+        action_token_expires_at = $9, soft_lock_expires_at = $10, updated_at = NOW()
+      WHERE booking_id = $11`,
       [
         updatePaymentStatus,
         updateBookingStatus,
@@ -435,6 +439,7 @@ const paytmCallback = async (req, res) => {
         commStatus,
         actionToken,
         tokenExpiry,
+        softLockExpiry,
         booking.booking_id,
       ],
     );
@@ -444,6 +449,7 @@ const paytmCallback = async (req, res) => {
       order_id: orderId,
       payment_status: updatePaymentStatus,
       booking_status: updateBookingStatus,
+      soft_lock_expires_at: softLockExpiry,
     });
 
     if (status === "TXN_SUCCESS") {
@@ -654,6 +660,9 @@ const paytmWebhook = async (req, res) => {
 
     const actionToken = generateActionToken();
     const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+    const softLockExpiryWebhook = status === "TXN_SUCCESS"
+      ? new Date(Date.now() + 60 * 60 * 1000)
+      : new Date();
 
     await query(
       `UPDATE bookings SET 
@@ -661,8 +670,8 @@ const paytmWebhook = async (req, res) => {
         payment_method = $4, webhook_processed = true,
         admin_commission = $5, referrer_commission = $6, commission_status = $7,
         action_token = $8, action_token_used = false, action_token_expires_at = $9,
-        updated_at = NOW()
-      WHERE booking_id = $10`,
+        soft_lock_expires_at = $10, updated_at = NOW()
+      WHERE booking_id = $11`,
       [
         updatePaymentStatus,
         updateBookingStatus,
@@ -673,6 +682,7 @@ const paytmWebhook = async (req, res) => {
         commissionStatus,
         actionToken,
         tokenExpiry,
+        softLockExpiryWebhook,
         booking.booking_id,
       ],
     );
@@ -682,6 +692,7 @@ const paytmWebhook = async (req, res) => {
       payment_status: updatePaymentStatus,
       booking_status: updateBookingStatus,
       commission: { admin: adminCommission, referrer: referrerCommission },
+      soft_lock_expires_at: softLockExpiryWebhook,
     });
 
     if (status === "TXN_SUCCESS") {

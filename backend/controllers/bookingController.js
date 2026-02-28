@@ -133,8 +133,8 @@ const initiateBooking = async (req, res) => {
         owner_name, map_link, property_address,
         referral_code, referral_discount, referral_type,
         unit_id,
-        payment_status, booking_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, 'INITIATED', 'PAYMENT_PENDING')
+        payment_status, booking_status, soft_lock_expires_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, 'INITIATED', 'PAYMENT_PENDING', NOW() + INTERVAL '5 minutes')
       RETURNING *
     `;
     const values = [

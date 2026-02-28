@@ -57,8 +57,8 @@ const getCampingById = async (req, res) => {
                 FROM bookings b
                 WHERE b.unit_id = pu.id
                 AND (
-                  b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                  OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                  b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  AND b.soft_lock_expires_at > NOW()
                 )
                 AND b.checkin_datetime::date <= d.date
                 AND b.checkout_datetime::date > d.date
@@ -84,8 +84,8 @@ const getCampingById = async (req, res) => {
                   FROM bookings b
                   WHERE b.unit_id = pu.id
                   AND (
-                    b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                    b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b.soft_lock_expires_at > NOW()
                   )
                   AND b.checkin_datetime::date <= d.date
                   AND b.checkout_datetime::date > d.date
@@ -199,8 +199,8 @@ const getPublicCampingBySlug = async (req, res) => {
                 FROM bookings b
                 WHERE b.unit_id = pu.id
                 AND (
-                  b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                  OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                  b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  AND b.soft_lock_expires_at > NOW()
                 )
                 AND b.checkin_datetime::date <= d.date
                 AND b.checkout_datetime::date > d.date
@@ -226,8 +226,8 @@ const getPublicCampingBySlug = async (req, res) => {
                   FROM bookings b
                   WHERE b.unit_id = pu.id
                   AND (
-                    b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
-                    OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                    b.booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    AND b.soft_lock_expires_at > NOW()
                   )
                   AND b.checkin_datetime::date <= d.date
                   AND b.checkout_datetime::date > d.date
@@ -535,15 +535,16 @@ const getUnitCalendarData = async (req, res) => {
 
     const bookingResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, veg_guest_count + nonveg_guest_count, 1) as persons FROM bookings
-       WHERE unit_id = $1 AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+       WHERE unit_id = $1 AND booking_status = 'TICKET_GENERATED'
        AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString()]
     );
 
     const softLockResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, veg_guest_count + nonveg_guest_count, 1) as persons FROM bookings
-       WHERE unit_id = $1 AND booking_status = 'PAYMENT_PENDING'
-         AND created_at > NOW() - INTERVAL '30 minutes'
+       WHERE unit_id = $1
+         AND booking_status IN ('PAYMENT_PENDING', 'PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+         AND soft_lock_expires_at > NOW()
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString()]
     );

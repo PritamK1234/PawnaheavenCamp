@@ -475,9 +475,15 @@ const getUnitCalendarData = async (req, res) => {
     );
 
     const softLockResult = await query(
-      `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, veg_guest_count + nonveg_guest_count, 1) as persons FROM bookings
-       WHERE unit_id = $1 AND booking_status = 'PAYMENT_PENDING'
-         AND created_at > NOW() - INTERVAL '30 minutes'
+      `SELECT checkin_datetime, checkout_datetime,
+              COALESCE(persons, veg_guest_count + nonveg_guest_count, 1) as persons,
+              booking_status
+       FROM bookings
+       WHERE unit_id = $1
+         AND (
+           (booking_status = 'PAYMENT_PENDING' AND created_at > NOW() - INTERVAL '30 minutes')
+           OR booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER')
+         )
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString()]
     );
@@ -538,10 +544,12 @@ const getUnitCalendarData = async (req, res) => {
         const ds = d.toISOString().split('T')[0];
         ensureDate(ds);
         calendarMap[ds].is_soft_locked = true;
-        calendarMap[ds].soft_available_quantity = Math.max(
-          0,
-          calendarMap[ds].soft_available_quantity - (booking.persons || 0)
-        );
+        if (booking.booking_status === 'PAYMENT_PENDING') {
+          calendarMap[ds].soft_available_quantity = Math.max(
+            0,
+            calendarMap[ds].soft_available_quantity - (booking.persons || 0)
+          );
+        }
         d.setDate(d.getDate() + 1);
       }
     }

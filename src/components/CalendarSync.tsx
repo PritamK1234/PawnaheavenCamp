@@ -120,6 +120,8 @@ export const CalendarSync = ({
     let pollInterval: ReturnType<typeof setInterval> | null = null;
     if (isOwnerOrAdmin) {
       pollInterval = setInterval(() => fetchCalendar(), 30000);
+    } else if (unitId) {
+      pollInterval = setInterval(() => fetchCalendar(), 60000);
     }
 
     return () => {

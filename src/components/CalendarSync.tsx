@@ -199,7 +199,10 @@ export const CalendarSync = ({
                   const isFullyBooked = isVilla 
                     ? data?.is_booked 
                     : (data?.available_quantity !== undefined && data.available_quantity <= 0);
-                  return isPast || !!isFullyBooked;
+                  const softAvailQty = data?.soft_available_quantity;
+                  const isSoftLocked = !isFullyBooked && data?.is_soft_locked === true;
+                  const isSoftFullyUnavail = isSoftLocked && (isVilla || (softAvailQty !== undefined && softAvailQty <= 0));
+                  return isPast || !!isFullyBooked || isSoftFullyUnavail;
                 }
                 return true;
               }
@@ -208,7 +211,10 @@ export const CalendarSync = ({
                 const isFullyBooked = isVilla 
                   ? data?.is_booked 
                   : (data?.available_quantity !== undefined && data.available_quantity <= 0);
-                return isPast || !!isFullyBooked;
+                const softAvailQty = data?.soft_available_quantity;
+                const isSoftLocked = !isFullyBooked && data?.is_soft_locked === true;
+                const isSoftFullyUnavail = isSoftLocked && (isVilla || (softAvailQty !== undefined && softAvailQty <= 0));
+                return isPast || !!isFullyBooked || isSoftFullyUnavail;
               }
               return isPast;
             }}
@@ -226,15 +232,19 @@ export const CalendarSync = ({
                 const isBooked = data?.is_booked;
                 const isPast = isBefore(startOfDay(date), startOfDay(new Date()));
                 const availableQuantity = data?.available_quantity !== undefined ? data.available_quantity : null;
+                const softAvailableQuantity = data?.soft_available_quantity !== undefined ? data.soft_available_quantity : availableQuantity;
                 const dayTotalCapacity = data?.total_capacity || totalCapacity;
                 const isFullyBooked = isVilla ? isBooked : (availableQuantity !== null && availableQuantity <= 0);
+                const isSoftLocked = !isFullyBooked && data?.is_soft_locked === true;
+                const isSoftFullyUnavailable = isSoftLocked && (isVilla || (softAvailableQuantity !== null && softAvailableQuantity <= 0));
                 
-                const isDisabled = isPast || !!isFullyBooked;
+                const isDisabled = isPast || !!isFullyBooked || isSoftFullyUnavailable;
                 
                 return (
                   <div className={cn(
                     "relative w-full h-full flex flex-col items-center justify-center p-0.5 rounded-md transition-all select-none",
                     "!bg-[#00FF00] !text-black",
+                    isSoftLocked && "!bg-[#808080] !text-white",
                     isFullyBooked && "!bg-[#FF0000] !text-white",
                     isPast && "opacity-60 grayscale-[0.5]",
                     isPublic && !onDateSelect && "cursor-default",
@@ -245,16 +255,23 @@ export const CalendarSync = ({
                     {!isPast && (
                       <div className="flex flex-col items-center mt-0.5 sm:mt-1 scale-90 sm:scale-100 font-black text-[8px] sm:text-[10px]">
                         {isVilla ? (
-                          <span className={isFullyBooked ? "text-white/80 uppercase" : "text-black/80 uppercase"}>
-                            {isFullyBooked ? "Booked" : "Available"}
+                          <span className={cn(
+                            "uppercase",
+                            isFullyBooked ? "text-white/80" : isSoftLocked ? "text-white/80" : "text-black/80"
+                          )}>
+                            {isFullyBooked ? "Booked" : isSoftLocked ? "Pending" : "Available"}
                           </span>
                         ) : (
                           <div className="flex items-center gap-0.5">
-                            <span className={isFullyBooked ? "text-white" : "text-[#008000]"}>
-                              {availableQuantity !== null ? availableQuantity : dayTotalCapacity}
+                            <span className={cn(
+                              isFullyBooked ? "text-white" : isSoftLocked ? "text-white" : "text-[#008000]"
+                            )}>
+                              {isSoftLocked
+                                ? (softAvailableQuantity !== null ? softAvailableQuantity : dayTotalCapacity)
+                                : (availableQuantity !== null ? availableQuantity : dayTotalCapacity)}
                             </span>
-                            <span className={isFullyBooked ? "text-white/40" : "text-gray-500"}>/</span>
-                            <span className={isFullyBooked ? "text-white/80" : "text-[#FF8C00]"}>
+                            <span className={isFullyBooked || isSoftLocked ? "text-white/40" : "text-gray-500"}>/</span>
+                            <span className={isFullyBooked || isSoftLocked ? "text-white/80" : "text-[#FF8C00]"}>
                               {dayTotalCapacity}
                             </span>
                           </div>

@@ -35,6 +35,17 @@ Preferred communication style: Simple, everyday language.
 - `getPropertyUnits/*` → camping controller
 - `getUnitCalendarData/*` → camping controller
 
+#### Calendar Soft/Hard Locking (Feb 2026)
+- **Soft lock (grey)**: `PAYMENT_PENDING` booking within last 30 minutes auto-grey via SQL time window (`created_at > NOW() - INTERVAL '30 minutes'`). No new DB column needed.
+- **Hard lock (red)**: Owner-confirmed bookings (`BOOKING_REQUEST_SENT_TO_OWNER`, `OWNER_CONFIRMED`) + ledger entries (`TICKET_GENERATED` camping = ledger entry as source of truth).
+- **Ledger entry on confirm**: `bookingController.js` CONFIRM branch inserts a ledger entry so camping calendar doesn't double-count persons from bookings table.
+- **New `booking_id` column** on `ledger_entries` table (VARCHAR 50, indexed) — links ledger entries to booking for deduplication.
+- **Villa hard-lock statuses**: `PENDING_OWNER_CONFIRMATION`, `BOOKING_REQUEST_SENT_TO_OWNER`, `OWNER_CONFIRMED`, `TICKET_GENERATED`
+- **Camping hard-lock statuses**: `PENDING_OWNER_CONFIRMATION`, `BOOKING_REQUEST_SENT_TO_OWNER`, `OWNER_CONFIRMED` only (TICKET_GENERATED counted via ledger)
+- **API fields added**: `is_soft_locked: boolean`, `soft_available_quantity: number` returned from all calendar endpoints
+- **CalendarSync.tsx**: Three visual states: green (available), grey (soft-locked), red (hard-locked). Soft-locked camping shows `soft_available_quantity`. Villa soft-locked shows "Pending". Soft-locked cells are disabled (unclickable).
+- **Files changed**: `backend/schema.sql`, `backend/controllers/bookingController.js`, `backend/controllers/propertyController.js`, `backend/controllers/villa/villaController.js`, `backend/controllers/camping/camping_CottagesController.js`, `src/components/CalendarSync.tsx`
+
 #### Villa Admin Form Restructuring (Feb 2026)
 - **Villa property-level form shows ONLY**: Status dropdown, Active/Available toggles, Referral Code, Property ID, Category selector, Owner Name, Owner WhatsApp Number, Owner OTP Number, Admin Mobile Number, VillaUnitManager (with Add Unit button and tabs), Save/Cancel buttons
 - **Villa property-level form HIDES**: Property Title, Location, Google Maps Link, all Price fields, Max Capacity, Rating, Check-in/out Times, Amenities, Activities, Highlights, Policies, Schedule, Images, Description (all moved to unit level)

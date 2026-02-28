@@ -249,6 +249,7 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   check_out DATE NOT NULL,
   payment_mode TEXT NOT NULL CHECK (payment_mode = ANY (ARRAY['online'::text, 'offline'::text])),
   amount NUMERIC NOT NULL,
+  booking_id VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -274,6 +275,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_action_token ON bookings(action_token);
 
 CREATE INDEX IF NOT EXISTS idx_ledger_entries_property_id ON ledger_entries(property_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_entries_check_in ON ledger_entries(check_in);
+CREATE INDEX IF NOT EXISTS idx_ledger_entries_booking_id ON ledger_entries(booking_id);
 
 -- Create webhook_events table for logging all incoming webhook events
 CREATE TABLE IF NOT EXISTS webhook_events (

@@ -802,6 +802,23 @@ const handleOwnerAction = async (req, res) => {
         [ticketToken, booking.booking_id]
       );
 
+      try {
+        const totalPersons = booking.persons ||
+          (booking.veg_guest_count || 0) + (booking.nonveg_guest_count || 0) || 1;
+        const checkinDate = new Date(booking.checkin_datetime).toISOString().split('T')[0];
+        const checkoutDate = new Date(booking.checkout_datetime).toISOString().split('T')[0];
+        await query(
+          `INSERT INTO ledger_entries
+             (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount, booking_id)
+           VALUES ($1, $2, $3, $4, $5, $6, 'online', $7, $8)
+           ON CONFLICT DO NOTHING`,
+          [booking.property_id, booking.unit_id || null, booking.guest_name,
+           totalPersons, checkinDate, checkoutDate, booking.advance_amount, booking.booking_id]
+        );
+      } catch (ledgerErr) {
+        console.error('[Booking Confirm] Failed to create ledger entry:', ledgerErr.message);
+      }
+
       const ticketUrl = `${frontendUrl}/ticket?token=${ticketToken}`;
 
       await whatsapp.sendTextMessage(

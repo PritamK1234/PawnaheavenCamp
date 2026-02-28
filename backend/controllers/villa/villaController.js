@@ -760,12 +760,10 @@ const getVillaUnitCalendarData = async (req, res) => {
     );
 
     const softLockResult = await query(
-      `SELECT checkin_datetime, checkout_datetime, booking_status FROM bookings
+      `SELECT checkin_datetime, checkout_datetime FROM bookings
        WHERE (unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))
-         AND (
-           (booking_status = 'PAYMENT_PENDING' AND created_at > NOW() - INTERVAL '30 minutes')
-           OR booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER')
-         )
+         AND booking_status = 'PAYMENT_PENDING'
+         AND created_at > NOW() - INTERVAL '30 minutes'
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
     );
@@ -826,9 +824,7 @@ const getVillaUnitCalendarData = async (req, res) => {
         const ds = d.toISOString().split('T')[0];
         ensureDate(ds);
         calendarMap[ds].is_soft_locked = true;
-        if (booking.booking_status === 'PAYMENT_PENDING') {
-          calendarMap[ds].soft_available_quantity = 0;
-        }
+        calendarMap[ds].soft_available_quantity = 0;
         d.setDate(d.getDate() + 1);
       }
     }

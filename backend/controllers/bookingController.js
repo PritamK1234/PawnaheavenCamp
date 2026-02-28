@@ -480,7 +480,7 @@ const getLedgerEntries = async (req, res) => {
     `;
     let ledgerParams = [property_id, date];
     if (hasUnit) {
-      ledgerQuery += ' AND (le.unit_id = $3 OR le.unit_id IS NULL)';
+      ledgerQuery += ' AND le.unit_id = $3';
       ledgerParams.push(unit_id);
     }
 
@@ -493,7 +493,7 @@ const getLedgerEntries = async (req, res) => {
       FROM bookings b
       JOIN properties p ON (p.id::text = b.property_id OR p.property_id = b.property_id)
       WHERE (p.id::text = $1 OR p.property_id = $1)
-      AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+      AND b.booking_status = 'TICKET_GENERATED'
       AND b.checkin_datetime::date <= $2 AND b.checkout_datetime::date > $2
       AND NOT EXISTS (
         SELECT 1 FROM ledger_entries le2
@@ -502,7 +502,7 @@ const getLedgerEntries = async (req, res) => {
     `;
     let bookingsParams = [property_id, date];
     if (hasUnit) {
-      bookingsQuery += ' AND (b.unit_id = $3 OR b.unit_id IS NULL)';
+      bookingsQuery += ' AND b.unit_id = $3';
       bookingsParams.push(unit_id);
     }
 

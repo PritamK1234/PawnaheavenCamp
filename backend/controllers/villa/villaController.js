@@ -34,13 +34,6 @@ const getVillaById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
-              ), 0) + COALESCE((
-                SELECT COUNT(*)
-                FROM bookings b
-                WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-                AND b.checkin_datetime::date <= d.date
-                AND b.checkout_datetime::date > d.date
               ), 0)
             ) > 0,
             'available_quantity', CASE WHEN (
@@ -50,33 +43,48 @@ const getVillaById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
-              ), 0) + COALESCE((
-                SELECT COUNT(*)
-                FROM bookings b
-                WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-                AND b.checkin_datetime::date <= d.date
-                AND b.checkout_datetime::date > d.date
               ), 0)
             ) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date),
             'is_soft_locked', (
-              SELECT COUNT(*) > 0 FROM bookings b2
-              WHERE b2.unit_id = pu.id
-                AND b2.booking_status = 'PAYMENT_PENDING'
-                AND b2.created_at > NOW() - INTERVAL '30 minutes'
-                AND b2.checkin_datetime::date <= d.date
-                AND b2.checkout_datetime::date > d.date
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) = 0
+              AND EXISTS (
+                SELECT 1 FROM bookings b2
+                WHERE b2.unit_id = pu.id
+                  AND (
+                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                  )
+                  AND b2.checkin_datetime::date <= d.date
+                  AND b2.checkout_datetime::date > d.date
+              )
             ),
             'soft_available_quantity', CASE WHEN (
-              SELECT COUNT(*) > 0 FROM bookings b2
-              WHERE b2.unit_id = pu.id
-                AND b2.booking_status = 'PAYMENT_PENDING'
-                AND b2.created_at > NOW() - INTERVAL '30 minutes'
-                AND b2.checkin_datetime::date <= d.date
-                AND b2.checkout_datetime::date > d.date
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) = 0
+              AND EXISTS (
+                SELECT 1 FROM bookings b2
+                WHERE b2.unit_id = pu.id
+                  AND (
+                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                  )
+                  AND b2.checkin_datetime::date <= d.date
+                  AND b2.checkout_datetime::date > d.date
+              )
             ) THEN 0 ELSE pu.total_persons END
           ) ORDER BY d.date)
           FROM (
@@ -103,43 +111,39 @@ const getVillaById = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0) + COALESCE((
-              SELECT COUNT(*)
-              FROM bookings b
-              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
-              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-              AND b.checkin_datetime::date <= d.date
-              AND b.checkout_datetime::date > d.date
             ), 0)
           ) > 0,
-          'available_quantity', p.max_capacity - (
+          'available_quantity', CASE WHEN (
             COALESCE((
-              SELECT SUM(persons) 
+              SELECT COUNT(*) 
               FROM ledger_entries le
-              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-              WHERE p_inner.id = p.id
+              WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0) + COALESCE((
-              SELECT SUM(COALESCE(b.persons, 1))
-              FROM bookings b
-              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
-              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-              AND b.checkin_datetime::date <= d.date
-              AND b.checkout_datetime::date > d.date
             ), 0)
-          ),
+          ) > 0 THEN 0 ELSE p.max_capacity END,
           'total_capacity', p.max_capacity,
           'weekday_price', p.weekday_price,
           'weekend_price', p.weekend_price,
           'special_dates', p.special_dates,
           'is_soft_locked', (
-            SELECT COUNT(*) > 0 FROM bookings b2
-            WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
-              AND b2.booking_status = 'PAYMENT_PENDING'
-              AND b2.created_at > NOW() - INTERVAL '30 minutes'
-              AND b2.checkin_datetime::date <= d.date
-              AND b2.checkout_datetime::date > d.date
+            COALESCE((
+              SELECT COUNT(*) 
+              FROM ledger_entries le
+              WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) = 0
+            AND EXISTS (
+              SELECT 1 FROM bookings b2
+              WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
+                AND (
+                  b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                )
+                AND b2.checkin_datetime::date <= d.date
+                AND b2.checkout_datetime::date > d.date
+            )
           )
         ) ORDER BY d.date) as calendar
         FROM properties p
@@ -221,13 +225,6 @@ const getPublicVillaBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
-              ), 0) + COALESCE((
-                SELECT COUNT(*)
-                FROM bookings b
-                WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-                AND b.checkin_datetime::date <= d.date
-                AND b.checkout_datetime::date > d.date
               ), 0)
             ) > 0,
             'available_quantity', CASE WHEN (
@@ -237,33 +234,48 @@ const getPublicVillaBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
-              ), 0) + COALESCE((
-                SELECT COUNT(*)
-                FROM bookings b
-                WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-                AND b.checkin_datetime::date <= d.date
-                AND b.checkout_datetime::date > d.date
               ), 0)
             ) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
             'is_special', EXISTS(SELECT 1 FROM jsonb_array_elements(p.special_dates) sd WHERE (sd->>'date')::date = d.date),
             'is_soft_locked', (
-              SELECT COUNT(*) > 0 FROM bookings b2
-              WHERE b2.unit_id = pu.id
-                AND b2.booking_status = 'PAYMENT_PENDING'
-                AND b2.created_at > NOW() - INTERVAL '30 minutes'
-                AND b2.checkin_datetime::date <= d.date
-                AND b2.checkout_datetime::date > d.date
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) = 0
+              AND EXISTS (
+                SELECT 1 FROM bookings b2
+                WHERE b2.unit_id = pu.id
+                  AND (
+                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                  )
+                  AND b2.checkin_datetime::date <= d.date
+                  AND b2.checkout_datetime::date > d.date
+              )
             ),
             'soft_available_quantity', CASE WHEN (
-              SELECT COUNT(*) > 0 FROM bookings b2
-              WHERE b2.unit_id = pu.id
-                AND b2.booking_status = 'PAYMENT_PENDING'
-                AND b2.created_at > NOW() - INTERVAL '30 minutes'
-                AND b2.checkin_datetime::date <= d.date
-                AND b2.checkout_datetime::date > d.date
+              COALESCE((
+                SELECT COUNT(*) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) = 0
+              AND EXISTS (
+                SELECT 1 FROM bookings b2
+                WHERE b2.unit_id = pu.id
+                  AND (
+                    b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                  )
+                  AND b2.checkin_datetime::date <= d.date
+                  AND b2.checkout_datetime::date > d.date
+              )
             ) THEN 0 ELSE pu.total_persons END
           ) ORDER BY d.date)
           FROM (
@@ -290,43 +302,39 @@ const getPublicVillaBySlug = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0) + COALESCE((
-              SELECT COUNT(*)
-              FROM bookings b
-              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
-              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-              AND b.checkin_datetime::date <= d.date
-              AND b.checkout_datetime::date > d.date
             ), 0)
           ) > 0,
-          'available_quantity', p.max_capacity - (
+          'available_quantity', CASE WHEN (
             COALESCE((
-              SELECT SUM(persons) 
+              SELECT COUNT(*) 
               FROM ledger_entries le
-              JOIN properties p_inner ON (p_inner.id::text = le.property_id OR p_inner.property_id = le.property_id)
-              WHERE p_inner.id = p.id
+              WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
-            ), 0) + COALESCE((
-              SELECT SUM(COALESCE(b.persons, 1))
-              FROM bookings b
-              WHERE (b.property_id = p.id::text OR b.property_id = p.property_id)
-              AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-              AND b.checkin_datetime::date <= d.date
-              AND b.checkout_datetime::date > d.date
             ), 0)
-          ),
+          ) > 0 THEN 0 ELSE p.max_capacity END,
           'total_capacity', p.max_capacity,
           'weekday_price', p.weekday_price,
           'weekend_price', p.weekend_price,
           'special_dates', p.special_dates,
           'is_soft_locked', (
-            SELECT COUNT(*) > 0 FROM bookings b2
-            WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
-              AND b2.booking_status = 'PAYMENT_PENDING'
-              AND b2.created_at > NOW() - INTERVAL '30 minutes'
-              AND b2.checkin_datetime::date <= d.date
-              AND b2.checkout_datetime::date > d.date
+            COALESCE((
+              SELECT COUNT(*) 
+              FROM ledger_entries le
+              WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
+              AND le.check_in <= d.date 
+              AND le.check_out > d.date
+            ), 0) = 0
+            AND EXISTS (
+              SELECT 1 FROM bookings b2
+              WHERE (b2.property_id = p.id::text OR b2.property_id = p.property_id)
+                AND (
+                  b2.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  OR (b2.booking_status = 'PAYMENT_PENDING' AND b2.created_at > NOW() - INTERVAL '30 minutes')
+                )
+                AND b2.checkin_datetime::date <= d.date
+                AND b2.checkout_datetime::date > d.date
+            )
           )
         ) ORDER BY d.date) as calendar
         FROM properties p
@@ -754,7 +762,7 @@ const getVillaUnitCalendarData = async (req, res) => {
     const bookingResult = await query(
       `SELECT checkin_datetime, checkout_datetime, COALESCE(persons, 1) as persons FROM bookings
        WHERE (unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))
-         AND booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+         AND booking_status = 'TICKET_GENERATED'
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
     );
@@ -762,8 +770,10 @@ const getVillaUnitCalendarData = async (req, res) => {
     const softLockResult = await query(
       `SELECT checkin_datetime, checkout_datetime FROM bookings
        WHERE (unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))
-         AND booking_status = 'PAYMENT_PENDING'
-         AND created_at > NOW() - INTERVAL '30 minutes'
+         AND (
+           booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+           OR (booking_status = 'PAYMENT_PENDING' AND created_at > NOW() - INTERVAL '30 minutes')
+         )
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
       [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
     );

@@ -34,16 +34,18 @@ const getCampingById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
-              ), 0) + COALESCE((
-                SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
-                FROM bookings b
-                WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-                AND b.checkin_datetime::date <= d.date
-                AND b.checkout_datetime::date > d.date
               ), 0)
             ) >= pu.total_persons,
-            'available_quantity', pu.total_persons - (
+            'available_quantity', GREATEST(0, pu.total_persons - (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0)
+            )),
+            'soft_available_quantity', GREATEST(0, pu.total_persons - (
               COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries le
@@ -54,10 +56,41 @@ const getCampingById = async (req, res) => {
                 SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                 FROM bookings b
                 WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND (
+                  b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                )
                 AND b.checkin_datetime::date <= d.date
                 AND b.checkout_datetime::date > d.date
               ), 0)
+            )),
+            'is_soft_locked', (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) < pu.total_persons
+              AND (
+                COALESCE((
+                  SELECT SUM(persons) 
+                  FROM ledger_entries le
+                  WHERE le.unit_id = pu.id 
+                  AND le.check_in <= d.date 
+                  AND le.check_out > d.date
+                ), 0) + COALESCE((
+                  SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
+                  FROM bookings b
+                  WHERE b.unit_id = pu.id
+                  AND (
+                    b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                  )
+                  AND b.checkin_datetime::date <= d.date
+                  AND b.checkout_datetime::date > d.date
+                ), 0)
+              ) >= pu.total_persons
             ),
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,
@@ -143,16 +176,18 @@ const getPublicCampingBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
-              ), 0) + COALESCE((
-                SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
-                FROM bookings b
-                WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
-                AND b.checkin_datetime::date <= d.date
-                AND b.checkout_datetime::date > d.date
               ), 0)
             ) >= pu.total_persons,
-            'available_quantity', pu.total_persons - (
+            'available_quantity', GREATEST(0, pu.total_persons - (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0)
+            )),
+            'soft_available_quantity', GREATEST(0, pu.total_persons - (
               COALESCE((
                 SELECT SUM(persons) 
                 FROM ledger_entries le
@@ -163,10 +198,41 @@ const getPublicCampingBySlug = async (req, res) => {
                 SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                 FROM bookings b
                 WHERE b.unit_id = pu.id
-                AND b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'OWNER_CONFIRMED', 'TICKET_GENERATED')
+                AND (
+                  b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                  OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                )
                 AND b.checkin_datetime::date <= d.date
                 AND b.checkout_datetime::date > d.date
               ), 0)
+            )),
+            'is_soft_locked', (
+              COALESCE((
+                SELECT SUM(persons) 
+                FROM ledger_entries le
+                WHERE le.unit_id = pu.id 
+                AND le.check_in <= d.date 
+                AND le.check_out > d.date
+              ), 0) < pu.total_persons
+              AND (
+                COALESCE((
+                  SELECT SUM(persons) 
+                  FROM ledger_entries le
+                  WHERE le.unit_id = pu.id 
+                  AND le.check_in <= d.date 
+                  AND le.check_out > d.date
+                ), 0) + COALESCE((
+                  SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
+                  FROM bookings b
+                  WHERE b.unit_id = pu.id
+                  AND (
+                    b.booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
+                    OR (b.booking_status = 'PAYMENT_PENDING' AND b.created_at > NOW() - INTERVAL '30 minutes')
+                  )
+                  AND b.checkin_datetime::date <= d.date
+                  AND b.checkout_datetime::date > d.date
+                ), 0)
+              ) >= pu.total_persons
             ),
             'total_capacity', pu.total_persons,
             'is_weekend', d.is_weekend,

@@ -42,10 +42,12 @@ Preferred communication style: Simple, everyday language.
 - **Legacy data fix**: Villa unit calendar queries now include property-level bookings (`unit_id IS NULL AND property_id = propertyInternalId`) so old bookings without unit_id still hard-lock the calendar.
 - **Soft lock trigger**: `BookingForm.tsx` dispatches `window.dispatchEvent(new CustomEvent("calendarUpdate"))` immediately after booking creation so calendar re-fetches and shows grey.
 - **Auto-refresh**: `CalendarSync.tsx` polls every 30 seconds in admin/owner mode; also refreshes on page visibility change (tab switch back). Ensures hard-lock updates appear after owner confirms via WhatsApp.
-- **LedgerPopup data**: `getLedgerEntries` endpoint now returns BOTH manual `ledger_entries` AND bookings from `bookings` table (PENDING_OWNER_CONFIRMATION / TICKET_GENERATED), with deduplication via `NOT EXISTS` subquery. Website-sourced bookings show "ONLINE" badge, have no edit/delete buttons.
+- **LedgerPopup data**: `getLedgerEntries` endpoint returns BOTH manual `ledger_entries` AND bookings from `bookings` table with status `TICKET_GENERATED` only (not PENDING_OWNER_CONFIRMATION), with deduplication via `NOT EXISTS` subquery. Unit_id filter is strict (`unit_id = $3`, not `OR unit_id IS NULL`). Website-sourced bookings show "ONLINE" badge, no edit/delete buttons.
 - **New `booking_id` column** on `ledger_entries` table (VARCHAR 50, indexed) — links auto-created ledger entries to their booking for deduplication.
-- **Villa hard-lock statuses**: `PENDING_OWNER_CONFIRMATION`, `BOOKING_REQUEST_SENT_TO_OWNER`, `OWNER_CONFIRMED`, `TICKET_GENERATED`
-- **Camping hard-lock statuses**: `PENDING_OWNER_CONFIRMATION`, `BOOKING_REQUEST_SENT_TO_OWNER`, `OWNER_CONFIRMED` only (TICKET_GENERATED counted via ledger)
+- **Villa hard-lock statuses**: Ledger entries ONLY (owner-confirmed = ledger entry created) + `TICKET_GENERATED` bookings as fallback (no ledger entry yet)
+- **Villa soft-lock statuses**: `PENDING_OWNER_CONFIRMATION`, `BOOKING_REQUEST_SENT_TO_OWNER`, `OWNER_CONFIRMED`, `PAYMENT_PENDING` (30-min window)
+- **Camping hard-lock statuses**: Ledger entries ONLY (`TICKET_GENERATED` bookings come via ledger on confirm)
+- **Camping soft-lock statuses**: `PENDING_OWNER_CONFIRMATION`, `BOOKING_REQUEST_SENT_TO_OWNER`, `OWNER_CONFIRMED`, `PAYMENT_PENDING` (30-min) — only triggers when combined with ledger fills capacity
 - **API fields added**: `is_soft_locked: boolean`, `soft_available_quantity: number` returned from all calendar endpoints
 - **CalendarSync.tsx**: Three visual states: green (available), grey (soft-locked), red (hard-locked). Soft-locked camping shows `soft_available_quantity`. Villa soft-locked shows "Pending". Soft-locked cells are disabled (unclickable).
 - **Files changed**: `backend/schema.sql`, `backend/controllers/bookingController.js`, `backend/controllers/propertyController.js`, `backend/controllers/villa/villaController.js`, `backend/controllers/camping/camping_CottagesController.js`, `src/components/CalendarSync.tsx`, `src/components/BookingForm.tsx`, `src/components/LedgerPopup.tsx`

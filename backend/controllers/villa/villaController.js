@@ -769,13 +769,13 @@ const getVillaUnitCalendarData = async (req, res) => {
 
     const softLockResult = await query(
       `SELECT checkin_datetime, checkout_datetime FROM bookings
-       WHERE (unit_id = $1 OR (unit_id IS NULL AND property_id = $4::text))
+       WHERE unit_id = $1
          AND (
            booking_status IN ('PENDING_OWNER_CONFIRMATION', 'BOOKING_REQUEST_SENT_TO_OWNER', 'OWNER_CONFIRMED')
            OR (booking_status = 'PAYMENT_PENDING' AND created_at > NOW() - INTERVAL '30 minutes')
          )
          AND checkout_datetime >= $2 AND checkin_datetime <= $3`,
-      [unitId, startDate.toISOString(), endDate.toISOString(), propertyInternalId]
+      [unitId, startDate.toISOString(), endDate.toISOString()]
     );
 
     const calendarMap = {};

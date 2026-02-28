@@ -279,9 +279,7 @@ export const CalendarSync = ({
                             <span className={cn(
                               isFullyBooked ? "text-white" : isSoftLocked ? "text-white" : "text-[#008000]"
                             )}>
-                              {isSoftLocked
-                                ? (softAvailableQuantity !== null ? softAvailableQuantity : dayTotalCapacity)
-                                : (availableQuantity !== null ? availableQuantity : dayTotalCapacity)}
+                              {softAvailableQuantity !== null ? softAvailableQuantity : (availableQuantity !== null ? availableQuantity : dayTotalCapacity)}
                             </span>
                             <span className={isFullyBooked || isSoftLocked ? "text-white/40" : "text-gray-500"}>/</span>
                             <span className={isFullyBooked || isSoftLocked ? "text-white/80" : "text-[#FF8C00]"}>

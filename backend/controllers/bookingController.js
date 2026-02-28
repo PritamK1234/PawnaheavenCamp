@@ -132,8 +132,9 @@ const initiateBooking = async (req, res) => {
         veg_guest_count, nonveg_guest_count,
         owner_name, map_link, property_address,
         referral_code, referral_discount, referral_type,
+        unit_id,
         payment_status, booking_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, 'INITIATED', 'PAYMENT_PENDING')
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, 'INITIATED', 'PAYMENT_PENDING')
       RETURNING *
     `;
     const values = [
@@ -159,6 +160,7 @@ const initiateBooking = async (req, res) => {
       bookingRequest.referral_code ? bookingRequest.referral_code.toUpperCase() : null,
       referralDiscount,
       referralType,
+      bookingRequest.unit_id || null,
     ];
 
     const result = await query(insertQuery, values);

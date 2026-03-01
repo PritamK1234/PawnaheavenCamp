@@ -12,10 +12,12 @@ router.post('/verify/:booking_id', paymentController.verifyPaymentStatus);
 router.post('/refund/initiate', authMiddleware, paymentController.initiateRefund);
 router.post('/refund/deny', authMiddleware, paymentController.denyRefund);
 router.get('/refund/requests', authMiddleware, paymentController.getRefundRequests);
+router.post('/refund/webhook', paymentController.refundWebhook);
 router.get('/requests/history', authMiddleware, paymentController.getRequestHistory);
 router.get('/withdrawal/requests', authMiddleware, paymentController.getWithdrawalRequests);
 router.post('/withdrawal/process', authMiddleware, paymentController.processWithdrawal);
 router.post('/withdrawal/reject', authMiddleware, paymentController.rejectWithdrawal);
+router.post('/withdrawal/webhook', paymentController.payoutWebhook);
 router.get('/bookings', authMiddleware, paymentController.getAllBookings);
 
 module.exports = router;

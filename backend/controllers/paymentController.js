@@ -1314,6 +1314,41 @@ const getWithdrawalRequests = async (req, res) => {
   }
 };
 
+const triggerPaytmPayout = async (transferId, amount, upiId, beneficiaryName) => {
+  /*
+   * PAYTM PAYOUT API — Uncomment when Paytm Payout product is activated on the merchant account.
+   *
+   * const mid = process.env.PAYTM_MID;
+   * const merchantKey = process.env.PAYTM_MERCHANT_KEY;
+   * const payoutUrl = "https://payout.paytm.com/api/v1/disbursement/init";
+   *
+   * const body = {
+   *   mid,
+   *   transferId: String(transferId),
+   *   transferType: "UPI",
+   *   amount: parseFloat(amount).toFixed(2),
+   *   beneficiaryDetail: {
+   *     beneficiaryName: beneficiaryName || "Referral Partner",
+   *     payoutMethodDetails: {
+   *       upiHandler: upiId,
+   *     },
+   *   },
+   * };
+   *
+   * const checksum = await PaytmChecksum.generateSignature(JSON.stringify(body), merchantKey);
+   *
+   * const response = await axios.post(payoutUrl, { body, head: { signature: checksum } }, {
+   *   headers: { "Content-Type": "application/json" },
+   * });
+   *
+   * return response.data;
+   */
+
+  // MOCK — remove this return and uncomment above when Paytm Payout is activated
+  console.log(`Payout initiated (mock): transferId=${transferId}, amount=₹${amount}, upiId=${upiId}`);
+  return { success: true, mock: true };
+};
+
 const processWithdrawal = async (req, res) => {
   try {
     const { transaction_id } = req.body;
@@ -1346,6 +1381,13 @@ const processWithdrawal = async (req, res) => {
       [transaction_id],
     );
 
+    const payoutResult = await triggerPaytmPayout(
+      transaction_id,
+      txn.amount,
+      txn.upi_id,
+      txn.username,
+    );
+
     try {
       const whatsapp = new WhatsAppService();
       await whatsapp.sendTextMessage(
@@ -1359,6 +1401,8 @@ const processWithdrawal = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Withdrawal processed successfully",
+      payout_initiated: true,
+      payout_mock: payoutResult.mock === true,
     });
   } catch (error) {
     console.error("Error processing withdrawal:", error);
@@ -1402,6 +1446,150 @@ const rejectWithdrawal = async (req, res) => {
   }
 };
 
+const refundWebhook = async (req, res) => {
+  try {
+    const body = { ...req.body };
+    const checksum = body.CHECKSUMHASH;
+    delete body.CHECKSUMHASH;
+
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY;
+    if (!merchantKey) {
+      return res.status(500).json({ error: "Payment gateway not configured" });
+    }
+
+    const isValid = await PaytmChecksum.verifySignature(body, merchantKey, checksum);
+    if (!isValid) {
+      console.error("Refund webhook: invalid checksum");
+      return res.status(400).json({ error: "Invalid checksum" });
+    }
+
+    const refundId = body.REFID;
+    if (!refundId) {
+      return res.status(200).json({ status: "ok" });
+    }
+
+    const result = await query(
+      "SELECT * FROM bookings WHERE refund_id = $1",
+      [refundId],
+    );
+
+    if (result.rows.length === 0) {
+      console.log(`Refund webhook: no booking found for refund_id=${refundId}`);
+      return res.status(200).json({ status: "ok" });
+    }
+
+    const booking = result.rows[0];
+    const paytmStatus = body.STATUS || "";
+    let newStatus;
+    if (paytmStatus === "TXN_SUCCESS" || paytmStatus === "REFUND_SUCCESS") {
+      newStatus = "REFUND_SUCCESSFUL";
+    } else if (paytmStatus === "PENDING") {
+      newStatus = "REFUND_INITIATED";
+    } else {
+      newStatus = "REFUND_FAILED";
+    }
+
+    await query(
+      "UPDATE bookings SET refund_status = $1, updated_at = NOW() WHERE refund_id = $2",
+      [newStatus, refundId],
+    );
+
+    if (newStatus === "REFUND_SUCCESSFUL" && booking.refund_status !== "REFUND_SUCCESSFUL") {
+      try {
+        const whatsapp = new WhatsAppService();
+        await whatsapp.sendTextMessage(
+          booking.guest_phone,
+          `💰 Refund Credited!\n\nBooking ID: ${booking.booking_id}\nRefund Amount: ₹${booking.refund_amount || booking.advance_amount}\n\nYour refund has been successfully credited to your account. It may take 3–5 business days to reflect.`,
+        );
+      } catch (whatsappErr) {
+        console.error("WhatsApp error on refund webhook:", whatsappErr.message);
+      }
+    }
+
+    console.log(`Refund webhook processed: refund_id=${refundId}, status=${newStatus}`);
+    return res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error("Error in refund webhook:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const payoutWebhook = async (req, res) => {
+  try {
+    const body = { ...req.body };
+    const checksum = body.CHECKSUMHASH;
+    delete body.CHECKSUMHASH;
+
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY;
+    if (!merchantKey) {
+      return res.status(500).json({ error: "Payment gateway not configured" });
+    }
+
+    const isValid = await PaytmChecksum.verifySignature(body, merchantKey, checksum);
+    if (!isValid) {
+      console.error("Payout webhook: invalid checksum");
+      return res.status(400).json({ error: "Invalid checksum" });
+    }
+
+    const transferId = body.TRANSFER_ID;
+    if (!transferId) {
+      return res.status(200).json({ status: "ok" });
+    }
+
+    const result = await query(
+      "SELECT rt.*, ru.username, ru.referral_otp_number FROM referral_transactions rt JOIN referral_users ru ON rt.referral_user_id = ru.id WHERE rt.id = $1 AND rt.type = 'withdrawal'",
+      [transferId],
+    );
+
+    if (result.rows.length === 0) {
+      console.log(`Payout webhook: no transaction found for transferId=${transferId}`);
+      return res.status(200).json({ status: "ok" });
+    }
+
+    const txn = result.rows[0];
+    const paytmStatus = body.STATUS || "";
+
+    if (paytmStatus === "SUCCESS") {
+      await query(
+        "UPDATE referral_transactions SET status = 'completed' WHERE id = $1",
+        [transferId],
+      );
+      try {
+        const whatsapp = new WhatsAppService();
+        await whatsapp.sendTextMessage(
+          txn.referral_otp_number,
+          `💰 Payout Successful!\n\nAmount: ₹${txn.amount}\nUPI: ${txn.upi_id || "N/A"}\n\nYour withdrawal has been credited to your UPI account.`,
+        );
+      } catch (whatsappErr) {
+        console.error("WhatsApp error on payout webhook:", whatsappErr.message);
+      }
+      console.log(`Payout webhook: SUCCESS for transferId=${transferId}`);
+    } else if (paytmStatus === "FAILURE") {
+      await query(
+        "UPDATE referral_transactions SET status = 'rejected' WHERE id = $1",
+        [transferId],
+      );
+      try {
+        const whatsapp = new WhatsAppService();
+        await whatsapp.sendTextMessage(
+          txn.referral_otp_number,
+          `❌ Payout Failed\n\nAmount: ₹${txn.amount}\nUPI: ${txn.upi_id || "N/A"}\n\nYour withdrawal of ₹${txn.amount} could not be processed. Please contact admin for assistance.`,
+        );
+      } catch (whatsappErr) {
+        console.error("WhatsApp error on payout failure webhook:", whatsappErr.message);
+      }
+      console.log(`Payout webhook: FAILURE for transferId=${transferId}`);
+    } else {
+      console.log(`Payout webhook: PENDING status for transferId=${transferId}, no action taken`);
+    }
+
+    return res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error("Error in payout webhook:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   initiatePaytmPayment,
   paytmRedirect,
@@ -1416,4 +1604,6 @@ module.exports = {
   getWithdrawalRequests,
   processWithdrawal,
   rejectWithdrawal,
+  refundWebhook,
+  payoutWebhook,
 };

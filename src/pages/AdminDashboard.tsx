@@ -179,6 +179,10 @@ const AdminDashboard = () => {
       toast({ title: "Enter valid 10-digit mobile number", variant: "destructive" });
       return;
     }
+    if (!/[A-Z]/.test(form.code) || !/[0-9]/.test(form.code)) {
+      toast({ title: "Referral code must contain both letters and numbers", variant: "destructive" });
+      return;
+    }
     if (type === 'owner' && !(form as any).propertyId) {
       toast({ title: "Please enter Property ID", variant: "destructive" });
       return;
@@ -257,6 +261,10 @@ const AdminDashboard = () => {
     }
     if (ownerB2bForm.mobile.length !== 10) {
       toast({ title: "Enter valid 10-digit mobile number", variant: "destructive" });
+      return;
+    }
+    if (!/[A-Z]/.test(ownerB2bForm.code) || !/[0-9]/.test(ownerB2bForm.code)) {
+      toast({ title: "Referral code must contain both letters and numbers", variant: "destructive" });
       return;
     }
     if (!ownerCodeVerified) {

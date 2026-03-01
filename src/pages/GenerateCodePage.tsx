@@ -39,6 +39,10 @@ const GenerateCodePage = () => {
       toast.error("Please fill all fields");
       return;
     }
+    if (!/[A-Za-z]/.test(formData.referralCode) || !/[0-9]/.test(formData.referralCode)) {
+      toast.error("Referral code must contain both letters and numbers");
+      return;
+    }
 
     setLoading(true);
     try {

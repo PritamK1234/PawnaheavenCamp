@@ -111,7 +111,7 @@ const ReferralController = {
          WHERE b.parent_referral_id = $1
            AND b.visible_to_owner = true
            AND b.referral_type = 'owners_b2b'
-           AND b.status != 'owner_deleted'
+           AND b.status NOT IN ('owner_deleted', 'deleted')
          ORDER BY b.created_at DESC`,
         [ownerId]
       );

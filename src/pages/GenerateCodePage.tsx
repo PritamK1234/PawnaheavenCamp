@@ -141,12 +141,14 @@ const GenerateCodePage = () => {
                   placeholder="Create your referral code"
                   className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg Capatalize"
                   value={formData.referralCode}
+                  maxLength={15}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       referralCode: e.target.value
                         .toUpperCase()
-                        .replace(/[^A-Z0-9]/g, ""),
+                        .replace(/[^A-Z0-9]/g, "")
+                        .slice(0, 15),
                     })
                   }
                 />

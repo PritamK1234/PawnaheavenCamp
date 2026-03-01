@@ -1456,7 +1456,7 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Referral Code</label>
-                      <Input placeholder="e.g. B2B-PARTNER1" value={b2bForm.code} onChange={(e) => setB2bForm({ ...b2bForm, code: e.target.value.toUpperCase().replace(/\s/g, '') })} className="h-11 rounded-xl bg-white/5 border-white/10 uppercase" />
+                      <Input placeholder="e.g. B2BPARTNER1" maxLength={15} value={b2bForm.code} onChange={(e) => setB2bForm({ ...b2bForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15) })} className="h-11 rounded-xl bg-white/5 border-white/10 uppercase" />
                     </div>
                     <Button onClick={() => handleCreateAdminReferral('b2b')} disabled={b2bCreating} className="w-full bg-gradient-gold text-black hover:opacity-90 font-bold h-12 rounded-2xl shadow-gold">
                       {b2bCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate B2B Code"}
@@ -1516,7 +1516,7 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Referral Code</label>
-                      <Input placeholder="e.g. OWN-PROPERTY1" value={ownerRefForm.code} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, code: e.target.value.toUpperCase().replace(/\s/g, '') })} className="h-11 rounded-xl bg-white/5 border-white/10 uppercase" />
+                      <Input placeholder="e.g. OWNPROPERTY1" maxLength={15} value={ownerRefForm.code} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15) })} className="h-11 rounded-xl bg-white/5 border-white/10 uppercase" />
                     </div>
                     <Button onClick={() => handleCreateAdminReferral('owner')} disabled={ownerRefCreating} className="w-full bg-primary text-white hover:opacity-90 font-bold h-12 rounded-2xl shadow-lg">
                       {ownerRefCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate Owner Code"}
@@ -1600,7 +1600,8 @@ const AdminDashboard = () => {
                               <Input
                                 placeholder="e.g. OWNB2B-PARTNER1"
                                 value={ownerB2bForm.code}
-                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, code: e.target.value.toUpperCase().replace(/\s/g, '') })}
+                                maxLength={15}
+                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15) })}
                                 className="h-11 rounded-xl bg-white/5 border-white/10 uppercase"
                               />
                             </div>

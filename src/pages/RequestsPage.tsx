@@ -9,7 +9,8 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Bell,
-  AlertTriangle
+  AlertTriangle,
+  X
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,24 @@ interface HistoryItem {
   status: string;
 }
 
+interface ConfirmDialogState {
+  open: boolean;
+  title: string;
+  message: string;
+  confirmLabel: string;
+  confirmStyle: "green" | "red";
+  onConfirm: () => void;
+}
+
+const DIALOG_CLOSED: ConfirmDialogState = {
+  open: false,
+  title: "",
+  message: "",
+  confirmLabel: "Confirm",
+  confirmStyle: "green",
+  onConfirm: () => {},
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem("adminToken");
   return {
@@ -64,6 +83,7 @@ const RequestsPage = () => {
   const [activeTab, setActiveTab] = useState("withdrawals");
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<ConfirmDialogState>(DIALOG_CLOSED);
 
   const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<WithdrawalRequest[]>([]);
@@ -108,100 +128,134 @@ const RequestsPage = () => {
     fetchAllData();
   }, [fetchAllData]);
 
-  const handleProcessRefund = async (bookingId: string) => {
-    if (!confirm(`Are you sure you want to process a refund for booking ${bookingId}? This will initiate a Paytm refund to the customer.`)) return;
-
-    setActionLoading(`refund-${bookingId}`);
-    try {
-      const res = await fetch("/api/payments/refund/initiate", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ booking_id: bookingId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast({ title: "Refund Initiated", description: `Refund of ₹${data.amount} initiated. ID: ${data.refund_id}` });
-        fetchAllData();
-      } else {
-        toast({ title: "Refund Failed", description: data.error || data.details || "Failed to process refund", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Network error processing refund", variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
+  const openDialog = (config: Omit<ConfirmDialogState, "open">) => {
+    setDialog({ ...config, open: true });
   };
 
-  const handleDenyRefund = async (bookingId: string) => {
-    if (!confirm(`Are you sure you want to deny the refund for booking ${bookingId}? The customer will NOT receive a refund.`)) return;
+  const closeDialog = () => setDialog(DIALOG_CLOSED);
 
-    setActionLoading(`deny-${bookingId}`);
-    try {
-      const res = await fetch("/api/payments/refund/deny", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ booking_id: bookingId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast({ title: "Refund Denied", description: "The refund request has been denied." });
-        fetchAllData();
-      } else {
-        toast({ title: "Error", description: data.error || "Failed to deny refund", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Network error denying refund", variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
+  const handleProcessRefund = (req: RefundRequest) => {
+    openDialog({
+      title: "Process Refund",
+      message: `Initiate a Paytm refund of ₹${req.advance_amount} to ${req.guest_name} (${req.guest_phone}) for booking ${req.booking_id}?\n\nThis action will trigger an immediate Paytm refund and cannot be undone.`,
+      confirmLabel: "Yes, Process Refund",
+      confirmStyle: "green",
+      onConfirm: async () => {
+        closeDialog();
+        setActionLoading(`refund-${req.booking_id}`);
+        try {
+          const res = await fetch("/api/payments/refund/initiate", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ booking_id: req.booking_id }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            toast({ title: "Refund Initiated", description: `Refund of ₹${data.amount} initiated. ID: ${data.refund_id}` });
+            fetchAllData();
+          } else {
+            toast({ title: "Refund Failed", description: data.error || data.details || "Failed to process refund", variant: "destructive" });
+          }
+        } catch {
+          toast({ title: "Error", description: "Network error processing refund", variant: "destructive" });
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
   };
 
-  const handleApproveWithdrawal = async (txnId: number) => {
-    if (!confirm("Are you sure you want to approve this withdrawal? Make sure you have completed the bank transfer.")) return;
-
-    setActionLoading(`approve-${txnId}`);
-    try {
-      const res = await fetch("/api/payments/withdrawal/process", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ transaction_id: txnId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast({ title: "Withdrawal Approved", description: "The withdrawal has been marked as completed." });
-        fetchAllData();
-      } else {
-        toast({ title: "Error", description: data.error || "Failed to approve withdrawal", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Network error approving withdrawal", variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
+  const handleDenyRefund = (req: RefundRequest) => {
+    openDialog({
+      title: "Deny Refund",
+      message: `Are you sure you want to deny the refund for ${req.guest_name}'s booking (${req.booking_id})?\n\nThe customer will NOT receive a refund. This action cannot be undone.`,
+      confirmLabel: "Yes, Deny Refund",
+      confirmStyle: "red",
+      onConfirm: async () => {
+        closeDialog();
+        setActionLoading(`deny-${req.booking_id}`);
+        try {
+          const res = await fetch("/api/payments/refund/deny", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ booking_id: req.booking_id }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            toast({ title: "Refund Denied", description: "The refund request has been denied." });
+            fetchAllData();
+          } else {
+            toast({ title: "Error", description: data.error || "Failed to deny refund", variant: "destructive" });
+          }
+        } catch {
+          toast({ title: "Error", description: "Network error denying refund", variant: "destructive" });
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
   };
 
-  const handleRejectWithdrawal = async (txnId: number) => {
-    if (!confirm("Are you sure you want to reject this withdrawal request?")) return;
+  const handleApproveWithdrawal = (req: WithdrawalRequest) => {
+    openDialog({
+      title: "Approve Withdrawal",
+      message: `Approve withdrawal of ₹${req.amount} for ${req.username}${req.upi_id ? ` to UPI ${req.upi_id}` : ""}?\n\nThis will mark the withdrawal as completed and notify the partner.`,
+      confirmLabel: "Yes, Approve",
+      confirmStyle: "green",
+      onConfirm: async () => {
+        closeDialog();
+        setActionLoading(`approve-${req.id}`);
+        try {
+          const res = await fetch("/api/payments/withdrawal/process", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ transaction_id: req.id }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            toast({ title: "Withdrawal Approved", description: "The withdrawal has been marked as completed." });
+            fetchAllData();
+          } else {
+            toast({ title: "Error", description: data.error || "Failed to approve withdrawal", variant: "destructive" });
+          }
+        } catch {
+          toast({ title: "Error", description: "Network error approving withdrawal", variant: "destructive" });
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
 
-    setActionLoading(`reject-${txnId}`);
-    try {
-      const res = await fetch("/api/payments/withdrawal/reject", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ transaction_id: txnId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast({ title: "Withdrawal Rejected", description: "The withdrawal request has been rejected." });
-        fetchAllData();
-      } else {
-        toast({ title: "Error", description: data.error || "Failed to reject withdrawal", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Network error rejecting withdrawal", variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
+  const handleRejectWithdrawal = (req: WithdrawalRequest) => {
+    openDialog({
+      title: "Reject Withdrawal",
+      message: `Are you sure you want to reject the withdrawal request of ₹${req.amount} from ${req.username}?\n\nThe partner will be notified that their request was rejected.`,
+      confirmLabel: "Yes, Reject",
+      confirmStyle: "red",
+      onConfirm: async () => {
+        closeDialog();
+        setActionLoading(`reject-${req.id}`);
+        try {
+          const res = await fetch("/api/payments/withdrawal/reject", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ transaction_id: req.id }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            toast({ title: "Withdrawal Rejected", description: "The withdrawal request has been rejected." });
+            fetchAllData();
+          } else {
+            toast({ title: "Error", description: data.error || "Failed to reject withdrawal", variant: "destructive" });
+          }
+        } catch {
+          toast({ title: "Error", description: "Network error rejecting withdrawal", variant: "destructive" });
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
   };
 
   const formatDate = (dateStr: string) => {
@@ -218,7 +272,64 @@ const RequestsPage = () => {
         <title>Requests Management - Admin</title>
       </Helmet>
 
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+      {dialog.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeDialog(); }}
+        >
+          <div className="w-full max-w-sm bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between p-5 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0",
+                  dialog.confirmStyle === "red" ? "bg-red-500/15 text-red-400" : "bg-emerald-500/15 text-emerald-400"
+                )}>
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <h3 className="font-display font-bold text-base text-white">{dialog.title}</h3>
+              </div>
+              <button
+                onClick={closeDialog}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5">
+              {dialog.message.split("\n\n").map((para, i) => (
+                <p key={i} className={cn("text-sm leading-relaxed", i === 0 ? "text-white/80" : "text-white/50 mt-2 text-xs")}>
+                  {para}
+                </p>
+              ))}
+            </div>
+
+            <div className="flex gap-3 px-5 pb-5">
+              <Button
+                variant="ghost"
+                className="flex-1 rounded-xl border border-white/10 hover:bg-white/5 text-white/70 hover:text-white h-10 text-sm"
+                onClick={closeDialog}
+              >
+                Cancel
+              </Button>
+              <Button
+                className={cn(
+                  "flex-1 rounded-xl h-10 text-sm font-bold text-white",
+                  dialog.confirmStyle === "red"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-emerald-500 hover:bg-emerald-600"
+                )}
+                onClick={dialog.onConfirm}
+              >
+                {dialog.confirmLabel}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-6 py-4 flex items-center gap-4">
           <Button 
             variant="ghost" 
@@ -284,7 +395,7 @@ const RequestsPage = () => {
                       <div className="flex flex-col gap-2">
                         <Button 
                           className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 text-xs font-bold"
-                          onClick={() => handleApproveWithdrawal(req.id)}
+                          onClick={() => handleApproveWithdrawal(req)}
                           disabled={actionLoading === `approve-${req.id}`}
                         >
                           {actionLoading === `approve-${req.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve"}
@@ -292,7 +403,7 @@ const RequestsPage = () => {
                         <Button 
                           variant="ghost" 
                           className="text-red-400 hover:bg-red-500/10 h-9 rounded-xl text-xs"
-                          onClick={() => handleRejectWithdrawal(req.id)}
+                          onClick={() => handleRejectWithdrawal(req)}
                           disabled={actionLoading === `reject-${req.id}`}
                         >
                           {actionLoading === `reject-${req.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reject"}
@@ -324,7 +435,7 @@ const RequestsPage = () => {
                       <div className="flex flex-col gap-2">
                         <Button 
                           className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 text-xs font-bold"
-                          onClick={() => handleProcessRefund(req.booking_id)}
+                          onClick={() => handleProcessRefund(req)}
                           disabled={actionLoading === `refund-${req.booking_id}`}
                         >
                           {actionLoading === `refund-${req.booking_id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Process Refund"}
@@ -332,7 +443,7 @@ const RequestsPage = () => {
                         <Button 
                           variant="ghost" 
                           className="text-red-400 hover:bg-red-500/10 h-9 rounded-xl text-xs"
-                          onClick={() => handleDenyRefund(req.booking_id)}
+                          onClick={() => handleDenyRefund(req)}
                           disabled={actionLoading === `deny-${req.booking_id}`}
                         >
                           {actionLoading === `deny-${req.booking_id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : "Deny"}

@@ -12,7 +12,7 @@ const ReferralService = {
   async getShareInfo(userId) {
     const { query } = require('../db');
     const userResult = await query(
-      'SELECT id, username, referral_code, status, referral_type, linked_property_id, linked_property_slug FROM referral_users WHERE id = $1',
+      'SELECT id, username, referral_code, status, referral_type, linked_property_id, linked_property_slug, parent_referral_id FROM referral_users WHERE id = $1',
       [userId]
     );
     const user = userResult.rows[0];
@@ -31,6 +31,15 @@ const ReferralService = {
     let referralLink;
     if (referralType === 'owner' && user.linked_property_slug) {
       referralLink = `https://${domain}/property/${user.linked_property_slug}?ref=${referralCode}`;
+    } else if (referralType === 'owners_b2b' && user.parent_referral_id) {
+      const parentRes = await query(
+        'SELECT linked_property_slug FROM referral_users WHERE id = $1',
+        [user.parent_referral_id]
+      );
+      const parentSlug = parentRes.rows[0]?.linked_property_slug;
+      referralLink = parentSlug
+        ? `https://${domain}/property/${parentSlug}?ref=${referralCode}`
+        : `https://${domain}/?ref=${referralCode}`;
     } else {
       referralLink = `https://${domain}/?ref=${referralCode}`;
     }

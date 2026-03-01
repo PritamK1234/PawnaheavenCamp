@@ -125,11 +125,16 @@ const CheckEarningPage = () => {
 
   const handleWhatsAppShare = () => {
     if (!shareData) return;
-    const message = `Hey!  
-Book villas, cottages & camping in Lonavala / Pawna Lake 🏕️🏡  
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(shareData.referralLink)}&size=300x300`;
+    const message = `Hey! Book villas, cottages & camping in Lonavala / Pawna Lake 🏕️🏡
 
-Use my referral link to get instant discount:  
-${shareData.referralLink}`;
+Use my referral link to get instant discount:
+${shareData.referralLink}
+
+Referral Code: ${shareData.referralCode}
+
+Scan QR Code to book directly:
+${qrImageUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   };
 
@@ -399,9 +404,13 @@ ${shareData.referralLink}`;
                         "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
                         dashboard.referral_type === 'owner' ? 'bg-blue-500/20 text-blue-400' :
                         dashboard.referral_type === 'b2b' ? 'bg-amber-500/20 text-amber-400' :
+                        dashboard.referral_type === 'owners_b2b' ? 'bg-purple-500/20 text-purple-400' :
                         'bg-emerald-500/20 text-emerald-400'
                       )}>
-                        {dashboard.referral_type === 'owner' ? 'Owner' : dashboard.referral_type === 'b2b' ? 'B2B Partner' : 'Public'} Referral
+                        {dashboard.referral_type === 'owner' ? 'Owner' :
+                         dashboard.referral_type === 'b2b' ? 'B2B Partner' :
+                         dashboard.referral_type === 'owners_b2b' ? 'Owners B2B' :
+                         'Public'} Referral
                       </span>
                       <span className="text-[10px] text-white/50">{dashboard.commission_label}</span>
                     </div>

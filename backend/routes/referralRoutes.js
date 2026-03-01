@@ -45,5 +45,7 @@ router.post('/admin/login-as', authMiddleware, AdminController.loginAsReferralUs
 router.get('/admin/owner-lookup/:propertyId', authMiddleware, AdminController.lookupOwnerByPropertyId);
 router.post('/admin/update-otp', authMiddleware, AdminController.updateOwnerOtpNumber);
 router.post('/admin/verify-owner-code', authMiddleware, AdminController.verifyOwnerCode);
+router.get('/admin/contacts', authMiddleware, AdminController.getAllContacts);
+router.post('/admin/hard-delete-contact', authMiddleware, AdminController.hardDeleteContact);
 
 module.exports = router;

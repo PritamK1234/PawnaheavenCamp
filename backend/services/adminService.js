@@ -25,6 +25,7 @@ const AdminService = {
       FROM referral_users u
       LEFT JOIN referral_users owner_ru ON owner_ru.id = u.parent_referral_id
       LEFT JOIN referral_transactions t ON u.id = t.referral_user_id
+      WHERE u.status != 'deleted'
       GROUP BY u.id, owner_ru.username
       ORDER BY u.created_at DESC
     `;
@@ -39,10 +40,36 @@ const AdminService = {
   },
 
   async deleteReferral(userId) {
-    await query('DELETE FROM referral_transactions WHERE referral_user_id = $1', [userId]);
-    const res = await query('DELETE FROM referral_users WHERE id = $1 RETURNING *', [userId]);
+    const res = await query("UPDATE referral_users SET status = 'deleted' WHERE id = $1 RETURNING *", [userId]);
     if (res.rows.length === 0) throw new Error('Referral user not found');
     return res.rows[0];
+  },
+
+  async hardDeleteContact(userId) {
+    await query('DELETE FROM referral_transactions WHERE referral_user_id = $1', [userId]);
+    const res = await query('DELETE FROM referral_users WHERE id = $1 RETURNING *', [userId]);
+    if (res.rows.length === 0) throw new Error('Contact not found');
+    return res.rows[0];
+  },
+
+  async getAllContacts() {
+    const text = `
+      SELECT 
+        u.id, 
+        u.username, 
+        u.referral_otp_number, 
+        u.referral_code, 
+        u.status, 
+        u.referral_type,
+        u.visible_to_owner,
+        u.created_at,
+        owner_ru.username AS parent_owner_name
+      FROM referral_users u
+      LEFT JOIN referral_users owner_ru ON owner_ru.id = u.parent_referral_id
+      ORDER BY u.created_at DESC
+    `;
+    const res = await query(text);
+    return res.rows;
   },
 
   async createAdminReferral(username, mobileNumber, referralCode, referralType, linkedPropertyId, propertyId, parentReferralId, ownerId) {
@@ -65,6 +92,13 @@ const AdminService = {
       linkedSlug = propResult.rows[0].slug;
       resolvedLinkedPropertyId = propResult.rows[0].id;
       referralUrl = `https://${domain}/property/${linkedSlug}?ref=${code}`;
+    } else if (referralType === 'owners_b2b' && parentReferralId) {
+      const parentRes = await query('SELECT linked_property_slug FROM referral_users WHERE id = $1', [parentReferralId]);
+      const parentSlug = parentRes.rows[0]?.linked_property_slug;
+      if (parentSlug) {
+        linkedSlug = parentSlug;
+        referralUrl = `https://${domain}/property/${parentSlug}?ref=${code}`;
+      }
     }
 
     const text = `

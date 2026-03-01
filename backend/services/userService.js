@@ -51,7 +51,7 @@ const UserService = {
     const referralType = userDetails.referral_type || 'public';
     let commissionLabel = '15% of advance';
     if (referralType === 'owner') commissionLabel = '25% of advance';
-    else if (referralType === 'b2b') commissionLabel = '22% of advance';
+    else if (referralType === 'b2b' || referralType === 'owners_b2b') commissionLabel = '22% of advance';
 
     return {
       username: userDetails.username,

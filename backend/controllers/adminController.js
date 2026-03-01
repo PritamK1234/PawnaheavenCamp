@@ -33,6 +33,26 @@ const AdminController = {
     }
   },
 
+  async getAllContacts(req, res) {
+    try {
+      const contacts = await AdminService.getAllContacts();
+      res.json(contacts);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  async hardDeleteContact(req, res) {
+    try {
+      const { userId } = req.body;
+      if (!userId) return res.status(400).json({ error: 'User ID is required' });
+      const deleted = await AdminService.hardDeleteContact(userId);
+      res.json({ success: true, data: deleted });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
   async loginAsReferralUser(req, res) {
     try {
       const { mobile } = req.body;

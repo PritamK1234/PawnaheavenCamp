@@ -59,10 +59,11 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
     if (refCode) {
       localStorage.setItem("applied_referral_code", refCode.toUpperCase());
       axios.get(`/api/referrals/validate/${refCode}`).then(res => {
-        if (res.data.valid && res.data.referral_type === 'owner' && res.data.linked_property_slug) {
+        const isOwnerType = res.data.referral_type === 'owner' || res.data.referral_type === 'owners_b2b';
+        if (res.data.valid && isOwnerType && res.data.linked_property_slug) {
           localStorage.setItem("owner_referral_lock", res.data.linked_property_slug);
           if (!location.pathname.startsWith('/property/')) {
-            window.location.href = `/property/${res.data.linked_property_slug}?ref=${refCode.toUpperCase()}`;
+            window.location.replace(`/property/${res.data.linked_property_slug}?ref=${refCode.toUpperCase()}`);
           }
         }
       }).catch(() => {});

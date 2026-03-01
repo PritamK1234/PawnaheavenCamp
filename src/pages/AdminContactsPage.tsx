@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { adminPaths } from "@/lib/adminPaths";
-import { ChevronLeft, Phone, Loader2 } from "lucide-react";
+import { ChevronLeft, Phone, Loader2, Trash2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 const AdminContactsPage = () => {
   const [contacts, setContacts] = useState<{
@@ -12,31 +13,56 @@ const AdminContactsPage = () => {
     referrals: any[];
   }>({ owners: [], b2b: [], owners_b2b: [], referrals: [] });
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const token = localStorage.getItem("adminToken");
+
+  const fetchContacts = async () => {
+    if (!token) { setLoading(false); return; }
+    try {
+      const res = await fetch("/api/referrals/admin/contacts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { setLoading(false); return; }
+      const data: any[] = await res.json();
+      setContacts({
+        owners: data.filter(u => u.referral_type === "owner"),
+        b2b: data.filter(u => u.referral_type === "b2b"),
+        owners_b2b: data.filter(u => u.referral_type === "owners_b2b"),
+        referrals: data.filter(u => u.referral_type === "public" || !u.referral_type),
+      });
+    } catch (e) {
+      console.error("Failed to load contacts", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchContacts = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) { setLoading(false); return; }
-      try {
-        const res = await fetch("/api/referrals/admin/all", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) { setLoading(false); return; }
-        const data: any[] = await res.json();
-        setContacts({
-          owners: data.filter(u => u.referral_type === "owner"),
-          b2b: data.filter(u => u.referral_type === "b2b"),
-          owners_b2b: data.filter(u => u.referral_type === "owners_b2b"),
-          referrals: data.filter(u => u.referral_type === "public" || !u.referral_type),
-        });
-      } catch (e) {
-        console.error("Failed to load contacts", e);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchContacts();
   }, []);
+
+  const handleHardDelete = async (id: number, name: string) => {
+    if (!window.confirm(`Permanently delete contact "${name}"? This cannot be undone.`)) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch("/api/referrals/admin/hard-delete-contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: id }),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      toast.success(`${name} permanently deleted`);
+      await fetchContacts();
+    } catch (e) {
+      toast.error("Failed to delete contact");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const renderList = (items: any[], showOwner?: boolean) => {
     if (loading) {
@@ -55,19 +81,35 @@ const AdminContactsPage = () => {
       <div className="space-y-2 mt-4">
         {items.map((c, i) => (
           <div key={i} className="flex items-center justify-between bg-white/[0.03] border border-white/5 rounded-2xl px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-white/90 capitalize">{c.username || c.name}</p>
+            <div className="flex-1 min-w-0 mr-2">
+              <p className="text-sm font-semibold text-white/90 capitalize truncate">{c.username || c.name}</p>
               {showOwner && c.parent_owner_name && (
                 <p className="text-[10px] text-amber-400">Owner: {c.parent_owner_name}</p>
               )}
               <p className="text-xs text-white/40">{c.referral_otp_number || c.mobile}</p>
+              {c.status === "deleted" && (
+                <p className="text-[10px] text-red-400/70">Referral removed</p>
+              )}
             </div>
-            <a
-              href={`tel:${c.referral_otp_number || c.mobile}`}
-              className="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-400 hover:bg-emerald-500/20 transition-all"
-            >
-              <Phone className="w-4 h-4" />
-            </a>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <a
+                href={`tel:${c.referral_otp_number || c.mobile}`}
+                className="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-400 hover:bg-emerald-500/20 transition-all"
+              >
+                <Phone className="w-4 h-4" />
+              </a>
+              <button
+                onClick={() => handleHardDelete(c.id, c.username || c.name)}
+                disabled={deletingId === c.id}
+                className="w-9 h-9 rounded-full bg-red-500/10 border border-red-500/15 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-all disabled:opacity-50"
+              >
+                {deletingId === c.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
         ))}
       </div>

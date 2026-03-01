@@ -17,17 +17,25 @@ const ReferralController = {
       const { code } = req.params;
       if (!code) return res.status(400).json({ valid: false, error: 'Code is required' });
       const result = await query(
-        "SELECT id, username, referral_code, referral_type, linked_property_id, linked_property_slug FROM referral_users WHERE referral_code = $1 AND status = 'active'",
+        "SELECT id, username, referral_code, referral_type, linked_property_id, linked_property_slug, parent_referral_id FROM referral_users WHERE referral_code = $1 AND status = 'active'",
         [code.toUpperCase()]
       );
       if (result.rows.length > 0) {
         const user = result.rows[0];
+        let linkedPropertySlug = user.linked_property_slug || null;
+        if (user.referral_type === 'owners_b2b' && user.parent_referral_id) {
+          const parentRes = await query(
+            'SELECT linked_property_slug FROM referral_users WHERE id = $1',
+            [user.parent_referral_id]
+          );
+          linkedPropertySlug = parentRes.rows[0]?.linked_property_slug || null;
+        }
         return res.json({ 
           valid: true, 
           referrer: user.username,
           referral_type: user.referral_type || 'public',
           linked_property_id: user.linked_property_id || null,
-          linked_property_slug: user.linked_property_slug || null
+          linked_property_slug: linkedPropertySlug
         });
       }
       return res.json({ valid: false });

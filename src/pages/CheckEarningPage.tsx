@@ -123,29 +123,9 @@ const CheckEarningPage = () => {
     document.body.removeChild(link);
   };
 
-  const handleWhatsAppShare = async () => {
+  const handleWhatsAppShare = () => {
     if (!shareData) return;
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(shareData.referralLink)}&size=300x300`;
-    const message = `Hey! Book villas, cottages & camping in Lonavala / Pawna Lake 🏕️🏡
-
-Referral Code: ${shareData.referralCode}
-Referral Link: ${shareData.referralLink}`;
-
-    try {
-      const imgRes = await fetch(qrImageUrl);
-      const blob = await imgRes.blob();
-      const file = new File([blob], `qr-${shareData.referralCode}.png`, { type: "image/png" });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: message, title: "Pawna Haven Camp" });
-        return;
-      }
-    } catch (err: any) {
-      if (err?.name === "AbortError") return;
-    }
-
-    const fallbackMessage = `${message}\n\nQR Code Image: ${qrImageUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareData.referralLink)}`, "_blank");
   };
 
   const handleSendOTP = async () => {

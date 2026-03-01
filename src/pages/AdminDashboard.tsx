@@ -81,6 +81,11 @@ const AdminDashboard = () => {
   const [ownerRefForm, setOwnerRefForm] = useState({ username: "", mobile: "", code: "", propertyId: "" });
   const [b2bCreating, setB2bCreating] = useState(false);
   const [ownerRefCreating, setOwnerRefCreating] = useState(false);
+  const [ownerB2bForm, setOwnerB2bForm] = useState({ ownerCode: "", username: "", mobile: "", code: "" });
+  const [ownerB2bCreating, setOwnerB2bCreating] = useState(false);
+  const [ownerCodeVerified, setOwnerCodeVerified] = useState(false);
+  const [verifiedOwnerName, setVerifiedOwnerName] = useState("");
+  const [ownerCodeVerifying, setOwnerCodeVerifying] = useState(false);
   const [bookingsData, setBookingsData] = useState<any[]>([]);
   const [isBookingsLoading, setIsBookingsLoading] = useState(false);
 
@@ -211,6 +216,80 @@ const AdminDashboard = () => {
       toast({ title: "Failed to create referral code", variant: "destructive" });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleVerifyOwnerCode = async () => {
+    const token = localStorage.getItem("adminToken");
+    if (!ownerB2bForm.ownerCode) {
+      toast({ title: "Please enter an owner referral code", variant: "destructive" });
+      return;
+    }
+    setOwnerCodeVerifying(true);
+    try {
+      const response = await fetch("/api/referrals/admin/verify-owner-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ code: ownerB2bForm.ownerCode }),
+      });
+      const result = await response.json();
+      if (result.valid) {
+        setOwnerCodeVerified(true);
+        setVerifiedOwnerName(result.owner_name || "");
+        toast({ title: "Owner code verified!" });
+      } else {
+        setOwnerCodeVerified(false);
+        setVerifiedOwnerName("");
+        toast({ title: result.error || "Invalid owner referral code", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Verification failed", variant: "destructive" });
+    } finally {
+      setOwnerCodeVerifying(false);
+    }
+  };
+
+  const handleCreateOwnerB2BReferral = async () => {
+    const token = localStorage.getItem("adminToken");
+    if (!ownerB2bForm.username || !ownerB2bForm.mobile || !ownerB2bForm.code) {
+      toast({ title: "Please fill all fields", variant: "destructive" });
+      return;
+    }
+    if (ownerB2bForm.mobile.length !== 10) {
+      toast({ title: "Enter valid 10-digit mobile number", variant: "destructive" });
+      return;
+    }
+    if (!ownerCodeVerified) {
+      toast({ title: "Please verify the owner referral code first", variant: "destructive" });
+      return;
+    }
+    setOwnerB2bCreating(true);
+    try {
+      const response = await fetch("/api/referrals/admin/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          username: ownerB2bForm.username,
+          referral_otp_number: ownerB2bForm.mobile,
+          referral_code: ownerB2bForm.code,
+          referral_type: "owners_b2b",
+          owner_referral_code: ownerB2bForm.ownerCode,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast({ title: "Owners B2B code created!" });
+        setOwnerB2bForm({ ownerCode: "", username: "", mobile: "", code: "" });
+        setOwnerCodeVerified(false);
+        setVerifiedOwnerName("");
+        await fetchReferralUsers();
+      } else {
+        toast({ title: result.error || "Failed to create code", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Failed to create referral code", variant: "destructive" });
+    } finally {
+      setOwnerB2bCreating(false);
     }
   };
 
@@ -1088,12 +1167,13 @@ const AdminDashboard = () => {
               onValueChange={setReferralSubTab}
               className="w-full"
             >
-              <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5">
+              <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5 flex flex-wrap gap-1">
                 {[
-                  { id: "all", label: "All Referrals" },
-                  { id: "owners", label: "Owners Referrals" },
-                  { id: "b2b", label: "B2B Referrals" },
-                  { id: "public", label: "Public Referrals" },
+                  { id: "all", label: "All" },
+                  { id: "owners", label: "Owners" },
+                  { id: "b2b", label: "B2B" },
+                  { id: "public", label: "Public" },
+                  { id: "owners_b2b", label: "Owners B2B" },
                 ].map((tab) => (
                   <TabsTrigger
                     key={tab.id}
@@ -1148,7 +1228,8 @@ const AdminDashboard = () => {
                           "b2b": "b2b",
                           "b2b referrals": "b2b",
                           "public": "public",
-                          "public referrals": "public"
+                          "public referrals": "public",
+                          "owners_b2b": "owners_b2b",
                         };
                         const targetType = typeMap[referralSubTab.toLowerCase()];
                         return matchesSearch && u.type === targetType;
@@ -1170,6 +1251,11 @@ const AdminDashboard = () => {
                                 <p className="text-xs text-muted-foreground">
                                   {referral.referral_otp_number}
                                 </p>
+                                {referral.type === "owners_b2b" && referral.parent_owner_name && (
+                                  <p className="text-[10px] text-amber-400 mt-0.5">
+                                    Owner: {referral.parent_owner_name}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             <Badge
@@ -1336,12 +1422,15 @@ const AdminDashboard = () => {
             </div>
 
             <Tabs value={b2bSubTab} onValueChange={setB2bSubTab} className="w-full">
-              <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5 grid grid-cols-2">
+              <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5 grid grid-cols-3">
                 <TabsTrigger value="b2b" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
-                  Generate code for B2B
+                  Generate B2B
                 </TabsTrigger>
                 <TabsTrigger value="owners" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
-                  Generate code for Owners
+                  Generate Owner
+                </TabsTrigger>
+                <TabsTrigger value="owners_b2b" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                  Owners B2B
                 </TabsTrigger>
               </TabsList>
               
@@ -1432,6 +1521,100 @@ const AdminDashboard = () => {
                     <Button onClick={() => handleCreateAdminReferral('owner')} disabled={ownerRefCreating} className="w-full bg-primary text-white hover:opacity-90 font-bold h-12 rounded-2xl shadow-lg">
                       {ownerRefCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate Owner Code"}
                     </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="owners_b2b" className="mt-6">
+                <div className="glass-dark rounded-[2.5rem] border border-white/5 p-6 space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center border border-amber-500/20 text-amber-400">
+                      <Users2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold">Owners B2B Referral</h4>
+                      <p className="text-xs text-muted-foreground">Commission: 22% of advance | Admin: 8%</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Step 1: Enter Owner Referral Code</label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="e.g. OWN-PROPERTY1"
+                          value={ownerB2bForm.ownerCode}
+                          onChange={(e) => {
+                            setOwnerB2bForm({ ...ownerB2bForm, ownerCode: e.target.value.toUpperCase().replace(/\s/g, '') });
+                            setOwnerCodeVerified(false);
+                            setVerifiedOwnerName("");
+                          }}
+                          className="h-11 rounded-xl bg-white/5 border-white/10 uppercase flex-1"
+                        />
+                        <Button
+                          onClick={handleVerifyOwnerCode}
+                          disabled={ownerCodeVerifying || !ownerB2bForm.ownerCode}
+                          className="h-11 px-4 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 font-bold"
+                          variant="outline"
+                        >
+                          {ownerCodeVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {ownerCodeVerified && (
+                      <>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Property Owner Name</label>
+                          <Input
+                            readOnly
+                            value={verifiedOwnerName}
+                            className="h-11 rounded-xl bg-emerald-500/5 border-emerald-500/30 text-emerald-400 capitalize"
+                          />
+                        </div>
+
+                        <div className="pt-2 border-t border-white/10">
+                          <p className="text-xs text-muted-foreground mb-3">Step 2: Enter B2B Partner Details</p>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs text-muted-foreground mb-1 block">B2B Partner Name</label>
+                              <Input
+                                placeholder="Business partner name"
+                                value={ownerB2bForm.username}
+                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, username: e.target.value })}
+                                className="h-11 rounded-xl bg-white/5 border-white/10"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground mb-1 block">Mobile Number</label>
+                              <Input
+                                placeholder="10-digit mobile"
+                                maxLength={10}
+                                value={ownerB2bForm.mobile}
+                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, mobile: e.target.value.replace(/\D/g, '') })}
+                                className="h-11 rounded-xl bg-white/5 border-white/10"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground mb-1 block">Referral Code</label>
+                              <Input
+                                placeholder="e.g. OWNB2B-PARTNER1"
+                                value={ownerB2bForm.code}
+                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, code: e.target.value.toUpperCase().replace(/\s/g, '') })}
+                                className="h-11 rounded-xl bg-white/5 border-white/10 uppercase"
+                              />
+                            </div>
+                            <Button
+                              onClick={handleCreateOwnerB2BReferral}
+                              disabled={ownerB2bCreating}
+                              className="w-full bg-gradient-gold text-black hover:opacity-90 font-bold h-12 rounded-2xl shadow-gold"
+                            >
+                              {ownerB2bCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate Owners_B2B Code"}
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </TabsContent>

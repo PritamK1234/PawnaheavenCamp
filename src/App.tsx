@@ -44,6 +44,7 @@ const VillaOwnerMain = lazy(() => import("./pages/owner/dashboard/Villas-owners-
 const VillaOwnerProfile = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Profile"));
 const VillaOwnerInfo = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Info"));
 const VillaOwnerUnits = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Units"));
+const OwnerB2B = lazy(() => import("./pages/owner/dashboard/OwnerB2B"));
 
 const queryClient = new QueryClient();
 
@@ -129,6 +130,7 @@ const App = () => {
                 <Route path="/owner/bookings" element={<PageWrapper><OwnerBookings /></PageWrapper>} />
                 <Route path="/owner/units" element={<PageWrapper><OwnerUnits /></PageWrapper>} />
                 <Route path="/owner/units/villa" element={<PageWrapper><VillaOwnerUnits /></PageWrapper>} />
+                <Route path="/owner/b2b" element={<PageWrapper><OwnerB2B /></PageWrapper>} />
               </Route>
 
               <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />

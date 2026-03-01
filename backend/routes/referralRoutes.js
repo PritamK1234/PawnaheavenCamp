@@ -32,6 +32,10 @@ router.get('/owner-lookup-property/:propertyId', ReferralController.ownerLookupB
 // Owner self-login (no admin auth needed, generates token for own mobile)
 router.post('/owner-login', UserController.ownerSelfLogin);
 
+// Owner B2B endpoints (no admin auth - owner-side only)
+router.get('/owner/b2b-list', ReferralController.getOwnerB2BList);
+router.post('/owner/b2b-hide', ReferralController.hideOwnerB2B);
+
 // Admin endpoints (Session Protected)
 router.get('/admin/all', authMiddleware, AdminController.getAllReferrals);
 router.post('/admin/update-status', authMiddleware, AdminController.updateReferralStatus);
@@ -40,5 +44,6 @@ router.post('/admin/delete', authMiddleware, AdminController.deleteReferral);
 router.post('/admin/login-as', authMiddleware, AdminController.loginAsReferralUser);
 router.get('/admin/owner-lookup/:propertyId', authMiddleware, AdminController.lookupOwnerByPropertyId);
 router.post('/admin/update-otp', authMiddleware, AdminController.updateOwnerOtpNumber);
+router.post('/admin/verify-owner-code', authMiddleware, AdminController.verifyOwnerCode);
 
 module.exports = router;

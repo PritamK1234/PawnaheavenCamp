@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Calendar, IndianRupee, User, LayoutGrid, Info, ClipboardList, Share2, Phone, MessageCircle, X, Loader2 } from 'lucide-react';
+import { Calendar, IndianRupee, User, LayoutGrid, Info, ClipboardList, Share2, Phone, MessageCircle, X, Loader2, Users2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PWAInstallButton from '../pwa/PWAInstallButton';
 import { Button } from '@/components/ui/button';
@@ -92,7 +92,7 @@ const OwnerLayout = () => {
             </span>
           </div>
           
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <PWAInstallButton />
             
             <button 
@@ -106,6 +106,14 @@ const OwnerLayout = () => {
                 <Share2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
               )}
               <span className="text-[10px] font-bold whitespace-nowrap">Referral</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/owner/b2b')}
+              className="flex items-center gap-1 px-2 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(245,158,11,0.2)] group"
+            >
+              <Users2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold whitespace-nowrap">B2B</span>
             </button>
           </div>
         </div>

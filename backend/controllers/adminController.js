@@ -46,20 +46,54 @@ const AdminController = {
 
   async createReferral(req, res) {
     try {
-      const { username, referral_otp_number, referral_code, referral_type, linked_property_id, property_id } = req.body;
+      const { username, referral_otp_number, referral_code, referral_type, linked_property_id, property_id, owner_referral_code } = req.body;
       if (!username || !referral_otp_number || !referral_code || !referral_type) {
         return res.status(400).json({ error: 'All fields are required' });
       }
-      if (!['owner', 'b2b'].includes(referral_type)) {
-        return res.status(400).json({ error: 'Invalid referral type. Must be owner or b2b' });
+      if (!['owner', 'b2b', 'owners_b2b'].includes(referral_type)) {
+        return res.status(400).json({ error: 'Invalid referral type. Must be owner, b2b, or owners_b2b' });
       }
       if (referral_type === 'owner' && !property_id) {
         return res.status(400).json({ error: 'Property ID is required for owner referrals' });
       }
-      const result = await AdminService.createAdminReferral(username, referral_otp_number, referral_code, referral_type, linked_property_id, property_id);
+      let parentReferralId = null;
+      let ownerId = null;
+      if (referral_type === 'owners_b2b') {
+        if (!owner_referral_code) {
+          return res.status(400).json({ error: 'Owner referral code is required for owners_b2b type' });
+        }
+        const ownerRes = await query(
+          "SELECT id FROM referral_users WHERE referral_code = $1 AND referral_type = 'owner' AND status = 'active'",
+          [owner_referral_code.toUpperCase()]
+        );
+        if (ownerRes.rows.length === 0) {
+          return res.status(400).json({ error: 'Invalid or inactive owner referral code' });
+        }
+        parentReferralId = ownerRes.rows[0].id;
+        ownerId = ownerRes.rows[0].id;
+      }
+      const result = await AdminService.createAdminReferral(username, referral_otp_number, referral_code, referral_type, linked_property_id, property_id, parentReferralId, ownerId);
       res.json({ success: true, data: result });
     } catch (error) {
       res.status(400).json({ error: error.message });
+    }
+  },
+
+  async verifyOwnerCode(req, res) {
+    try {
+      const { code } = req.body;
+      if (!code) return res.status(400).json({ valid: false, error: 'Code is required' });
+      const result = await query(
+        "SELECT id, username, property_id FROM referral_users WHERE referral_code = $1 AND referral_type = 'owner' AND status = 'active'",
+        [code.toUpperCase()]
+      );
+      if (result.rows.length === 0) {
+        return res.json({ valid: false, error: 'Invalid or inactive owner referral code' });
+      }
+      const owner = result.rows[0];
+      return res.json({ valid: true, owner_name: owner.username, owner_id: owner.id, property_id: owner.property_id });
+    } catch (error) {
+      res.status(400).json({ valid: false, error: error.message });
     }
   },
 

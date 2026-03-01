@@ -183,18 +183,19 @@ Preferred communication style: Simple, everyday language.
 - **VPS Deployment**: Hostinger VPS with PM2 (backend) + Nginx (reverse proxy + static files)
 - **Environment Config**: `backend/.env.example` provides template for all required env vars
 
-### Referral System (Extended Feb 2026)
-- **Three referral types**: Public (15% commission), Owner (25% commission, property-linked), B2B (22% commission)
-- **Commission structure**: No referral = 30% Admin; Public = 15% Referrer + 15% Admin; Owner = 25% Owner + 5% Admin; B2B = 22% B2B + 8% Admin
-- **Admin owner referral creation**: Uses Property ID (e.g., 74SQF) to auto-fetch owner name + OTP number from owners table
-- **Database columns**: `referral_type` (public/owner/b2b), `linked_property_id` (integer FK), `linked_property_slug`, `property_id` (varchar, e.g., 74SQF) on `referral_users` table
-- **Admin-only creation**: Owner and B2B codes are created exclusively from Admin Dashboard > B2B tab
-- **Owner referral links**: Redirect to specific property page (`/property/slug?ref=CODE`) and lock customer to that property via `localStorage.owner_referral_lock`
-- **B2B/Public links**: Redirect to home page (`/?ref=CODE`)
-- **Owner Dashboard referral page**: `/owner/referral` - auto-fetches owner's referral data by their mobile number
-- **Database columns**: `referral_type` (public/owner/b2b), `linked_property_id`, `linked_property_slug` on `referral_users` table
-- **Backend endpoints**: `POST /api/referrals/admin/create` (admin creates owner/b2b codes), `GET /api/referrals/owner-lookup/:mobile`, `GET /api/referrals/validate/:code` (returns type info)
-- **Pages reused**: CheckEarningPage, GenerateCodePage, ReferralPage all display type-specific info via conditional rendering
+### Referral System (Extended Mar 2026)
+- **Four referral types**: Public (15%/15%), Owner (25%/5%, property-linked), B2B (22%/8%), OWNERS_B2B (22%/8%, linked to owner)
+- **Commission structure**: No referral = 30% Admin; Public = 15% Referrer + 15% Admin; Owner = 25% Owner + 5% Admin; B2B = 22% B2B + 8% Admin; OWNERS_B2B = 22% B2B + 8% Admin
+- **OWNERS_B2B rules**: Must be linked to existing OWNER referral code. Admin verifies owner code first, then creates B2B code under that owner.
+- **Database columns on `referral_users`**: `referral_type`, `linked_property_id`, `linked_property_slug`, `property_id`, `parent_referral_id` (FK to self — links owners_b2b to parent owner row), `owner_id` (denormalised), `visible_to_owner` (boolean default true — soft hide by owner)
+- **Admin creation flow**: Admin Dashboard > B2B tab > "Owners B2B" sub-tab → enter owner code → verify → fill B2B fields → generate
+- **Owner B2B visibility**: Owner can soft-hide (visible_to_owner=false) from their B2B page. Admin always sees all records. Contacts tab also always shows all regardless of visible_to_owner.
+- **Owner Dashboard B2B page**: `/owner/b2b` — shows OWNERS_B2B list linked to owner's mobile; QR codes via qrserver.com; delete = soft hide only
+- **Admin endpoints**: `POST /api/referrals/admin/verify-owner-code` (verify owner code before creating owners_b2b), `POST /api/referrals/admin/create` now accepts `owners_b2b` type + `owner_referral_code`
+- **Owner endpoints**: `GET /api/referrals/owner/b2b-list?mobile=` (fetch owner's B2B partners), `POST /api/referrals/owner/b2b-hide` (soft hide)
+- **Admin Referrals tab**: New "Owners B2B" sub-tab; card shows B2B name + mobile + owner name (parent_owner_name from JOIN)
+- **Admin Contacts page**: Now live data from API (not static). 5 tabs: Owners, B2B, Own B2B, Referrals, Guests
+- **getAllReferralUsers**: Now returns parent_owner_name via LEFT JOIN on parent_referral_id
 
 ### Data Architecture
 - PostgreSQL database with full booking/payment schema

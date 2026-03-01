@@ -161,7 +161,10 @@ CREATE TABLE IF NOT EXISTS referral_users (
   linked_property_id INTEGER,
   linked_property_slug VARCHAR(500),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  property_id VARCHAR(50)
+  property_id VARCHAR(50),
+  parent_referral_id INTEGER REFERENCES referral_users(id),
+  owner_id INTEGER,
+  visible_to_owner BOOLEAN DEFAULT true
 );
 
 -- Create referral_transactions table

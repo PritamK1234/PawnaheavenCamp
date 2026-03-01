@@ -14,13 +14,18 @@ const AdminService = {
         u.linked_property_id,
         u.linked_property_slug,
         u.property_id,
+        u.parent_referral_id,
+        u.owner_id,
+        u.visible_to_owner,
         u.created_at,
+        owner_ru.username AS parent_owner_name,
         COALESCE(SUM(CASE WHEN t.type = 'earning' AND t.status = 'completed' THEN t.amount ELSE 0 END), 0) - 
         COALESCE(SUM(CASE WHEN t.type = 'withdrawal' AND t.status = 'completed' THEN t.amount ELSE 0 END), 0) as balance,
         (SELECT COUNT(*) FROM referral_transactions WHERE referral_user_id = u.id AND type = 'earning' AND source = 'booking') as total_referrals
       FROM referral_users u
+      LEFT JOIN referral_users owner_ru ON owner_ru.id = u.parent_referral_id
       LEFT JOIN referral_transactions t ON u.id = t.referral_user_id
-      GROUP BY u.id
+      GROUP BY u.id, owner_ru.username
       ORDER BY u.created_at DESC
     `;
     const res = await query(text);
@@ -40,7 +45,7 @@ const AdminService = {
     return res.rows[0];
   },
 
-  async createAdminReferral(username, mobileNumber, referralCode, referralType, linkedPropertyId, propertyId) {
+  async createAdminReferral(username, mobileNumber, referralCode, referralType, linkedPropertyId, propertyId, parentReferralId, ownerId) {
     const code = referralCode.toUpperCase();
     const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN || "pawnahavencamp.com";
     
@@ -63,11 +68,11 @@ const AdminService = {
     }
 
     const text = `
-      INSERT INTO referral_users (username, referral_otp_number, referral_code, referral_url, status, balance, referral_type, linked_property_id, linked_property_slug, property_id)
-      VALUES ($1, $2, $3, $4, 'active', 0, $5, $6, $7, $8)
+      INSERT INTO referral_users (username, referral_otp_number, referral_code, referral_url, status, balance, referral_type, linked_property_id, linked_property_slug, property_id, parent_referral_id, owner_id)
+      VALUES ($1, $2, $3, $4, 'active', 0, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
-    const res = await query(text, [username.toLowerCase(), mobileNumber, code, referralUrl, referralType, resolvedLinkedPropertyId, linkedSlug, propertyId || null]);
+    const res = await query(text, [username.toLowerCase(), mobileNumber, code, referralUrl, referralType, resolvedLinkedPropertyId, linkedSlug, propertyId || null, parentReferralId || null, ownerId || null]);
     return res.rows[0];
   }
 };

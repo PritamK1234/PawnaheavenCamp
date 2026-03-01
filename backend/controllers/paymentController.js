@@ -405,8 +405,17 @@ const paytmCallback = async (req, res) => {
 
     if (status === "TXN_SUCCESS") {
       if (hasReferral) {
-        adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
-        referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+        const rType = (booking.referral_type || '').toLowerCase();
+        if (rType === 'owner') {
+          adminComm = Math.round(advanceAmt * 0.05 * 100) / 100;
+          referrerComm = Math.round(advanceAmt * 0.25 * 100) / 100;
+        } else if (rType === 'b2b' || rType === 'owners_b2b') {
+          adminComm = Math.round(advanceAmt * 0.08 * 100) / 100;
+          referrerComm = Math.round(advanceAmt * 0.22 * 100) / 100;
+        } else {
+          adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+          referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+        }
       } else {
         adminComm = Math.round(advanceAmt * 0.3 * 100) / 100;
         referrerComm = 0;
@@ -649,8 +658,17 @@ const paytmWebhook = async (req, res) => {
 
     if (status === "TXN_SUCCESS") {
       if (hasReferral) {
-        adminCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
-        referrerCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
+        const rTypeW = (booking.referral_type || '').toLowerCase();
+        if (rTypeW === 'owner') {
+          adminCommission = Math.round(advanceAmount * 0.05 * 100) / 100;
+          referrerCommission = Math.round(advanceAmount * 0.25 * 100) / 100;
+        } else if (rTypeW === 'b2b' || rTypeW === 'owners_b2b') {
+          adminCommission = Math.round(advanceAmount * 0.08 * 100) / 100;
+          referrerCommission = Math.round(advanceAmount * 0.22 * 100) / 100;
+        } else {
+          adminCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
+          referrerCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
+        }
       } else {
         adminCommission = Math.round(advanceAmount * 0.3 * 100) / 100;
         referrerCommission = 0;
@@ -1082,8 +1100,17 @@ const verifyPaymentStatus = async (req, res) => {
       let commStatus = null;
 
       if (hasReferral) {
-        adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
-        referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+        const rTypeS = (booking.referral_type || '').toLowerCase();
+        if (rTypeS === 'owner') {
+          adminComm = Math.round(advanceAmt * 0.05 * 100) / 100;
+          referrerComm = Math.round(advanceAmt * 0.25 * 100) / 100;
+        } else if (rTypeS === 'b2b' || rTypeS === 'owners_b2b') {
+          adminComm = Math.round(advanceAmt * 0.08 * 100) / 100;
+          referrerComm = Math.round(advanceAmt * 0.22 * 100) / 100;
+        } else {
+          adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+          referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+        }
       } else {
         adminComm = Math.round(advanceAmt * 0.3 * 100) / 100;
       }

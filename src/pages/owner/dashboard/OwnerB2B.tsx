@@ -9,8 +9,7 @@ import {
   Loader2,
   Users2,
   AlertCircle,
-  Eye,
-  EyeOff,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,13 +22,15 @@ interface B2BPartner {
   referral_otp_number: string;
   referral_code: string;
   referral_url: string;
+  owner_name: string | null;
+  property_name: string | null;
 }
 
 const OwnerB2B = () => {
   const [loading, setLoading] = useState(true);
   const [list, setList] = useState<B2BPartner[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [hidingId, setHidingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const ownerDataString = localStorage.getItem("ownerData");
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
@@ -63,39 +64,53 @@ const OwnerB2B = () => {
     toast.success(`${label} copied!`);
   };
 
-  const handleHide = async (partner: B2BPartner) => {
-    setHidingId(partner.id);
+  const handleDelete = async (partner: B2BPartner) => {
+    if (!window.confirm(`Delete "${partner.username}"? This will remove them from your dashboard and admin referrals, but their contact info is preserved.`)) return;
+    setDeletingId(partner.id);
     try {
-      await axios.post("/api/referrals/owner/b2b-hide", {
+      await axios.post("/api/referrals/owner/b2b-delete", {
         id: partner.id,
         ownerMobile,
       });
-      toast.success(`${partner.username} removed from your view`);
+      toast.success(`${partner.username} deleted`);
       setExpandedId(null);
       await fetchB2BList();
     } catch (error) {
-      toast.error("Failed to remove partner");
+      toast.error("Failed to delete partner");
     } finally {
-      setHidingId(null);
+      setDeletingId(null);
     }
   };
 
   const getQrUrl = (url: string) =>
-    `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(url)}&size=200x200&bgcolor=ffffff`;
+    `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(url)}&size=300x300&bgcolor=ffffff`;
 
-  const handleWhatsAppShare = (partner: B2BPartner) => {
+  const handleWhatsAppShare = async (partner: B2BPartner) => {
     const link = partner.referral_url || `${window.location.origin}/?ref=${partner.referral_code}`;
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(link)}&size=300x300`;
-    const message = `Hey! Book villas, cottages & camping in Lonavala / Pawna Lake 🏕️🏡
+    const qrUrl = getQrUrl(link);
 
-Use this referral link to get instant discount:
-${link}
+    let messageLines = [];
+    if (partner.property_name) messageLines.push(`Property: ${partner.property_name}`);
+    if (partner.owner_name) messageLines.push(`Owner: ${partner.owner_name}`);
+    messageLines.push(`Referral Code: ${partner.referral_code}`);
+    messageLines.push(`Referral Link: ${link}`);
+    const message = messageLines.join("\n");
 
-Referral Code: ${partner.referral_code}
+    try {
+      const imgRes = await fetch(qrUrl);
+      const blob = await imgRes.blob();
+      const file = new File([blob], `qr-${partner.referral_code}.png`, { type: "image/png" });
 
-Scan QR Code to book directly:
-${qrImageUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: message, title: "Pawna Haven Camp" });
+        return;
+      }
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
+    }
+
+    const fallbackMessage = `${message}\n\nQR Code Image: ${qrUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
   };
 
   const toggleExpand = (id: number) => {
@@ -220,15 +235,15 @@ ${qrImageUrl}`;
                       variant="outline"
                       size="sm"
                       className="w-full h-9 rounded-xl text-red-400 border-red-500/20 hover:bg-red-500/10 hover:text-red-300"
-                      onClick={() => handleHide(partner)}
-                      disabled={hidingId === partner.id}
+                      onClick={() => handleDelete(partner)}
+                      disabled={deletingId === partner.id}
                     >
-                      {hidingId === partner.id ? (
+                      {deletingId === partner.id ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : (
-                        <EyeOff className="w-4 h-4 mr-2" />
+                        <Trash2 className="w-4 h-4 mr-2" />
                       )}
-                      Hide from my view
+                      Delete
                     </Button>
                   </div>
                 )}

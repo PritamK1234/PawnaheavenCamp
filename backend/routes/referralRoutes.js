@@ -35,6 +35,7 @@ router.post('/owner-login', UserController.ownerSelfLogin);
 // Owner B2B endpoints (no admin auth - owner-side only)
 router.get('/owner/b2b-list', ReferralController.getOwnerB2BList);
 router.post('/owner/b2b-hide', ReferralController.hideOwnerB2B);
+router.post('/owner/b2b-delete', ReferralController.deleteOwnerB2B);
 
 // Admin endpoints (Session Protected)
 router.get('/admin/all', authMiddleware, AdminController.getAllReferrals);

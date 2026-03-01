@@ -25,7 +25,7 @@ const AdminService = {
       FROM referral_users u
       LEFT JOIN referral_users owner_ru ON owner_ru.id = u.parent_referral_id
       LEFT JOIN referral_transactions t ON u.id = t.referral_user_id
-      WHERE u.status != 'deleted'
+      WHERE u.status NOT IN ('deleted', 'owner_deleted')
       GROUP BY u.id, owner_ru.username
       ORDER BY u.created_at DESC
     `;

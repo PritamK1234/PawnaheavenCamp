@@ -101,7 +101,17 @@ const ReferralController = {
       }
       const ownerId = ownerRes.rows[0].id;
       const b2bRes = await query(
-        "SELECT id, username, referral_otp_number, referral_code, referral_url FROM referral_users WHERE parent_referral_id = $1 AND visible_to_owner = true AND referral_type = 'owners_b2b' ORDER BY created_at DESC",
+        `SELECT b.id, b.username, b.referral_otp_number, b.referral_code, b.referral_url,
+                o.username AS owner_name,
+                p.title AS property_name
+         FROM referral_users b
+         JOIN referral_users o ON o.id = b.parent_referral_id
+         LEFT JOIN properties p ON p.id = o.linked_property_id
+         WHERE b.parent_referral_id = $1
+           AND b.visible_to_owner = true
+           AND b.referral_type = 'owners_b2b'
+           AND b.status != 'owner_deleted'
+         ORDER BY b.created_at DESC`,
         [ownerId]
       );
       return res.json({ found: true, list: b2bRes.rows });
@@ -130,6 +140,32 @@ const ReferralController = {
         return res.status(403).json({ success: false, error: 'Not authorized to hide this record' });
       }
       await query('UPDATE referral_users SET visible_to_owner = false WHERE id = $1', [id]);
+      return res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  },
+
+  async deleteOwnerB2B(req, res) {
+    try {
+      const { id, ownerMobile } = req.body;
+      if (!id || !ownerMobile) return res.status(400).json({ success: false, error: 'id and ownerMobile are required' });
+      const ownerRes = await query(
+        "SELECT id FROM referral_users WHERE referral_otp_number = $1 AND referral_type = 'owner'",
+        [ownerMobile]
+      );
+      if (ownerRes.rows.length === 0) {
+        return res.status(403).json({ success: false, error: 'Owner not found' });
+      }
+      const ownerId = ownerRes.rows[0].id;
+      const check = await query(
+        "SELECT id FROM referral_users WHERE id = $1 AND parent_referral_id = $2 AND referral_type = 'owners_b2b'",
+        [id, ownerId]
+      );
+      if (check.rows.length === 0) {
+        return res.status(403).json({ success: false, error: 'Not authorized to delete this record' });
+      }
+      await query("UPDATE referral_users SET status = 'owner_deleted' WHERE id = $1", [id]);
       return res.json({ success: true });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });

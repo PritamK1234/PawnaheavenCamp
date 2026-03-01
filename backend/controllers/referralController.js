@@ -208,7 +208,103 @@ const ReferralController = {
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  }
+  },
+
+  async getInProcess(req, res) {
+    try {
+      const userRes = await query(
+        'SELECT referral_code FROM referral_users WHERE id = $1',
+        [req.user.id]
+      );
+      if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+      const code = userRes.rows[0].referral_code;
+      const result = await query(
+        `SELECT booking_id, property_name, guest_name, checkin_datetime, checkout_datetime, referrer_commission
+         FROM bookings
+         WHERE referral_code = $1
+           AND booking_status = 'TICKET_GENERATED'
+           AND checkout_datetime > NOW()
+         ORDER BY checkin_datetime ASC`,
+        [code]
+      );
+      return res.json({ in_process: result.rows });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  async getReferralHistory(req, res) {
+    try {
+      const userRes = await query(
+        'SELECT referral_code FROM referral_users WHERE id = $1',
+        [req.user.id]
+      );
+      if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+      const code = userRes.rows[0].referral_code;
+      const userId = req.user.id;
+
+      const [completedRes, cancelledRes, withdrawalRes] = await Promise.all([
+        query(
+          `SELECT booking_id, property_name, guest_name, referrer_commission, checkout_datetime AS date
+           FROM bookings
+           WHERE referral_code = $1
+             AND booking_status = 'TICKET_GENERATED'
+             AND checkout_datetime < NOW()
+           ORDER BY checkout_datetime DESC`,
+          [code]
+        ),
+        query(
+          `SELECT booking_id, property_name, guest_name, referrer_commission, updated_at AS date
+           FROM bookings
+           WHERE referral_code = $1
+             AND booking_status IN ('CANCELLED_BY_OWNER', 'CANCELLED_NO_REFUND', 'REFUND_INITIATED', 'REFUND_SUCCESSFUL')
+           ORDER BY updated_at DESC`,
+          [code]
+        ),
+        query(
+          `SELECT id, amount, upi_id, status, created_at AS date
+           FROM referral_transactions
+           WHERE referral_user_id = $1
+             AND type = 'withdrawal'
+             AND status IN ('completed', 'rejected')
+           ORDER BY created_at DESC`,
+          [userId]
+        ),
+      ]);
+
+      const history = [
+        ...completedRes.rows.map(r => ({
+          type: 'booking_success',
+          property_name: r.property_name,
+          guest_name: r.guest_name,
+          amount: parseFloat(r.referrer_commission) || 0,
+          date: r.date,
+          message: 'Booking Completed',
+        })),
+        ...cancelledRes.rows.map(r => ({
+          type: 'booking_cancelled',
+          property_name: r.property_name,
+          guest_name: r.guest_name,
+          amount: parseFloat(r.referrer_commission) || 0,
+          date: r.date,
+          message: 'Booking Cancelled',
+        })),
+        ...withdrawalRes.rows.map(r => ({
+          type: r.status === 'completed' ? 'withdrawal_paid' : 'withdrawal_rejected',
+          amount: parseFloat(r.amount),
+          date: r.date,
+          message: r.status === 'completed' ? 'Withdrawal Paid' : 'Withdrawal Rejected',
+          upi_id: r.upi_id,
+        })),
+      ];
+
+      history.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      return res.json({ history });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 };
 
 module.exports = ReferralController;

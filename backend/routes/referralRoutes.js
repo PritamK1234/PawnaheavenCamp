@@ -23,6 +23,8 @@ router.post('/login', authenticateReferralUser, UserController.login);
 // Authenticated User endpoints
 router.get('/dashboard', authenticateReferralUser, UserController.getDashboard);
 router.get('/share', authenticateReferralUser, ReferralController.getShareInfo);
+router.get('/in-process', authenticateReferralUser, ReferralController.getInProcess);
+router.get('/history', authenticateReferralUser, ReferralController.getReferralHistory);
 router.post('/withdraw', authenticateReferralUser, WithdrawalController.withdraw);
 
 // Owner dashboard - lookup referral by mobile or property

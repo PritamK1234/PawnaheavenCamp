@@ -24,6 +24,7 @@ interface B2BPartner {
   referral_url: string;
   owner_name: string | null;
   property_name: string | null;
+  referral_qr: string;
 }
 
 const OwnerB2B = () => {
@@ -82,14 +83,10 @@ const OwnerB2B = () => {
     }
   };
 
-  const getQrUrl = (url: string) =>
-    `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(url)}&size=300x300&bgcolor=ffffff`;
-
   const handleWhatsAppShare = async (partner: B2BPartner) => {
     const link = partner.referral_url || `${window.location.origin}/?ref=${partner.referral_code}`;
-    const qrUrl = getQrUrl(link);
 
-    let messageLines = [];
+    let messageLines: string[] = [];
     if (partner.property_name) messageLines.push(`Property: ${partner.property_name}`);
     if (partner.owner_name) messageLines.push(`Owner: ${partner.owner_name}`);
     messageLines.push(`Referral Code: ${partner.referral_code}`);
@@ -97,7 +94,7 @@ const OwnerB2B = () => {
     const message = messageLines.join("\n");
 
     try {
-      const imgRes = await fetch(qrUrl);
+      const imgRes = await fetch(partner.referral_qr);
       const blob = await imgRes.blob();
       const file = new File([blob], `qr-${partner.referral_code}.png`, { type: "image/png" });
 
@@ -109,7 +106,8 @@ const OwnerB2B = () => {
       if (err?.name === "AbortError") return;
     }
 
-    const fallbackMessage = `${message}\n\nQR Code Image: ${qrUrl}`;
+    const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(link)}&size=300x300`;
+    const fallbackMessage = `${message}\n\nQR Code Image: ${fallbackQrUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
   };
 
@@ -216,7 +214,7 @@ const OwnerB2B = () => {
                     <div className="flex flex-col items-center gap-2 pt-2 border-t border-white/10">
                       <div className="p-2 bg-white rounded-2xl">
                         <img
-                          src={getQrUrl(referralLink)}
+                          src={partner.referral_qr}
                           alt={`QR for ${partner.referral_code}`}
                           className="w-[140px] h-[140px]"
                         />

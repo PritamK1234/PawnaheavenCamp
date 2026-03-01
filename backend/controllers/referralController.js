@@ -1,4 +1,5 @@
 const ReferralService = require('../services/referralService');
+const QRCode = require('qrcode');
 const { query } = require('../db');
 
 const ReferralController = {
@@ -114,7 +115,19 @@ const ReferralController = {
          ORDER BY b.created_at DESC`,
         [ownerId]
       );
-      return res.json({ found: true, list: b2bRes.rows });
+      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN || "pawnahavencamp.com";
+      const listWithQr = await Promise.all(
+        b2bRes.rows.map(async (partner) => {
+          const link = partner.referral_url || `https://${domain}/?ref=${partner.referral_code}`;
+          const qrDataUrl = await QRCode.toDataURL(link, {
+            width: 400,
+            margin: 2,
+            color: { dark: "#000000", light: "#ffffff" },
+          });
+          return { ...partner, referral_qr: qrDataUrl };
+        })
+      );
+      return res.json({ found: true, list: listWithQr });
     } catch (error) {
       res.status(400).json({ found: false, error: error.message });
     }

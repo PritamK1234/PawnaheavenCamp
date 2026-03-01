@@ -73,7 +73,7 @@ const AdminDashboard = () => {
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [ownerSearchTerm, setOwnerSearchTerm] = useState("");
   const [referralSubTab, setReferralSubTab] = useState("all");
-  const [transactionSubTab, setTransactionSubTab] = useState("bookings");
+  const [transactionSubTab, setTransactionSubTab] = useState("all");
   const [referralUsers, setReferralUsers] = useState<any[]>([]);
   const [isReferralLoading, setIsReferralLoading] = useState(false);
   const [b2bSubTab, setB2bSubTab] = useState("b2b");
@@ -1664,12 +1664,11 @@ const AdminDashboard = () => {
                   <Loader2 className="w-8 h-8 animate-spin text-gold" />
                 </div>
               ) : (() => {
-                const CANCELLED_STATUSES = ["CANCELLED_BY_OWNER", "CANCELLED_NO_REFUND", "REFUND_INITIATED", "REFUND_SUCCESSFUL"];
                 const filtered = bookingsData.filter(b => {
-                  if (transactionSubTab === "bookings") return b.booking_status === "TICKET_GENERATED";
-                  if (transactionSubTab === "refunds") return CANCELLED_STATUSES.includes(b.booking_status);
+                  if (transactionSubTab === "bookings") return b.booking_status === "TICKET_GENERATED" && b.payment_status === "SUCCESS";
+                  if (transactionSubTab === "refunds") return b.booking_status === "CANCELLED_BY_OWNER";
                   if (transactionSubTab === "withdrawals") return false;
-                  return b.booking_status === "TICKET_GENERATED" || CANCELLED_STATUSES.includes(b.booking_status);
+                  return b.payment_status === "SUCCESS";
                 });
                 if (filtered.length === 0) {
                   return (

@@ -87,7 +87,7 @@ const AdminContactsPage = () => {
                 <p className="text-[10px] text-amber-400">Owner: {c.parent_owner_name}</p>
               )}
               <p className="text-xs text-white/40">{c.referral_otp_number || c.mobile}</p>
-              {c.status === "deleted" && (
+              {(c.status === "deleted" || c.status === "owner_deleted") && (
                 <p className="text-[10px] text-red-400/70">Referral removed</p>
               )}
             </div>

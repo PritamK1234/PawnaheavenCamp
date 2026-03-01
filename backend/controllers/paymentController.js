@@ -3,6 +3,7 @@ const axios = require("axios");
 const { query } = require("../db");
 const PaytmChecksum = require("paytmchecksum");
 const { WhatsAppService } = require("../utils/whatsappService");
+const { distributeCheckoutCommissions } = require("../services/commissionService");
 
 function getPublicDomain(req) {
   const rawDomain =
@@ -1606,4 +1607,20 @@ module.exports = {
   rejectWithdrawal,
   refundWebhook,
   payoutWebhook,
+  triggerCommissions,
 };
+
+async function triggerCommissions(req, res) {
+  try {
+    const result = await distributeCheckoutCommissions();
+    return res.json({
+      success: true,
+      distributed: result.distributed,
+      skipped: result.skipped,
+      message: `Commission distribution complete. Distributed: ${result.distributed}, Skipped: ${result.skipped}`,
+    });
+  } catch (err) {
+    console.error("[Commission] Manual trigger error:", err.message);
+    return res.status(500).json({ error: "Commission distribution failed", details: err.message });
+  }
+}

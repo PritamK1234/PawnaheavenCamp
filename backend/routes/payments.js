@@ -19,5 +19,6 @@ router.post('/withdrawal/process', authMiddleware, paymentController.processWith
 router.post('/withdrawal/reject', authMiddleware, paymentController.rejectWithdrawal);
 router.post('/withdrawal/webhook', paymentController.payoutWebhook);
 router.get('/bookings', authMiddleware, paymentController.getAllBookings);
+router.post('/commissions/distribute', authMiddleware, paymentController.triggerCommissions);
 
 module.exports = router;

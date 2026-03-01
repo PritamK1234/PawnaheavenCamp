@@ -83,6 +83,16 @@ const bookingController = require('./controllers/bookingController');
 app.get('/webhook', bookingController.handleWhatsAppWebhook);
 app.post('/webhook', bookingController.handleWhatsAppWebhook);
 
+const { distributeCheckoutCommissions } = require('./services/commissionService');
+const COMMISSION_INTERVAL_MS = 30 * 60 * 1000;
+setTimeout(async () => {
+  console.log('[Commission] Running initial checkout commission distribution...');
+  try { await distributeCheckoutCommissions(); } catch (e) { console.error('[Commission] Initial run error:', e.message); }
+  setInterval(async () => {
+    try { await distributeCheckoutCommissions(); } catch (e) { console.error('[Commission] Scheduled run error:', e.message); }
+  }, COMMISSION_INTERVAL_MS);
+}, 10000);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({

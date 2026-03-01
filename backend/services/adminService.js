@@ -79,7 +79,7 @@ const AdminService = {
     const existingCode = await query('SELECT id FROM referral_users WHERE referral_code = $1', [code]);
     if (existingCode.rows.length > 0) throw new Error('Referral code already exists');
 
-    const existingMobile = await query('SELECT id FROM referral_users WHERE referral_otp_number = $1', [mobileNumber]);
+    const existingMobile = await query("SELECT id FROM referral_users WHERE referral_otp_number = $1 AND status NOT IN ('deleted', 'owner_deleted')", [mobileNumber]);
     if (existingMobile.rows.length > 0) throw new Error('Mobile number already registered');
 
     let referralUrl = `https://${domain}/?ref=${code}`;

@@ -275,13 +275,13 @@ const OwnerReferral = () => {
                 <Clock className="w-4 h-4 mr-1" />
                 In-Process
               </TabsTrigger>
-              <TabsTrigger value="share" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
-                <Share2 className="w-4 h-4 mr-1" />
-                Share
-              </TabsTrigger>
               <TabsTrigger value="history" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
                 <History className="w-4 h-4 mr-1" />
                 History
+              </TabsTrigger>
+              <TabsTrigger value="share" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
+                <Share2 className="w-4 h-4 mr-1" />
+                Share
               </TabsTrigger>
             </TabsList>
 

@@ -411,6 +411,10 @@ const CheckEarningPage = () => {
                   <Wallet className="w-4 h-4 mr-1" />
                   Withdraw
                 </TabsTrigger>
+                <TabsTrigger value="history" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
+                  <History className="w-4 h-4 mr-1" />
+                  History
+                </TabsTrigger>
                 <TabsTrigger value="stats" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
                   <AlertCircle className="w-4 h-4 mr-1" />
                   Stats
@@ -418,10 +422,6 @@ const CheckEarningPage = () => {
                 <TabsTrigger value="share" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
                   <Share2 className="w-4 h-4 mr-1" />
                   Share
-                </TabsTrigger>
-                <TabsTrigger value="history" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
-                  <History className="w-4 h-4 mr-1" />
-                  History
                 </TabsTrigger>
               </TabsList>
 

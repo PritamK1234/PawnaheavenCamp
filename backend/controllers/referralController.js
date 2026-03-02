@@ -212,29 +212,27 @@ const ReferralController = {
 
   async getInProcess(req, res) {
     try {
-      const userRes = await query(
-        'SELECT referral_code FROM referral_users WHERE id = $1',
-        [req.user.id]
-      );
-      if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
-      const code = userRes.rows[0].referral_code;
+      const userId = req.user.id;
       const [listRes, sumRes] = await Promise.all([
         query(
-          `SELECT booking_id, property_name, guest_name, checkin_datetime, checkout_datetime, referrer_commission
-           FROM bookings
-           WHERE referral_code = $1
-             AND booking_status = 'TICKET_GENERATED'
-             AND checkout_datetime > NOW()
-           ORDER BY checkin_datetime ASC`,
-          [code]
+          `SELECT rt.id AS transaction_id, rt.amount AS referrer_commission,
+                  b.booking_id, b.property_name, b.guest_name,
+                  b.checkin_datetime, b.checkout_datetime
+           FROM referral_transactions rt
+           JOIN bookings b ON b.id = rt.booking_id
+           WHERE rt.referral_user_id = $1
+             AND rt.type = 'earning'
+             AND rt.status = 'in_process'
+           ORDER BY b.checkin_datetime ASC`,
+          [userId]
         ),
         query(
-          `SELECT COALESCE(SUM(referrer_commission), 0) AS in_process_amount
-           FROM bookings
-           WHERE referral_code = $1
-             AND booking_status = 'TICKET_GENERATED'
-             AND checkout_datetime > NOW()`,
-          [code]
+          `SELECT COALESCE(SUM(rt.amount), 0) AS in_process_amount
+           FROM referral_transactions rt
+           WHERE rt.referral_user_id = $1
+             AND rt.type = 'earning'
+             AND rt.status = 'in_process'`,
+          [userId]
         ),
       ]);
       return res.json({
@@ -248,31 +246,41 @@ const ReferralController = {
 
   async getReferralHistory(req, res) {
     try {
-      const userRes = await query(
-        'SELECT referral_code FROM referral_users WHERE id = $1',
-        [req.user.id]
-      );
-      if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
-      const code = userRes.rows[0].referral_code;
       const userId = req.user.id;
 
-      const [completedRes, cancelledRes, withdrawalRes] = await Promise.all([
+      const [availableRes, cancelledRes, noShowCompRes, withdrawalRes] = await Promise.all([
         query(
-          `SELECT booking_id, property_name, guest_name, referrer_commission, checkout_datetime AS date
-           FROM bookings
-           WHERE referral_code = $1
-             AND booking_status = 'TICKET_GENERATED'
-             AND checkout_datetime < NOW()
-           ORDER BY checkout_datetime DESC`,
-          [code]
+          `SELECT rt.amount, rt.created_at AS date, rt.source,
+                  b.property_name, b.guest_name
+           FROM referral_transactions rt
+           LEFT JOIN bookings b ON b.id = rt.booking_id
+           WHERE rt.referral_user_id = $1
+             AND rt.type = 'earning'
+             AND rt.status = 'available'
+             AND rt.source != 'no_show_compensation'
+           ORDER BY rt.created_at DESC`,
+          [userId]
         ),
         query(
-          `SELECT booking_id, property_name, guest_name, referrer_commission, updated_at AS date
-           FROM bookings
-           WHERE referral_code = $1
-             AND booking_status IN ('CANCELLED_BY_OWNER', 'CANCELLED_NO_REFUND', 'REFUND_INITIATED', 'REFUND_SUCCESSFUL')
-           ORDER BY updated_at DESC`,
-          [code]
+          `SELECT rt.amount, COALESCE(rt.updated_at, rt.created_at) AS date,
+                  b.property_name, b.guest_name, rt.status
+           FROM referral_transactions rt
+           LEFT JOIN bookings b ON b.id = rt.booking_id
+           WHERE rt.referral_user_id = $1
+             AND rt.type = 'earning'
+             AND rt.status IN ('canceled', 'no_show_canceled')
+           ORDER BY rt.created_at DESC`,
+          [userId]
+        ),
+        query(
+          `SELECT rt.amount, rt.created_at AS date
+           FROM referral_transactions rt
+           WHERE rt.referral_user_id = $1
+             AND rt.type = 'earning'
+             AND rt.status = 'available'
+             AND rt.source = 'no_show_compensation'
+           ORDER BY rt.created_at DESC`,
+          [userId]
         ),
         query(
           `SELECT id, amount, upi_id, status, created_at AS date
@@ -286,11 +294,11 @@ const ReferralController = {
       ]);
 
       const history = [
-        ...completedRes.rows.map(r => ({
+        ...availableRes.rows.map(r => ({
           type: 'booking_success',
           property_name: r.property_name,
           guest_name: r.guest_name,
-          amount: parseFloat(r.referrer_commission) || 0,
+          amount: parseFloat(r.amount) || 0,
           date: r.date,
           message: 'Booking Completed',
         })),
@@ -298,9 +306,15 @@ const ReferralController = {
           type: 'booking_cancelled',
           property_name: r.property_name,
           guest_name: r.guest_name,
-          amount: parseFloat(r.referrer_commission) || 0,
+          amount: parseFloat(r.amount) || 0,
           date: r.date,
           message: 'Booking Cancelled',
+        })),
+        ...noShowCompRes.rows.map(r => ({
+          type: 'no_show_bonus',
+          amount: parseFloat(r.amount) || 0,
+          date: r.date,
+          message: 'No-Show Compensation',
         })),
         ...withdrawalRes.rows.map(r => ({
           type: r.status === 'completed' ? 'withdrawal_paid' : 'withdrawal_rejected',

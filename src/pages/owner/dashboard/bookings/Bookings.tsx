@@ -4,7 +4,7 @@ import {
   FileSpreadsheet,
   FileText,
   AlertCircle,
-  Download
+  XCircle
 } from 'lucide-react';
 import { 
   Select, 
@@ -30,6 +30,9 @@ interface LedgerEntry {
   unit_id: number | null;
   unit_name: string;
   source: 'website' | 'offline';
+  booking_id?: string;
+  checkout_datetime?: string;
+  booking_status?: string;
 }
 
 interface UnitOption {
@@ -50,6 +53,8 @@ const Bookings = () => {
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [units, setUnits] = useState<UnitOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [noShowConfirm, setNoShowConfirm] = useState<string | null>(null);
+  const [noShowLoading, setNoShowLoading] = useState(false);
 
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
@@ -125,6 +130,25 @@ const Bookings = () => {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
+  const isBeforeCheckout = (checkoutDatetime?: string) => {
+    if (!checkoutDatetime) return false;
+    return new Date(checkoutDatetime) > new Date();
+  };
+
+  const handleNoShow = async (bookingId: string) => {
+    setNoShowLoading(true);
+    try {
+      await axios.post('/api/bookings/no-show', { booking_id: bookingId, mobile: ownerMobile });
+      toast.success('Booking marked as no-show');
+      setNoShowConfirm(null);
+      fetchLedger();
+    } catch (e: any) {
+      toast.error(e.response?.data?.error || 'Failed to mark no-show');
+    } finally {
+      setNoShowLoading(false);
+    }
+  };
+
   const totalAmount = entries.reduce((sum, e) => sum + (parseFloat(String(e.amount)) || 0), 0);
 
   const buildExportRows = () => {
@@ -188,75 +212,41 @@ const Bookings = () => {
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
+    doc.setFillColor(10, 10, 10);
+    doc.rect(0, 0, 210, 297, 'F');
+
+    doc.setTextColor(212, 175, 55);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(propertyName, 14, 18);
+    doc.text('Bookings Ledger', 14, 20);
 
-    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100);
-    doc.text(`Bookings Ledger - ${getFilterLabel()}`, 14, 25);
-    doc.setTextColor(0);
+    doc.text(getFilterLabel(), 14, 28);
+    doc.text(`Property: ${propertyName}`, 14, 34);
 
-    const tableData = entries.map((entry, idx) => [
-      idx + 1,
-      entry.customer_name || 'Guest',
-      entry.unit_name || 'N/A',
-      formatDateFull(entry.check_in),
-      formatDateFull(entry.check_out),
-      entry.source === 'website' ? 'Online' : (entry.payment_mode || 'Cash'),
-      `Rs. ${parseFloat(String(entry.amount || 0)).toLocaleString('en-IN')}`,
-    ]);
-
-    tableData.push([
-      '',
-      '',
-      '',
-      '',
-      '',
-      'TOTAL',
-      `Rs. ${totalAmount.toLocaleString('en-IN')}`,
-    ]);
+    const rows = buildExportRows();
 
     autoTable(doc, {
-      startY: 30,
-      head: [['#', 'Customer', 'Unit', 'Check In', 'Check Out', 'Payment', 'Amount']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [30, 30, 30],
-        textColor: [212, 175, 55],
-        fontStyle: 'bold',
-        fontSize: 8,
-      },
-      bodyStyles: {
-        fontSize: 8,
-        textColor: [50, 50, 50],
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
-      },
-      foot: [],
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 10 },
-        6: { halign: 'right', fontStyle: 'bold' },
-      },
-      didParseCell: (data) => {
-        if (data.row.index === tableData.length - 1) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [30, 30, 30];
-          data.cell.styles.textColor = [212, 175, 55];
-        }
-      },
+      startY: 40,
+      head: [['#', 'Customer', 'Unit', 'Check In', 'Check Out', 'Source', 'Payment', 'Amount (₹)']],
+      body: rows.map(r => [r['Sr.'], r['Customer'], r['Unit'], r['Check In'], r['Check Out'], r['Source'], r['Payment'], r['Amount (₹)'].toLocaleString('en-IN')]),
+      foot: [['', '', '', '', '', '', 'TOTAL', totalAmount.toLocaleString('en-IN')]],
+      theme: 'plain',
+      styles: { textColor: [200, 200, 200], fontSize: 8, cellPadding: 3, fillColor: [26, 26, 26] },
+      headStyles: { textColor: [212, 175, 55], fontStyle: 'bold', fillColor: [20, 20, 20] },
+      footStyles: { textColor: [212, 175, 55], fontStyle: 'bold', fillColor: [20, 20, 20] },
+      alternateRowStyles: { fillColor: [30, 30, 30] },
     });
 
-    const pageCount = doc.getNumberOfPages();
+    const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
+      doc.setTextColor(100, 100, 100);
       doc.setFontSize(7);
-      doc.setTextColor(150);
       doc.text(
-        `Generated on ${new Date().toLocaleDateString('en-IN')} | Page ${i} of ${pageCount}`,
+        `Page ${i} of ${pageCount}`,
         14,
         doc.internal.pageSize.height - 8
       );
@@ -334,38 +324,65 @@ const Bookings = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {entries.map((entry, idx) => (
-              <Card key={`${entry.source}-${entry.id}`} className="bg-[#1A1A1A] border border-[#D4AF37]/10 rounded-2xl overflow-hidden shadow-xl">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#261F18] rounded-xl flex items-center justify-center shrink-0 border border-[#D4AF37]/10">
-                    <span className="text-[#D4AF37] text-sm font-bold">#{idx + 1}</span>
-                  </div>
+            {entries.map((entry, idx) => {
+              const canNoShow = entry.source === 'website'
+                && entry.booking_id
+                && entry.booking_status !== 'NO_SHOW'
+                && isBeforeCheckout(entry.checkout_datetime);
+              const isNoShow = entry.source === 'website' && entry.booking_status === 'NO_SHOW';
 
-                  <div className="flex-grow min-w-0">
-                    <h3 className="text-sm font-bold text-white mb-0.5 leading-tight truncate">
-                      {entry.customer_name || 'Guest'}
-                    </h3>
-                    <div className="flex items-center gap-2 text-gray-500 flex-wrap">
-                      <span className="text-[9px] text-gray-400 truncate max-w-[80px]">{entry.unit_name}</span>
-                      <div className="flex items-center gap-1 border border-gray-800 rounded px-1 py-0.25">
-                        <span className="text-[8px] uppercase font-bold tracking-tighter">
-                          {entry.source === 'website' ? 'online' : (entry.payment_mode || 'cash')}
+              return (
+                <Card key={`${entry.source}-${entry.id}`} className="bg-[#1A1A1A] border border-[#D4AF37]/10 rounded-2xl overflow-hidden shadow-xl">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#261F18] rounded-xl flex items-center justify-center shrink-0 border border-[#D4AF37]/10">
+                        <span className="text-[#D4AF37] text-sm font-bold">#{idx + 1}</span>
+                      </div>
+
+                      <div className="flex-grow min-w-0">
+                        <h3 className="text-sm font-bold text-white mb-0.5 leading-tight truncate">
+                          {entry.customer_name || 'Guest'}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-500 flex-wrap">
+                          <span className="text-[9px] text-gray-400 truncate max-w-[80px]">{entry.unit_name}</span>
+                          <div className="flex items-center gap-1 border border-gray-800 rounded px-1 py-0.25">
+                            <span className="text-[8px] uppercase font-bold tracking-tighter">
+                              {entry.source === 'website' ? 'online' : (entry.payment_mode || 'cash')}
+                            </span>
+                          </div>
+                          {isNoShow && (
+                            <span className="text-[8px] uppercase font-bold tracking-tighter text-gray-500 border border-gray-700 rounded px-1">
+                              No-Show
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-right flex flex-col items-end gap-0.5 shrink-0">
+                        <span className="text-base font-bold text-[#D4AF37]">
+                          ₹{parseFloat(String(entry.amount || 0)).toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[9px] font-medium text-gray-500">
+                          {formatDate(entry.check_in)} - {formatDate(entry.check_out)}
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right flex flex-col items-end gap-0.5 shrink-0">
-                    <span className="text-base font-bold text-[#D4AF37]">
-                      ₹{parseFloat(String(entry.amount || 0)).toLocaleString('en-IN')}
-                    </span>
-                    <span className="text-[9px] font-medium text-gray-500">
-                      {formatDate(entry.check_in)} - {formatDate(entry.check_out)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    {canNoShow && (
+                      <div className="mt-2 flex justify-end">
+                        <button
+                          onClick={() => setNoShowConfirm(entry.booking_id!)}
+                          className="flex items-center gap-1 px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase tracking-widest active:scale-95 transition-all"
+                        >
+                          <XCircle className="w-3 h-3" />
+                          No-Show
+                        </button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -396,6 +413,41 @@ const Bookings = () => {
           <span className="font-bold text-white uppercase tracking-widest text-sm">PDF</span>
         </button>
       </div>
+
+      {noShowConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" onClick={() => setNoShowConfirm(null)}>
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div
+            className="relative bg-[#1A1A1A] border border-red-500/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                <XCircle className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-base font-bold text-white">Mark as No-Show?</h3>
+            </div>
+            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+              This will cancel the booking and stop commission processing. The referral commission will be moved to history as "cancelled booking". This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setNoShowConfirm(null)}
+                className="flex-1 h-11 rounded-2xl bg-[#2A2A2A] border border-white/10 text-white text-xs font-bold uppercase tracking-widest active:scale-95 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleNoShow(noShowConfirm)}
+                disabled={noShowLoading}
+                className="flex-1 h-11 rounded-2xl bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold uppercase tracking-widest active:scale-95 transition-all disabled:opacity-50"
+              >
+                {noShowLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Confirm No-Show'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

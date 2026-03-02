@@ -177,7 +177,8 @@ CREATE TABLE IF NOT EXISTS referral_transactions (
   status VARCHAR(20) DEFAULT 'completed',
   source VARCHAR(50),
   upi_id VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create property_units table (used by both villa and campings_cottages)

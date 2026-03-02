@@ -17,5 +17,6 @@ router.get('/:bookingId', bookingController.getBooking);
 router.put('/update-status', bookingController.updateBookingStatus);
 router.post('/process-confirmed', bookingController.processConfirmedBooking);
 router.post('/process-cancelled', bookingController.processCancelledBooking);
+router.post('/no-show', bookingController.handleNoShow);
 
 module.exports = router;

@@ -1,6 +1,84 @@
 const crypto = require('crypto');
-const { query } = require('../db');
+const { query, pool } = require('../db');
 const { WhatsAppService } = require('../utils/whatsappService');
+
+const REFERRAL_RATES = {
+  owner:      0.25,
+  b2b:        0.22,
+  owners_b2b: 0.22,
+  public:     0.15,
+};
+
+function resolveCommissionTotal(booking) {
+  const total   = parseFloat(booking.total_amount);
+  const advance = parseFloat(booking.advance_amount);
+  if (total && total > 0) return total;
+  if (advance && advance > 0) return Math.round((advance / 0.30) * 100) / 100;
+  return 0;
+}
+
+async function createInProcessCommission(booking) {
+  if (!booking.referral_code) return;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const refRes = await client.query(
+      `SELECT id FROM referral_users WHERE referral_code = $1 AND status = 'active'`,
+      [booking.referral_code]
+    );
+    if (refRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return;
+    }
+    const referrerId = refRes.rows[0].id;
+    const existing = await client.query(
+      `SELECT id FROM referral_transactions WHERE booking_id = $1 AND type = 'earning'`,
+      [booking.id]
+    );
+    if (existing.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return;
+    }
+    const totalAmount = resolveCommissionTotal(booking);
+    if (totalAmount <= 0) {
+      await client.query('ROLLBACK');
+      return;
+    }
+    const rate = REFERRAL_RATES[(booking.referral_type || '').toLowerCase()] || REFERRAL_RATES.public;
+    const commissionAmount = Math.round(totalAmount * rate * 100) / 100;
+    await client.query(
+      `INSERT INTO referral_transactions
+         (referral_user_id, booking_id, amount, type, status, source)
+       VALUES ($1, $2, $3, 'earning', 'in_process', 'booking_confirm')`,
+      [referrerId, booking.id, commissionAmount]
+    );
+    await client.query(
+      `UPDATE bookings SET commission_status = 'IN_PROCESS', referrer_commission = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [commissionAmount, booking.id]
+    );
+    await client.query('COMMIT');
+    console.log(`[Commission] In-process created for booking ${booking.booking_id} — referrer ₹${commissionAmount}`);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function cancelInProcessCommission(bookingDbId) {
+  try {
+    await query(
+      `UPDATE referral_transactions
+       SET status = 'canceled', updated_at = NOW()
+       WHERE booking_id = $1 AND type = 'earning' AND status = 'in_process'`,
+      [bookingDbId]
+    );
+  } catch (err) {
+    console.error('[Commission] cancelInProcessCommission error:', err.message);
+  }
+}
 
 function getFrontendUrl(req) {
   if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL;
@@ -862,6 +940,8 @@ const handleOwnerAction = async (req, res) => {
         `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance: ₹${booking.advance_amount}\n\nTicket: ${ticketUrl}`
       );
 
+      try { await createInProcessCommission(booking); } catch(e) { console.error('[Commission] in-process creation failed (handleOwnerAction):', e.message); }
+
       return res.status(200).send(`
         <!DOCTYPE html><html><head><title>Booking Confirmed</title>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -871,12 +951,14 @@ const handleOwnerAction = async (req, res) => {
     } else {
       await query(
         `UPDATE bookings SET booking_status = 'CANCELLED_BY_OWNER', action_token_used = true,
-         commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END,
+         commission_status = CASE WHEN commission_status IN ('PENDING','CONFIRMED','IN_PROCESS') THEN 'CANCELLED' ELSE commission_status END,
          refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_PENDING' ELSE refund_status END,
          refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END,
          updated_at = NOW() WHERE booking_id = $1`,
         [booking.booking_id]
       );
+
+      await cancelInProcessCommission(booking.id);
 
       const ownerName = booking.owner_name || 'The owner';
 
@@ -1084,6 +1166,8 @@ const handleWhatsAppWebhook = async (req, res) => {
                 ticketToken,
               });
 
+              try { await createInProcessCommission(booking); } catch(e) { console.error('[Commission] in-process creation failed (WhatsApp CONFIRM):', e.message); }
+
             } else if (action === 'CANCEL') {
               // Idempotency: already cancelled
               if (booking.booking_status === 'CANCELLED_BY_OWNER') {
@@ -1095,13 +1179,15 @@ const handleWhatsAppWebhook = async (req, res) => {
                 `UPDATE bookings
                  SET booking_status = 'CANCELLED_BY_OWNER',
                      action_token_used = true,
-                     commission_status = CASE WHEN commission_status = 'PENDING' THEN 'CANCELLED' ELSE commission_status END,
+                     commission_status = CASE WHEN commission_status IN ('PENDING','CONFIRMED','IN_PROCESS') THEN 'CANCELLED' ELSE commission_status END,
                      refund_status = CASE WHEN payment_status = 'SUCCESS' THEN 'REFUND_PENDING' ELSE refund_status END,
                      refund_amount = CASE WHEN payment_status = 'SUCCESS' THEN advance_amount ELSE refund_amount END,
                      updated_at = NOW()
                  WHERE booking_id = $1`,
                 [booking.booking_id]
               );
+
+              await cancelInProcessCommission(booking.id);
 
               const ownerName = booking.owner_name || 'The owner';
               const messageIds = {};
@@ -1206,11 +1292,12 @@ const getOwnerLedger = async (req, res) => {
         b.checkout_datetime AS check_out, b.payment_method AS payment_mode, 
         b.total_amount AS amount, b.unit_id,
         COALESCE(pu.name, 'N/A') AS unit_name,
-        'website' AS source
+        'website' AS source,
+        b.booking_id, b.checkout_datetime, b.booking_status
       FROM bookings b
       LEFT JOIN property_units pu ON b.unit_id = pu.id
       WHERE (b.property_id = $1 OR b.property_id = $4)
-      AND b.booking_status NOT IN ('CANCELLED', 'PAYMENT_PENDING')
+      AND b.booking_status NOT IN ('CANCELLED', 'PAYMENT_PENDING', 'PAYMENT_FAILED', 'CANCELLED_NO_REFUND', 'CANCELLED_BY_OWNER')
       AND (
         (DATE(b.checkin_datetime) BETWEEN $2 AND $3) OR
         (DATE(b.checkout_datetime) BETWEEN $2 AND $3) OR
@@ -1291,6 +1378,87 @@ const getOwnerUnits = async (req, res) => {
   }
 };
 
+const handleNoShow = async (req, res) => {
+  try {
+    const { booking_id, mobile } = req.body;
+    if (!booking_id || !mobile) {
+      return res.status(400).json({ error: 'booking_id and mobile are required' });
+    }
+
+    const bookingRes = await query(
+      `SELECT * FROM bookings WHERE booking_id = $1`,
+      [booking_id]
+    );
+    if (bookingRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    const booking = bookingRes.rows[0];
+
+    if (booking.owner_phone !== mobile) {
+      return res.status(403).json({ error: 'Not authorised for this booking' });
+    }
+    if (booking.booking_status !== 'TICKET_GENERATED') {
+      return res.status(400).json({ error: 'Only confirmed bookings can be marked as no-show', current_status: booking.booking_status });
+    }
+    if (new Date(booking.checkout_datetime) <= new Date()) {
+      return res.status(400).json({ error: 'Checkout time has already passed — cannot mark as no-show' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `UPDATE bookings
+         SET booking_status = 'NO_SHOW', commission_paid = true, commission_paid_at = NOW(),
+             commission_status = 'NO_SHOW_CANCELED', updated_at = NOW()
+         WHERE booking_id = $1`,
+        [booking_id]
+      );
+
+      await client.query(
+        `UPDATE referral_transactions
+         SET status = 'no_show_canceled', updated_at = NOW()
+         WHERE booking_id = $1 AND type = 'earning' AND status = 'in_process'`,
+        [booking.id]
+      );
+
+      const ownerRefRes = await client.query(
+        `SELECT id FROM referral_users WHERE referral_otp_number = $1 AND referral_type = 'owner'`,
+        [mobile]
+      );
+      if (ownerRefRes.rows.length > 0) {
+        const ownerReferralId = ownerRefRes.rows[0].id;
+        const totalAmount = resolveCommissionTotal(booking);
+        const ownerCompensation = totalAmount > 0 ? Math.round(totalAmount * 0.15 * 100) / 100 : 0;
+        if (ownerCompensation > 0) {
+          await client.query(
+            `INSERT INTO referral_transactions
+               (referral_user_id, booking_id, amount, type, status, source)
+             VALUES ($1, $2, $3, 'earning', 'available', 'no_show_compensation')`,
+            [ownerReferralId, booking.id, ownerCompensation]
+          );
+          await client.query(
+            `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
+            [ownerCompensation, ownerReferralId]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+      return res.json({ success: true, message: 'Booking marked as no-show' });
+    } catch (innerErr) {
+      await client.query('ROLLBACK');
+      throw innerErr;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('[NoShow] Error:', error.message);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+};
+
 module.exports = {
   getLedgerEntries,
   addLedgerEntry,
@@ -1306,4 +1474,5 @@ module.exports = {
   handleWhatsAppWebhook,
   getOwnerLedger,
   getOwnerUnits,
+  handleNoShow,
 };

@@ -1,0 +1,140 @@
+Fix and implement complete commission + cancellation logic exactly as below. Do NOT change amounts. Follow strictly.
+
+Booking Example:
+Total = 1000
+Advance (30%) = 300
+Paytm always receives FULL 300 in admin account.
+
+GLOBAL RULES:
+
+Paytm transaction amount = ALWAYS advance amount (300).
+
+Referral commission is created ONLY after:
+
+Payment SUCCESS
+
+Owner clicks CONFIRM on WhatsApp
+
+If owner clicks CANCEL on WhatsApp:
+
+Send refund request to Admin "Request Center"
+
+Terminate referral flow
+
+Move referral amount to History with message: "canceled booking"
+
+On Check-out day at 12:00 AM:
+
+Move referral from "In-Process" → "Available Balance"
+
+CASE 1 — Direct Website Booking (No Referral)
+
+Payment success → 300 to Admin Paytm
+Owner Confirm → No referral commission
+Owner Cancel → Refund request to Request Center
+
+CASE 2 — Owner Referral Link
+
+Owner Confirm →
+Create referral entry:
+Amount = 250
+Status = "In-Process" (On Respective Referral dashboard)
+
+At checkout 12:00 AM →
+Move 250 → Available Balance
+
+If owner reports no-show BEFORE checkout 12:00 AM →
+Move 250 → History (On Respective Referral dashboard)
+Message = "canceled booking"
+
+If owner clicks WhatsApp Cancel →
+Refund request
+Move 250 → History (On Respective Referral dashboard)
+Message = "canceled booking"
+
+CASE 3 — Owner_B2B Referral
+
+Owner Confirm →
+Amount = 220
+Status = "In-Process"  (On Respective Referral dashboard)
+
+Checkout 12:00 AM →
+220 → Available Balance
+
+No-show before 12:00 AM →
+220 → History   (On Respective Referral dashboard)
+Message = "canceled booking"
+
+WhatsApp Cancel →
+Refund request
+220 → History (On Respective Referral dashboard)
+
+CASE 4 — B2B Referral
+
+Owner Confirm →
+Amount = 220
+Status = "In-Process" (On Respective Referral dashboard)
+
+Checkout 12:00 AM →
+220 → Available Balance
+
+No-show before 12:00 AM →
+220 → History (On Respective Referral dashboard)
+Message = "canceled booking"
+
+WhatsApp Cancel →
+Refund request
+220 → History (On Respective Referral dashboard)
+
+CASE 5 — Public Referral
+
+Owner Confirm →
+Amount = 150
+Status = "In-Process" (On Respective Referral dashboard)
+
+Checkout 12:00 AM →
+150 → Available Balance
+
+No-show before 12:00 AM →
+150 → History (On Respective Referral dashboard)
+Message = "canceled booking"
+
+NEW FUNCTIONALITY — NO-SHOW CANCEL BUTTON
+
+Add "Cancel Booking" button on each ledger entry:
+
+Villa Owner Dashboard
+
+Camping/Cottages Owner Dashboard
+
+Rules:
+
+• Button visible ONLY before checkout date 12:00 AM
+• On click:
+- Mark booking as "No-Show Cancelled"
+- Move referral amount → History (On Respective Referral dashboard)
+- Message = "canceled booking"
+
+• From total advance (300):
+150 should be credited to that Owner Referral Dashboard.
+
+• Stop further referral processing.
+• Prevent double cancellation.
+
+IMPORTANT:
+
+• Use single source of truth for referralType
+• Use status enums:
+PENDING_PAYMENT
+CONFIRMED
+IN_PROCESS
+AVAILABLE
+CANCELED
+NO_SHOW_CANCELED
+
+• All transitions must be atomic.
+• Prevent duplicate ledger entries.
+• Add proper validation checks.
+
+Do NOT break existing payment flow.
+Fix all incorrect commission calculations.

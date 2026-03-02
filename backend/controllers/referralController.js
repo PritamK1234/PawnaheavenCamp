@@ -218,16 +218,29 @@ const ReferralController = {
       );
       if (userRes.rows.length === 0) return res.status(404).json({ error: 'User not found' });
       const code = userRes.rows[0].referral_code;
-      const result = await query(
-        `SELECT booking_id, property_name, guest_name, checkin_datetime, checkout_datetime, referrer_commission
-         FROM bookings
-         WHERE referral_code = $1
-           AND booking_status = 'TICKET_GENERATED'
-           AND checkout_datetime > NOW()
-         ORDER BY checkin_datetime ASC`,
-        [code]
-      );
-      return res.json({ in_process: result.rows });
+      const [listRes, sumRes] = await Promise.all([
+        query(
+          `SELECT booking_id, property_name, guest_name, checkin_datetime, checkout_datetime, referrer_commission
+           FROM bookings
+           WHERE referral_code = $1
+             AND booking_status = 'TICKET_GENERATED'
+             AND checkout_datetime > NOW()
+           ORDER BY checkin_datetime ASC`,
+          [code]
+        ),
+        query(
+          `SELECT COALESCE(SUM(referrer_commission), 0) AS in_process_amount
+           FROM bookings
+           WHERE referral_code = $1
+             AND booking_status = 'TICKET_GENERATED'
+             AND checkout_datetime > NOW()`,
+          [code]
+        ),
+      ]);
+      return res.json({
+        in_process: listRes.rows,
+        in_process_amount: parseFloat(sumRes.rows[0].in_process_amount) || 0,
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

@@ -79,6 +79,7 @@ const CheckEarningPage = () => {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [shareData, setShareData] = useState<ShareData | null>(null);
   const [inProcess, setInProcess] = useState<InProcessBooking[]>([]);
+  const [inProcessAmount, setInProcessAmount] = useState(0);
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [token, setToken] = useState<string | null>(
@@ -135,6 +136,7 @@ const CheckEarningPage = () => {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setInProcess(res.data.in_process || []);
+      setInProcessAmount(res.data.in_process_amount || 0);
     } catch (error: any) {
       console.error("In-process error:", error);
     }
@@ -525,7 +527,8 @@ const CheckEarningPage = () => {
                   </Card>
                   <Card className="p-4 bg-card border-border/50 rounded-2xl text-center">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">In-Process</p>
-                    <p className="text-lg font-bold text-amber-400">{inProcess.length}</p>
+                    <p className="text-lg font-bold text-amber-400">₹{inProcessAmount.toLocaleString("en-IN")}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{inProcess.length} booking{inProcess.length !== 1 ? "s" : ""}</p>
                   </Card>
                 </div>
               </TabsContent>

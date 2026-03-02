@@ -114,8 +114,7 @@ const initiateBooking = async (req, res) => {
       );
       if (refResult.rows.length > 0) {
         referralType = refResult.rows[0].referral_type || 'public';
-        referralDiscount = Math.round(bookingRequest.advance_amount * 0.05);
-        bookingRequest.advance_amount = bookingRequest.advance_amount - referralDiscount;
+        referralDiscount = 0;
       }
     }
 
@@ -863,35 +862,6 @@ const handleOwnerAction = async (req, res) => {
         `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance: ₹${booking.advance_amount}\n\nTicket: ${ticketUrl}`
       );
 
-      if (booking.referral_code) {
-        try {
-          const refUser = await query(
-            "SELECT * FROM referral_users WHERE referral_code = $1 AND status = 'active'",
-            [booking.referral_code]
-          );
-          if (refUser.rows.length > 0) {
-            const refType = booking.referral_type || refUser.rows[0].referral_type || 'public';
-            let commissionRate = 0.15;
-            if (refType === 'owner') commissionRate = 0.25;
-            else if (refType === 'b2b') commissionRate = 0.22;
-            const commission = Math.round(parseFloat(booking.advance_amount) * commissionRate);
-            const existingTxn = await query(
-              "SELECT id FROM referral_transactions WHERE booking_id = $1",
-              [booking.id]
-            );
-            if (existingTxn.rows.length === 0) {
-              await query(
-                "INSERT INTO referral_transactions (referral_user_id, booking_id, amount, type, status, source) VALUES ($1, $2, $3, 'earning', 'pending', 'booking')",
-                [refUser.rows[0].id, booking.id, commission]
-              );
-              console.log(`Referral commission (PENDING, type=${refType}, rate=${commissionRate}) created for booking:`, booking.booking_id);
-            }
-          }
-        } catch (refErr) {
-          console.error('Error creating referral commission:', refErr);
-        }
-      }
-
       return res.status(200).send(`
         <!DOCTYPE html><html><head><title>Booking Confirmed</title>
         <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -925,17 +895,6 @@ const handleOwnerAction = async (req, res) => {
           { id: `call_cust_${booking.booking_id}`.substring(0, 20), title: 'Call Customer' },
         ]
       );
-
-      if (booking.referral_code) {
-        try {
-          await query(
-            "DELETE FROM referral_transactions WHERE booking_id = $1 AND status = 'pending'",
-            [booking.id]
-          );
-        } catch (refErr) {
-          console.error('Error cancelling referral commission:', refErr);
-        }
-      }
 
       return res.status(200).send(`
         <!DOCTYPE html><html><head><title>Booking Cancelled</title>
@@ -1124,34 +1083,6 @@ const handleWhatsAppWebhook = async (req, res) => {
                 inboundMessageId: buttonResponse.messageId,
                 ticketToken,
               });
-
-              if (booking.referral_code) {
-                try {
-                  const refUser = await query(
-                    "SELECT * FROM referral_users WHERE referral_code = $1 AND status = 'active'",
-                    [booking.referral_code]
-                  );
-                  if (refUser.rows.length > 0) {
-                    const refType = booking.referral_type || refUser.rows[0].referral_type || 'public';
-                    let commissionRate = 0.15;
-                    if (refType === 'owner') commissionRate = 0.25;
-                    else if (refType === 'b2b') commissionRate = 0.22;
-                    const commission = Math.round(parseFloat(booking.advance_amount) * commissionRate);
-                    const existingTxn = await query(
-                      'SELECT id FROM referral_transactions WHERE booking_id = $1',
-                      [booking.id]
-                    );
-                    if (existingTxn.rows.length === 0) {
-                      await query(
-                        "INSERT INTO referral_transactions (referral_user_id, booking_id, amount, type, status, source) VALUES ($1, $2, $3, 'earning', 'pending', 'booking')",
-                        [refUser.rows[0].id, booking.id, commission]
-                      );
-                    }
-                  }
-                } catch (refErr) {
-                  console.error('Error creating referral commission:', refErr);
-                }
-              }
 
             } else if (action === 'CANCEL') {
               // Idempotency: already cancelled

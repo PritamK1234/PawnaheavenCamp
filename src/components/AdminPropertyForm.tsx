@@ -69,12 +69,12 @@ const UnitManager = ({
   const [isUploading, setIsUploading] = useState(false);
   const [unitForm, setUnitForm] = useState({
     name: "",
-    available_persons: "0",
-    total_persons: "0",
-    price_per_person: "0",
-    weekday_price: "0",
-    weekend_price: "0",
-    special_price: "0",
+    available_persons: "",
+    total_persons: "",
+    price_per_person: "",
+    weekday_price: "",
+    weekend_price: "",
+    special_price: "",
     amenities: [""],
     images: [] as string[],
     special_dates: [] as { date: string; price: string }[],
@@ -82,6 +82,83 @@ const UnitManager = ({
   const { toast } = useToast();
 
   const handleSaveUnit = async () => {
+    // =========================
+    // ✅ VALIDATION SECTION
+    // =========================
+
+    const name = unitForm.name.trim();
+    const available = parseInt(unitForm.available_persons);
+    const total = parseInt(unitForm.total_persons);
+    const weekday = parseFloat(unitForm.weekday_price);
+    const weekend = parseFloat(unitForm.weekend_price);
+
+    if (!name) {
+      toast({ title: "Unit name is required", variant: "destructive" });
+      return;
+    }
+
+    if (isNaN(total) || total <= 0) {
+      toast({
+        title: "Total capacity must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isNaN(available) || available < 0) {
+      toast({
+        title: "Available persons cannot be negative",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (available > total) {
+      toast({
+        title: "Available persons cannot exceed total capacity",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isNaN(weekday) || weekday <= 0) {
+      toast({
+        title: "Weekday price must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isNaN(weekend) || weekend <= 0) {
+      toast({
+        title: "Weekend price must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    for (const sd of unitForm.special_dates) {
+      if (!sd.date || !sd.price) {
+        toast({
+          title: "Special date requires both date and price",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (parseFloat(sd.price) <= 0) {
+        toast({
+          title: "Special date price must be greater than 0",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // =========================
+    // ✅ ORIGINAL SAVE LOGIC
+    // =========================
+
     try {
       const payload = {
         ...unitForm,
@@ -104,8 +181,10 @@ const UnitManager = ({
 
       if (res.success) {
         toast({ title: editingUnit ? "Unit updated" : "Unit created" });
+
         setIsAdding(false);
         setEditingUnit(null);
+
         setUnitForm({
           name: "",
           available_persons: "0",
@@ -115,9 +194,10 @@ const UnitManager = ({
           weekend_price: "0",
           special_price: "0",
           amenities: [""],
-          images: [] as string[],
-          special_dates: [] as { date: string; price: string }[],
+          images: [],
+          special_dates: [],
         });
+
         onRefresh();
       }
     } catch (e) {
@@ -379,10 +459,27 @@ const UnitManager = ({
                   id="weekday-price"
                   name="weekday_price"
                   type="number"
+                  min="1"
+                  inputMode="numeric"
                   value={unitForm.weekday_price}
-                  onChange={(e) =>
-                    setUnitForm({ ...unitForm, weekday_price: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+
+                    if (val === "") {
+                      setUnitForm({ ...unitForm, weekday_price: "" });
+                      return;
+                    }
+
+                    if (/^\d+$/.test(val) && parseInt(val) > 0) {
+                      setUnitForm({ ...unitForm, weekday_price: val });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (["e", "E", "+", "-", "."].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  placeholder="Enter weekday price"
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -392,10 +489,27 @@ const UnitManager = ({
                   id="weekend-price"
                   name="weekend_price"
                   type="number"
+                  min="1"
+                  inputMode="numeric"
                   value={unitForm.weekend_price}
-                  onChange={(e) =>
-                    setUnitForm({ ...unitForm, weekend_price: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+
+                    if (val === "") {
+                      setUnitForm({ ...unitForm, weekend_price: "" });
+                      return;
+                    }
+
+                    if (/^\d+$/.test(val) && parseInt(val) > 0) {
+                      setUnitForm({ ...unitForm, weekend_price: val });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (["e", "E", "+", "-", "."].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  placeholder="Enter weekend price"
                   className="bg-white/5 border-white/10"
                 />
               </div>
@@ -433,28 +547,54 @@ const UnitManager = ({
                       id="available-persons"
                       name="available_persons"
                       type="number"
-                      placeholder="Available"
+                      min="0"
+                      inputMode="numeric"
                       value={unitForm.available_persons}
-                      onChange={(e) =>
-                        setUnitForm({
-                          ...unitForm,
-                          available_persons: e.target.value,
-                        })
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+
+                        if (val === "") {
+                          setUnitForm({ ...unitForm, available_persons: "" });
+                          return;
+                        }
+
+                        if (/^\d+$/.test(val) && parseInt(val) >= 0) {
+                          setUnitForm({ ...unitForm, available_persons: val });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (["e", "E", "+", "-", "."].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      placeholder="Available"
                       className="bg-white/5 border-white/10 text-[#00FF41] font-bold"
                     />
                     <Input
                       id="total-persons"
                       name="total_persons"
                       type="number"
-                      placeholder="Total"
+                      min="1"
+                      inputMode="numeric"
                       value={unitForm.total_persons}
-                      onChange={(e) =>
-                        setUnitForm({
-                          ...unitForm,
-                          total_persons: e.target.value,
-                        })
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+
+                        if (val === "") {
+                          setUnitForm({ ...unitForm, total_persons: "" });
+                          return;
+                        }
+
+                        if (/^\d+$/.test(val) && parseInt(val) > 0) {
+                          setUnitForm({ ...unitForm, total_persons: val });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (["e", "E", "+", "-", "."].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      placeholder="Total Capacity"
                       className="bg-white/5 border-white/10 text-[#FFA500] font-bold"
                     />
                   </div>
@@ -506,13 +646,37 @@ const UnitManager = ({
                       <Label className="text-xs">Price</Label>
                       <Input
                         type="number"
+                        min="1"
+                        inputMode="numeric"
                         value={sd.price}
                         onChange={(e) => {
-                          const newDates = [...unitForm.special_dates];
-                          newDates[idx].price = e.target.value;
-                          setUnitForm({ ...unitForm, special_dates: newDates });
+                          const val = e.target.value;
+
+                          if (val === "") {
+                            const newDates = [...unitForm.special_dates];
+                            newDates[idx].price = "";
+                            setUnitForm({
+                              ...unitForm,
+                              special_dates: newDates,
+                            });
+                            return;
+                          }
+
+                          if (/^\d+$/.test(val) && parseInt(val) > 0) {
+                            const newDates = [...unitForm.special_dates];
+                            newDates[idx].price = val;
+                            setUnitForm({
+                              ...unitForm,
+                              special_dates: newDates,
+                            });
+                          }
                         }}
-                        placeholder="₹ 2999"
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder="Enter price"
                         className="bg-charcoal border-white/10"
                       />
                     </div>
@@ -1476,6 +1640,21 @@ const VillaUnitManager = ({
                   </button>
                 </div>
               ))}
+            </div>
+            <div className="pt-4 border-t border-white/10">
+              <Button
+                type="button"
+                onClick={handleSaveUnit}
+                disabled={isSaving}
+                className="w-full bg-gradient-gold text-black font-bold h-12 rounded-xl"
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Save Unit
+              </Button>
             </div>
           </div>
         </div>

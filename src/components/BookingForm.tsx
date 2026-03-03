@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,13 +48,18 @@ export function BookingForm({
 }: BookingFormProps) {
   const navigate = useNavigate();
 
+  const { toast } = useToast();
+
   const getInitialDates = () => {
     if (initialCheckIn) {
       const nextDay = new Date(initialCheckIn);
       nextDay.setDate(initialCheckIn.getDate() + 1);
       return { checkIn: initialCheckIn, checkOut: nextDay };
     }
-    return { checkIn: undefined as Date | undefined, checkOut: undefined as Date | undefined };
+    return {
+      checkIn: undefined as Date | undefined,
+      checkOut: undefined as Date | undefined,
+    };
   };
 
   const initialDates = getInitialDates();
@@ -131,28 +137,107 @@ export function BookingForm({
     setIsCheckInOpen(false);
   };
 
-  const handleBook = async () => {
-    if (
-      !formData.name ||
-      !formData.mobile ||
-      !formData.checkIn ||
-      !formData.checkOut
-    ) {
-      alert("Please fill all details");
-      return;
+  const validateForm = (): boolean => {
+    const name = formData.name.trim();
+    const mobile = formData.mobile.trim();
+
+    // ✅ Name validation
+    const nameRegex = /^[A-Za-z\s]{3,50}$/;
+    if (!name) {
+      toast({
+        title: "Validation Error",
+        description: "Full name is required",
+        variant: "destructive",
+      });
+      return false;
     }
 
+    if (!nameRegex.test(name)) {
+      toast({
+        title: "Validation Error",
+        description: "Name must be 3-50 letters only",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // ✅ Mobile validation (Indian 10-digit)
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(mobile)) {
+      toast({
+        title: "Validation Error",
+        description: "Enter valid 10-digit mobile number",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // ✅ Date validation
+    if (!formData.checkIn || !formData.checkOut) {
+      toast({
+        title: "Validation Error",
+        description: "Please select check-in and check-out dates",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // ✅ Persons validation
     if (isVilla) {
-      if (formData.persons === 0) {
-        alert("Please enter number of persons");
-        return;
+      if (!Number.isInteger(formData.persons)) {
+        toast({
+          title: "Validation Error",
+          description: "Invalid number of persons",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (formData.persons < 1) {
+        toast({
+          title: "Validation Error",
+          description: "At least 1 person required",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (formData.persons > maxCapacity) {
+        toast({
+          title: "Validation Error",
+          description: `Maximum ${maxCapacity} guests allowed`,
+          variant: "destructive",
+        });
+        return false;
       }
     } else {
-      if ((formData.vegPersons || 0) + (formData.nonVegPersons || 0) === 0) {
-        alert("Please enter number of persons");
-        return;
+      const totalPersons =
+        (formData.vegPersons || 0) + (formData.nonVegPersons || 0);
+
+      if (totalPersons < 1) {
+        toast({
+          title: "Validation Error",
+          description: "At least 1 guest required",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (totalPersons > maxCapacity) {
+        toast({
+          title: "Validation Error",
+          description: `Maximum ${maxCapacity} guests allowed`,
+          variant: "destructive",
+        });
+        return false;
       }
     }
+
+    return true;
+  };
+
+  const handleBook = async () => {
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
@@ -220,7 +305,7 @@ export function BookingForm({
       window.dispatchEvent(new CustomEvent("calendarUpdate"));
 
       if (onClose) onClose();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const result = await PaytmPaymentService.openCheckout(bookingId);
 
@@ -229,13 +314,19 @@ export function BookingForm({
         localStorage.removeItem("pending_booking_time");
         window.location.href = `/ticket?booking_id=${bookingId}`;
       } else {
-        throw new Error(result.message || "Payment was not successful. Please try again.");
+        throw new Error(
+          result.message || "Payment was not successful. Please try again.",
+        );
       }
     } catch (error: any) {
       console.error("Booking/Payment error:", error);
       const msg = error.message || "Something went wrong";
       if (!msg.includes("cancelled by user")) {
-        alert(`Payment failed: ${msg}`);
+        toast({
+          title: "Payment Failed",
+          description: msg,
+          variant: "destructive",
+        });
       }
       setIsLoading(false);
     }
@@ -249,10 +340,13 @@ export function BookingForm({
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
-              placeholder="Your name"
+              placeholder="Enter Your Full Name"
               value={formData.name}
               onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+                setFormData({
+                  ...formData,
+                  name: e.target.value.replace(/[^A-Za-z\s]/g, ""),
+                })
               }
               className="h-11"
             />
@@ -260,13 +354,18 @@ export function BookingForm({
           <div className="grid gap-1.5">
             <Label htmlFor="mobile">Mobile Number (whatsapp)</Label>
             <Input
+              maxLength={10}
+              pattern="[6-9][0-9]{9}"
               id="mobile"
               type="tel"
               inputMode="tel"
-              placeholder="Mobile"
+              placeholder="Enter WhatsApp Mobile number"
               value={formData.mobile}
               onChange={(e) =>
-                setFormData({ ...formData, mobile: e.target.value })
+                setFormData({
+                  ...formData,
+                  mobile: e.target.value.replace(/\D/g, ""),
+                })
               }
               className="h-11"
             />
@@ -334,6 +433,19 @@ export function BookingForm({
                       isVilla={isVilla}
                       isBookingForm={true}
                       onDateSelect={(date) => {
+                        if (!date || !formData.checkIn) return;
+
+                        // ❌ Prevent selecting check-out before or same as check-in
+                        if (date <= formData.checkIn) {
+                          toast({
+                            title: "Invalid Date",
+                            description:
+                              "Check-out must be after check-in date",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
                         setFormData({ ...formData, checkOut: date });
                         setIsCheckOutOpen(false);
                       }}
@@ -355,13 +467,13 @@ export function BookingForm({
         {isVilla ? (
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label htmlFor="persons">Persons</Label>
+              <Label htmlFor="persons">Person's Count</Label>
               <Input
                 id="persons"
                 type="number"
                 min="1"
                 max={maxCapacity}
-                value={formData.persons}
+                value={formData.persons === 0 ? "" : formData.persons}
                 onChange={(e) => {
                   const val = parseInt(e.target.value);
                   if (!isNaN(val) && val <= maxCapacity) {
@@ -384,19 +496,34 @@ export function BookingForm({
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label htmlFor="vegPersons">Veg</Label>
+                <Label htmlFor="vegPersons">Veg Person's Count</Label>
                 <Input
                   id="vegPersons"
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  placeholder="No. of Veg Guests"
                   value={formData.vegPersons === 0 ? "" : formData.vegPersons}
                   onChange={(e) => {
                     const val = e.target.value;
+
                     if (val === "" || /^[0-9]+$/.test(val)) {
+                      const newVeg = val === "" ? 0 : parseInt(val);
+                      const total = newVeg + (formData.nonVegPersons || 0);
+
+                      if (total > maxCapacity) {
+                        toast({
+                          title: "Capacity Exceeded",
+                          description: `Maximum ${maxCapacity} guests allowed`,
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+
                       setFormData({
                         ...formData,
-                        vegPersons: val === "" ? 0 : parseInt(val),
+                        vegPersons: newVeg,
+                        persons: total,
                       });
                     }
                   }}
@@ -404,21 +531,36 @@ export function BookingForm({
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="nonVegPersons">Non-Veg</Label>
+                <Label htmlFor="nonVegPersons">Non-Veg Person's Count</Label>
                 <Input
                   id="nonVegPersons"
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  placeholder="No. of Non-Veg Guests"
                   value={
                     formData.nonVegPersons === 0 ? "" : formData.nonVegPersons
                   }
                   onChange={(e) => {
                     const val = e.target.value;
+
                     if (val === "" || /^[0-9]+$/.test(val)) {
+                      const newNonVeg = val === "" ? 0 : parseInt(val);
+                      const total = (formData.vegPersons || 0) + newNonVeg;
+
+                      if (total > maxCapacity) {
+                        toast({
+                          title: "Capacity Exceeded",
+                          description: `Maximum ${maxCapacity} guests allowed`,
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+
                       setFormData({
                         ...formData,
-                        nonVegPersons: val === "" ? 0 : parseInt(val),
+                        nonVegPersons: newNonVeg,
+                        persons: total,
                       });
                     }
                   }}
@@ -458,7 +600,7 @@ export function BookingForm({
 
       <div className="bg-secondary/50 p-3 rounded-xl flex items-center justify-between">
         <div>
-          <span className="text-xs font-medium block text-muted-foreground">
+          <span className="text-xs font-medium block text-white-foreground">
             Advance Payment (30%)
           </span>
           <span className="text-lg font-bold text-primary">
@@ -466,7 +608,7 @@ export function BookingForm({
           </span>
         </div>
         <div className="text-right">
-          <span className="text-[10px] font-medium block text-muted-foreground">
+          <span className="text-[10px] font-medium block text-white-foreground">
             Total: ₹{totalPrice}
           </span>
         </div>

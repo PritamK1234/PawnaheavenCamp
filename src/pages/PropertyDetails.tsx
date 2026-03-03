@@ -239,13 +239,18 @@ const PropertyDetails = () => {
 
           if (mappedProperty.units?.length > 0) {
             const params = new URLSearchParams(window.location.search);
-            const unitIdParam = params.get('unit_id');
+            const unitIdParam = params.get("unit_id");
             if (unitIdParam) {
-              const targetUnit = mappedProperty.units.find((u: any) => u.id === parseInt(unitIdParam));
+              const targetUnit = mappedProperty.units.find(
+                (u: any) => u.id === parseInt(unitIdParam),
+              );
               setSelectedUnit(targetUnit || mappedProperty.units[0]);
               setTimeout(() => {
-                const el = document.getElementById('stay-options') || document.getElementById('stay-options-desktop');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const el =
+                  document.getElementById("stay-options") ||
+                  document.getElementById("stay-options-desktop");
+                if (el)
+                  el.scrollIntoView({ behavior: "smooth", block: "center" });
               }, 500);
             } else {
               setSelectedUnit(mappedProperty.units[0]);
@@ -297,83 +302,89 @@ const PropertyDetails = () => {
 
   const isVilla = propertyData.category === "villa";
   const hasUnits = propertyData.units && propertyData.units.length > 0;
-  const displayPrice =
-    selectedUnit
-      ? (isVilla
-          ? selectedUnit.weekday_price || selectedUnit.price_per_person || propertyData.price || "Price on Selection"
-          : selectedUnit.weekday_price || selectedUnit.price_per_person || propertyData.price || "Price on Selection")
-      : propertyData.price || "N/A";
-  const displayPriceNote =
-    selectedUnit
-      ? (isVilla ? "villa" : "per person")
-      : propertyData.priceNote || "per night";
-  const displayCapacityValue =
-    selectedUnit
-      ? selectedUnit.total_persons || 0
-      : propertyData.capacity || 0;
+  const displayPrice = selectedUnit
+    ? isVilla
+      ? selectedUnit.weekday_price ||
+        selectedUnit.price_per_person ||
+        propertyData.price ||
+        "Price on Selection"
+      : selectedUnit.weekday_price ||
+        selectedUnit.price_per_person ||
+        propertyData.price ||
+        "Price on Selection"
+    : propertyData.price || "N/A";
+  const displayPriceNote = selectedUnit
+    ? isVilla
+      ? "villa"
+      : "per person"
+    : propertyData.priceNote || "per night";
+  const displayCapacityValue = selectedUnit
+    ? selectedUnit.total_persons || 0
+    : propertyData.capacity || 0;
 
-  const displayCapacity =
-    selectedUnit ? (
-      isVilla ? (
-        <span className="flex items-center gap-2">
-          <span className="text-blue-400 font-bold">
-            Max Capacity: {selectedUnit.total_persons || 0}
-          </span>
-          <span className="ml-1 text-xs text-gray-400">persons</span>
+  const displayCapacity = selectedUnit ? (
+    isVilla ? (
+      <span className="flex items-center gap-2">
+        <span className="text-blue-400 font-bold">
+          Max Capacity: {selectedUnit.total_persons || 0}
         </span>
-      ) : (
-        <span className="flex items-center gap-2">
-          <span className="text-[#00FF41] font-bold">
-            {selectedUnit.available_persons || 0}
-          </span>
-          <span className="text-gray-500">/</span>
-          <span className="text-[#FFA500] font-bold">
-            {selectedUnit.total_persons || 0}
-          </span>
-          <span className="ml-1 text-xs text-gray-400">persons</span>
-        </span>
-      )
+        <span className="ml-1 text-xs text-gray-400">persons</span>
+      </span>
     ) : (
-      propertyData.capacity
-    );
-  const displayAvailability =
-    selectedUnit
-      ? (isVilla
-          ? (selectedUnit.calendar?.[0]?.is_booked ? "Booked" : "Available")
-          : (selectedUnit.available_persons > 0 ? "Available" : "Booked"))
-      : propertyData.is_available
+      <span className="flex items-center gap-2">
+        <span className="text-[#00FF41] font-bold">
+          {selectedUnit.available_persons || 0}
+        </span>
+        <span className="text-gray-500">/</span>
+        <span className="text-[#FFA500] font-bold">
+          {selectedUnit.total_persons || 0}
+        </span>
+        <span className="ml-1 text-xs text-gray-400">persons</span>
+      </span>
+    )
+  ) : (
+    propertyData.capacity
+  );
+  const displayAvailability = selectedUnit
+    ? isVilla
+      ? selectedUnit.calendar?.[0]?.is_booked
+        ? "Booked"
+        : "Available"
+      : selectedUnit.available_persons > 0
         ? "Available"
-        : "Booked";
+        : "Booked"
+    : propertyData.is_available
+      ? "Available"
+      : "Booked";
 
   const BookingSection = ({ isDesktop = false }: { isDesktop?: boolean }) => (
     <div className={cn("space-y-4", isDesktop ? "hidden lg:block" : "")}>
       {/* Unit Selector */}
-      {propertyData.units &&
-        propertyData.units.length > 0 && (
-          <div id="stay-options" className="mb-6">
-            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-3 block">
-              Select Stay Option
-            </span>
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {propertyData.units.map((unit) => (
-                <Button
-                  key={unit.id}
-                  variant={selectedUnit?.id === unit.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedUnit(unit)}
-                  className={cn(
-                    "rounded-xl px-4 py-2 h-auto text-[11px] font-bold tracking-tight whitespace-nowrap transition-all",
-                    selectedUnit?.id === unit.id
-                      ? "bg-[#C5A021] text-black border-none"
-                      : "bg-[#1A1A1A] border-[#D4AF37]/30 text-gray-400 hover:text-white",
-                  )}
-                >
-                  {unit.name}
-                </Button>
-              ))}
-            </div>
+      {propertyData.units && propertyData.units.length > 0 && (
+        <div id="stay-options" className="mb-6">
+          <span className="text-[10px] capatalize tracking-[0.2em] font-bold text-white-400 mb-3 block">
+            Select Stay Option
+          </span>
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {propertyData.units.map((unit) => (
+              <Button
+                key={unit.id}
+                variant={selectedUnit?.id === unit.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedUnit(unit)}
+                className={cn(
+                  "rounded-xl px-4 py-2 h-auto text-[11px] font-bold tracking-tight whitespace-nowrap transition-all",
+                  selectedUnit?.id === unit.id
+                    ? "bg-[#C5A021] text-black border-none"
+                    : "bg-[#1A1A1A] border-[#D4AF37]/30 text-gray-400 hover:text-white",
+                )}
+              >
+                {unit.name}
+              </Button>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
       {/* Mobile-only view */}
       {!isDesktop && (
@@ -678,37 +689,36 @@ const PropertyDetails = () => {
 
         <div className="relative">
           {/* Desktop Unit Selector */}
-          {propertyData.units &&
-            propertyData.units.length > 0 && (
-              <div id="stay-options-desktop" className="mb-8">
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground mb-4 block">
-                  Select Stay Option
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {propertyData.units.map((unit) => (
-                    <Button
-                      key={unit.id}
-                      variant={
-                        selectedUnit?.id === unit.id ? "default" : "outline"
-                      }
-                      size="sm"
-                      onClick={() => setSelectedUnit(unit)}
-                      className={cn(
-                        "rounded-xl px-5 py-2.5 h-auto text-xs font-bold tracking-tight transition-all",
-                        selectedUnit?.id === unit.id
-                          ? "bg-primary text-primary-foreground shadow-gold"
-                          : "bg-secondary/50 border-border/50 hover:bg-secondary",
-                      )}
-                    >
-                      {unit.name}
-                    </Button>
-                  ))}
-                </div>
+          {propertyData.units && propertyData.units.length > 0 && (
+            <div id="stay-options-desktop" className="mb-8">
+              <span className="text-[10px] capatalize tracking-[0.2em] font-bold text-white-foreground mb-4 block">
+                Select Stay Option
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {propertyData.units.map((unit) => (
+                  <Button
+                    key={unit.id}
+                    variant={
+                      selectedUnit?.id === unit.id ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setSelectedUnit(unit)}
+                    className={cn(
+                      "rounded-xl px-5 py-2.5 h-auto text-xs font-bold tracking-tight transition-all",
+                      selectedUnit?.id === unit.id
+                        ? "bg-primary text-primary-foreground shadow-gold"
+                        : "bg-secondary/50 border-border/50 hover:bg-secondary",
+                    )}
+                  >
+                    {unit.name}
+                  </Button>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
           <div className="mb-8">
-            <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground block mb-2">
+            <span className="text-[10px] capataliz tracking-[0.3em] font-bold text-white-foreground block mb-2">
               Total Starting At
             </span>
             <div className="flex items-baseline gap-2">
@@ -716,14 +726,14 @@ const PropertyDetails = () => {
                 {displayPrice.startsWith("₹") ? "" : "₹"}
                 {displayPrice}
               </span>
-              <span className="text-muted-foreground font-medium text-lg">
+              <span className="text-white-foreground font-medium text-lg">
                 / {isVilla ? "villa" : "person"}
               </span>
             </div>
 
             {selectedUnit && (
               <div className="mt-4 p-4 rounded-2xl bg-secondary/30 border border-border/50">
-                <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground block mb-2">
+                <span className="text-[10px] capatalize tracking-widest font-bold text-white-foreground block mb-2">
                   {isVilla ? "Villa Capacity" : "Available Capacity"}
                 </span>
                 <div className="text-2xl font-bold flex items-center gap-3">
@@ -732,7 +742,7 @@ const PropertyDetails = () => {
               </div>
             )}
 
-            <p className="text-sm text-muted-foreground mt-3 font-medium flex items-center gap-2">
+            <p className="text-sm text-white-foreground mt-3 font-medium flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-green-500" />
               {propertyData.priceNote}
             </p>
@@ -756,7 +766,7 @@ const PropertyDetails = () => {
               <DialogContent className="sm:max-w-[500px] rounded-[2rem]">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-display">
-                    Book Your Stay
+                    Book Your Stay!
                   </DialogTitle>
                   <DialogDescription className="text-muted-foreground text-sm">
                     Complete the form below to book your stay at{" "}
@@ -875,7 +885,7 @@ const PropertyDetails = () => {
                 <Phone className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                <p className="text-[10px] capatalize tracking-widest font-bold text-white-foreground">
                   Inquiry Support
                 </p>
                 <p className="font-bold text-foreground">+91 8806092609</p>
@@ -921,7 +931,11 @@ const PropertyDetails = () => {
           <div className="md:hidden">
             <div className="relative aspect-square w-full">
               <ImageSlider
-                images={selectedUnit?.images?.length ? selectedUnit.images : propertyData.images}
+                images={
+                  selectedUnit?.images?.length
+                    ? selectedUnit.images
+                    : propertyData.images
+                }
                 title={propertyData.title}
                 className="h-full w-full rounded-none"
                 aspectRatio="1:1"
@@ -967,7 +981,11 @@ const PropertyDetails = () => {
           <div className="hidden md:block">
             <div className="h-auto w-full relative container mx-auto px-6 py-8">
               <ImageSlider
-                images={selectedUnit?.images?.length ? selectedUnit.images : propertyData.images}
+                images={
+                  selectedUnit?.images?.length
+                    ? selectedUnit.images
+                    : propertyData.images
+                }
                 title={propertyData.title}
                 className="rounded-3xl shadow-2xl"
               />
@@ -980,7 +998,9 @@ const PropertyDetails = () => {
               onClick={() => {
                 const ownerLock = localStorage.getItem("owner_referral_lock");
                 if (ownerLock) {
-                  window.history.length > 1 ? window.history.back() : window.close();
+                  window.history.length > 1
+                    ? window.history.back()
+                    : window.close();
                 } else {
                   window.location.href = "/";
                 }
@@ -1021,10 +1041,15 @@ const PropertyDetails = () => {
               {/* Title Section */}
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display text-white">
-                  {(propertyData.category === "villa" && selectedUnit?.title) ? selectedUnit.title : propertyData.title}
+                  {propertyData.category === "villa" && selectedUnit?.title
+                    ? selectedUnit.title
+                    : propertyData.title}
                 </h1>
                 <p className="text-gray-400 leading-relaxed font-light text-lg">
-                  {(propertyData.category === "villa" && selectedUnit?.description) ? selectedUnit.description : propertyData.description}
+                  {propertyData.category === "villa" &&
+                  selectedUnit?.description
+                    ? selectedUnit.description
+                    : propertyData.description}
                 </p>
               </div>
 
@@ -1033,17 +1058,28 @@ const PropertyDetails = () => {
                 {[
                   {
                     label: "Check-in",
-                    value: (propertyData.category === "villa" && selectedUnit?.check_in_time) ? selectedUnit.check_in_time : (propertyData.check_in_time || "2:00 PM"),
+                    value:
+                      propertyData.category === "villa" &&
+                      selectedUnit?.check_in_time
+                        ? selectedUnit.check_in_time
+                        : propertyData.check_in_time || "2:00 PM",
                     icon: Clock,
                   },
                   {
                     label: "Check-out",
-                    value: (propertyData.category === "villa" && selectedUnit?.check_out_time) ? selectedUnit.check_out_time : (propertyData.check_out_time || "11:00 AM"),
+                    value:
+                      propertyData.category === "villa" &&
+                      selectedUnit?.check_out_time
+                        ? selectedUnit.check_out_time
+                        : propertyData.check_out_time || "11:00 AM",
                     icon: Clock,
                   },
                   {
                     label: "Capacity",
-                    value: (propertyData.category === "villa" && selectedUnit) ? `${selectedUnit.total_persons || 0} Guests` : `${propertyData.capacity} Guests`,
+                    value:
+                      propertyData.category === "villa" && selectedUnit
+                        ? `${selectedUnit.total_persons || 0} Guests`
+                        : `${propertyData.capacity} Guests`,
                     icon: Users,
                   },
                   {
@@ -1084,10 +1120,12 @@ const PropertyDetails = () => {
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {(
-                    (propertyData.category === "campings_cottages" || propertyData.category === "villa")
-                      ? (selectedUnit?.amenities?.length ? selectedUnit.amenities : propertyData.amenities || [])
-                      : (propertyData.amenities || [])
+                  {(propertyData.category === "campings_cottages" ||
+                  propertyData.category === "villa"
+                    ? selectedUnit?.amenities?.length
+                      ? selectedUnit.amenities
+                      : propertyData.amenities || []
+                    : propertyData.amenities || []
                   ).map((amenity, index) => (
                     <div
                       key={index}
@@ -1112,31 +1150,35 @@ const PropertyDetails = () => {
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {(() => {
-                    const acts = (propertyData.category === "villa" && selectedUnit?.activities?.length)
-                      ? selectedUnit.activities
-                      : propertyData.activities;
+                    const acts =
+                      propertyData.category === "villa" &&
+                      selectedUnit?.activities?.length
+                        ? selectedUnit.activities
+                        : propertyData.activities;
                     return Array.isArray(acts) && acts;
                   })()?.map((activity, index) => (
-                      <div
-                        key={index}
-                        className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all"
-                      >
-                        <div className="text-[#C5A021] opacity-80 scale-90 md:scale-100">
-                          {getIcon(activity)}
-                        </div>
-                        <span className="text-[10px] md:text-sm font-bold text-gray-300 uppercase tracking-widest break-words w-full">
-                          {activity}
-                        </span>
+                    <div
+                      key={index}
+                      className="bg-[#1A1A1A] rounded-2xl p-3 md:p-6 border border-gray-800/50 flex flex-col items-center text-center gap-2 md:gap-4 group hover:border-[#C5A021]/30 transition-all"
+                    >
+                      <div className="text-[#C5A021] opacity-80 scale-90 md:scale-100">
+                        {getIcon(activity)}
                       </div>
-                    ))}
+                      <span className="text-[10px] md:text-sm font-bold text-gray-300 uppercase tracking-widest break-words w-full">
+                        {activity}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </section>
 
               {/* Schedule Section */}
               {(() => {
-                const sched = (propertyData.category === "villa" && selectedUnit?.schedule?.length)
-                  ? selectedUnit.schedule
-                  : propertyData.schedule;
+                const sched =
+                  propertyData.category === "villa" &&
+                  selectedUnit?.schedule?.length
+                    ? selectedUnit.schedule
+                    : propertyData.schedule;
                 return sched && sched.length > 0 ? sched : null;
               })() && (
                 <section className="relative">
@@ -1149,9 +1191,11 @@ const PropertyDetails = () => {
                     {/* Vertical Line */}
                     <div className="absolute left-[21px] top-2 bottom-0 w-0.5 bg-gradient-to-b from-[#C5A021] via-[#C5A021]/50 to-transparent" />
 
-                    {((propertyData.category === "villa" && selectedUnit?.schedule?.length)
+                    {(propertyData.category === "villa" &&
+                    selectedUnit?.schedule?.length
                       ? selectedUnit.schedule
-                      : propertyData.schedule || []).map((item, idx) => (
+                      : propertyData.schedule || []
+                    ).map((item, idx) => (
                       <div
                         key={idx}
                         className="relative flex items-start gap-6 pb-10 group last:pb-0"
@@ -1197,18 +1241,23 @@ const PropertyDetails = () => {
                     <AccordionContent className="pb-6">
                       <ul className="space-y-4">
                         {(() => {
-                          const hl = (propertyData.category === "villa" && selectedUnit?.highlights?.length)
-                            ? selectedUnit.highlights
-                            : propertyData.highlights;
-                          return Array.isArray(hl) && hl.map((h, i) => (
-                            <li
-                              key={i}
-                              className="text-gray-400 text-sm md:text-base flex items-start gap-3"
-                            >
-                              <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
-                              {h}
-                            </li>
-                          ));
+                          const hl =
+                            propertyData.category === "villa" &&
+                            selectedUnit?.highlights?.length
+                              ? selectedUnit.highlights
+                              : propertyData.highlights;
+                          return (
+                            Array.isArray(hl) &&
+                            hl.map((h, i) => (
+                              <li
+                                key={i}
+                                className="text-gray-400 text-sm md:text-base flex items-start gap-3"
+                              >
+                                <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
+                                {h}
+                              </li>
+                            ))
+                          );
                         })()}
                       </ul>
                     </AccordionContent>
@@ -1227,18 +1276,23 @@ const PropertyDetails = () => {
                     <AccordionContent className="pb-6">
                       <ul className="space-y-4">
                         {(() => {
-                          const pol = (propertyData.category === "villa" && selectedUnit?.policies?.length)
-                            ? selectedUnit.policies
-                            : propertyData.policies;
-                          return Array.isArray(pol) && pol.map((p, i) => (
-                            <li
-                              key={i}
-                              className="text-gray-400 text-sm md:text-base flex items-start gap-3"
-                            >
-                              <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
-                              {p}
-                            </li>
-                          ));
+                          const pol =
+                            propertyData.category === "villa" &&
+                            selectedUnit?.policies?.length
+                              ? selectedUnit.policies
+                              : propertyData.policies;
+                          return (
+                            Array.isArray(pol) &&
+                            pol.map((p, i) => (
+                              <li
+                                key={i}
+                                className="text-gray-400 text-sm md:text-base flex items-start gap-3"
+                              >
+                                <div className="w-2 h-2 rounded-full bg-[#C5A021] mt-2 shrink-0" />
+                                {p}
+                              </li>
+                            ))
+                          );
                         })()}
                       </ul>
                     </AccordionContent>

@@ -1,49 +1,80 @@
-import React, { useEffect, useState } from 'react';
-import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Calendar, IndianRupee, User, LayoutGrid, Info, ClipboardList, Share2, Phone, MessageCircle, X, Loader2, Users2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import PWAInstallButton from '../pwa/PWAInstallButton';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useEffect, useState } from "react";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import {
+  Calendar,
+  IndianRupee,
+  User,
+  LayoutGrid,
+  Info,
+  ClipboardList,
+  Share2,
+  Phone,
+  MessageCircle,
+  X,
+  Loader2,
+  Users2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import PWAInstallButton from "../pwa/PWAInstallButton";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const OwnerLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isLoggedIn = localStorage.getItem('ownerLoggedIn') === 'true';
-  const ownerDataString = localStorage.getItem('ownerData');
-  const ownerData = ownerDataString ? JSON.parse(ownerDataString) : { propertyName: 'My Property', propertyType: 'Villa' };
-  const ownerMobile = ownerData?.owner_otp_number || ownerData?.ownerNumber || ownerData?.mobileNumber || ownerData?.mobile || '';
-  const ownerPropertyId = ownerData?.property_id || ownerData?.propertyId || '';
+  const isLoggedIn = localStorage.getItem("ownerLoggedIn") === "true";
+  const ownerDataString = localStorage.getItem("ownerData");
+  const ownerData = ownerDataString
+    ? JSON.parse(ownerDataString)
+    : { propertyName: "My Property", propertyType: "Villa" };
+  const ownerMobile =
+    ownerData?.owner_otp_number ||
+    ownerData?.ownerNumber ||
+    ownerData?.mobileNumber ||
+    ownerData?.mobile ||
+    "";
+  const ownerPropertyId = ownerData?.property_id || ownerData?.propertyId || "";
 
   const [showContactModal, setShowContactModal] = useState(false);
   const [referralLoading, setReferralLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate('/owner');
+      navigate("/owner");
     }
 
-    if (window.location.hostname.includes('pawnahavencamp.shop')) {
-      const link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+    if (window.location.hostname.includes("pawnahavencamp.shop")) {
+      const link = document.querySelector(
+        'link[rel="manifest"]',
+      ) as HTMLLinkElement;
       if (link) {
-        link.href = '/manifest-owner.json';
+        link.href = "/manifest-owner.json";
       }
     }
   }, [isLoggedIn, navigate]);
 
   if (!isLoggedIn) return null;
 
-  const isVilla = ownerData.property_type === 'villa';
-  const dashboardPath = isVilla ? '/owner/dashboard/villa' : '/owner/dashboard/camping';
-  const profilePath = isVilla ? '/owner/profile/villa' : '/owner/profile/camping';
+  const isVilla = ownerData.property_type === "villa";
+  const dashboardPath = isVilla
+    ? "/owner/dashboard/villa"
+    : "/owner/dashboard/camping";
+  const profilePath = isVilla
+    ? "/owner/profile/villa"
+    : "/owner/profile/camping";
 
-  const unitsPath = isVilla ? '/owner/units/villa' : '/owner/units';
+  const unitsPath = isVilla ? "/owner/units/villa" : "/owner/units";
 
   const navItems = [
-    { label: 'Calendar', icon: Calendar, path: dashboardPath },
-    { label: 'Bookings', icon: ClipboardList, path: '/owner/bookings' },
-    { label: 'Units', icon: LayoutGrid, path: unitsPath },
-    { label: 'Profile', icon: User, path: profilePath },
+    { label: "Calendar", icon: Calendar, path: dashboardPath },
+    { label: "Bookings", icon: ClipboardList, path: "/owner/bookings" },
+    { label: "Units", icon: LayoutGrid, path: unitsPath },
+    { label: "Profile", icon: User, path: profilePath },
   ];
 
   const handleReferralClick = async () => {
@@ -54,19 +85,21 @@ const OwnerLayout = () => {
 
     setReferralLoading(true);
     try {
-      const res = await fetch(`/api/referrals/owner-lookup-property/${ownerPropertyId}`);
+      const res = await fetch(
+        `/api/referrals/owner-lookup-property/${ownerPropertyId}`,
+      );
       const result = await res.json();
 
       if (result.found && result.data?.referral_code) {
-        const loginRes = await fetch('/api/referrals/owner-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const loginRes = await fetch("/api/referrals/owner-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ propertyId: ownerPropertyId }),
         });
         const loginData = await loginRes.json();
         if (loginData.success && loginData.token) {
-          localStorage.setItem('referral_token', loginData.token);
-          navigate('/referral/check?from=owner');
+          localStorage.setItem("referral_token", loginData.token);
+          navigate("/referral/check?from=owner");
         } else {
           setShowContactModal(true);
         }
@@ -74,7 +107,7 @@ const OwnerLayout = () => {
         setShowContactModal(true);
       }
     } catch (e) {
-      console.error('Referral lookup failed:', e);
+      console.error("Referral lookup failed:", e);
       setShowContactModal(true);
     } finally {
       setReferralLoading(false);
@@ -86,34 +119,45 @@ const OwnerLayout = () => {
       <header className="bg-[#1A1A1A] border-b border-[#D4AF37]/20 px-3 py-3 sticky top-0 z-[60] shadow-2xl">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col min-w-0 flex-shrink">
-            <h1 className="text-[8px] font-bold uppercase tracking-[0.1em] text-[#D4AF37] leading-none mb-0.5">Owner Portal</h1>
+            <h1 className="text-[8px] font-bold uppercase tracking-[0.1em] text-[#D4AF37] leading-none mb-0.5">
+              Owner Portal
+            </h1>
             <span className="text-sm font-bold text-white leading-tight truncate">
               {ownerData.propertyName}
             </span>
           </div>
-          
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <PWAInstallButton />
-            
-            <button 
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Install App */}
+            <div className="flex">
+              <PWAInstallButton />
+            </div>
+
+            {/* Referral */}
+            <button
               onClick={handleReferralClick}
               disabled={referralLoading}
-              className="flex items-center gap-1 px-2 py-1.5 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.2)] group disabled:opacity-70"
+              className="flex items-center gap-1.5 px-3 py-2 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-lg transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.2)] group disabled:opacity-70"
             >
               {referralLoading ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Share2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                <Share2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
               )}
-              <span className="text-[10px] font-bold whitespace-nowrap">Referral</span>
+              <span className="text-[11px] font-bold whitespace-nowrap">
+                Referral
+              </span>
             </button>
 
+            {/* B2B */}
             <button
-              onClick={() => navigate('/owner/b2b')}
-              className="flex items-center gap-1 px-2 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(245,158,11,0.2)] group"
+              onClick={() => navigate("/owner/b2b")}
+              className="flex items-center gap-1.5 px-3 py-2 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-lg transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.2)] group"
             >
-              <Users2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold whitespace-nowrap">B2B</span>
+              <Users2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+              <span className="text-[11px] font-bold whitespace-nowrap">
+                B2B
+              </span>
             </button>
           </div>
         </div>
@@ -125,23 +169,34 @@ const OwnerLayout = () => {
 
       <nav className="fixed bottom-0 left-0 right-0 bg-[#1A1A1A] border-t border-[#D4AF37]/20 flex justify-around items-center h-20 px-4 z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path || (item.path === '/owner/dashboard' && location.pathname === '/owner/dashboard');
+          const isActive =
+            location.pathname === item.path ||
+            (item.path === "/owner/dashboard" &&
+              location.pathname === "/owner/dashboard");
           return (
             <Link
               key={item.path}
               to={item.path}
               className={cn(
                 "flex flex-col items-center justify-center space-y-1.5 w-full h-full transition-all duration-300",
-                isActive ? "text-[#D4AF37]" : "text-gray-500 hover:text-gray-300"
+                isActive
+                  ? "text-[#D4AF37]"
+                  : "text-gray-500 hover:text-gray-300",
               )}
             >
-              <div className={cn(
-                "p-2 rounded-xl transition-all",
-                isActive ? "bg-[#D4AF37]/10 shadow-[0_0_15px_rgba(212,175,55,0.15)]" : ""
-              )}>
+              <div
+                className={cn(
+                  "p-2 rounded-xl transition-all",
+                  isActive
+                    ? "bg-[#D4AF37]/10 shadow-[0_0_15px_rgba(212,175,55,0.15)]"
+                    : "",
+                )}
+              >
                 <item.icon className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold Capatalize tracking-widest">{item.label}</span>
+              <span className="text-[10px] font-bold Capatalize tracking-widest">
+                {item.label}
+              </span>
             </Link>
           );
         })}
@@ -156,7 +211,8 @@ const OwnerLayout = () => {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <p className="text-sm text-gray-400 text-center leading-relaxed">
-              You don't have a referral code generated yet. Please contact admin to generate a referral code and earn more on bookings.
+              You don't have a referral code generated yet. Please contact admin
+              to generate a referral code and earn more on bookings.
             </p>
             <div className="flex gap-3">
               <a

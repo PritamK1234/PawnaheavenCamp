@@ -16,6 +16,7 @@ import {
 const OwnerProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("ownerToken");
@@ -58,34 +59,39 @@ const OwnerProfile = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-[#D4AF37]">Profile</h2>
+
         <div className="flex items-center space-x-2">
-          <Dialog>
+          <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
             <DialogTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-red-500 hover:bg-red-500/10"
+                className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 hover:text-[#D4AF37] rounded-xl"
               >
                 <LogOut className="w-4 h-4 mr-1" /> Logout
               </Button>
             </DialogTrigger>
+
             <DialogContent className="sm:max-w-[400px] bg-black border-[#D4AF37]/20 rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="text-[#D4AF37] font-display text-xl">
-                  Confirm Logout
+                  Confirm Logout?
                 </DialogTitle>
+
                 <DialogDescription className="text-gray-400">
                   Are you sure you want to log out of your dashboard?
                 </DialogDescription>
               </DialogHeader>
+
               <div className="flex gap-3 mt-4">
                 <Button
                   variant="outline"
-                  className="flex-1 border-white/10 text-white hover:bg-white/5"
-                  onClick={() => {}}
+                  className="flex-1 border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] hover:border-[#D4AF37]"
+                  onClick={() => setLogoutOpen(false)}
                 >
                   Cancel
                 </Button>
+
                 <Button
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                   onClick={handleLogout}
@@ -111,7 +117,9 @@ const OwnerProfile = () => {
             </h3>
             <p className="text-xs text-gray-400 font-medium Capatalize tracking-widest">
               {ownerData?.ownerName || ownerData?.owner_name || "Owner"} •{" "}
-              {ownerData?.ownerNumber || ownerData?.owner_otp_number || "Contact"}
+              {ownerData?.ownerNumber ||
+                ownerData?.owner_otp_number ||
+                "Contact"}
             </p>
           </div>
         </CardContent>
@@ -119,7 +127,10 @@ const OwnerProfile = () => {
 
       <div className="p-4 bg-[#1A1A1A]/50 border border-[#D4AF37]/20 rounded-xl">
         <p className="text-sm text-gray-400">
-          Amenities, Activities, Highlights, Schedule, Policies, and Description are now managed at the unit level. Go to the <span className="text-[#D4AF37] font-bold">Units</span> tab to edit these details for each villa unit.
+          Amenities, Activities, Highlights, Schedule, Policies, and Description
+          are now managed at the unit level. Go to the{" "}
+          <span className="text-[#D4AF37] font-bold">Units</span> tab to edit
+          these details for each villa unit.
         </p>
       </div>
     </div>

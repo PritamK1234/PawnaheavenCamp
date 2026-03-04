@@ -28,6 +28,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const defaultUnitForm = {
   name: "",
@@ -37,7 +44,7 @@ const defaultUnitForm = {
   weekend_price: "0",
   special_price: "0",
   max_capacity: "0",
-  check_in_time: "2:00 PM",
+  check_in_time: "02:00 PM",
   check_out_time: "11:00 AM",
   rating: "4.5",
   price_note: "",
@@ -50,6 +57,100 @@ const defaultUnitForm = {
   schedule: [{ time: "", title: "" }] as { time: string; title: string }[],
   images: [] as string[],
   special_dates: [] as { date: string; price: string }[],
+};
+
+const TimePicker = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (time: string) => void;
+}) => {
+  const [hour, setHour] = React.useState("02");
+  const [minute, setMinute] = React.useState("00");
+  const [period, setPeriod] = React.useState("PM");
+
+  useEffect(() => {
+    if (value) {
+      const match = value.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (match) {
+        setHour(match[1].padStart(2, "0"));
+        setMinute(match[2]);
+        setPeriod(match[3].toUpperCase());
+      }
+    }
+  }, [value]);
+
+  const update = (h: string, m: string, p: string) => {
+    onChange(`${h}:${m} ${p}`);
+  };
+
+  return (
+    <div className="flex gap-2">
+      {/* Hour */}
+      <Select
+        value={hour}
+        onValueChange={(h) => {
+          setHour(h);
+          update(h, minute, period);
+        }}
+      >
+        <SelectTrigger className="bg-white/5 border-white/10 text-white w-20">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: 12 }, (_, i) => {
+            const val = (i + 1).toString().padStart(2, "0");
+            return (
+              <SelectItem key={val} value={val}>
+                {val}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+
+      {/* Minute */}
+      <Select
+        value={minute}
+        onValueChange={(m) => {
+          setMinute(m);
+          update(hour, m, period);
+        }}
+      >
+        <SelectTrigger className="bg-white/5 border-white/10 text-white w-20">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: 60 }, (_, i) => {
+            const val = i.toString().padStart(2, "0");
+            return (
+              <SelectItem key={val} value={val}>
+                {val}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+
+      {/* AM PM */}
+      <Select
+        value={period}
+        onValueChange={(p) => {
+          setPeriod(p);
+          update(hour, minute, p);
+        }}
+      >
+        <SelectTrigger className="bg-white/5 border-white/10 text-white w-24">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="AM">AM</SelectItem>
+          <SelectItem value="PM">PM</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
 };
 
 const VillaOwnerUnits = () => {
@@ -129,7 +230,9 @@ const VillaOwnerUnits = () => {
       activities: parsedActivities.length ? parsedActivities : [""],
       highlights: parsedHighlights.length ? parsedHighlights : [""],
       policies: parsedPolicies.length ? parsedPolicies : [""],
-      schedule: parsedSchedule.length ? parsedSchedule : [{ time: "", title: "" }],
+      schedule: parsedSchedule.length
+        ? parsedSchedule
+        : [{ time: "", title: "" }],
       images: parsedImages,
       special_dates: parsedSpecialDates,
     });
@@ -157,7 +260,9 @@ const VillaOwnerUnits = () => {
         activities: unitForm.activities.filter((a) => a.trim()),
         highlights: unitForm.highlights.filter((h) => h.trim()),
         policies: unitForm.policies.filter((p) => p.trim()),
-        schedule: unitForm.schedule.filter((s) => s.time.trim() || s.title.trim()),
+        schedule: unitForm.schedule.filter(
+          (s) => s.time.trim() || s.title.trim(),
+        ),
         images: unitForm.images.filter((i) => i.trim()),
         special_dates: unitForm.special_dates,
       };
@@ -268,7 +373,7 @@ const VillaOwnerUnits = () => {
               weekend_price: "0",
               special_price: "0",
               max_capacity: "0",
-              check_in_time: "2:00 PM",
+              check_in_time: "02:00 PM",
               check_out_time: "11:00 AM",
               rating: "4.5",
               price_note: "",
@@ -278,7 +383,10 @@ const VillaOwnerUnits = () => {
               activities: [""] as string[],
               highlights: [""] as string[],
               policies: [""] as string[],
-              schedule: [{ time: "", title: "" }] as { time: string; title: string }[],
+              schedule: [{ time: "", title: "" }] as {
+                time: string;
+                title: string;
+              }[],
               images: [] as string[],
               special_dates: [] as { date: string; price: string }[],
             });
@@ -321,10 +429,13 @@ const VillaOwnerUnits = () => {
                       </h3>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[9px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/20 uppercase flex items-center gap-1">
-                          <Users className="w-3 h-3" /> Max Capacity: {unit.total_persons || unit.max_capacity || 0}
+                          <Users className="w-3 h-3" /> Max Capacity:{" "}
+                          {unit.total_persons || unit.max_capacity || 0}
                         </span>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${hasBooking ? 'text-red-400 bg-red-400/10 border border-red-400/20' : 'text-green-400 bg-green-400/10 border border-green-400/20'}`}>
-                          {hasBooking ? 'Booked' : 'Available'}
+                        <span
+                          className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${hasBooking ? "text-red-400 bg-red-400/10 border border-red-400/20" : "text-green-400 bg-green-400/10 border border-green-400/20"}`}
+                        >
+                          {hasBooking ? "Booked" : "Available"}
                         </span>
                       </div>
                     </div>
@@ -353,7 +464,9 @@ const VillaOwnerUnits = () => {
         {units.length === 0 && (
           <div className="text-center py-16 glass border border-white/5 rounded-2xl bg-black/20">
             <LayoutGrid className="w-12 h-12 text-gray-700 mx-auto mb-4 opacity-50" />
-            <p className="text-gray-500 font-medium italic">No units found. Add your first villa unit.</p>
+            <p className="text-gray-500 font-medium italic">
+              No units found. Add your first villa unit.
+            </p>
           </div>
         )}
       </div>
@@ -451,7 +564,10 @@ const VillaOwnerUnits = () => {
                     <Input
                       value={unitForm.google_maps_link}
                       onChange={(e) =>
-                        setUnitForm({ ...unitForm, google_maps_link: e.target.value })
+                        setUnitForm({
+                          ...unitForm,
+                          google_maps_link: e.target.value,
+                        })
                       }
                       placeholder="https://maps.google.com/..."
                       className="bg-white/5 border-white/10 h-11 text-white"
@@ -582,13 +698,14 @@ const VillaOwnerUnits = () => {
                       <Clock className="w-4 h-4 text-purple-400" />
                       <span className="text-gray-400">Check-in Time</span>
                     </Label>
-                    <Input
+                    <TimePicker
                       value={unitForm.check_in_time}
-                      onChange={(e) =>
-                        setUnitForm({ ...unitForm, check_in_time: e.target.value })
+                      onChange={(time) =>
+                        setUnitForm({
+                          ...unitForm,
+                          check_in_time: time,
+                        })
                       }
-                      placeholder="e.g. 2:00 PM"
-                      className="bg-white/5 border-white/10 h-11 text-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -596,13 +713,14 @@ const VillaOwnerUnits = () => {
                       <Clock className="w-4 h-4 text-purple-400" />
                       <span className="text-gray-400">Check-out Time</span>
                     </Label>
-                    <Input
+                    <TimePicker
                       value={unitForm.check_out_time}
-                      onChange={(e) =>
-                        setUnitForm({ ...unitForm, check_out_time: e.target.value })
+                      onChange={(time) =>
+                        setUnitForm({
+                          ...unitForm,
+                          check_out_time: time,
+                        })
                       }
-                      placeholder="e.g. 11:00 AM"
-                      className="bg-white/5 border-white/10 h-11 text-white"
                     />
                   </div>
                 </div>
@@ -628,16 +746,29 @@ const VillaOwnerUnits = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-400 text-xs font-bold">
-                      Price Note
+                      Price Note *
                     </Label>
-                    <Input
+
+                    <Select
                       value={unitForm.price_note}
-                      onChange={(e) =>
-                        setUnitForm({ ...unitForm, price_note: e.target.value })
+                      onValueChange={(value) =>
+                        setUnitForm({ ...unitForm, price_note: value })
                       }
-                      placeholder="e.g. Per night, exclusive of taxes"
-                      className="bg-white/5 border-white/10 h-11 text-white"
-                    />
+                    >
+                      <SelectTrigger className="bg-white/5 border-white/10 h-11 text-white">
+                        <SelectValue placeholder="Select Price Note" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="per person with meal">
+                          Per person with meal
+                        </SelectItem>
+
+                        <SelectItem value="per person without meal">
+                          Per person without meal
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -678,6 +809,7 @@ const VillaOwnerUnits = () => {
                         </Label>
                         <Input
                           type="date"
+                          min={new Date().toISOString().split("T")[0]}
                           value={sd.date}
                           onChange={(e) => {
                             const newDates = [...unitForm.special_dates];
@@ -750,9 +882,14 @@ const VillaOwnerUnits = () => {
                         <Input
                           value={val}
                           onChange={(e) => {
-                            const newArr = [...(unitForm[section.field] as string[])];
+                            const newArr = [
+                              ...(unitForm[section.field] as string[]),
+                            ];
                             newArr[idx] = e.target.value;
-                            setUnitForm({ ...unitForm, [section.field]: newArr });
+                            setUnitForm({
+                              ...unitForm,
+                              [section.field]: newArr,
+                            });
                           }}
                           placeholder={`Add ${section.label.toLowerCase()}...`}
                           className="bg-white/5 border-white/10 h-10 text-white"
@@ -763,9 +900,9 @@ const VillaOwnerUnits = () => {
                           size="icon"
                           className="h-10 w-10 text-red-500/50 hover:text-red-500 hover:bg-red-500/10"
                           onClick={() => {
-                            const newArr = (unitForm[section.field] as string[]).filter(
-                              (_, i) => i !== idx,
-                            );
+                            const newArr = (
+                              unitForm[section.field] as string[]
+                            ).filter((_, i) => i !== idx);
                             setUnitForm({
                               ...unitForm,
                               [section.field]: newArr.length ? newArr : [""],
@@ -783,7 +920,10 @@ const VillaOwnerUnits = () => {
                       onClick={() =>
                         setUnitForm({
                           ...unitForm,
-                          [section.field]: [...(unitForm[section.field] as string[]), ""],
+                          [section.field]: [
+                            ...(unitForm[section.field] as string[]),
+                            "",
+                          ],
                         })
                       }
                     >
@@ -827,15 +967,13 @@ const VillaOwnerUnits = () => {
                         <Label className="text-[10px] text-gray-500 capitalize font-bold">
                           Time
                         </Label>
-                        <Input
+                        <TimePicker
                           value={item.time}
-                          onChange={(e) => {
+                          onChange={(time) => {
                             const newSchedule = [...unitForm.schedule];
-                            newSchedule[idx].time = e.target.value;
+                            newSchedule[idx].time = time;
                             setUnitForm({ ...unitForm, schedule: newSchedule });
                           }}
-                          placeholder="e.g. 3:00 PM"
-                          className="bg-charcoal border-white/10 h-10 text-white"
                         />
                       </div>
                       <div className="flex-1 space-y-2">

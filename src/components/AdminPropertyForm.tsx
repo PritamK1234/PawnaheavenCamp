@@ -44,6 +44,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import TimePicker from "@/components/TimePicker";
 
 interface AdminPropertyFormProps {
   property?: any;
@@ -633,6 +634,7 @@ const UnitManager = ({
                       <Label className="text-xs">Date</Label>
                       <Input
                         type="date"
+                        min={new Date().toISOString().split("T")[0]}
                         value={sd.date}
                         onChange={(e) => {
                           const newDates = [...unitForm.special_dates];
@@ -996,8 +998,107 @@ const VillaUnitManager = ({
 
   const handleSaveUnit = async () => {
     if (!activeUnitId || !unitFormData[activeUnitId]) return;
-    setIsSaving(true);
+
     const form = unitFormData[activeUnitId];
+
+    // =========================
+    // ✅ VALIDATION SECTION
+    // =========================
+
+    if (!form.name.trim()) {
+      toast({ title: "Unit name is required", variant: "destructive" });
+      return;
+    }
+
+    if (!form.title.trim()) {
+      toast({ title: "Property title is required", variant: "destructive" });
+      return;
+    }
+
+    const total = parseInt(form.total_persons);
+    if (isNaN(total) || total <= 0) {
+      toast({
+        title: "Total capacity must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const weekday = parseFloat(form.weekday_price);
+    if (isNaN(weekday) || weekday <= 0) {
+      toast({
+        title: "Weekday price must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const weekend = parseFloat(form.weekend_price);
+    if (isNaN(weekend) || weekend <= 0) {
+      toast({
+        title: "Weekend price must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const rating = parseFloat(form.rating);
+    if (isNaN(rating) || rating < 0 || rating > 5) {
+      toast({
+        title: "Rating must be between 0 and 5",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!form.google_maps_link.trim()) {
+      toast({
+        title: "Google Maps link is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!form.price_note.trim()) {
+      toast({
+        title: "Price note is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // if (!form.images.length) {
+    //   toast({
+    //     title: "At least one image is required",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
+
+    for (const sd of form.special_dates) {
+      if (!sd.date || !sd.price) {
+        toast({
+          title: "Special date requires both date and price",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (parseFloat(sd.price) <= 0) {
+        toast({
+          title: "Special date price must be greater than 0",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // =========================
+    // ✅ ORIGINAL SAVE LOGIC
+    // =========================
+
+    setIsSaving(true);
+
     try {
       const payload = {
         name: form.name,
@@ -1006,11 +1107,11 @@ const VillaUnitManager = ({
         weekday_price: String(form.weekday_price),
         weekend_price: String(form.weekend_price),
         special_price: String(form.special_price),
-        total_persons: parseInt(form.total_persons) || 0,
-        available_persons: parseInt(form.total_persons) || 0,
+        total_persons: total,
+        available_persons: total,
         check_in_time: form.check_in_time,
         check_out_time: form.check_out_time,
-        rating: parseFloat(form.rating) || 4.5,
+        rating: rating || 4.5,
         price_note: form.price_note,
         location: form.location,
         google_maps_link: form.google_maps_link,
@@ -1024,7 +1125,9 @@ const VillaUnitManager = ({
           ? form.special_dates
           : [],
       };
+
       const res = await villaAPI.updateUnit(activeUnitId, payload);
+
       if (res.success) {
         toast({ title: "Unit saved successfully" });
         onRefresh();
@@ -1258,138 +1361,276 @@ const VillaUnitManager = ({
                 className="bg-white/5 border-white/10"
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label>Property Title *</Label>
+            <div className="space-y-2">
+              <Label className="text-gray-400 text-xs font-bold">
+                Property Title *
+              </Label>
               <Input
                 value={activeForm.title}
                 onChange={(e) => updateField("title", e.target.value)}
-                className="bg-white/5 border-white/10"
-                placeholder="e.g. Luxury Villa with Pool"
+                placeholder="e.g. Luxury Mountain Villa"
+                className="bg-white/5 border-white/10 h-11 text-white"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label>Description</Label>
+              <Label className="text-gray-400 text-xs font-bold">
+                Description
+              </Label>
               <Textarea
                 value={activeForm.description}
                 onChange={(e) => updateField("description", e.target.value)}
-                className="bg-white/5 border-white/10 min-h-[80px]"
+                placeholder="Describe this villa unit..."
+                className="bg-white/5 border-white/10 text-white min-h-[80px]"
               />
             </div>
             <div className="space-y-2">
-              <Label>Location</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={activeForm.location}
-                  onChange={(e) => updateField("location", e.target.value)}
-                  className="bg-white/5 border-white/10 pl-10"
-                  placeholder="e.g. Near Pawna Lake"
-                />
-              </div>
+              <Label className="text-xs font-bold flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-green-400" />
+                <span className="text-gray-400">Location</span>
+              </Label>
+              <Input
+                value={activeForm.location}
+                onChange={(e) => updateField("location", e.target.value)}
+                placeholder="e.g. Lonavala, Maharashtra"
+                className="bg-white/5 border-white/10 h-11 text-white"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Google Maps Link *</Label>
+              <Label className="text-gray-400 text-xs font-bold">
+                Google Maps Link
+              </Label>
               <Input
                 value={activeForm.google_maps_link}
                 onChange={(e) =>
                   updateField("google_maps_link", e.target.value)
                 }
-                className="bg-white/5 border-white/10"
-                placeholder="Paste Google Maps URL"
+                placeholder="https://maps.google.com/..."
+                className="bg-white/5 border-white/10 h-11 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label>Weekday Price</Label>
-              <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="number"
-                  value={activeForm.weekday_price}
-                  onChange={(e) => updateField("weekday_price", e.target.value)}
-                  className="bg-white/5 border-white/10 pl-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Weekend Price</Label>
-              <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="number"
-                  value={activeForm.weekend_price}
-                  onChange={(e) => updateField("weekend_price", e.target.value)}
-                  className="bg-white/5 border-white/10 pl-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Special Price</Label>
+              <Label className="text-xs font-bold flex items-center gap-2">
+                <IndianRupee className="w-4 h-4 text-[#D4AF37]" />
+                <span className="text-gray-400">Weekday Price</span>
+              </Label>
               <Input
                 type="number"
-                value={activeForm.special_price}
-                onChange={(e) => updateField("special_price", e.target.value)}
-                className="bg-white/5 border-white/10"
+                min="1"
+                inputMode="numeric"
+                value={
+                  activeForm.weekday_price === "0"
+                    ? ""
+                    : activeForm.weekday_price
+                }
+                onFocus={() => {
+                  if (activeForm.weekday_price === "0") {
+                    updateField("weekday_price", "");
+                  }
+                }}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/^-/g, "");
+
+                  if (val === "") {
+                    updateField("weekday_price", "");
+                    return;
+                  }
+
+                  if (/^\d+$/.test(val) && parseInt(val) > 0) {
+                    updateField("weekday_price", val);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                placeholder="Enter weekday price!"
+                className="bg-white/5 border-white/10 h-11 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label>Max Capacity (Total Persons)</Label>
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="number"
-                  value={activeForm.total_persons}
-                  onChange={(e) => updateField("total_persons", e.target.value)}
-                  className="bg-white/5 border-white/10 pl-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Check-in Time</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={activeForm.check_in_time}
-                  onChange={(e) => updateField("check_in_time", e.target.value)}
-                  className="bg-white/5 border-white/10 pl-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Check-out Time</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={activeForm.check_out_time}
-                  onChange={(e) =>
-                    updateField("check_out_time", e.target.value)
+              <Label className="text-xs font-bold flex items-center gap-2">
+                <IndianRupee className="w-4 h-4 text-[#D4AF37]" />
+                <span className="text-gray-400">Weekend Price</span>
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                inputMode="numeric"
+                value={
+                  activeForm.weekend_price === "0"
+                    ? ""
+                    : activeForm.weekend_price
+                }
+                onFocus={() => {
+                  if (activeForm.weekend_price === "0") {
+                    updateField("weekend_price", "");
                   }
-                  className="bg-white/5 border-white/10 pl-10"
-                />
-              </div>
+                }}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/^-/g, "");
+
+                  if (val === "") {
+                    updateField("weekend_price", "");
+                    return;
+                  }
+
+                  if (/^\d+$/.test(val) && parseInt(val) > 0) {
+                    updateField("weekend_price", val);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                placeholder="Enter weekend price!"
+                className="bg-white/5 border-white/10 h-11 text-white"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Rating (0-5)</Label>
-              <div className="relative">
-                <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  value={activeForm.rating}
-                  onChange={(e) => updateField("rating", e.target.value)}
-                  className="bg-white/5 border-white/10 pl-10"
-                />
-              </div>
+              <Label className="text-gray-400 text-xs font-bold">
+                Special Price
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={
+                  activeForm.special_price === "0"
+                    ? ""
+                    : activeForm.special_price
+                }
+                onFocus={() => {
+                  if (activeForm.special_price === "0") {
+                    updateField("special_price", "");
+                  }
+                }}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/^-/g, "");
+
+                  if (val === "") {
+                    updateField("special_price", "");
+                    return;
+                  }
+
+                  if (/^\d+$/.test(val)) {
+                    updateField("special_price", val);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                placeholder="Special price"
+                className="bg-white/5 border-white/10 h-11 text-white"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Price Note *</Label>
+              <Label className="text-xs capitalize font-bold flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-400" />
+                <span className="text-blue-400">Max Capacity</span>
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                inputMode="numeric"
+                value={
+                  activeForm.total_persons === "0"
+                    ? ""
+                    : activeForm.total_persons
+                }
+                onFocus={() => {
+                  if (activeForm.total_persons === "0") {
+                    updateField("total_persons", "");
+                  }
+                }}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/^-/g, "");
+
+                  if (val === "") {
+                    updateField("total_persons", "");
+                    return;
+                  }
+
+                  if (/^\d+$/.test(val) && parseInt(val) > 0) {
+                    updateField("total_persons", val);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                placeholder="Max number of guests"
+                className="bg-white/5 border-white/10 text-blue-400 font-bold h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-purple-400" />
+                <span className="text-gray-400">Check-in Time</span>
+              </Label>
+              <TimePicker
+                value={activeForm.check_in_time}
+                onChange={(time) => updateField("check_in_time", time)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-purple-400" />
+                <span className="text-gray-400">Check-out Time</span>
+              </Label>
+              <TimePicker
+                value={activeForm.check_out_time}
+                onChange={(time) => updateField("check_out_time", time)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex items-center gap-2">
+                <Star className="w-4 h-4 text-yellow-400" />
+                <span className="text-gray-400">Rating</span>
+              </Label>
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                value={activeForm.rating}
+                onChange={(e) => {
+                  const val = e.target.value;
+
+                  if (val === "") {
+                    updateField("rating", "");
+                    return;
+                  }
+
+                  const num = parseFloat(val);
+
+                  if (!isNaN(num) && num >= 0 && num <= 5) {
+                    updateField("rating", val);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-"].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                placeholder="e.g. 4.5"
+                className="bg-white/5 border-white/10 h-11 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold flex items-center gap-2">
+                <span className="text-gray-400">Price Note *</span>
+              </Label>
 
               <Select
                 value={activeForm.price_note}
                 onValueChange={(value) => updateField("price_note", value)}
               >
-                <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-xl">
+                <SelectTrigger className="bg-white/5 border-white/10 h-11 text-white">
                   <SelectValue placeholder="Select Price Note" />
                 </SelectTrigger>
 
@@ -1434,6 +1675,7 @@ const VillaUnitManager = ({
                     <Label className="text-xs">Date</Label>
                     <Input
                       type="date"
+                      min={new Date().toISOString().split("T")[0]}
                       value={sd.date}
                       onChange={(e) => {
                         const newDates = [...activeForm.special_dates];
@@ -1527,18 +1769,16 @@ const VillaUnitManager = ({
             <div className="space-y-2">
               {activeForm.schedule.map((item, idx) => (
                 <div key={idx} className="flex gap-2 items-center">
-                  <Input
+                  <TimePicker
                     value={item.time}
-                    onChange={(e) => {
+                    onChange={(time) => {
                       const newSchedule = [...activeForm.schedule];
                       newSchedule[idx] = {
                         ...newSchedule[idx],
-                        time: e.target.value,
+                        time: time,
                       };
                       updateField("schedule", newSchedule);
                     }}
-                    placeholder="Time"
-                    className="bg-white/5 border-white/10 h-9 flex-1"
                   />
                   <Input
                     value={item.title}
@@ -2254,7 +2494,7 @@ const AdminPropertyForm = ({
                       navigator.clipboard.writeText(formData.property_id)
                     }
                     title="Copy Property ID"
-                    className="hover:text-primary"
+                    className="hover:bg-muted"
                   >
                     <Copy className="w-4 h-4" />
                   </Button>
@@ -2435,6 +2675,7 @@ const AdminPropertyForm = ({
                           >
                             <Input
                               type="date"
+                              min={new Date().toISOString().split("T")[0]}
                               value={sd.date}
                               onChange={(e) => {
                                 const newDates = [...formData.special_dates];
@@ -2602,36 +2843,36 @@ const AdminPropertyForm = ({
 
                   <div className="space-y-2">
                     <Label htmlFor="check_in_time">Check-in Time</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="check_in_time"
+
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+
+                      <TimePicker
                         value={formData.check_in_time}
-                        onChange={(e) =>
+                        onChange={(time) =>
                           setFormData({
                             ...formData,
-                            check_in_time: e.target.value,
+                            check_in_time: time,
                           })
                         }
-                        className="h-12 pl-10 bg-secondary/50 rounded-xl"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="check_out_time">Check-out Time</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="check_out_time"
+
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+
+                      <TimePicker
                         value={formData.check_out_time}
-                        onChange={(e) =>
+                        onChange={(time) =>
                           setFormData({
                             ...formData,
-                            check_out_time: e.target.value,
+                            check_out_time: time,
                           })
                         }
-                        className="h-12 pl-10 bg-secondary/50 rounded-xl"
                       />
                     </div>
                   </div>
@@ -2646,7 +2887,10 @@ const AdminPropertyForm = ({
                     id="owner_name"
                     value={formData.owner_name}
                     onChange={(e) =>
-                      setFormData({ ...formData, owner_name: e.target.value })
+                      setFormData({
+                        ...formData,
+                        owner_name: e.target.value.replace(/[^A-Za-z\s]/g, ""),
+                      })
                     }
                     className="h-12 pl-10 bg-secondary/50 rounded-xl"
                     required
@@ -2875,16 +3119,14 @@ const AdminPropertyForm = ({
                   {formData.schedule.map((item: any, index: number) => (
                     <div key={index} className="flex items-start gap-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-                        <Input
+                        <TimePicker
                           value={item.time}
-                          onChange={(e) =>
+                          onChange={(time) =>
                             handleArrayChange("schedule", index, {
                               ...item,
-                              time: e.target.value,
+                              time: time,
                             })
                           }
-                          placeholder="Time (e.g. 4:30 PM)"
-                          className="h-12 bg-secondary/50 rounded-xl"
                         />
                         <Input
                           value={item.title}

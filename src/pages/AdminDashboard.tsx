@@ -37,6 +37,7 @@ import {
   ArrowDownLeft,
   Bell,
   Copy,
+  Handshake,
 } from "lucide-react";
 import AdminPropertyForm from "@/components/AdminPropertyForm";
 import { Input } from "@/components/ui/input";
@@ -58,6 +59,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -77,17 +84,32 @@ const AdminDashboard = () => {
   const [referralUsers, setReferralUsers] = useState<any[]>([]);
   const [isReferralLoading, setIsReferralLoading] = useState(false);
   const [b2bSubTab, setB2bSubTab] = useState("b2b");
-  const [b2bForm, setB2bForm] = useState({ username: "", mobile: "", code: "" });
-  const [ownerRefForm, setOwnerRefForm] = useState({ username: "", mobile: "", code: "", propertyId: "" });
+  const [b2bForm, setB2bForm] = useState({
+    username: "",
+    mobile: "",
+    code: "",
+  });
+  const [ownerRefForm, setOwnerRefForm] = useState({
+    username: "",
+    mobile: "",
+    code: "",
+    propertyId: "",
+  });
   const [b2bCreating, setB2bCreating] = useState(false);
   const [ownerRefCreating, setOwnerRefCreating] = useState(false);
-  const [ownerB2bForm, setOwnerB2bForm] = useState({ ownerCode: "", username: "", mobile: "", code: "" });
+  const [ownerB2bForm, setOwnerB2bForm] = useState({
+    ownerCode: "",
+    username: "",
+    mobile: "",
+    code: "",
+  });
   const [ownerB2bCreating, setOwnerB2bCreating] = useState(false);
   const [ownerCodeVerified, setOwnerCodeVerified] = useState(false);
   const [verifiedOwnerName, setVerifiedOwnerName] = useState("");
   const [ownerCodeVerifying, setOwnerCodeVerifying] = useState(false);
   const [bookingsData, setBookingsData] = useState<any[]>([]);
   const [isBookingsLoading, setIsBookingsLoading] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -122,7 +144,10 @@ const AdminDashboard = () => {
       const response = await fetch("/api/payments/bookings", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (response.status === 401) { handleLogout(); return; }
+      if (response.status === 401) {
+        handleLogout();
+        return;
+      }
       const result = await response.json();
       setBookingsData(Array.isArray(result.bookings) ? result.bookings : []);
     } catch (error) {
@@ -166,24 +191,30 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleCreateAdminReferral = async (type: 'b2b' | 'owner') => {
+  const handleCreateAdminReferral = async (type: "b2b" | "owner") => {
     const token = localStorage.getItem("adminToken");
-    const form = type === 'b2b' ? b2bForm : ownerRefForm;
-    const setCreating = type === 'b2b' ? setB2bCreating : setOwnerRefCreating;
+    const form = type === "b2b" ? b2bForm : ownerRefForm;
+    const setCreating = type === "b2b" ? setB2bCreating : setOwnerRefCreating;
 
     if (!form.username || !form.mobile || !form.code) {
       toast({ title: "Please fill all fields", variant: "destructive" });
       return;
     }
     if (form.mobile.length !== 10) {
-      toast({ title: "Enter valid 10-digit mobile number", variant: "destructive" });
+      toast({
+        title: "Enter valid 10-digit mobile number",
+        variant: "destructive",
+      });
       return;
     }
     if (!/[A-Z]/.test(form.code) || !/[0-9]/.test(form.code)) {
-      toast({ title: "Referral code must contain both letters and numbers", variant: "destructive" });
+      toast({
+        title: "Referral code must contain both letters and numbers",
+        variant: "destructive",
+      });
       return;
     }
-    if (type === 'owner' && !(form as any).propertyId) {
+    if (type === "owner" && !(form as any).propertyId) {
       toast({ title: "Please enter Property ID", variant: "destructive" });
       return;
     }
@@ -192,32 +223,48 @@ const AdminDashboard = () => {
     try {
       const response = await fetch("/api/referrals/admin/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           username: form.username,
           referral_otp_number: form.mobile,
           referral_code: form.code,
           referral_type: type,
-          property_id: type === 'owner' ? (form as any).propertyId : undefined,
+          property_id: type === "owner" ? (form as any).propertyId : undefined,
         }),
       });
       const result = await response.json();
       if (result.success) {
-        toast({ title: `${type === 'b2b' ? 'B2B' : 'Owner'} referral code created!` });
-        if (type === 'b2b') {
+        toast({
+          title: `${type === "b2b" ? "B2B" : "Owner"} referral code created!`,
+        });
+        if (type === "b2b") {
           setB2bForm({ username: "", mobile: "", code: "" });
         } else {
-          setOwnerRefForm({ username: "", mobile: "", code: "", propertyId: "" });
+          setOwnerRefForm({
+            username: "",
+            mobile: "",
+            code: "",
+            propertyId: "",
+          });
         }
         await fetchReferralUsers();
-        if (type === 'owner') {
+        if (type === "owner") {
           setActiveTab("owners");
         }
       } else {
-        toast({ title: result.error || "Failed to create code", variant: "destructive" });
+        toast({
+          title: result.error || "Failed to create code",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast({ title: "Failed to create referral code", variant: "destructive" });
+      toast({
+        title: "Failed to create referral code",
+        variant: "destructive",
+      });
     } finally {
       setCreating(false);
     }
@@ -226,14 +273,20 @@ const AdminDashboard = () => {
   const handleVerifyOwnerCode = async () => {
     const token = localStorage.getItem("adminToken");
     if (!ownerB2bForm.ownerCode) {
-      toast({ title: "Please enter an owner referral code", variant: "destructive" });
+      toast({
+        title: "Please enter an owner referral code",
+        variant: "destructive",
+      });
       return;
     }
     setOwnerCodeVerifying(true);
     try {
       const response = await fetch("/api/referrals/admin/verify-owner-code", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ code: ownerB2bForm.ownerCode }),
       });
       const result = await response.json();
@@ -244,7 +297,10 @@ const AdminDashboard = () => {
       } else {
         setOwnerCodeVerified(false);
         setVerifiedOwnerName("");
-        toast({ title: result.error || "Invalid owner referral code", variant: "destructive" });
+        toast({
+          title: result.error || "Invalid owner referral code",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       toast({ title: "Verification failed", variant: "destructive" });
@@ -260,22 +316,34 @@ const AdminDashboard = () => {
       return;
     }
     if (ownerB2bForm.mobile.length !== 10) {
-      toast({ title: "Enter valid 10-digit mobile number", variant: "destructive" });
+      toast({
+        title: "Enter valid 10-digit mobile number",
+        variant: "destructive",
+      });
       return;
     }
     if (!/[A-Z]/.test(ownerB2bForm.code) || !/[0-9]/.test(ownerB2bForm.code)) {
-      toast({ title: "Referral code must contain both letters and numbers", variant: "destructive" });
+      toast({
+        title: "Referral code must contain both letters and numbers",
+        variant: "destructive",
+      });
       return;
     }
     if (!ownerCodeVerified) {
-      toast({ title: "Please verify the owner referral code first", variant: "destructive" });
+      toast({
+        title: "Please verify the owner referral code first",
+        variant: "destructive",
+      });
       return;
     }
     setOwnerB2bCreating(true);
     try {
       const response = await fetch("/api/referrals/admin/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           username: ownerB2bForm.username,
           referral_otp_number: ownerB2bForm.mobile,
@@ -292,16 +360,26 @@ const AdminDashboard = () => {
         setVerifiedOwnerName("");
         await fetchReferralUsers();
       } else {
-        toast({ title: result.error || "Failed to create code", variant: "destructive" });
+        toast({
+          title: result.error || "Failed to create code",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast({ title: "Failed to create referral code", variant: "destructive" });
+      toast({
+        title: "Failed to create referral code",
+        variant: "destructive",
+      });
     } finally {
       setOwnerB2bCreating(false);
     }
   };
 
-  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; referralId: number | null; username: string }>({ open: false, referralId: null, username: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    referralId: number | null;
+    username: string;
+  }>({ open: false, referralId: null, username: "" });
 
   const handleDeleteReferral = async (userId: number) => {
     const token = localStorage.getItem("adminToken");
@@ -319,7 +397,10 @@ const AdminDashboard = () => {
         toast({ title: "Referral deleted successfully" });
         fetchReferralUsers();
       } else {
-        toast({ title: result.error || "Failed to delete", variant: "destructive" });
+        toast({
+          title: result.error || "Failed to delete",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       toast({ title: "Failed to delete referral", variant: "destructive" });
@@ -539,37 +620,60 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-1 sm:gap-4">
             <Popover>
               <PopoverTrigger asChild>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10 relative"
+                        onClick={() => navigate(adminPaths.requests)}
+                      >
+                        <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Requests Center</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </PopoverTrigger>
+            </Popover>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10 relative"
-                  onClick={() => navigate(adminPaths.requests)}
+                  className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
+                  onClick={() => navigate(adminPaths.contacts)}
                 >
-                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-charcoal animate-pulse" />
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
-              </PopoverTrigger>
-            </Popover>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
-              onClick={() => navigate(adminPaths.contacts)}
-            >
-              <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
-              onClick={() => navigate(adminPaths.revenue)}
-            >
-              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Contacts</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10"
+                  onClick={() => navigate(adminPaths.revenue)}
+                >
+                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Revenue Dashboard</p>
+              </TooltipContent>
+            </Tooltip>
             <Button
               variant="outline"
+              title="Logout"
               size="sm"
-              onClick={handleLogout}
+              onClick={() => setLogoutConfirm(true)}
               className="rounded-xl h-8 sm:h-10 text-[10px] sm:text-sm px-2 sm:px-4 border-gold/30 text-gold hover:bg-gold hover:text-black"
             >
               <LogOut className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
@@ -876,7 +980,7 @@ const AdminDashboard = () => {
                                 );
                                 toast({ title: "Property ID copied" });
                               }}
-                              className="h-7 w-7 text-muted-foreground hover:text-gold"
+                              className="hover:bg-muted"
                               title="Copy Property ID"
                             >
                               <Copy className="w-4 h-4" />
@@ -957,7 +1061,7 @@ const AdminDashboard = () => {
                           </Button>
                           <Button
                             variant="outline"
-                            className="flex-1 rounded-xl h-11 border-white/10 text-red-500 hover:bg-red-500/10 font-bold"
+                            className="flex-1 rounded-xl h-11 border-white/10 text-red-500 hover:text-white font-bold transition-colors"
                             onClick={() => handleDeleteProperty(property.id)}
                           >
                             <Trash2 className="w-4 h-4 mr-2" /> Delete
@@ -1028,10 +1132,12 @@ const AdminDashboard = () => {
                 ),
               ).map((mobile, idx) => {
                 const ownerProp = properties.find(
-                  (p) => (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
+                  (p) =>
+                    (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
                 );
                 const ownerProperties = properties.filter(
-                  (p) => (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
+                  (p) =>
+                    (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
                 );
 
                 return (
@@ -1040,14 +1146,17 @@ const AdminDashboard = () => {
                     className="glass-dark rounded-2xl border border-white/5 p-4"
                   >
                     <div className="flex items-center gap-4 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center text-gold border border-gold/20 shrink-0">
+                      <div className="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center text-gold border border-gold/20 shrink-0">
                         <User className="w-6 h-6" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white truncate text-[12px]">
-                          {ownerProp?.owner_name || `Owner ${idx + 1}`}
+                        <h4 className="font-semibold text-white truncate text-base">
+                          {ownerProp?.owner_name
+                            ?.split(" ")
+                            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                            .join(" ") || `Owner ${idx + 1}`}
                         </h4>
-                        <p className="text-[10px] text-muted-foreground font-medium">
+                        <p className="text-sm text-muted-foreground">
                           {mobile || "+91 ---"}
                         </p>
                       </div>
@@ -1081,7 +1190,7 @@ const AdminDashboard = () => {
                           key={p.id}
                           className="flex items-center justify-between gap-3 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 group hover:border-gold/30 transition-colors"
                         >
-                          <span className="text-xs text-white font-medium truncate flex-1">
+                          <span className="text-sm text-white font-medium truncate flex-1">
                             {p.title}
                           </span>
                           <Badge
@@ -1097,7 +1206,9 @@ const AdminDashboard = () => {
                     <div className="pt-3 border-t border-white/5">
                       {(() => {
                         const ownerReferral = referralUsers.find(
-                          (r) => r.referral_otp_number === mobile && r.type === "owner"
+                          (r) =>
+                            r.referral_otp_number === mobile &&
+                            r.type === "owner",
                         );
                         if (ownerReferral) {
                           return (
@@ -1107,20 +1218,30 @@ const AdminDashboard = () => {
                               className="w-full h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10 rounded-xl"
                               onClick={async () => {
                                 try {
-                                  const adminToken = localStorage.getItem("adminToken");
+                                  const adminToken =
+                                    localStorage.getItem("adminToken");
                                   if (!adminToken) return;
-                                  const res = await fetch("/api/referrals/admin/login-as", {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                      Authorization: `Bearer ${adminToken}`,
+                                  const res = await fetch(
+                                    "/api/referrals/admin/login-as",
+                                    {
+                                      method: "POST",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: `Bearer ${adminToken}`,
+                                      },
+                                      body: JSON.stringify({ mobile }),
                                     },
-                                    body: JSON.stringify({ mobile }),
-                                  });
+                                  );
                                   const data = await res.json();
                                   if (data.success && data.token) {
-                                    localStorage.setItem("referral_token", data.token);
-                                    window.open("/referral/check?from=admin", "_blank");
+                                    localStorage.setItem(
+                                      "referral_token",
+                                      data.token,
+                                    );
+                                    window.open(
+                                      "/referral/check?from=admin",
+                                      "_blank",
+                                    );
                                   }
                                 } catch (e) {
                                   console.error("Admin login-as failed", e);
@@ -1144,7 +1265,8 @@ const AdminDashboard = () => {
                                 username: ownerProp?.owner_name || "",
                                 mobile: mobile || "",
                                 code: "",
-                                propertyId: ownerProperties[0]?.property_id || "",
+                                propertyId:
+                                  ownerProperties[0]?.property_id || "",
                               });
                             }}
                           >
@@ -1229,17 +1351,22 @@ const AdminDashboard = () => {
                             .toLowerCase()
                             .includes(searchTerm.toLowerCase());
 
-                        if (referralSubTab === "all" || referralSubTab === "all referrals") return matchesSearch;
+                        if (
+                          referralSubTab === "all" ||
+                          referralSubTab === "all referrals"
+                        )
+                          return matchesSearch;
                         const typeMap: Record<string, string> = {
-                          "owners": "owner",
+                          owners: "owner",
                           "owners referrals": "owner",
-                          "b2b": "b2b",
+                          b2b: "b2b",
                           "b2b referrals": "b2b",
-                          "public": "public",
+                          public: "public",
                           "public referrals": "public",
-                          "owners_b2b": "owners_b2b",
+                          owners_b2b: "owners_b2b",
                         };
-                        const targetType = typeMap[referralSubTab.toLowerCase()];
+                        const targetType =
+                          typeMap[referralSubTab.toLowerCase()];
                         return matchesSearch && u.type === targetType;
                       })
                       .map((referral) => (
@@ -1254,16 +1381,24 @@ const AdminDashboard = () => {
                               </div>
                               <div>
                                 <h4 className="font-semibold text-white">
-                                  {referral.username}
+                                  {referral.username
+                                    ?.split(" ")
+                                    .map(
+                                      (word) =>
+                                        word.charAt(0).toUpperCase() +
+                                        word.slice(1),
+                                    )
+                                    .join(" ")}
                                 </h4>
                                 <p className="text-xs text-muted-foreground">
                                   {referral.referral_otp_number}
                                 </p>
-                                {referral.type === "owners_b2b" && referral.parent_owner_name && (
-                                  <p className="text-[10px] text-amber-400 mt-0.5">
-                                    Owner: {referral.parent_owner_name}
-                                  </p>
-                                )}
+                                {referral.type === "owners_b2b" &&
+                                  referral.parent_owner_name && (
+                                    <p className="text-[10px] text-amber-400 mt-0.5">
+                                      Owner: {referral.parent_owner_name}
+                                    </p>
+                                  )}
                               </div>
                             </div>
                             <Badge
@@ -1298,9 +1433,9 @@ const AdminDashboard = () => {
                               </p>
                               <p className="text-xs font-bold text-white">
                                 ₹
-                                {parseFloat(referral.balance || "0").toLocaleString(
-                                  "en-IN",
-                                )}
+                                {parseFloat(
+                                  referral.balance || "0",
+                                ).toLocaleString("en-IN")}
                               </p>
                             </div>
                             <div className="p-2 rounded-xl bg-white/5 border border-white/5 text-center">
@@ -1317,23 +1452,35 @@ const AdminDashboard = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-full h-8 text-[10px] border-gold/30 text-gold hover:bg-gold/10 rounded-xl"
+                              className="w-full h-9 text-xs border-gold/30 text-gold hover:bg-gold/10 rounded-xl"
                               onClick={async () => {
                                 try {
-                                  const adminToken = localStorage.getItem("adminToken");
+                                  const adminToken =
+                                    localStorage.getItem("adminToken");
                                   if (!adminToken) return;
-                                  const res = await fetch("/api/referrals/admin/login-as", {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                      Authorization: `Bearer ${adminToken}`,
+                                  const res = await fetch(
+                                    "/api/referrals/admin/login-as",
+                                    {
+                                      method: "POST",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: `Bearer ${adminToken}`,
+                                      },
+                                      body: JSON.stringify({
+                                        mobile: referral.referral_otp_number,
+                                      }),
                                     },
-                                    body: JSON.stringify({ mobile: referral.referral_otp_number }),
-                                  });
+                                  );
                                   const data = await res.json();
                                   if (data.success && data.token) {
-                                    localStorage.setItem("referral_token", data.token);
-                                    window.open("/referral/check?from=admin", "_blank");
+                                    localStorage.setItem(
+                                      "referral_token",
+                                      data.token,
+                                    );
+                                    window.open(
+                                      "/referral/check?from=admin",
+                                      "_blank",
+                                    );
                                   }
                                 } catch (e) {
                                   console.error("Admin login-as failed", e);
@@ -1344,54 +1491,60 @@ const AdminDashboard = () => {
                               Referral Dashboard ({referral.referral_code})
                             </Button>
                             <div className="flex items-center justify-between">
-                            <p className="text-[10px] text-muted-foreground">
-                              Joined{" "}
-                              {new Date(
-                                referral.created_at,
-                              ).toLocaleDateString()}
-                            </p>
-                            <div className="flex gap-2">
-                              {referral.status === "active" ? (
+                              <p className="text-[10px] text-muted-foreground">
+                                Joined{" "}
+                                {new Date(
+                                  referral.created_at,
+                                ).toLocaleDateString()}
+                              </p>
+                              <div className="flex gap-2">
+                                {referral.status === "active" ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                    onClick={() =>
+                                      handleUpdateReferralStatus(
+                                        referral.id,
+                                        "blocked",
+                                      )
+                                    }
+                                  >
+                                    <XCircle className="w-3 h-3 mr-1" />
+                                    Block
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-[10px] text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+                                    onClick={() =>
+                                      handleUpdateReferralStatus(
+                                        referral.id,
+                                        "active",
+                                      )
+                                    }
+                                  >
+                                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                                    Activate
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                  className="h-7 text-[10px] text-red-500 hover:text-red-400 hover:bg-red-500/10"
                                   onClick={() =>
-                                    handleUpdateReferralStatus(
-                                      referral.id,
-                                      "blocked",
-                                    )
+                                    setDeleteConfirm({
+                                      open: true,
+                                      referralId: referral.id,
+                                      username: referral.username,
+                                    })
                                   }
                                 >
-                                  <XCircle className="w-3 h-3 mr-1" />
-                                  Block
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Delete
                                 </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 text-[10px] text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-                                  onClick={() =>
-                                    handleUpdateReferralStatus(
-                                      referral.id,
-                                      "active",
-                                    )
-                                  }
-                                >
-                                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                                  Activate
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-[10px] text-red-500 hover:text-red-400 hover:bg-red-500/10"
-                                onClick={() => setDeleteConfirm({ open: true, referralId: referral.id, username: referral.username })}
-                              >
-                                <Trash2 className="w-3 h-3 mr-1" />
-                                Delete
-                              </Button>
-                            </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1429,19 +1582,32 @@ const AdminDashboard = () => {
               </h3>
             </div>
 
-            <Tabs value={b2bSubTab} onValueChange={setB2bSubTab} className="w-full">
+            <Tabs
+              value={b2bSubTab}
+              onValueChange={setB2bSubTab}
+              className="w-full"
+            >
               <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5 grid grid-cols-3">
-                <TabsTrigger value="b2b" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                <TabsTrigger
+                  value="b2b"
+                  className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all"
+                >
                   Generate B2B
                 </TabsTrigger>
-                <TabsTrigger value="owners" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                <TabsTrigger
+                  value="owners"
+                  className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all"
+                >
                   Generate Owner
                 </TabsTrigger>
-                <TabsTrigger value="owners_b2b" className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all">
+                <TabsTrigger
+                  value="owners_b2b"
+                  className="rounded-lg text-[10px] py-3 data-[state=active]:bg-gold data-[state=active]:text-black transition-all"
+                >
                   Owners B2B
                 </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="b2b" className="mt-6">
                 <div className="glass-dark rounded-[2.5rem] border border-white/5 p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-2">
@@ -1450,24 +1616,72 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <h4 className="text-lg font-bold">B2B Referral</h4>
-                      <p className="text-xs text-muted-foreground">Commission: 22% of advance | Admin: 8%</p>
+                      <p className="text-xs text-muted-foreground">
+                        Commission: 22% of advance | Admin: 8%
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Partner Name</label>
-                      <Input placeholder="Business partner name" value={b2bForm.username} onChange={(e) => setB2bForm({ ...b2bForm, username: e.target.value })} className="h-11 rounded-xl bg-white/5 border-white/10" />
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Partner Name
+                      </label>
+                      <Input
+                        placeholder="Business partner name"
+                        value={b2bForm.username}
+                        onChange={(e) =>
+                          setB2bForm({ ...b2bForm, username: e.target.value })
+                        }
+                        className="h-11 rounded-xl bg-white/5 border-white/10"
+                      />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Mobile Number</label>
-                      <Input placeholder="10-digit mobile" maxLength={10} value={b2bForm.mobile} onChange={(e) => setB2bForm({ ...b2bForm, mobile: e.target.value.replace(/\D/g, '') })} className="h-11 rounded-xl bg-white/5 border-white/10" />
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Mobile Number
+                      </label>
+                      <Input
+                        placeholder="10-digit mobile"
+                        maxLength={10}
+                        value={b2bForm.mobile}
+                        onChange={(e) =>
+                          setB2bForm({
+                            ...b2bForm,
+                            mobile: e.target.value.replace(/\D/g, ""),
+                          })
+                        }
+                        className="h-11 rounded-xl bg-white/5 border-white/10"
+                      />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Referral Code</label>
-                      <Input placeholder="e.g. B2BPARTNER1" maxLength={15} value={b2bForm.code} onChange={(e) => setB2bForm({ ...b2bForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15) })} className="h-11 rounded-xl bg-white/5 border-white/10 uppercase" />
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Referral Code
+                      </label>
+                      <Input
+                        placeholder="e.g. B2BPARTNER1"
+                        maxLength={15}
+                        value={b2bForm.code}
+                        onChange={(e) =>
+                          setB2bForm({
+                            ...b2bForm,
+                            code: e.target.value
+                              .toUpperCase()
+                              .replace(/[^A-Z0-9]/g, "")
+                              .slice(0, 15),
+                          })
+                        }
+                        className="h-11 rounded-xl bg-white/5 border-white/10 uppercase"
+                      />
                     </div>
-                    <Button onClick={() => handleCreateAdminReferral('b2b')} disabled={b2bCreating} className="w-full bg-gradient-gold text-black hover:opacity-90 font-bold h-12 rounded-2xl shadow-gold">
-                      {b2bCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate B2B Code"}
+                    <Button
+                      onClick={() => handleCreateAdminReferral("b2b")}
+                      disabled={b2bCreating}
+                      className="w-full bg-gradient-gold text-black hover:opacity-90 font-bold h-12 rounded-2xl shadow-gold"
+                    >
+                      {b2bCreating ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        "Generate B2B Code"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -1481,31 +1695,42 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <h4 className="text-lg font-bold">Owner Referral</h4>
-                      <p className="text-xs text-muted-foreground">Commission: 25% of advance | Admin: 5%</p>
+                      <p className="text-xs text-muted-foreground">
+                        Commission: 25% of advance | Admin: 5%
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Property ID</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Property ID
+                      </label>
                       <Input
                         placeholder="e.g. 74SQF"
                         value={ownerRefForm.propertyId}
                         onChange={async (e) => {
-                          const val = e.target.value.toUpperCase().replace(/\s/g, '');
+                          const val = e.target.value
+                            .toUpperCase()
+                            .replace(/\s/g, "");
                           setOwnerRefForm({ ...ownerRefForm, propertyId: val });
                           if (val.length >= 4) {
                             try {
                               const token = localStorage.getItem("adminToken");
-                              const res = await fetch(`/api/referrals/admin/owner-lookup/${val}`, {
-                                headers: { Authorization: `Bearer ${token}` }
-                              });
+                              const res = await fetch(
+                                `/api/referrals/admin/owner-lookup/${val}`,
+                                {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                },
+                              );
                               const data = await res.json();
                               if (data.success && data.data) {
-                                setOwnerRefForm(prev => ({
+                                setOwnerRefForm((prev) => ({
                                   ...prev,
                                   propertyId: val,
-                                  username: data.data.owner_name || prev.username,
-                                  mobile: data.data.owner_otp_number || prev.mobile,
+                                  username:
+                                    data.data.owner_name || prev.username,
+                                  mobile:
+                                    data.data.owner_otp_number || prev.mobile,
                                 }));
                               }
                             } catch (e) {}
@@ -1515,19 +1740,68 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Owner Name</label>
-                      <Input placeholder="Property owner name" value={ownerRefForm.username} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, username: e.target.value })} className="h-11 rounded-xl bg-white/5 border-white/10" />
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Owner Name
+                      </label>
+                      <Input
+                        placeholder="Property owner name"
+                        value={ownerRefForm.username}
+                        onChange={(e) =>
+                          setOwnerRefForm({
+                            ...ownerRefForm,
+                            username: e.target.value,
+                          })
+                        }
+                        className="h-11 rounded-xl bg-white/5 border-white/10"
+                      />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Mobile Number (OTP)</label>
-                      <Input placeholder="Auto-fetched from owner registration" maxLength={10} value={ownerRefForm.mobile} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, mobile: e.target.value.replace(/\D/g, '') })} className="h-11 rounded-xl bg-white/5 border-white/10" />
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Mobile Number (OTP)
+                      </label>
+                      <Input
+                        placeholder="Auto-fetched from owner registration"
+                        maxLength={10}
+                        value={ownerRefForm.mobile}
+                        onChange={(e) =>
+                          setOwnerRefForm({
+                            ...ownerRefForm,
+                            mobile: e.target.value.replace(/\D/g, ""),
+                          })
+                        }
+                        className="h-11 rounded-xl bg-white/5 border-white/10"
+                      />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Referral Code</label>
-                      <Input placeholder="e.g. OWNPROPERTY1" maxLength={15} value={ownerRefForm.code} onChange={(e) => setOwnerRefForm({ ...ownerRefForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15) })} className="h-11 rounded-xl bg-white/5 border-white/10 uppercase" />
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Referral Code
+                      </label>
+                      <Input
+                        placeholder="e.g. OWNPROPERTY1"
+                        maxLength={15}
+                        value={ownerRefForm.code}
+                        onChange={(e) =>
+                          setOwnerRefForm({
+                            ...ownerRefForm,
+                            code: e.target.value
+                              .toUpperCase()
+                              .replace(/[^A-Z0-9]/g, "")
+                              .slice(0, 15),
+                          })
+                        }
+                        className="h-11 rounded-xl bg-white/5 border-white/10 uppercase"
+                      />
                     </div>
-                    <Button onClick={() => handleCreateAdminReferral('owner')} disabled={ownerRefCreating} className="w-full bg-primary text-white hover:opacity-90 font-bold h-12 rounded-2xl shadow-lg">
-                      {ownerRefCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate Owner Code"}
+                    <Button
+                      onClick={() => handleCreateAdminReferral("owner")}
+                      disabled={ownerRefCreating}
+                      className="w-full bg-primary text-white hover:opacity-90 font-bold h-12 rounded-2xl shadow-lg"
+                    >
+                      {ownerRefCreating ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        "Generate Owner Code"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -1541,19 +1815,28 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <h4 className="text-lg font-bold">Owners B2B Referral</h4>
-                      <p className="text-xs text-muted-foreground">Commission: 22% of advance | Admin: 8%</p>
+                      <p className="text-xs text-muted-foreground">
+                        Commission: 22% of advance | Admin: 8%
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Step 1: Enter Owner Referral Code</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Step 1: Enter Owner Referral Code
+                      </label>
                       <div className="flex gap-2">
                         <Input
                           placeholder="e.g. OWN-PROPERTY1"
                           value={ownerB2bForm.ownerCode}
                           onChange={(e) => {
-                            setOwnerB2bForm({ ...ownerB2bForm, ownerCode: e.target.value.toUpperCase().replace(/\s/g, '') });
+                            setOwnerB2bForm({
+                              ...ownerB2bForm,
+                              ownerCode: e.target.value
+                                .toUpperCase()
+                                .replace(/\s/g, ""),
+                            });
                             setOwnerCodeVerified(false);
                             setVerifiedOwnerName("");
                           }}
@@ -1561,11 +1844,17 @@ const AdminDashboard = () => {
                         />
                         <Button
                           onClick={handleVerifyOwnerCode}
-                          disabled={ownerCodeVerifying || !ownerB2bForm.ownerCode}
+                          disabled={
+                            ownerCodeVerifying || !ownerB2bForm.ownerCode
+                          }
                           className="h-11 px-4 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 font-bold"
                           variant="outline"
                         >
-                          {ownerCodeVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                          {ownerCodeVerifying ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            "Verify"
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -1573,7 +1862,9 @@ const AdminDashboard = () => {
                     {ownerCodeVerified && (
                       <>
                         <div>
-                          <label className="text-xs text-muted-foreground mb-1 block">Property Owner Name</label>
+                          <label className="text-xs text-muted-foreground mb-1 block">
+                            Property Owner Name
+                          </label>
                           <Input
                             readOnly
                             value={verifiedOwnerName}
@@ -1582,34 +1873,60 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="pt-2 border-t border-white/10">
-                          <p className="text-xs text-muted-foreground mb-3">Step 2: Enter B2B Partner Details</p>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Step 2: Enter B2B Partner Details
+                          </p>
                           <div className="space-y-3">
                             <div>
-                              <label className="text-xs text-muted-foreground mb-1 block">B2B Partner Name</label>
+                              <label className="text-xs text-muted-foreground mb-1 block">
+                                B2B Partner Name
+                              </label>
                               <Input
                                 placeholder="Business partner name"
                                 value={ownerB2bForm.username}
-                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, username: e.target.value })}
+                                onChange={(e) =>
+                                  setOwnerB2bForm({
+                                    ...ownerB2bForm,
+                                    username: e.target.value,
+                                  })
+                                }
                                 className="h-11 rounded-xl bg-white/5 border-white/10"
                               />
                             </div>
                             <div>
-                              <label className="text-xs text-muted-foreground mb-1 block">Mobile Number</label>
+                              <label className="text-xs text-muted-foreground mb-1 block">
+                                Mobile Number
+                              </label>
                               <Input
                                 placeholder="10-digit mobile"
                                 maxLength={10}
                                 value={ownerB2bForm.mobile}
-                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, mobile: e.target.value.replace(/\D/g, '') })}
+                                onChange={(e) =>
+                                  setOwnerB2bForm({
+                                    ...ownerB2bForm,
+                                    mobile: e.target.value.replace(/\D/g, ""),
+                                  })
+                                }
                                 className="h-11 rounded-xl bg-white/5 border-white/10"
                               />
                             </div>
                             <div>
-                              <label className="text-xs text-muted-foreground mb-1 block">Referral Code</label>
+                              <label className="text-xs text-muted-foreground mb-1 block">
+                                Referral Code
+                              </label>
                               <Input
                                 placeholder="e.g. OWNB2B-PARTNER1"
                                 value={ownerB2bForm.code}
                                 maxLength={15}
-                                onChange={(e) => setOwnerB2bForm({ ...ownerB2bForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15) })}
+                                onChange={(e) =>
+                                  setOwnerB2bForm({
+                                    ...ownerB2bForm,
+                                    code: e.target.value
+                                      .toUpperCase()
+                                      .replace(/[^A-Z0-9]/g, "")
+                                      .slice(0, 15),
+                                  })
+                                }
                                 className="h-11 rounded-xl bg-white/5 border-white/10 uppercase"
                               />
                             </div>
@@ -1618,7 +1935,11 @@ const AdminDashboard = () => {
                               disabled={ownerB2bCreating}
                               className="w-full bg-gradient-gold text-black hover:opacity-90 font-bold h-12 rounded-2xl shadow-gold"
                             >
-                              {ownerB2bCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : "Generate Owners_B2B Code"}
+                              {ownerB2bCreating ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : (
+                                "Generate Owners_B2B Code"
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -1663,74 +1984,156 @@ const AdminDashboard = () => {
                 <div className="flex justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-gold" />
                 </div>
-              ) : (() => {
-                const filtered = bookingsData.filter(b => {
-                  if (transactionSubTab === "bookings") return b.booking_status === "TICKET_GENERATED" && b.payment_status === "SUCCESS";
-                  if (transactionSubTab === "refunds") return b.booking_status === "CANCELLED_BY_OWNER";
-                  if (transactionSubTab === "withdrawals") return false;
-                  return b.payment_status === "SUCCESS";
-                });
-                if (filtered.length === 0) {
-                  return (
-                    <div className="flex flex-col items-center justify-center py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/10 text-white/30">
-                      <CreditCard className="w-12 h-12 mb-3 opacity-20" />
-                      <p className="font-display text-base font-bold">No {transactionSubTab === "all" ? "" : transactionSubTab} records yet</p>
-                    </div>
-                  );
-                }
-                return filtered.map((booking) => {
-                  const isCancelled = booking.booking_status === "CANCELLED_BY_OWNER" || booking.booking_status === "CANCELLED_NO_REFUND";
-                  const isConfirmed = booking.booking_status === "TICKET_GENERATED" || booking.booking_status === "OWNER_CONFIRMED";
-                  const checkin = booking.checkin_datetime ? new Date(booking.checkin_datetime).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
-                  return (
-                    <div key={booking.booking_id} className="glass-dark rounded-2xl border border-white/5 p-4 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 flex-shrink-0",
-                          isCancelled ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500",
-                        )}>
-                          {isCancelled ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-sm font-bold text-white truncate">{booking.property_name}</h4>
-                          <p className="text-[10px] text-muted-foreground truncate">{booking.guest_name} • {checkin}</p>
-                          <p className="text-[9px] text-white/30 font-mono">{booking.booking_id}</p>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className={cn("font-bold text-sm", isCancelled ? "text-red-500" : "text-emerald-500")}>
-                          {isCancelled ? "-" : "+"}₹{parseFloat(booking.advance_amount || 0).toLocaleString("en-IN")}
+              ) : (
+                (() => {
+                  const filtered = bookingsData.filter((b) => {
+                    if (transactionSubTab === "bookings")
+                      return (
+                        b.booking_status === "TICKET_GENERATED" &&
+                        b.payment_status === "SUCCESS"
+                      );
+                    if (transactionSubTab === "refunds")
+                      return b.booking_status === "CANCELLED_BY_OWNER";
+                    if (transactionSubTab === "withdrawals") return false;
+                    return b.payment_status === "SUCCESS";
+                  });
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/10 text-white/30">
+                        <CreditCard className="w-12 h-12 mb-3 opacity-20" />
+                        <p className="font-display text-base font-bold">
+                          No{" "}
+                          {transactionSubTab === "all" ? "" : transactionSubTab}{" "}
+                          records yet
                         </p>
-                        <Badge variant="outline" className={cn(
-                          "text-[8px] h-4 mt-0.5",
-                          isConfirmed ? "border-emerald-500/20 text-emerald-400" :
-                          isCancelled ? "border-red-500/20 text-red-400" :
-                          "border-white/10 text-white/40"
-                        )}>
-                          {isConfirmed ? "CONFIRMED" : isCancelled ? "CANCELLED" : booking.booking_status?.replace(/_/g, " ")}
-                        </Badge>
                       </div>
-                    </div>
-                  );
-                });
-              })()}
+                    );
+                  }
+                  return filtered.map((booking) => {
+                    const isCancelled =
+                      booking.booking_status === "CANCELLED_BY_OWNER" ||
+                      booking.booking_status === "CANCELLED_NO_REFUND";
+                    const isConfirmed =
+                      booking.booking_status === "TICKET_GENERATED" ||
+                      booking.booking_status === "OWNER_CONFIRMED";
+                    const checkin = booking.checkin_datetime
+                      ? new Date(booking.checkin_datetime).toLocaleDateString(
+                          "en-IN",
+                          { day: "2-digit", month: "short", year: "numeric" },
+                        )
+                      : "-";
+                    return (
+                      <div
+                        key={booking.booking_id}
+                        className="glass-dark rounded-2xl border border-white/5 p-4 flex items-center justify-between gap-3"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 flex-shrink-0",
+                              isCancelled
+                                ? "bg-red-500/10 text-red-500"
+                                : "bg-emerald-500/10 text-emerald-500",
+                            )}
+                          >
+                            {isCancelled ? (
+                              <ArrowUpRight className="w-5 h-5" />
+                            ) : (
+                              <ArrowDownLeft className="w-5 h-5" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-bold text-white truncate">
+                              {booking.property_name}
+                            </h4>
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              {booking.guest_name} • {checkin}
+                            </p>
+                            <p className="text-[9px] text-white/30 font-mono">
+                              {booking.booking_id}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p
+                            className={cn(
+                              "font-bold text-sm",
+                              isCancelled ? "text-red-500" : "text-emerald-500",
+                            )}
+                          >
+                            {isCancelled ? "-" : "+"}₹
+                            {parseFloat(
+                              booking.advance_amount || 0,
+                            ).toLocaleString("en-IN")}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[8px] h-4 mt-0.5",
+                              isConfirmed
+                                ? "border-emerald-500/20 text-emerald-400"
+                                : isCancelled
+                                  ? "border-red-500/20 text-red-400"
+                                  : "border-white/10 text-white/40",
+                            )}
+                          >
+                            {isConfirmed
+                              ? "CONFIRMED"
+                              : isCancelled
+                                ? "CANCELLED"
+                                : booking.booking_status?.replace(/_/g, " ")}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()
+              )}
             </div>
           </div>
         )}
 
-        <Dialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, referralId: null, username: "" })}>
+        <Dialog
+          open={deleteConfirm.open}
+          onOpenChange={(open) =>
+            !open &&
+            setDeleteConfirm({ open: false, referralId: null, username: "" })
+          }
+        >
           <DialogContent className="sm:max-w-[400px] bg-charcoal border-white/10 rounded-3xl">
             <DialogHeader>
-              <DialogTitle className="text-red-500 font-display">Delete Referral</DialogTitle>
+              <DialogTitle className="text-red-500 font-display">
+                Delete Referral
+              </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Are you sure you want to permanently delete the referral for <span className="font-bold text-white">{deleteConfirm.username}</span>? This action cannot be undone.
+                Are you sure you want to permanently delete the referral for{" "}
+                <span className="font-bold text-white">
+                  {deleteConfirm.username}
+                </span>
+                ? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex gap-3 mt-4">
-              <Button variant="outline" className="flex-1 rounded-xl border-white/10" onClick={() => setDeleteConfirm({ open: false, referralId: null, username: "" })}>
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl border-white/10"
+                onClick={() =>
+                  setDeleteConfirm({
+                    open: false,
+                    referralId: null,
+                    username: "",
+                  })
+                }
+              >
                 Cancel
               </Button>
-              <Button className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white" onClick={() => deleteConfirm.referralId && handleDeleteReferral(deleteConfirm.referralId)}>
+              <Button
+                className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+                onClick={() =>
+                  deleteConfirm.referralId &&
+                  handleDeleteReferral(deleteConfirm.referralId)
+                }
+              >
                 <Trash2 className="w-4 h-4 mr-1" />
                 Delete
               </Button>
@@ -1738,6 +2141,37 @@ const AdminDashboard = () => {
           </DialogContent>
         </Dialog>
 
+        <Dialog open={logoutConfirm} onOpenChange={setLogoutConfirm}>
+          <DialogContent className="sm:max-w-[400px] bg-charcoal border-white/10 rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-gold font-display">
+                Confirm Logout
+              </DialogTitle>
+
+              <DialogDescription className="text-sm text-muted-foreground">
+                Are you sure you want to logout from the admin dashboard?
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex gap-3 mt-4">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl border-white/10"
+                onClick={() => setLogoutConfirm(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                className="flex-1 rounded-xl bg-gold text-black hover:opacity-90"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-1" />
+                Logout
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         <div className="mt-8 text-center pb-8">
           <Button
             variant="ghost"
@@ -1759,7 +2193,7 @@ const AdminDashboard = () => {
             { id: "owners", icon: Users2, label: "Owners" },
             { id: "referrals", icon: Share2, label: "Referrals" },
             { id: "transactions", icon: CreditCard, label: "Transactions" },
-            { id: "b2b", icon: Building2, label: "B2B" },
+            { id: "b2b", icon: Handshake, label: "B2B" },
           ].map((tab) => (
             <button
               key={tab.id}

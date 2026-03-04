@@ -533,6 +533,7 @@ const OwnerUnits = () => {
                         </Label>
                         <Input
                           type="date"
+                          min={new Date().toISOString().split("T")[0]}
                           value={sd.date}
                           onChange={(e) => {
                             const newDates = [...unitForm.special_dates];

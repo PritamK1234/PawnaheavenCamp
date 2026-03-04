@@ -1378,6 +1378,110 @@ const getOwnerUnits = async (req, res) => {
   }
 };
 
+const handleAdminCancel = async (req, res) => {
+  try {
+    const { booking_id } = req.body;
+    if (!booking_id) {
+      return res.status(400).json({ error: 'booking_id is required' });
+    }
+
+    const bookingRes = await query(
+      `SELECT * FROM bookings WHERE booking_id = $1`,
+      [booking_id]
+    );
+    if (bookingRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    const booking = bookingRes.rows[0];
+
+    if (booking.booking_status === 'CANCELLED') {
+      return res.status(400).json({ error: 'Booking is already cancelled' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `UPDATE bookings
+         SET booking_status = 'CANCELLED', commission_status = 'CANCELLED', updated_at = NOW()
+         WHERE booking_id = $1`,
+        [booking_id]
+      );
+
+      await client.query(
+        `UPDATE referral_transactions
+         SET status = 'canceled', updated_at = NOW()
+         WHERE booking_id = $1 AND type = 'earning' AND status = 'in_process'`,
+        [booking.id]
+      );
+
+      const ownerRefRes = await client.query(
+        `SELECT id FROM referral_users WHERE referral_otp_number = $1 AND referral_type = 'owner'`,
+        [booking.owner_phone]
+      );
+      if (ownerRefRes.rows.length > 0) {
+        const ownerReferralId = ownerRefRes.rows[0].id;
+        const totalAmount = resolveCommissionTotal(booking);
+        const ownerEarning = totalAmount > 0 ? Math.round(totalAmount * 0.25 * 100) / 100 : 0;
+        if (ownerEarning > 0) {
+          await client.query(
+            `INSERT INTO referral_transactions
+               (referral_user_id, booking_id, amount, type, status, source)
+             VALUES ($1, $2, $3, 'earning', 'available', 'admin_cancel_compensation')`,
+            [ownerReferralId, booking.id, ownerEarning]
+          );
+          await client.query(
+            `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
+            [ownerEarning, ownerReferralId]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+
+      const whatsapp = new WhatsAppService();
+      const checkinStr = booking.checkin_datetime
+        ? new Date(booking.checkin_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+        : 'N/A';
+      const checkoutStr = booking.checkout_datetime
+        ? new Date(booking.checkout_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+        : 'N/A';
+      const propertyName = booking.property_name || 'the property';
+
+      if (booking.guest_phone) {
+        await whatsapp.sendTextMessage(
+          booking.guest_phone,
+          `Your booking for *${propertyName}* from *${checkinStr} to ${checkoutStr}* has been cancelled because the property owner reported that the guest did not attend. If this is incorrect please contact support.`
+        );
+      }
+      if (booking.owner_phone) {
+        await whatsapp.sendTextMessage(
+          booking.owner_phone,
+          `Booking *${booking_id}* has been cancelled by admin after your report that the guest did not attend. Your eligible cancellation earning has been recorded.`
+        );
+      }
+      const adminPhone = process.env.ADMIN_PHONE;
+      if (adminPhone) {
+        await whatsapp.sendTextMessage(
+          adminPhone,
+          `Booking *${booking_id}* cancelled successfully. Referral commission cancelled.`
+        );
+      }
+
+      return res.json({ success: true, message: 'Booking cancelled successfully' });
+    } catch (innerErr) {
+      await client.query('ROLLBACK');
+      throw innerErr;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('[AdminCancel] Error:', error.message);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+};
+
 const handleNoShow = async (req, res) => {
   try {
     const { booking_id, mobile } = req.body;
@@ -1475,4 +1579,5 @@ module.exports = {
   getOwnerLedger,
   getOwnerUnits,
   handleNoShow,
+  handleAdminCancel,
 };

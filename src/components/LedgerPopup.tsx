@@ -23,6 +23,7 @@ import {
   FileText,
   Pencil,
   Trash2,
+  XCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -55,6 +56,7 @@ interface LedgerPopupProps {
   availablePersons: number;
   totalPersons: number;
   isVilla?: boolean;
+  isAdmin?: boolean;
 }
 
 export const LedgerPopup = ({
@@ -68,6 +70,7 @@ export const LedgerPopup = ({
   availablePersons,
   totalPersons,
   isVilla = false,
+  isAdmin = false,
 }: LedgerPopupProps) => {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,6 +78,8 @@ export const LedgerPopup = ({
   const [editingEntry, setEditingEntry] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [cancelConfirmEntry, setCancelConfirmEntry] = useState<any>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const currentOccupancy = entries.reduce(
     (sum, entry) => sum + (entry.persons || 0),
@@ -333,6 +338,32 @@ export const LedgerPopup = ({
       console.error("Error fetching entries:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAdminCancel = async (bookingId: string) => {
+    setCancelLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      await fetch('/api/bookings/admin-cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ booking_id: bookingId }),
+      }).then(async (r) => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Failed to cancel booking');
+        return data;
+      });
+      toast.success('Booking cancelled successfully');
+      setCancelConfirmEntry(null);
+      fetchEntries();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to cancel booking');
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -792,6 +823,17 @@ export const LedgerPopup = ({
                             </button>
                           </div>
                         )}
+                        {isAdmin && entry.source === 'website' && entry.booking_status !== 'CANCELLED' && entry.booking_id && (
+                          <div className="border-l border-white/10 pl-3">
+                            <button
+                              onClick={() => setCancelConfirmEntry(entry)}
+                              className="text-red-400 hover:text-red-300 transition-colors"
+                              title="Cancel Booking"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -829,6 +871,51 @@ export const LedgerPopup = ({
           </div>
         </DrawerFooter>
       </DrawerContent>
+
+      {cancelConfirmEntry && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center px-4"
+          onClick={() => setCancelConfirmEntry(null)}
+        >
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div
+            className="relative bg-[#1A1A1A] border border-red-500/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                <XCircle className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-base font-bold text-white">Cancel Booking?</h3>
+            </div>
+            <p className="text-xs text-gray-400 mb-2 leading-relaxed">
+              Owner reported that the customer did not attend the booking. Cancel this booking?
+            </p>
+            <p className="text-[10px] text-gray-600 mb-6 leading-relaxed">
+              This will cancel the referral commission, credit 25% of total booking amount to the owner as compensation, and send WhatsApp notifications. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCancelConfirmEntry(null)}
+                className="flex-1 h-11 rounded-2xl bg-[#2A2A2A] border border-white/10 text-white text-xs font-bold uppercase tracking-widest active:scale-95 transition-all"
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={() => handleAdminCancel(cancelConfirmEntry.booking_id)}
+                disabled={cancelLoading}
+                className="flex-1 h-11 rounded-2xl bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold uppercase tracking-widest active:scale-95 transition-all disabled:opacity-50"
+              >
+                {cancelLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : (
+                  'Cancel Booking'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Drawer>
   );
 };

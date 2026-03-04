@@ -4,7 +4,6 @@ import {
   FileSpreadsheet,
   FileText,
   AlertCircle,
-  XCircle
 } from 'lucide-react';
 import { 
   Select, 
@@ -53,9 +52,6 @@ const Bookings = () => {
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [units, setUnits] = useState<UnitOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [noShowConfirm, setNoShowConfirm] = useState<string | null>(null);
-  const [noShowLoading, setNoShowLoading] = useState(false);
-
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
   const propertyId = ownerData?.property_id || ownerData?.propertyId || '';
@@ -128,25 +124,6 @@ const Bookings = () => {
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-  };
-
-  const isBeforeCheckout = (checkoutDatetime?: string) => {
-    if (!checkoutDatetime) return false;
-    return new Date(checkoutDatetime) > new Date();
-  };
-
-  const handleNoShow = async (bookingId: string) => {
-    setNoShowLoading(true);
-    try {
-      await axios.post('/api/bookings/no-show', { booking_id: bookingId, mobile: ownerMobile });
-      toast.success('Booking marked as no-show');
-      setNoShowConfirm(null);
-      fetchLedger();
-    } catch (e: any) {
-      toast.error(e.response?.data?.error || 'Failed to mark no-show');
-    } finally {
-      setNoShowLoading(false);
-    }
   };
 
   const totalAmount = entries.reduce((sum, e) => sum + (parseFloat(String(e.amount)) || 0), 0);
@@ -325,10 +302,6 @@ const Bookings = () => {
         ) : (
           <div className="space-y-3">
             {entries.map((entry, idx) => {
-              const canNoShow = entry.source === 'website'
-                && entry.booking_id
-                && entry.booking_status !== 'NO_SHOW'
-                && isBeforeCheckout(entry.checkout_datetime);
               const isNoShow = entry.source === 'website' && entry.booking_status === 'NO_SHOW';
 
               return (
@@ -368,17 +341,6 @@ const Bookings = () => {
                       </div>
                     </div>
 
-                    {canNoShow && (
-                      <div className="mt-2 flex justify-end">
-                        <button
-                          onClick={() => setNoShowConfirm(entry.booking_id!)}
-                          className="flex items-center gap-1 px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase tracking-widest active:scale-95 transition-all"
-                        >
-                          <XCircle className="w-3 h-3" />
-                          No-Show
-                        </button>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               );
@@ -414,40 +376,6 @@ const Bookings = () => {
         </button>
       </div>
 
-      {noShowConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" onClick={() => setNoShowConfirm(null)}>
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-          <div
-            className="relative bg-[#1A1A1A] border border-red-500/30 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center">
-                <XCircle className="w-5 h-5 text-red-400" />
-              </div>
-              <h3 className="text-base font-bold text-white">Mark as No-Show?</h3>
-            </div>
-            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
-              This will cancel the booking and stop commission processing. The referral commission will be moved to history as "cancelled booking". This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setNoShowConfirm(null)}
-                className="flex-1 h-11 rounded-2xl bg-[#2A2A2A] border border-white/10 text-white text-xs font-bold uppercase tracking-widest active:scale-95 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleNoShow(noShowConfirm)}
-                disabled={noShowLoading}
-                className="flex-1 h-11 rounded-2xl bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold uppercase tracking-widest active:scale-95 transition-all disabled:opacity-50"
-              >
-                {noShowLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Confirm No-Show'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

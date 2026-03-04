@@ -1,0 +1,71 @@
+Move the **No-Show / Cancel Booking feature from Owner Dashboard to Admin Dashboard**.
+
+Requirements:
+
+1. **Remove the No-Show button** from the Owner Dashboard ledger UI.
+
+2. In **Admin Dashboard → Ledger Entry Form**, add a **"Cancel Booking" button** for website bookings.
+
+3. Button should appear only if:
+
+* `source === "website"`
+* `booking_status !== "CANCELLED"`
+* booking has `booking_id`
+
+4. When Admin clicks **Cancel Booking**
+   Show confirmation popup:
+
+"Owner reported that the customer did not attend the booking. Cancel this booking?"
+
+5. On confirmation backend must:
+
+* Update `booking_status = "CANCELLED"`
+* Mark referral commission for that booking as **CANCELLED**
+* Move that referral earning to **Referral Dashboard → History tab**
+* Add note: **"Booking cancelled by admin (Customer did not attend)"**
+
+6. **Advance money distribution logic**
+
+Customer already paid **30% advance at booking time**.
+
+When booking is cancelled by admin:
+
+* **25% of the total booking amount** → Credit to **Property Owner (Referral Dashboard Earnings)**
+* **5% of the total booking amount** → Platform / Admin earning
+* Referral for that booking → **Not payable**
+
+Example:
+
+Total Booking = ₹10,000
+Advance Paid = ₹3,000 (30%)
+
+Distribution:
+
+* Owner earning = **₹2,500 (25%)**
+* Platform earning = **₹500 (5%)**
+* Referral earning = **Cancelled**
+
+7. After success:
+
+* Refresh ledger
+* Show toast: **"Booking cancelled successfully"**
+
+8. Send **WhatsApp notifications using webhook** to:
+
+Owner
+Customer
+Admin
+
+Customer message:
+"Your booking for **{property_name}** from **{check_in} to {check_out}** has been cancelled because the property owner reported that the guest did not attend. If this is incorrect please contact support."
+
+Owner message:
+"Booking **{booking_id}** has been cancelled by admin after your report that the guest did not attend. Your eligible cancellation earning has been recorded."
+
+Admin log message:
+"Booking **{booking_id}** cancelled successfully. Referral commission cancelled."
+
+Goal:
+
+Only **Admin can cancel bookings when owner reports that the guest did not attend**.
+Referral commission for that booking must **not be paid**, and advance payment should be **distributed as 25% owner earning and 5% platform earning**.

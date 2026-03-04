@@ -1,5 +1,25 @@
 # PawnaHavenCamp - Luxury Resort Booking Platform
 
+## Replit Environment Setup
+
+### Running the Application
+- **Frontend (Vite dev server)**: Port 5000 — workflow "Start application" (`npx vite --host 0.0.0.0 --port 5000`)
+- **Backend (Express API)**: Port 5001 — workflow "Start Backend" (`cd backend && npm install --legacy-peer-deps && node server.js`)
+- Frontend proxies `/api`, `/webhook`, and `/attached_assets` to the backend on port 5001
+
+### Database
+- PostgreSQL provided by Replit (DATABASE_URL secret is set automatically)
+- Run `node backend/init-db.js` from project root to initialize the schema if tables are missing
+- Schema located at `backend/schema.sql`
+
+### Environment Variables (set in Replit)
+- `PORT=5001` — backend port
+- `JWT_SECRET` — JWT signing secret
+- `VITE_API_BASE_URL=/api` — used for client-side API calls (proxied by Vite)
+- `OTP_TEST_MODE=true` — enables OTP bypass for testing
+- `PAYTM_CHANNEL_ID=WEB`
+- Cloudinary, WhatsApp and Paytm keys need to be added as secrets for full functionality
+
 ## Overview
 
 PawnaHavenCamp is a luxury resort and cottage booking platform focused on properties near Pawna Lake and Lonavala, India. The application serves as a showcase and booking portal for premium glamping domes, cottages, and villas, featuring property listings with detailed information, image galleries, and direct contact integration via WhatsApp and phone.

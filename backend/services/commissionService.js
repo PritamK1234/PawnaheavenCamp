@@ -1,4 +1,5 @@
 const { pool } = require('../db');
+const { WhatsAppService } = require('../utils/whatsappService');
 
 const REFERRAL_RATES = {
   owner:      { referrer: 0.25, admin: 0.05 },
@@ -34,9 +35,12 @@ async function distributeCheckoutCommissions() {
     const inProcessRows = await client.query(
       `SELECT rt.id AS rt_id, rt.referral_user_id, rt.amount,
               b.id AS booking_db_id, b.booking_id, b.checkout_datetime,
-              b.referral_code, b.referral_type, b.total_amount, b.advance_amount
+              b.checkin_datetime, b.property_name,
+              b.referral_code, b.referral_type, b.total_amount, b.advance_amount,
+              ru.referral_otp_number AS referral_phone
        FROM referral_transactions rt
        JOIN bookings b ON b.id = rt.booking_id
+       LEFT JOIN referral_users ru ON ru.id = rt.referral_user_id
        WHERE rt.type = 'earning'
          AND rt.status = 'in_process'
          AND b.checkout_datetime < NOW()
@@ -75,6 +79,26 @@ async function distributeCheckoutCommissions() {
         await client.query('COMMIT');
         distributed++;
         console.log(`[Commission] in_process → available for booking ${row.booking_id} — ₹${row.amount}`);
+
+        if (row.referral_phone) {
+          try {
+            const whatsapp = new WhatsAppService();
+            const checkinStr = row.checkin_datetime
+              ? new Date(row.checkin_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+              : 'N/A';
+            const checkoutStr = row.checkout_datetime
+              ? new Date(row.checkout_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+              : 'N/A';
+            const propertyName = row.property_name || 'the property';
+            await whatsapp.sendTextMessage(
+              row.referral_phone,
+              `Good news! 🎉\nThe customer for booking *${row.booking_id}* at *${propertyName}* from *${checkinStr} to ${checkoutStr}* has successfully completed their stay.\n\nYour referral commission of *₹${row.amount}* has now been *credited to your Available Balance* in the Referral Dashboard.\n\nYou can view it under *Available Earnings*.`
+            );
+            console.log(`[Commission] WhatsApp sent to referral partner ${row.referral_phone} for booking ${row.booking_id}`);
+          } catch (waErr) {
+            console.error(`[Commission] WhatsApp notification failed for booking ${row.booking_id}:`, waErr.message);
+          }
+        }
       } catch (innerErr) {
         await client.query('ROLLBACK');
         console.error(`[Commission] Error transitioning rt_id=${row.rt_id}:`, innerErr.message);
@@ -84,7 +108,8 @@ async function distributeCheckoutCommissions() {
 
     const legacyRows = await client.query(
       `SELECT b.id, b.booking_id, b.referral_code, b.referral_type,
-              b.total_amount, b.advance_amount, b.checkout_datetime
+              b.total_amount, b.advance_amount, b.checkout_datetime,
+              b.checkin_datetime, b.property_name
        FROM bookings b
        WHERE b.booking_status = 'TICKET_GENERATED'
          AND b.checkout_datetime < NOW()
@@ -112,9 +137,11 @@ async function distributeCheckoutCommissions() {
           continue;
         }
 
+        let legacyNotify = null;
+
         if (booking.referral_code) {
           const refRes = await client.query(
-            `SELECT id FROM referral_users WHERE referral_code = $1 AND status = 'active'`,
+            `SELECT id, referral_otp_number FROM referral_users WHERE referral_code = $1 AND status = 'active'`,
             [booking.referral_code]
           );
           if (refRes.rows.length === 0) {
@@ -128,6 +155,7 @@ async function distributeCheckoutCommissions() {
             continue;
           }
           const referrerId = refRes.rows[0].id;
+          const referralPhone = refRes.rows[0].referral_otp_number;
           const { referrerAmount, adminAmount } = calcCommission(totalAmount, booking.referral_type);
           await client.query(
             `INSERT INTO referral_transactions
@@ -148,6 +176,9 @@ async function distributeCheckoutCommissions() {
             [adminAmount, referrerAmount, booking.id]
           );
           console.log(`[Commission] Legacy booking ${booking.booking_id} — referrer ₹${referrerAmount}`);
+          if (referralPhone) {
+            legacyNotify = { phone: referralPhone, amount: referrerAmount };
+          }
         } else {
           const adminAmount = Math.round(totalAmount * 0.30 * 100) / 100;
           await client.query(
@@ -163,6 +194,26 @@ async function distributeCheckoutCommissions() {
 
         await client.query('COMMIT');
         legacy++;
+
+        if (legacyNotify) {
+          try {
+            const whatsapp = new WhatsAppService();
+            const checkinStr = booking.checkin_datetime
+              ? new Date(booking.checkin_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+              : 'N/A';
+            const checkoutStr = booking.checkout_datetime
+              ? new Date(booking.checkout_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+              : 'N/A';
+            const propertyName = booking.property_name || 'the property';
+            await whatsapp.sendTextMessage(
+              legacyNotify.phone,
+              `Good news! 🎉\nThe customer for booking *${booking.booking_id}* at *${propertyName}* from *${checkinStr} to ${checkoutStr}* has successfully completed their stay.\n\nYour referral commission of *₹${legacyNotify.amount}* has now been *credited to your Available Balance* in the Referral Dashboard.\n\nYou can view it under *Available Earnings*.`
+            );
+            console.log(`[Commission] WhatsApp sent to referral partner ${legacyNotify.phone} for booking ${booking.booking_id}`);
+          } catch (waErr) {
+            console.error(`[Commission] WhatsApp notification failed for booking ${booking.booking_id}:`, waErr.message);
+          }
+        }
       } catch (innerErr) {
         await client.query('ROLLBACK');
         console.error(`[Commission] Legacy error for booking ${booking.booking_id}:`, innerErr.message);

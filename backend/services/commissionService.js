@@ -18,11 +18,8 @@ function calcCommission(totalAmount, referralType) {
 }
 
 function resolveTotalAmount(booking) {
-  const total   = parseFloat(booking.total_amount);
-  const advance = parseFloat(booking.advance_amount);
-  if (total && total > 0) return total;
-  if (advance && advance > 0) return Math.round((advance / 0.30) * 100) / 100;
-  return 0;
+  const total = parseFloat(booking.total_amount);
+  return (total && total > 0) ? total : 0;
 }
 
 async function distributeCheckoutCommissions() {

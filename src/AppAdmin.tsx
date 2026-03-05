@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,11 +8,10 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
 } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import ScrollRestoration from "./components/ScrollRestoration";
-import LogoLoader from "./components/LogoLoader";
+import PageSkeleton from "./components/PageSkeleton";
 import { adminPaths } from "./lib/adminPaths";
 
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
@@ -22,25 +21,22 @@ const AdminRevenuePage = lazy(() => import("./pages/AdminRevenuePage"));
 const AdminContactsPage = lazy(() => import("./pages/AdminContactsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      gcTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-const PageWrapper = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  const [showChildren, setShowChildren] = useState(false);
-
-  useEffect(() => {
-    setShowChildren(false);
-    const timer = setTimeout(() => setShowChildren(true), 10);
-    return () => clearTimeout(timer);
-  }, [location.pathname, location.search]);
-
-  return (
-    <>
-      {!showChildren && <LogoLoader />}
-      <Suspense fallback={<LogoLoader />}>{showChildren && children}</Suspense>
-    </>
-  );
-};
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageSkeleton />}>
+    {children}
+  </Suspense>
+);
 
 const AppAdmin = () => {
   return (

@@ -1,12 +1,12 @@
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import ScrollRestoration from "./components/ScrollRestoration";
-import LogoLoader from "./components/LogoLoader";
+import PageSkeleton from "./components/PageSkeleton";
 
 const OwnerEntry = lazy(() => import("./pages/owner/Entry"));
 const OwnerRegister = lazy(() => import("./pages/owner/register/Register"));
@@ -24,27 +24,22 @@ const VillaOwnerMain = lazy(() => import("./pages/owner/dashboard/Villas-owners-
 const VillaOwnerProfile = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Profile"));
 const VillaOwnerUnits = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Units"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      gcTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-const PageWrapper = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  const [showChildren, setShowChildren] = useState(false);
-
-  useEffect(() => {
-    setShowChildren(false);
-    const timer = setTimeout(() => setShowChildren(true), 10);
-    return () => clearTimeout(timer);
-  }, [location.pathname, location.search]);
-
-  return (
-    <>
-      {!showChildren && <LogoLoader />}
-      <Suspense fallback={<LogoLoader />}>
-        {showChildren && children}
-      </Suspense>
-    </>
-  );
-};
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageSkeleton />}>
+    {children}
+  </Suspense>
+);
 
 const AppOwner = () => {
   return (

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,11 +6,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import ScrollRestoration from "./components/ScrollRestoration";
-import LogoLoader from "./components/LogoLoader";
+import PageSkeleton from "./components/PageSkeleton";
 import { adminPaths } from "./lib/adminPaths";
 import axios from "axios";
 
-// Lazy load pages for transition effect
+// Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
 const PropertyDetails = lazy(() => import("./pages/PropertyDetails"));
 const VideoGallery = lazy(() => import("./pages/VideoGallery"));
@@ -46,12 +46,19 @@ const VillaOwnerInfo = lazy(() => import("./pages/owner/dashboard/Villas-owners-
 const VillaOwnerUnits = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Units"));
 const OwnerB2B = lazy(() => import("./pages/owner/dashboard/OwnerB2B"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      gcTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-// Page wrapper to handle loading state on route changes
 const PageWrapper = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const [showChildren, setShowChildren] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -68,25 +75,29 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
         }
       }).catch(() => {});
     }
-
-    setShowChildren(false);
-    const timer = setTimeout(() => setShowChildren(true), 10);
-    return () => clearTimeout(timer);
   }, [location.pathname, location.search]);
 
   return (
-    <>
-      {!showChildren && <LogoLoader />}
-      <Suspense fallback={<LogoLoader />}>
-        {showChildren && children}
-      </Suspense>
-    </>
+    <Suspense fallback={<PageSkeleton />}>
+      {children}
+    </Suspense>
   );
 };
 
 const App = () => {
   const ownerDataString = localStorage.getItem('ownerData');
   const ownerData = ownerDataString ? JSON.parse(ownerDataString) : null;
+
+  useEffect(() => {
+    const prefetch = () => {
+      import('./pages/PropertyDetails');
+    };
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(prefetch);
+    } else {
+      setTimeout(prefetch, 1500);
+    }
+  }, []);
 
   return (
     <HelmetProvider>

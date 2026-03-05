@@ -295,6 +295,12 @@ CREATE TABLE IF NOT EXISTS webhook_events (
 CREATE INDEX IF NOT EXISTS idx_webhook_events_booking_id ON webhook_events(booking_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_ticket_token ON bookings(ticket_token);
 
+-- Unique partial index: prevents more than one active earning per booking
+-- Status 'canceled' and 'no_show_canceled' are excluded so compensation rows can be inserted after cancellation
+CREATE UNIQUE INDEX IF NOT EXISTS uix_rt_booking_active_earning
+  ON referral_transactions (booking_id)
+  WHERE type = 'earning' AND status NOT IN ('canceled', 'no_show_canceled');
+
 -- Insert initial admin user
 INSERT INTO admins (email, password_hash)
 VALUES ('admin@looncamp.shop', '$2b$10$8k31lpb.NzzVqV0Pq5iJKuauiTJY2Bdnb4APYKM2MvLPsRYtV9WEu')

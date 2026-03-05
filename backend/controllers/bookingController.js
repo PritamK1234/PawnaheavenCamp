@@ -28,14 +28,6 @@ async function createInProcessCommission(booking) {
       return;
     }
     const referrerId = refRes.rows[0].id;
-    const existing = await client.query(
-      `SELECT id FROM referral_transactions WHERE booking_id = $1 AND type = 'earning'`,
-      [booking.id]
-    );
-    if (existing.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return;
-    }
     const totalAmount = resolveCommissionTotal(booking);
     if (totalAmount <= 0) {
       await client.query('ROLLBACK');
@@ -43,12 +35,19 @@ async function createInProcessCommission(booking) {
     }
     const rate = REFERRAL_RATES[(booking.referral_type || '').toLowerCase()] || REFERRAL_RATES.public;
     const commissionAmount = Math.round(totalAmount * rate * 100) / 100;
-    await client.query(
+    const insertResult = await client.query(
       `INSERT INTO referral_transactions
          (referral_user_id, booking_id, amount, type, status, source)
-       VALUES ($1, $2, $3, 'earning', 'in_process', 'booking_confirm')`,
+       VALUES ($1, $2, $3, 'earning', 'in_process', 'booking_confirm')
+       ON CONFLICT DO NOTHING
+       RETURNING id`,
       [referrerId, booking.id, commissionAmount]
     );
+    if (insertResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      console.log(`[Commission] Duplicate skipped for booking ${booking.booking_id} — already exists`);
+      return;
+    }
     await client.query(
       `UPDATE bookings SET commission_status = 'IN_PROCESS', referrer_commission = $1, updated_at = NOW()
        WHERE id = $2`,
@@ -1422,16 +1421,22 @@ const handleAdminCancel = async (req, res) => {
         const totalAmount = resolveCommissionTotal(booking);
         const ownerEarning = totalAmount > 0 ? Math.round(totalAmount * 0.25 * 100) / 100 : 0;
         if (ownerEarning > 0) {
-          await client.query(
+          const cancelCompInsert = await client.query(
             `INSERT INTO referral_transactions
                (referral_user_id, booking_id, amount, type, status, source)
-             VALUES ($1, $2, $3, 'earning', 'available', 'admin_cancel_compensation')`,
+             VALUES ($1, $2, $3, 'earning', 'available', 'admin_cancel_compensation')
+             ON CONFLICT DO NOTHING
+             RETURNING id`,
             [ownerReferralId, booking.id, ownerEarning]
           );
-          await client.query(
-            `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
-            [ownerEarning, ownerReferralId]
-          );
+          if (cancelCompInsert.rows.length > 0) {
+            await client.query(
+              `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
+              [ownerEarning, ownerReferralId]
+            );
+          } else {
+            console.log(`[Commission] Admin-cancel compensation skipped for booking ${booking.booking_id} — already exists`);
+          }
         }
       }
 
@@ -1533,16 +1538,22 @@ const handleNoShow = async (req, res) => {
         const totalAmount = resolveCommissionTotal(booking);
         const ownerCompensation = totalAmount > 0 ? Math.round(totalAmount * 0.15 * 100) / 100 : 0;
         if (ownerCompensation > 0) {
-          await client.query(
+          const noShowCompInsert = await client.query(
             `INSERT INTO referral_transactions
                (referral_user_id, booking_id, amount, type, status, source)
-             VALUES ($1, $2, $3, 'earning', 'available', 'no_show_compensation')`,
+             VALUES ($1, $2, $3, 'earning', 'available', 'no_show_compensation')
+             ON CONFLICT DO NOTHING
+             RETURNING id`,
             [ownerReferralId, booking.id, ownerCompensation]
           );
-          await client.query(
-            `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
-            [ownerCompensation, ownerReferralId]
-          );
+          if (noShowCompInsert.rows.length > 0) {
+            await client.query(
+              `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
+              [ownerCompensation, ownerReferralId]
+            );
+          } else {
+            console.log(`[Commission] No-show compensation skipped for booking ${booking.booking_id} — already exists`);
+          }
         }
       }
 

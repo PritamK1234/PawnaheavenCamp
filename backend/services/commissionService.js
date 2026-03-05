@@ -154,12 +154,20 @@ async function distributeCheckoutCommissions() {
           const referrerId = refRes.rows[0].id;
           const referralPhone = refRes.rows[0].referral_otp_number;
           const { referrerAmount, adminAmount } = calcCommission(totalAmount, booking.referral_type);
-          await client.query(
+          const legacyInsert = await client.query(
             `INSERT INTO referral_transactions
                (referral_user_id, booking_id, amount, type, status, source)
-             VALUES ($1, $2, $3, 'earning', 'available', 'legacy_checkout')`,
+             VALUES ($1, $2, $3, 'earning', 'available', 'legacy_checkout')
+             ON CONFLICT DO NOTHING
+             RETURNING id`,
             [referrerId, booking.id, referrerAmount]
           );
+          if (legacyInsert.rows.length === 0) {
+            await client.query('ROLLBACK');
+            console.log(`[Commission] Legacy duplicate skipped for booking ${booking.booking_id}`);
+            skipped++;
+            continue;
+          }
           await client.query(
             `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
             [referrerAmount, referrerId]

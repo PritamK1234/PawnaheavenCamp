@@ -399,7 +399,7 @@ const paytmCallback = async (req, res) => {
 
     const paymentMode = paytmResponse.PAYMENTMODE || "";
     const hasReferral = !!booking.referral_code;
-    const advanceAmt = parseFloat(booking.advance_amount);
+    const commBase = parseFloat(booking.total_amount) || 0;
     let adminComm = 0;
     let referrerComm = 0;
     let commStatus = null;
@@ -408,17 +408,17 @@ const paytmCallback = async (req, res) => {
       if (hasReferral) {
         const rType = (booking.referral_type || '').toLowerCase();
         if (rType === 'owner') {
-          adminComm = Math.round(advanceAmt * 0.05 * 100) / 100;
-          referrerComm = Math.round(advanceAmt * 0.25 * 100) / 100;
+          adminComm = Math.round(commBase * 0.05 * 100) / 100;
+          referrerComm = Math.round(commBase * 0.25 * 100) / 100;
         } else if (rType === 'b2b' || rType === 'owners_b2b') {
-          adminComm = Math.round(advanceAmt * 0.08 * 100) / 100;
-          referrerComm = Math.round(advanceAmt * 0.22 * 100) / 100;
+          adminComm = Math.round(commBase * 0.08 * 100) / 100;
+          referrerComm = Math.round(commBase * 0.22 * 100) / 100;
         } else {
-          adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
-          referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+          adminComm = Math.round(commBase * 0.15 * 100) / 100;
+          referrerComm = Math.round(commBase * 0.15 * 100) / 100;
         }
       } else {
-        adminComm = Math.round(advanceAmt * 0.3 * 100) / 100;
+        adminComm = Math.round(commBase * 0.3 * 100) / 100;
         referrerComm = 0;
       }
       commStatus = "PENDING";
@@ -652,7 +652,7 @@ const paytmWebhook = async (req, res) => {
     }
 
     const hasReferral = !!booking.referral_code;
-    const advanceAmount = parseFloat(booking.advance_amount);
+    const commBase = parseFloat(booking.total_amount) || 0;
     let adminCommission = 0;
     let referrerCommission = 0;
     let commissionStatus = null;
@@ -661,17 +661,17 @@ const paytmWebhook = async (req, res) => {
       if (hasReferral) {
         const rTypeW = (booking.referral_type || '').toLowerCase();
         if (rTypeW === 'owner') {
-          adminCommission = Math.round(advanceAmount * 0.05 * 100) / 100;
-          referrerCommission = Math.round(advanceAmount * 0.25 * 100) / 100;
+          adminCommission = Math.round(commBase * 0.05 * 100) / 100;
+          referrerCommission = Math.round(commBase * 0.25 * 100) / 100;
         } else if (rTypeW === 'b2b' || rTypeW === 'owners_b2b') {
-          adminCommission = Math.round(advanceAmount * 0.08 * 100) / 100;
-          referrerCommission = Math.round(advanceAmount * 0.22 * 100) / 100;
+          adminCommission = Math.round(commBase * 0.08 * 100) / 100;
+          referrerCommission = Math.round(commBase * 0.22 * 100) / 100;
         } else {
-          adminCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
-          referrerCommission = Math.round(advanceAmount * 0.15 * 100) / 100;
+          adminCommission = Math.round(commBase * 0.15 * 100) / 100;
+          referrerCommission = Math.round(commBase * 0.15 * 100) / 100;
         }
       } else {
-        adminCommission = Math.round(advanceAmount * 0.3 * 100) / 100;
+        adminCommission = Math.round(commBase * 0.3 * 100) / 100;
         referrerCommission = 0;
       }
       commissionStatus = "PENDING";
@@ -1095,7 +1095,7 @@ const verifyPaymentStatus = async (req, res) => {
       const paymentMode = statusBody.paymentMode || clientTxnResponse.PAYMENTMODE || "";
 
       const hasReferral = !!booking.referral_code;
-      const advanceAmt = parseFloat(booking.advance_amount);
+      const commBase = parseFloat(booking.total_amount) || 0;
       let adminComm = 0;
       let referrerComm = 0;
       let commStatus = null;
@@ -1103,17 +1103,17 @@ const verifyPaymentStatus = async (req, res) => {
       if (hasReferral) {
         const rTypeS = (booking.referral_type || '').toLowerCase();
         if (rTypeS === 'owner') {
-          adminComm = Math.round(advanceAmt * 0.05 * 100) / 100;
-          referrerComm = Math.round(advanceAmt * 0.25 * 100) / 100;
+          adminComm = Math.round(commBase * 0.05 * 100) / 100;
+          referrerComm = Math.round(commBase * 0.25 * 100) / 100;
         } else if (rTypeS === 'b2b' || rTypeS === 'owners_b2b') {
-          adminComm = Math.round(advanceAmt * 0.08 * 100) / 100;
-          referrerComm = Math.round(advanceAmt * 0.22 * 100) / 100;
+          adminComm = Math.round(commBase * 0.08 * 100) / 100;
+          referrerComm = Math.round(commBase * 0.22 * 100) / 100;
         } else {
-          adminComm = Math.round(advanceAmt * 0.15 * 100) / 100;
-          referrerComm = Math.round(advanceAmt * 0.15 * 100) / 100;
+          adminComm = Math.round(commBase * 0.15 * 100) / 100;
+          referrerComm = Math.round(commBase * 0.15 * 100) / 100;
         }
       } else {
-        adminComm = Math.round(advanceAmt * 0.3 * 100) / 100;
+        adminComm = Math.round(commBase * 0.3 * 100) / 100;
       }
       commStatus = "PENDING";
 

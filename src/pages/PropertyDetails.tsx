@@ -1074,14 +1074,20 @@ const PropertyDetails = () => {
                         : propertyData.check_out_time || "11:00 AM",
                     icon: Clock,
                   },
-                  {
-                    label: "Capacity",
-                    value:
-                      propertyData.category === "villa" && selectedUnit
-                        ? `${selectedUnit.total_persons || 0} Guests`
-                        : `${propertyData.capacity} Guests`,
-                    icon: Users,
-                  },
+
+                  // Only show for villas
+                  ...(propertyData.category === "villa"
+                    ? [
+                        {
+                          label: "Capacity",
+                          value: selectedUnit
+                            ? `${selectedUnit.total_persons || 0} Guests`
+                            : `${propertyData.capacity} Guests`,
+                          icon: Users,
+                        },
+                      ]
+                    : []),
+
                   {
                     label: "Status",
                     value: "Verified",
@@ -1164,7 +1170,7 @@ const PropertyDetails = () => {
                       <div className="text-[#C5A021] opacity-80 scale-90 md:scale-100">
                         {getIcon(activity)}
                       </div>
-                      <span className="text-[10px] md:text-sm font-bold text-gray-300 uppercase tracking-widest break-words w-full">
+                      <span className="text-[10px] md:text-sm font-bold text-gray-300 capatalize tracking-widest break-words w-full">
                         {activity}
                       </span>
                     </div>

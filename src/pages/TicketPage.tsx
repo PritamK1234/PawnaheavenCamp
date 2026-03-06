@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { AlertCircle, Loader2, CheckCircle2, ArrowLeft, XCircle } from "lucide-react";
 import { ETicket } from "@/components/ETicket";
 
 const TicketPage = () => {
@@ -21,6 +21,12 @@ const TicketPage = () => {
 
   const verifyAttempts = useRef(0);
   const maxVerifyAttempts = 12;
+
+  const returnUrl = localStorage.getItem("booking_return_url") || "/";
+
+  const goBack = () => {
+    navigate(returnUrl);
+  };
 
   useEffect(() => {
     const preventDefault = (e: Event) => e.preventDefault();
@@ -105,7 +111,9 @@ const TicketPage = () => {
       (ticket.payment_status === "SUCCESS" ||
         ticket.booking_status === "PENDING_OWNER_CONFIRMATION" ||
         ticket.booking_status === "OWNER_CONFIRMED" ||
-        ticket.booking_status === "TICKET_GENERATED")
+        ticket.booking_status === "TICKET_GENERATED" ||
+        ticket.booking_status === "PAYMENT_FAILED" ||
+        ticket.booking_status === "CANCELLED_BY_OWNER")
     ) {
       localStorage.removeItem("pending_booking_id");
       localStorage.removeItem("pending_booking_time");
@@ -239,7 +247,7 @@ const TicketPage = () => {
               <span className="text-[#d4af37] font-semibold">e-ticket</span> and
               booking confirmation will be sent to your
               <span className="text-green-400 font-semibold"> WhatsApp</span>
-              within the next hour.
+              {" "}within the next hour.
             </p>
 
             <p className="text-xs text-gray-500 mt-2">
@@ -247,9 +255,102 @@ const TicketPage = () => {
             </p>
           </div>
 
-          {/* Back Button */}
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
+            className="mt-4 flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-[#d4af37] text-black font-semibold hover:bg-[#e5c04a] transition"
+          >
+            <ArrowLeft size={18} />
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (ticket.booking_status === "PAYMENT_FAILED") {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-4">
+        <div className="bg-[#1a1a1a] rounded-2xl p-8 border border-red-500/20 text-center max-w-md w-full space-y-5">
+          <div className="w-20 h-20 mx-auto bg-red-500/10 rounded-full flex items-center justify-center">
+            <XCircle className="w-12 h-12 text-red-500" />
+          </div>
+
+          <h1 className="text-2xl font-bold text-red-400">Payment Failed</h1>
+
+          <p className="text-gray-400">
+            Your payment could not be processed. No amount has been charged.
+          </p>
+
+          <div className="bg-[#111] rounded-xl p-4 space-y-3 text-left">
+            <div className="flex justify-between">
+              <span className="text-gray-500 text-sm">Booking ID</span>
+              <span className="text-white text-sm font-mono">
+                {ticket.booking_id}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 text-sm">Property</span>
+              <span className="text-white text-sm">{ticket.property_name}</span>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-500">
+            Please try booking again. If money was deducted, it will be refunded automatically within 5–7 business days.
+          </p>
+
+          <button
+            onClick={goBack}
+            className="mt-4 flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-[#d4af37] text-black font-semibold hover:bg-[#e5c04a] transition"
+          >
+            <ArrowLeft size={18} />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (ticket.booking_status === "CANCELLED_BY_OWNER") {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-4">
+        <div className="bg-[#1a1a1a] rounded-2xl p-8 border border-red-500/20 text-center max-w-md w-full space-y-5">
+          <div className="w-20 h-20 mx-auto bg-red-500/10 rounded-full flex items-center justify-center">
+            <XCircle className="w-12 h-12 text-red-500" />
+          </div>
+
+          <h1 className="text-2xl font-bold text-red-400">Booking Cancelled</h1>
+
+          <p className="text-gray-400">
+            The property owner has cancelled your booking. Your advance will be refunded within 24 hours.
+          </p>
+
+          <div className="bg-[#111] rounded-xl p-4 space-y-3 text-left">
+            <div className="flex justify-between">
+              <span className="text-gray-500 text-sm">Booking ID</span>
+              <span className="text-white text-sm font-mono">
+                {ticket.booking_id}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 text-sm">Property</span>
+              <span className="text-white text-sm">{ticket.property_name}</span>
+            </div>
+            {ticket.advance_amount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-500 text-sm">Refund Amount</span>
+                <span className="text-yellow-400 text-sm font-bold">
+                  ₹{Number(ticket.advance_amount).toLocaleString("en-IN")}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <p className="text-sm text-gray-500">
+            Our team will process your refund shortly. For assistance, contact us on WhatsApp.
+          </p>
+
+          <button
+            onClick={goBack}
             className="mt-4 flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-[#d4af37] text-black font-semibold hover:bg-[#e5c04a] transition"
           >
             <ArrowLeft size={18} />

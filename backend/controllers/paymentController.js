@@ -473,10 +473,7 @@ const paytmCallback = async (req, res) => {
     }
 
     const frontendUrl = `https://${getPublicDomain(req)}`;
-    const redirectUrl =
-      status === "TXN_SUCCESS"
-        ? `${frontendUrl}/ticket?booking_id=${booking.booking_id}`
-        : `${frontendUrl}`;
+    const redirectUrl = `${frontendUrl}/ticket?booking_id=${booking.booking_id}`;
 
     return res.status(200).send(`
       <!DOCTYPE html>
@@ -541,7 +538,7 @@ const paytmCallback = async (req, res) => {
               ? `
             <div class="icon success">✓</div>
             <h1 class="success">Payment Successful!</h1>
-            <p>Redirecting to your booking ticket...</p>
+            <p>Redirecting to your booking status...</p>
           `
               : `
             <div class="icon failed">✗</div>
@@ -556,7 +553,7 @@ const paytmCallback = async (req, res) => {
             <p><strong>Amount:</strong> ₹${txnAmount}</p>
             <p><strong>Status:</strong> ${status}</p>
           </div>
-          <a href="${redirectUrl}" class="btn">${status === "TXN_SUCCESS" ? "View Ticket" : "Back to Home"}</a>
+          <a href="${redirectUrl}" class="btn">View Booking Status</a>
         </div>
       </body>
       </html>

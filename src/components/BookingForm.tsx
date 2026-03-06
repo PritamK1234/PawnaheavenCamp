@@ -300,6 +300,7 @@ export function BookingForm({
       const bookingId = bookingData.booking.booking_id;
       localStorage.setItem("pending_booking_id", bookingId);
       localStorage.setItem("pending_booking_time", Date.now().toString());
+      localStorage.setItem("booking_return_url", window.location.pathname);
 
       window.dispatchEvent(new CustomEvent("calendarUpdate"));
 

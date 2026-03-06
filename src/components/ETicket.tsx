@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -12,6 +13,7 @@ import {
   Download,
   Share2,
   ExternalLink,
+  ArrowLeft,
 } from "lucide-react";
 
 interface ETicketProps {
@@ -36,6 +38,7 @@ interface ETicketProps {
 
 export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
   const ticketRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const handleShare = () => {
     const checkInDate = formatDate(bookingData.checkIn);
@@ -316,6 +319,14 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
           Save
         </Button>
       </div>
+
+      <Button
+        onClick={() => navigate(localStorage.getItem("booking_return_url") || "/")}
+        className="w-full rounded-xl py-5 font-bold flex items-center justify-center gap-2 bg-[#d4af37] hover:bg-[#e5c04a] text-black text-sm"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Go Back
+      </Button>
     </div>
   );
 }

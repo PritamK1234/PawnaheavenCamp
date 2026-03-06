@@ -151,6 +151,15 @@ Preferred communication style: Simple, everyday language.
 - **TicketPage**: E-ticket display with QR code, auto-refreshes when waiting for owner confirmation
 - **NotFound**: 404 error handling
 
+### Cancellation Policy (Mar 2026)
+- **Field format**: 3 fixed rows with editable day values — 100% Refund (full_refund_days), 50% Refund (half_refund_days), No Refund (no_refund_days)
+- **Storage**: `cancellation_policy JSONB DEFAULT NULL` added to both `properties` and `property_units` tables
+- **Villa**: stored at unit level (`property_units`); edited in VillaUnitManager in AdminPropertyForm after "Policies" array section
+- **Camping/Cottages**: stored at property level (`properties`); edited in AdminPropertyForm after "Rules & Policies" card section
+- **Public display**: New "Cancellation Policy" accordion on PropertyDetails page, after "Rules & Policies"; green/yellow/red bullet dots; only shown if cancellation_policy data exists
+- **Backend**: `villaController.js` (createVillaUnit + updateVillaUnit), `camping_CottagesController.js` (updateCamping), `propertyController.js` (createProperty) all updated to handle field
+- **Frontend files**: `src/components/AdminPropertyForm.tsx`, `src/pages/PropertyDetails.tsx`
+
 ### Booking & Payment System (Feb 2026)
 - **Booking Flow**: PAYMENT_PENDING → PENDING_OWNER_CONFIRMATION (payment_status=SUCCESS) → TICKET_GENERATED (owner confirms)
 - **Booking ID Format**: PHC-{timestamp36}-{hex} (e.g. PHC-M2K3F4-A1B2C3)

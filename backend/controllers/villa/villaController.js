@@ -572,7 +572,7 @@ const getVillaUnits = async (req, res) => {
 const createVillaUnit = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, schedule, rating, price_note, location, google_maps_link, title } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, cancellation_policy, schedule, rating, price_note, location, google_maps_link, title } = req.body;
 
     const propertyCheck = await query(
       `SELECT id FROM properties WHERE (property_id = $1 OR id::text = $1) AND category = 'villa'`,
@@ -587,8 +587,8 @@ const createVillaUnit = async (req, res) => {
     }
 
     const result = await query(
-      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, schedule, rating, price_note, location, google_maps_link, title)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+      `INSERT INTO property_units (property_id, name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, cancellation_policy, schedule, rating, price_note, location, google_maps_link, title)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
        RETURNING *`,
       [
         propertyCheck.rows[0].id, 
@@ -608,6 +608,7 @@ const createVillaUnit = async (req, res) => {
         Array.isArray(highlights) ? JSON.stringify(highlights) : (highlights || '[]'),
         Array.isArray(activities) ? JSON.stringify(activities) : (activities || '[]'),
         Array.isArray(policies) ? JSON.stringify(policies) : (policies || '[]'),
+        cancellation_policy ? JSON.stringify(cancellation_policy) : null,
         Array.isArray(schedule) ? JSON.stringify(schedule) : (schedule || '[]'),
         parseFloat(rating) || 4.5,
         price_note || null,
@@ -631,7 +632,7 @@ const createVillaUnit = async (req, res) => {
 const updateVillaUnit = async (req, res) => {
   try {
     const { unitId } = req.params;
-    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, schedule, rating, price_note, location, google_maps_link, title } = req.body;
+    const { name, available_persons, total_persons, amenities, images, price_per_person, weekday_price, weekend_price, special_price, special_dates, description, check_in_time, check_out_time, highlights, activities, policies, cancellation_policy, schedule, rating, price_note, location, google_maps_link, title } = req.body;
 
     const result = await query(
       `UPDATE property_units 
@@ -651,12 +652,13 @@ const updateVillaUnit = async (req, res) => {
            highlights = COALESCE($15, highlights),
            activities = COALESCE($16, activities),
            policies = COALESCE($17, policies),
-           schedule = COALESCE($18, schedule),
-           rating = COALESCE($19, rating),
-           price_note = COALESCE($20, price_note),
-           location = COALESCE($21, location),
-           google_maps_link = COALESCE($22, google_maps_link),
-           title = COALESCE($23, title),
+           cancellation_policy = COALESCE($18, cancellation_policy),
+           schedule = COALESCE($19, schedule),
+           rating = COALESCE($20, rating),
+           price_note = COALESCE($21, price_note),
+           location = COALESCE($22, location),
+           google_maps_link = COALESCE($23, google_maps_link),
+           title = COALESCE($24, title),
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $11
        RETURNING *`,
@@ -678,6 +680,7 @@ const updateVillaUnit = async (req, res) => {
         highlights !== undefined ? (Array.isArray(highlights) ? JSON.stringify(highlights) : highlights) : null,
         activities !== undefined ? (Array.isArray(activities) ? JSON.stringify(activities) : activities) : null,
         policies !== undefined ? (Array.isArray(policies) ? JSON.stringify(policies) : policies) : null,
+        cancellation_policy !== undefined ? JSON.stringify(cancellation_policy) : null,
         schedule !== undefined ? (Array.isArray(schedule) ? JSON.stringify(schedule) : schedule) : null,
         rating !== undefined ? parseFloat(rating) : null,
         price_note !== undefined ? price_note : null,

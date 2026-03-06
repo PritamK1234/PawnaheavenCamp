@@ -34,6 +34,7 @@ import {
   Pencil,
   Check,
   X,
+  ShieldCheck,
 } from "lucide-react";
 import { propertyAPI, villaAPI } from "@/lib/api";
 import {
@@ -841,6 +842,7 @@ interface VillaUnitFormState {
   activities: string[];
   highlights: string[];
   policies: string[];
+  cancellation_policy: { full_refund_days: number; half_refund_days: number; no_refund_days: number };
   schedule: { time: string; title: string }[];
   images: string[];
   special_dates: { date: string; price: string }[];
@@ -864,6 +866,7 @@ const createDefaultVillaUnitForm = (): VillaUnitFormState => ({
   activities: [""],
   highlights: [""],
   policies: [""],
+  cancellation_policy: { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 },
   schedule: [{ time: "", title: "" }],
   images: [],
   special_dates: [],
@@ -932,6 +935,11 @@ const VillaUnitManager = ({
         policies: parseJson(unit.policies).length
           ? parseJson(unit.policies)
           : [""],
+        cancellation_policy: unit.cancellation_policy
+          ? (typeof unit.cancellation_policy === "string"
+              ? JSON.parse(unit.cancellation_policy)
+              : unit.cancellation_policy)
+          : { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 },
         schedule: parseJson(unit.schedule).length
           ? parseJson(unit.schedule)
           : [{ time: "", title: "" }],
@@ -1119,6 +1127,7 @@ const VillaUnitManager = ({
         activities: form.activities.filter((a) => a.trim()),
         highlights: form.highlights.filter((h) => h.trim()),
         policies: form.policies.filter((p) => p.trim()),
+        cancellation_policy: form.cancellation_policy,
         schedule: form.schedule.filter((s) => s.time.trim() || s.title.trim()),
         images: form.images.filter((i) => i.trim()),
         special_dates: Array.isArray(form.special_dates)
@@ -1765,6 +1774,34 @@ const VillaUnitManager = ({
           )}
 
           <div className="space-y-2">
+            <Label className="capitalize">Cancellation Policy</Label>
+            <div className="space-y-2">
+              {[
+                { label: "100% Refund — Upto", field: "full_refund_days" as const },
+                { label: "50% Refund — Upto", field: "half_refund_days" as const },
+                { label: "No Refund — Less than", field: "no_refund_days" as const },
+              ].map(({ label, field }) => (
+                <div key={field} className="flex items-center gap-2">
+                  <span className="text-sm text-white/70 w-44 shrink-0">{label}</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={activeForm.cancellation_policy[field]}
+                    onChange={(e) =>
+                      updateField("cancellation_policy", {
+                        ...activeForm.cancellation_policy,
+                        [field]: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="bg-white/5 border-white/10 h-9 w-20"
+                  />
+                  <span className="text-sm text-white/70">days</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label>Schedule</Label>
             <div className="space-y-2">
               {activeForm.schedule.map((item, idx) => (
@@ -2009,6 +2046,7 @@ const AdminPropertyForm = ({
     activities: [""],
     highlights: [""],
     policies: [""],
+    cancellation_policy: { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 } as { full_refund_days: number; half_refund_days: number; no_refund_days: number },
     schedule: [{ time: "", title: "" }],
     images: [] as string[],
     special_dates: [] as { date: string; price: string }[],
@@ -2163,6 +2201,11 @@ const AdminPropertyForm = ({
         activities: property.activities?.length ? property.activities : [""],
         highlights: property.highlights?.length ? property.highlights : [""],
         policies: property.policies?.length ? property.policies : [""],
+        cancellation_policy: property.cancellation_policy
+          ? (typeof property.cancellation_policy === "string"
+              ? JSON.parse(property.cancellation_policy)
+              : property.cancellation_policy)
+          : { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 },
         schedule: property.schedule?.length
           ? property.schedule
           : [{ time: "", title: "" }],
@@ -2252,6 +2295,7 @@ const AdminPropertyForm = ({
       activities: formData.activities.filter((a) => a.trim()),
       highlights: formData.highlights.filter((h) => h.trim()),
       policies: formData.policies.filter((p) => p.trim()),
+      cancellation_policy: formData.cancellation_policy,
       schedule: formData.schedule.filter(
         (s) => s.time.trim() || s.title.trim(),
       ),
@@ -3108,6 +3152,41 @@ const AdminPropertyForm = ({
                     </Button>
                   </div>
                 ))}
+
+              {/* Cancellation Policy */}
+              <div className="glass rounded-2xl border border-border/50 p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  Cancellation Policy
+                </h2>
+                <div className="space-y-4">
+                  {[
+                    { label: "100% Refund — Upto", field: "full_refund_days" as const },
+                    { label: "50% Refund — Upto", field: "half_refund_days" as const },
+                    { label: "No Refund — Less than", field: "no_refund_days" as const },
+                  ].map(({ label, field }) => (
+                    <div key={field} className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground w-52 shrink-0">{label}</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={formData.cancellation_policy[field]}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            cancellation_policy: {
+                              ...prev.cancellation_policy,
+                              [field]: parseInt(e.target.value) || 0,
+                            },
+                          }))
+                        }
+                        className="h-12 bg-secondary/50 rounded-xl w-28"
+                      />
+                      <span className="text-sm text-muted-foreground">days</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Schedule */}
               <div className="glass rounded-2xl border border-border/50 p-6">

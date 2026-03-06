@@ -288,7 +288,7 @@ const updateCamping = async (req, res) => {
   try {
     const { id } = req.params;
     const { 
-      amenities, activities, highlights, policies, schedule, 
+      amenities, activities, highlights, policies, cancellation_policy, schedule, 
       description, availability, weekday_price, weekend_price, 
       price_note, price, special_dates, special_prices,
       owner_name, owner_whatsapp_number
@@ -303,22 +303,24 @@ const updateCamping = async (req, res) => {
         activities = COALESCE($2, activities), 
         highlights = COALESCE($3, highlights), 
         policies = COALESCE($4, policies), 
-        schedule = COALESCE($5, schedule), 
-        description = COALESCE($6, description),
-        availability = COALESCE($7, availability),
-        weekday_price = COALESCE(NULLIF($8, ''), weekday_price),
-        weekend_price = COALESCE(NULLIF($9, ''), weekend_price),
-        price_note = COALESCE($10, price_note),
-        price = COALESCE(NULLIF($11, ''), price),
-        special_dates = COALESCE($12, special_dates),
+        cancellation_policy = COALESCE($5, cancellation_policy),
+        schedule = COALESCE($6, schedule), 
+        description = COALESCE($7, description),
+        availability = COALESCE($8, availability),
+        weekday_price = COALESCE(NULLIF($9, ''), weekday_price),
+        weekend_price = COALESCE(NULLIF($10, ''), weekend_price),
+        price_note = COALESCE($11, price_note),
+        price = COALESCE(NULLIF($12, ''), price),
+        special_dates = COALESCE($13, special_dates),
         updated_at = CURRENT_TIMESTAMP
-      WHERE (property_id = $13 OR id::text = $13) AND category = 'campings_cottages'
+      WHERE (property_id = $14 OR id::text = $14) AND category = 'campings_cottages'
       RETURNING *
     `, [
       Array.isArray(amenities) ? JSON.stringify(amenities) : (amenities || null), 
       Array.isArray(activities) ? JSON.stringify(activities) : (activities || null), 
       Array.isArray(highlights) ? JSON.stringify(highlights) : (highlights || null), 
       Array.isArray(policies) ? JSON.stringify(policies) : (policies || null), 
+      cancellation_policy !== undefined ? JSON.stringify(cancellation_policy) : null,
       Array.isArray(schedule) ? JSON.stringify(schedule) : (schedule || null), 
       description || null,
       Array.isArray(availability) ? JSON.stringify(availability) : (availability || null),

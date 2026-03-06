@@ -961,6 +961,7 @@ const createProperty = async (req, res) => {
       activities,
       highlights,
       policies,
+      cancellation_policy,
       schedule,
       availability,
       images,
@@ -1016,8 +1017,8 @@ const createProperty = async (req, res) => {
       `INSERT INTO properties (
         title, slug, property_id, description, category, location, rating, price, weekday_price, weekend_price, price_note,
         capacity, max_capacity, check_in_time, check_out_time, status, is_top_selling, is_active, is_available,
-        contact, owner_name, owner_whatsapp_number, map_link, amenities, activities, highlights, policies, schedule, availability, referral_code, owner_otp_number, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, CURRENT_TIMESTAMP)
+        contact, owner_name, owner_whatsapp_number, map_link, amenities, activities, highlights, policies, cancellation_policy, schedule, availability, referral_code, owner_otp_number, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, CURRENT_TIMESTAMP)
       RETURNING *`,
       [
         title,
@@ -1055,6 +1056,7 @@ const createProperty = async (req, res) => {
         typeof policies === "string"
           ? policies
           : JSON.stringify(policies || []),
+        cancellation_policy ? JSON.stringify(cancellation_policy) : null,
         typeof schedule === "string"
           ? schedule
           : JSON.stringify(schedule || []),

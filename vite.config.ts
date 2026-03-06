@@ -44,6 +44,32 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  preview: {
+    host: "0.0.0.0",
+    port: 5000,
+    proxy: {
+      "/api/payments/paytm/callback": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/api": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/attached_assets": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/webhook": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   build: {
     outDir: "dist",
     sourcemap: false,

@@ -90,6 +90,14 @@ const Properties = () => {
         };
       });
     }
+
+    if (p.category === 'campings_cottages' && p.units && p.units.length > 0) {
+      const allUnitImages = p.units.flatMap((unit: any) => parseImages(unit.images));
+      if (allUnitImages.length > 0) {
+        return [{ ...p, images: allUnitImages, image: allUnitImages[0] }];
+      }
+    }
+
     return [p];
   });
 

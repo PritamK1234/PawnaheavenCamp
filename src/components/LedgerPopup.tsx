@@ -823,7 +823,7 @@ export const LedgerPopup = ({
                             </button>
                           </div>
                         )}
-                        {isAdmin && entry.source === 'website' && entry.booking_status !== 'CANCELLED' && entry.booking_id && (
+                        {isAdmin && !!entry.booking_id && entry.booking_status !== 'CANCELLED' && (
                           <div className="border-l border-white/10 pl-3">
                             <button
                               onClick={() => setCancelConfirmEntry(entry)}

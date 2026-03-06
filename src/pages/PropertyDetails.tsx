@@ -155,6 +155,7 @@ const PropertyDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [gatewayInProgress, setGatewayInProgress] = useState(false);
   const [calendarSelectedDate, setCalendarSelectedDate] = useState<
     Date | undefined
   >(undefined);
@@ -492,6 +493,7 @@ const PropertyDetails = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <Dialog
                     open={bookingDialogOpen}
+                    modal={!gatewayInProgress}
                     onOpenChange={(open) => {
                       setBookingDialogOpen(open);
                       if (!open) setCalendarSelectedDate(undefined);
@@ -536,6 +538,7 @@ const PropertyDetails = () => {
                         ownerName={propertyData.owner_name}
                         initialCheckIn={calendarSelectedDate}
                         onClose={() => setBookingDialogOpen(false)}
+                        onGatewayLoading={(loading) => setGatewayInProgress(loading)}
                       />
                     </DialogContent>
                   </Dialog>
@@ -751,6 +754,7 @@ const PropertyDetails = () => {
           <div className="space-y-6 mb-8">
             <Dialog
               open={bookingDialogOpen}
+              modal={!gatewayInProgress}
               onOpenChange={(open) => {
                 setBookingDialogOpen(open);
                 if (!open) setCalendarSelectedDate(undefined);
@@ -790,6 +794,7 @@ const PropertyDetails = () => {
                   ownerName={propertyData.owner_name}
                   initialCheckIn={calendarSelectedDate}
                   onClose={() => setBookingDialogOpen(false)}
+                  onGatewayLoading={(loading) => setGatewayInProgress(loading)}
                 />
               </DialogContent>
             </Dialog>

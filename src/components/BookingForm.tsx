@@ -28,6 +28,7 @@ interface BookingFormProps {
   propertyCategory?: string;
   maxCapacity?: number;
   onClose?: () => void;
+  onGatewayLoading?: (loading: boolean) => void;
   selectedUnitId?: number;
   ownerPhone?: string;
   ownerName?: string;
@@ -41,6 +42,7 @@ export function BookingForm({
   propertyCategory = "camping",
   maxCapacity = 4,
   onClose,
+  onGatewayLoading,
   selectedUnitId,
   ownerPhone,
   ownerName,
@@ -307,6 +309,7 @@ export function BookingForm({
 
       setIsLoading(false);
       setGatewayLoading(true);
+      onGatewayLoading?.(true);
 
       const result = await PaytmPaymentService.openCheckout(bookingId);
 
@@ -332,6 +335,7 @@ export function BookingForm({
       }
       setIsLoading(false);
       setGatewayLoading(false);
+      onGatewayLoading?.(false);
     }
   };
 

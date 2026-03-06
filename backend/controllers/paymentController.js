@@ -425,7 +425,7 @@ const paytmCallback = async (req, res) => {
     }
 
     const actionToken = generateActionToken();
-    const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const softLockExpiry = status === "TXN_SUCCESS"
       ? new Date(Date.now() + 60 * 60 * 1000)
@@ -678,7 +678,7 @@ const paytmWebhook = async (req, res) => {
     }
 
     const actionToken = generateActionToken();
-    const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const softLockExpiryWebhook = status === "TXN_SUCCESS"
       ? new Date(Date.now() + 60 * 60 * 1000)
       : new Date();
@@ -998,6 +998,16 @@ const verifyPaymentStatus = async (req, res) => {
 
     const booking = result.rows[0];
 
+    if (booking.webhook_processed && booking.payment_status === "SUCCESS") {
+      return res.json({
+        success: true,
+        payment_status: "SUCCESS",
+        booking_status: booking.booking_status,
+        booking_id: booking.booking_id,
+        message: "Payment already verified",
+      });
+    }
+
     if (booking.payment_status === "SUCCESS") {
       return res.json({
         success: true,
@@ -1118,7 +1128,7 @@ const verifyPaymentStatus = async (req, res) => {
       commStatus = "PENDING";
 
       const actionToken = generateActionToken();
-      const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+      const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       await query(
         `UPDATE bookings SET 

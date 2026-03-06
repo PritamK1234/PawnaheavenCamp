@@ -78,6 +78,7 @@ export function BookingForm({
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [gatewayLoading, setGatewayLoading] = useState(false);
 
   const [totalPrice, setTotalPrice] = useState(0);
   const [advanceAmount, setAdvanceAmount] = useState(0);
@@ -304,14 +305,15 @@ export function BookingForm({
 
       window.dispatchEvent(new CustomEvent("calendarUpdate"));
 
-      if (onClose) onClose();
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      setIsLoading(false);
+      setGatewayLoading(true);
 
       const result = await PaytmPaymentService.openCheckout(bookingId);
 
       if (result.success && result.payment_status === "SUCCESS") {
         localStorage.removeItem("pending_booking_id");
         localStorage.removeItem("pending_booking_time");
+        if (onClose) onClose();
         window.location.href = `/ticket?booking_id=${bookingId}`;
       } else {
         throw new Error(
@@ -329,6 +331,7 @@ export function BookingForm({
         });
       }
       setIsLoading(false);
+      setGatewayLoading(false);
     }
   };
 
@@ -614,13 +617,19 @@ export function BookingForm({
         </div>
       </div>
 
+      {gatewayLoading && (
+        <div className="text-center text-sm text-[#D4AF37] py-2 animate-pulse">
+          Connecting to secure payment gateway...
+        </div>
+      )}
+
       <Button
         className="w-full h-12 rounded-xl text-base font-bold gap-2 shadow-gold"
         onClick={handleBook}
-        disabled={isLoading}
+        disabled={isLoading || gatewayLoading}
       >
         <CreditCard className="w-4 h-4" />
-        {isLoading ? "Processing..." : "Pay & Confirm"}
+        {isLoading ? "Processing..." : gatewayLoading ? "Opening payment gateway..." : "Pay & Confirm"}
       </Button>
     </div>
   );

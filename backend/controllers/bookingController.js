@@ -1135,32 +1135,38 @@ const handleWhatsAppWebhook = async (req, res) => {
               const checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
               const dueAmount = (parseFloat(booking.total_amount) || 0) - parseFloat(booking.advance_amount);
 
-              const guestResult = await whatsapp.sendTextMessage(
-                booking.guest_phone,
-                `🎉 Your Booking is Confirmed!\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance Paid: ₹${booking.advance_amount}\nDue at Property: ₹${dueAmount}\n\nView your secure e-ticket:\n${ticketUrl}\n\nThis link is unique to your booking. Please do not share it.`
-              );
-
-              const adminResult = await whatsapp.sendTextMessage(
-                booking.admin_phone,
-                `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance: ₹${booking.advance_amount}\n\nTicket: ${ticketUrl}`
-              );
-
-              const ownerAckResult = await whatsapp.sendTextMessage(
-                buttonResponse.from,
-                `✅ Booking ${booking.booking_id} confirmed! Guest and admin have been notified with the ticket link.`
-              );
-
-              await mergeMessageIds(booking.booking_id, {
-                guest_confirm: guestResult.messageId,
-                admin_confirm: adminResult.messageId,
-                owner_ack_confirm: ownerAckResult.messageId,
-              });
-
-              await logWebhookEvent('OWNER_CONFIRM', booking.booking_id, {
-                from: buttonResponse.from,
-                inboundMessageId: buttonResponse.messageId,
-                ticketToken,
-              });
+              try {
+                const guestResult = await whatsapp.sendTextMessage(
+                  booking.guest_phone,
+                  `🎉 Your Booking is Confirmed!\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance Paid: ₹${booking.advance_amount}\nDue at Property: ₹${dueAmount}\n\nView your secure e-ticket:\n${ticketUrl}\n\nThis link is unique to your booking. Please do not share it.`
+                );
+                const adminResult = await whatsapp.sendTextMessage(
+                  booking.admin_phone,
+                  `✅ Booking Confirmed\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nCheck-in: ${checkinStr}\nCheck-out: ${checkoutStr}\nAdvance: ₹${booking.advance_amount}\n\nTicket: ${ticketUrl}`
+                );
+                const ownerAckResult = await whatsapp.sendTextMessage(
+                  buttonResponse.from,
+                  `✅ Booking ${booking.booking_id} confirmed! Guest and admin have been notified with the ticket link.`
+                );
+                await mergeMessageIds(booking.booking_id, {
+                  guest_confirm: guestResult.messageId,
+                  admin_confirm: adminResult.messageId,
+                  owner_ack_confirm: ownerAckResult.messageId,
+                });
+                await logWebhookEvent('OWNER_CONFIRM', booking.booking_id, {
+                  from: buttonResponse.from,
+                  inboundMessageId: buttonResponse.messageId,
+                  ticketToken,
+                });
+              } catch (notifyErr) {
+                console.error('[WhatsApp CONFIRM] Notification failed:', notifyErr.message);
+                try {
+                  await whatsapp.sendTextMessage(
+                    buttonResponse.from,
+                    `✅ Booking ${booking.booking_id} is confirmed! There was a delay sending notifications but your confirmation is saved.`
+                  );
+                } catch (_) {}
+              }
 
               try { await createInProcessCommission(booking); } catch(e) { console.error('[Commission] in-process creation failed (WhatsApp CONFIRM):', e.message); }
 
@@ -1186,38 +1192,44 @@ const handleWhatsAppWebhook = async (req, res) => {
               await cancelInProcessCommission(booking.id);
 
               const ownerName = booking.owner_name || 'The owner';
-              const messageIds = {};
 
-              if (booking.payment_status === 'SUCCESS') {
-                const guestResult = await whatsapp.sendTextMessage(
-                  booking.guest_phone,
-                  `Extremely sorry for the inconvenience, but your booking has been cancelled due to unavoidable circumstances. You will get your refund in next 24 hours.`
+              try {
+                const messageIds = {};
+                if (booking.payment_status === 'SUCCESS') {
+                  const guestResult = await whatsapp.sendTextMessage(
+                    booking.guest_phone,
+                    `Extremely sorry for the inconvenience, but your booking has been cancelled due to unavoidable circumstances. You will get your refund in next 24 hours.`
+                  );
+                  messageIds.guest_cancel = guestResult.messageId;
+                }
+                const adminResult = await whatsapp.sendInteractiveButtons(
+                  booking.admin_phone,
+                  `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\n${ownerName} owner cancelled booking of ${booking.guest_name} customer. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
+                  [
+                    { id: `call_owner_${booking.booking_id}`, title: '📞 Call Owner' },
+                    { id: `call_customer_${booking.booking_id}`, title: '📞 Call Customer' },
+                  ]
                 );
-                messageIds.guest_cancel = guestResult.messageId;
+                messageIds.admin_cancel = adminResult.messageId;
+                const ownerAckResult = await whatsapp.sendTextMessage(
+                  buttonResponse.from,
+                  `❌ Booking ${booking.booking_id} cancelled. Customer notified. Refund will be processed within 24 hours.`
+                );
+                messageIds.owner_ack_cancel = ownerAckResult.messageId;
+                await mergeMessageIds(booking.booking_id, messageIds);
+                await logWebhookEvent('OWNER_CANCEL', booking.booking_id, {
+                  from: buttonResponse.from,
+                  inboundMessageId: buttonResponse.messageId,
+                });
+              } catch (notifyErr) {
+                console.error('[WhatsApp CANCEL] Notification failed:', notifyErr.message);
+                try {
+                  await whatsapp.sendTextMessage(
+                    buttonResponse.from,
+                    `❌ Booking ${booking.booking_id} has been cancelled and saved. There was a delay sending other notifications.`
+                  );
+                } catch (_) {}
               }
-
-              const adminResult = await whatsapp.sendInteractiveButtons(
-                booking.admin_phone,
-                `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\n${ownerName} owner cancelled booking of ${booking.guest_name} customer. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
-                [
-                  { id: `call_owner_${booking.booking_id}`, title: '📞 Call Owner' },
-                  { id: `call_customer_${booking.booking_id}`, title: '📞 Call Customer' },
-                ]
-              );
-              messageIds.admin_cancel = adminResult.messageId;
-
-              const ownerAckResult = await whatsapp.sendTextMessage(
-                buttonResponse.from,
-                `❌ Booking ${booking.booking_id} cancelled. Customer notified. Refund will be processed within 24 hours.`
-              );
-              messageIds.owner_ack_cancel = ownerAckResult.messageId;
-
-              await mergeMessageIds(booking.booking_id, messageIds);
-
-              await logWebhookEvent('OWNER_CANCEL', booking.booking_id, {
-                from: buttonResponse.from,
-                inboundMessageId: buttonResponse.messageId,
-              });
 
               if (booking.referral_code) {
                 try {

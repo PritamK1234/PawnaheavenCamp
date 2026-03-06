@@ -126,7 +126,9 @@ const Bookings = () => {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
-  const totalAmount = entries.reduce((sum, e) => sum + (parseFloat(String(e.amount)) || 0), 0);
+  const totalAmount = entries
+    .filter(e => e.booking_status !== 'CANCELLED')
+    .reduce((sum, e) => sum + (parseFloat(String(e.amount)) || 0), 0);
 
   const buildExportRows = () => {
     return entries.map((entry, idx) => ({
@@ -303,17 +305,31 @@ const Bookings = () => {
           <div className="space-y-3">
             {entries.map((entry, idx) => {
               const isNoShow = entry.source === 'website' && entry.booking_status === 'NO_SHOW';
+              const isCancelled = entry.booking_status === 'CANCELLED';
 
               return (
-                <Card key={`${entry.source}-${entry.id}`} className="bg-[#1A1A1A] border border-[#D4AF37]/10 rounded-2xl overflow-hidden shadow-xl">
+                <Card
+                  key={`${entry.source}-${entry.id}`}
+                  className={`rounded-2xl overflow-hidden shadow-xl ${
+                    isCancelled
+                      ? 'bg-red-950/40 border border-red-500/30'
+                      : 'bg-[#1A1A1A] border border-[#D4AF37]/10'
+                  }`}
+                >
                   <CardContent className="p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#261F18] rounded-xl flex items-center justify-center shrink-0 border border-[#D4AF37]/10">
-                        <span className="text-[#D4AF37] text-sm font-bold">#{idx + 1}</span>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                        isCancelled
+                          ? 'bg-red-900/30 border-red-500/20'
+                          : 'bg-[#261F18] border-[#D4AF37]/10'
+                      }`}>
+                        <span className={`text-sm font-bold ${isCancelled ? 'text-red-400' : 'text-[#D4AF37]'}`}>
+                          #{idx + 1}
+                        </span>
                       </div>
 
                       <div className="flex-grow min-w-0">
-                        <h3 className="text-sm font-bold text-white mb-0.5 leading-tight truncate">
+                        <h3 className={`text-sm font-bold mb-0.5 leading-tight truncate ${isCancelled ? 'text-red-300' : 'text-white'}`}>
                           {entry.customer_name || 'Guest'}
                         </h3>
                         <div className="flex items-center gap-2 text-gray-500 flex-wrap">
@@ -323,16 +339,21 @@ const Bookings = () => {
                               {entry.source === 'website' ? 'online' : (entry.payment_mode || 'cash')}
                             </span>
                           </div>
-                          {isNoShow && (
+                          {isNoShow && !isCancelled && (
                             <span className="text-[8px] uppercase font-bold tracking-tighter text-gray-500 border border-gray-700 rounded px-1">
                               No-Show
+                            </span>
+                          )}
+                          {isCancelled && (
+                            <span className="text-[8px] uppercase font-bold tracking-tighter text-red-400 border border-red-500/40 rounded px-1">
+                              Cancelled
                             </span>
                           )}
                         </div>
                       </div>
 
                       <div className="text-right flex flex-col items-end gap-0.5 shrink-0">
-                        <span className="text-base font-bold text-[#D4AF37]">
+                        <span className={`text-base font-bold ${isCancelled ? 'text-red-400 line-through' : 'text-[#D4AF37]'}`}>
                           ₹{parseFloat(String(entry.amount || 0)).toLocaleString('en-IN')}
                         </span>
                         <span className="text-[9px] font-medium text-gray-500">

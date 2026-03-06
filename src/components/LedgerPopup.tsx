@@ -768,17 +768,25 @@ export const LedgerPopup = ({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {entries.map((entry, i) => (
+                  {entries.map((entry, i) => {
+                    const isCancelled = entry.booking_status === 'CANCELLED';
+                    return (
                     <div
                       key={entry.id ?? `b-${i}`}
-                      className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between"
+                      className={`rounded-2xl p-4 flex items-center justify-between ${
+                        isCancelled
+                          ? 'bg-red-900/20 border border-red-500/30'
+                          : 'bg-white/5 border border-white/10'
+                      }`}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold font-bold">
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold ${
+                          isCancelled ? 'bg-red-500/10 text-red-400' : 'bg-gold/10 text-gold'
+                        }`}>
                           #{i + 1}
                         </div>
                         <div>
-                          <p className="text-white font-bold">
+                          <p className={`font-bold ${isCancelled ? 'text-red-300' : 'text-white'}`}>
                             {entry.customer_name}
                           </p>
                           <div className="flex items-center gap-3 mt-1">
@@ -789,9 +797,14 @@ export const LedgerPopup = ({
                               <CreditCard className="w-3 h-3" />{" "}
                               {entry.payment_mode}
                             </span>
-                            {entry.source === 'website' && (
+                            {entry.source === 'website' && !isCancelled && (
                               <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full font-bold tracking-wider">
                                 ONLINE
+                              </span>
+                            )}
+                            {isCancelled && (
+                              <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-bold tracking-wider">
+                                CANCELLED
                               </span>
                             )}
                           </div>
@@ -799,7 +812,7 @@ export const LedgerPopup = ({
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className="text-gold font-black">
+                          <p className={`font-black ${isCancelled ? 'text-red-400 line-through' : 'text-gold'}`}>
                             ₹{entry.amount}
                           </p>
                           <p className="text-[8px] text-white/20 capatalize font-bold tracking-tighter mt-1">
@@ -823,7 +836,7 @@ export const LedgerPopup = ({
                             </button>
                           </div>
                         )}
-                        {isAdmin && !!entry.booking_id && entry.booking_status !== 'CANCELLED' && (
+                        {isAdmin && !!entry.booking_id && !isCancelled && (
                           <div className="border-l border-white/10 pl-3">
                             <button
                               onClick={() => setCancelConfirmEntry(entry)}
@@ -836,7 +849,8 @@ export const LedgerPopup = ({
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -564,11 +564,11 @@ const getLedgerEntries = async (req, res) => {
              COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1) AS persons,
              b.checkin_datetime::date AS check_in, b.checkout_datetime::date AS check_out,
              b.payment_method AS payment_mode, b.advance_amount AS amount,
-             b.unit_id, b.booking_id, 'website' AS source
+             b.unit_id, b.booking_id, 'website' AS source, b.booking_status
       FROM bookings b
       JOIN properties p ON (p.id::text = b.property_id OR p.property_id = b.property_id)
       WHERE (p.id::text = $1 OR p.property_id = $1)
-      AND b.booking_status = 'TICKET_GENERATED'
+      AND b.booking_status IN ('TICKET_GENERATED', 'CANCELLED')
       AND b.checkin_datetime::date <= $2 AND b.checkout_datetime::date > $2
       AND NOT EXISTS (
         SELECT 1 FROM ledger_entries le2
@@ -1305,7 +1305,7 @@ const getOwnerLedger = async (req, res) => {
       FROM bookings b
       LEFT JOIN property_units pu ON b.unit_id = pu.id
       WHERE (b.property_id = $1 OR b.property_id = $4)
-      AND b.booking_status NOT IN ('CANCELLED', 'PAYMENT_PENDING', 'PAYMENT_FAILED', 'CANCELLED_NO_REFUND', 'CANCELLED_BY_OWNER')
+      AND b.booking_status NOT IN ('PAYMENT_PENDING', 'PAYMENT_FAILED', 'CANCELLED_NO_REFUND', 'CANCELLED_BY_OWNER')
       AND (
         (DATE(b.checkin_datetime) BETWEEN $2 AND $3) OR
         (DATE(b.checkout_datetime) BETWEEN $2 AND $3) OR
@@ -1414,6 +1414,11 @@ const handleAdminCancel = async (req, res) => {
         `UPDATE bookings
          SET booking_status = 'CANCELLED', commission_status = 'CANCELLED', updated_at = NOW()
          WHERE booking_id = $1`,
+        [booking_id]
+      );
+
+      await client.query(
+        `DELETE FROM ledger_entries WHERE booking_id = $1`,
         [booking_id]
       );
 

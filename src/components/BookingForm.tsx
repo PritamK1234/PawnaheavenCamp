@@ -13,7 +13,6 @@ import {
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PaytmPaymentService } from "@/lib/paytmPayment";
 import {
   Accordion,
   AccordionContent,
@@ -28,7 +27,6 @@ interface BookingFormProps {
   propertyCategory?: string;
   maxCapacity?: number;
   onClose?: () => void;
-  onGatewayLoading?: (loading: boolean) => void;
   selectedUnitId?: number;
   ownerPhone?: string;
   ownerName?: string;
@@ -42,7 +40,6 @@ export function BookingForm({
   propertyCategory = "camping",
   maxCapacity = 4,
   onClose,
-  onGatewayLoading,
   selectedUnitId,
   ownerPhone,
   ownerName,
@@ -80,7 +77,6 @@ export function BookingForm({
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [gatewayLoading, setGatewayLoading] = useState(false);
 
   const [totalPrice, setTotalPrice] = useState(0);
   const [advanceAmount, setAdvanceAmount] = useState(0);
@@ -308,34 +304,17 @@ export function BookingForm({
       window.dispatchEvent(new CustomEvent("calendarUpdate"));
 
       setIsLoading(false);
-      setGatewayLoading(true);
-      onGatewayLoading?.(true);
-
-      const result = await PaytmPaymentService.openCheckout(bookingId);
-
-      if (result.success && result.payment_status === "SUCCESS") {
-        localStorage.removeItem("pending_booking_id");
-        localStorage.removeItem("pending_booking_time");
-        if (onClose) onClose();
-        window.location.href = `/ticket?booking_id=${bookingId}`;
-      } else {
-        throw new Error(
-          result.message || "Payment was not successful. Please try again.",
-        );
-      }
+      navigate("/payment-processing", {
+        state: { bookingId, returnPath: window.location.pathname },
+      });
     } catch (error: any) {
-      console.error("Booking/Payment error:", error);
-      const msg = error.message || "Something went wrong";
-      if (!msg.includes("cancelled by user")) {
-        toast({
-          title: "Payment Failed",
-          description: msg,
-          variant: "destructive",
-        });
-      }
+      console.error("Booking error:", error);
+      toast({
+        title: "Booking Failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
       setIsLoading(false);
-      setGatewayLoading(false);
-      onGatewayLoading?.(false);
     }
   };
 
@@ -621,19 +600,13 @@ export function BookingForm({
         </div>
       </div>
 
-      {gatewayLoading && (
-        <div className="text-center text-sm text-[#D4AF37] py-2 animate-pulse">
-          Connecting to secure payment gateway...
-        </div>
-      )}
-
       <Button
         className="w-full h-12 rounded-xl text-base font-bold gap-2 shadow-gold"
         onClick={handleBook}
-        disabled={isLoading || gatewayLoading}
+        disabled={isLoading}
       >
         <CreditCard className="w-4 h-4" />
-        {isLoading ? "Processing..." : gatewayLoading ? "Opening payment gateway..." : "Pay & Confirm"}
+        {isLoading ? "Processing..." : "Pay & Confirm"}
       </Button>
     </div>
   );

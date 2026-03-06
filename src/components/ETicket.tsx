@@ -302,31 +302,25 @@ export function ETicket({ bookingData, paymentInfo }: ETicketProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex gap-3">
         <Button
           onClick={handleShare}
-          className="rounded-xl py-5 font-bold flex items-center gap-2 bg-green-600 hover:bg-green-700 shadow-md text-sm"
+          className="flex-1 rounded-xl py-5 font-bold flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 shadow-md text-sm"
         >
           <Share2 className="w-4 h-4" />
           WhatsApp
         </Button>
+
         <Button
-          onClick={() => window.print()}
-          variant="outline"
-          className="rounded-xl py-5 font-bold flex items-center gap-2 border-primary/20 text-primary text-sm"
+          onClick={() =>
+            navigate(localStorage.getItem("booking_return_url") || "/")
+          }
+          className="flex-1 rounded-xl py-5 font-bold flex items-center justify-center gap-2 bg-[#d4af37] hover:bg-[#e5c04a] text-black text-sm"
         >
-          <Download className="w-4 h-4" />
-          Save
+          <ArrowLeft className="w-4 h-4" />
+          Go Back
         </Button>
       </div>
-
-      <Button
-        onClick={() => navigate(localStorage.getItem("booking_return_url") || "/")}
-        className="w-full rounded-xl py-5 font-bold flex items-center justify-center gap-2 bg-[#d4af37] hover:bg-[#e5c04a] text-black text-sm"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Go Back
-      </Button>
     </div>
   );
 }

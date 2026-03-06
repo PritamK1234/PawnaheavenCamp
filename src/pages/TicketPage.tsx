@@ -1,17 +1,24 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { ETicket } from "@/components/ETicket";
 
 const TicketPage = () => {
+  const navigate = useNavigate();
+
   const [searchParams] = useSearchParams();
   const bookingId = searchParams.get("booking_id");
   const ticketToken = searchParams.get("token");
   const identifier = ticketToken || bookingId;
-  const hasPendingBooking = bookingId ? localStorage.getItem("pending_booking_id") === bookingId : false;
+
+  const hasPendingBooking = bookingId
+    ? localStorage.getItem("pending_booking_id") === bookingId
+    : false;
+
   const [verifyingPayment, setVerifyingPayment] = useState(hasPendingBooking);
   const [isBlurred, setIsBlurred] = useState(false);
+
   const verifyAttempts = useRef(0);
   const maxVerifyAttempts = 12;
 
@@ -29,11 +36,13 @@ const TicketPage = () => {
         e.preventDefault();
       }
     };
+
     document.addEventListener("keydown", handleKeyDown);
 
     const handleVisibility = () => {
       setIsBlurred(document.visibilityState === "hidden");
     };
+
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
@@ -47,21 +56,31 @@ const TicketPage = () => {
     ? `/api/etickets/booking?token=${ticketToken}`
     : `/api/etickets/booking?booking_id=${bookingId}`;
 
-  const { data: ticket, isLoading, error, refetch } = useQuery({
+  const {
+    data: ticket,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["ticket", identifier],
     queryFn: async () => {
       const response = await fetch(apiUrl, {
         headers: { "Content-Type": "application/json" },
       });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch ticket");
       }
+
       return response.json();
     },
+
     enabled: !!identifier,
+
     refetchInterval: (query) => {
       const data = query.state.data;
+
       if (
         data &&
         (data.booking_status === "PENDING_OWNER_CONFIRMATION" ||
@@ -69,13 +88,16 @@ const TicketPage = () => {
       ) {
         return 10000;
       }
+
       return false;
     },
   });
 
   useEffect(() => {
     if (!bookingId) return;
+
     const isPending = localStorage.getItem("pending_booking_id") === bookingId;
+
     if (!isPending) return;
 
     if (
@@ -91,6 +113,7 @@ const TicketPage = () => {
     }
 
     setVerifyingPayment(true);
+
     const verifyPayment = async () => {
       try {
         const response = await fetch(`/api/payments/verify/${bookingId}`);
@@ -116,6 +139,7 @@ const TicketPage = () => {
       }
 
       verifyAttempts.current++;
+
       if (verifyAttempts.current >= maxVerifyAttempts) {
         setVerifyingPayment(false);
         localStorage.removeItem("pending_booking_id");
@@ -124,11 +148,13 @@ const TicketPage = () => {
     };
 
     verifyPayment();
+
     const interval = setInterval(() => {
       if (verifyAttempts.current >= maxVerifyAttempts) {
         clearInterval(interval);
         return;
       }
+
       verifyPayment();
     }, 5000);
 
@@ -150,51 +176,10 @@ const TicketPage = () => {
       <div className="flex flex-col justify-center items-center h-screen bg-[#0a0a0a] space-y-4">
         <Loader2 className="w-12 h-12 text-[#d4af37] animate-spin" />
         <p className="text-gray-400">
-          {verifyingPayment ? "Verifying your payment..." : "Loading your ticket..."}
+          {verifyingPayment
+            ? "Verifying your payment..."
+            : "Loading your ticket..."}
         </p>
-        {verifyingPayment && (
-          <p className="text-gray-500 text-sm">
-            This may take a few seconds. Please don't close this page.
-          </p>
-        )}
-      </div>
-    );
-  }
-
-  if (error) {
-    const errorMessage = error instanceof Error ? error.message : "Error loading ticket";
-
-    if (errorMessage.includes("expired")) {
-      return (
-        <div className="flex flex-col justify-center items-center h-screen space-y-4 bg-[#0a0a0a] px-4">
-          <AlertCircle className="w-16 h-16 text-red-500" />
-          <h1 className="text-2xl font-bold text-red-500">Booking Expired</h1>
-          <p className="text-gray-400 text-center">
-            This booking has expired as the checkout date has passed.
-          </p>
-        </div>
-      );
-    }
-
-    if (errorMessage.includes("not available") || errorMessage.includes("not yet available")) {
-      return (
-        <div className="flex flex-col justify-center items-center h-screen space-y-4 bg-[#0a0a0a] px-4">
-          <Loader2 className="w-16 h-16 text-[#d4af37] animate-spin" />
-          <h1 className="text-2xl font-bold text-[#d4af37]">Awaiting Confirmation</h1>
-          <p className="text-gray-400 text-center max-w-sm">
-            Your payment was successful! Waiting for property owner confirmation.
-            You will receive your e-ticket shortly.
-          </p>
-          <p className="text-gray-500 text-sm">This page auto-refreshes every 10 seconds</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex flex-col justify-center items-center h-screen space-y-4 bg-[#0a0a0a] px-4">
-        <AlertCircle className="w-16 h-16 text-red-500" />
-        <h1 className="text-2xl font-bold text-red-500">Error</h1>
-        <p className="text-gray-400 text-center">{errorMessage}</p>
       </div>
     );
   }
@@ -212,110 +197,89 @@ const TicketPage = () => {
     ticket.booking_status === "BOOKING_REQUEST_SENT_TO_OWNER"
   ) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-4 space-y-6">
-        <div className="bg-[#1a1a1a] rounded-2xl p-8 border border-[#d4af37]/20 text-center max-w-md w-full space-y-4">
-          <div className="w-20 h-20 mx-auto bg-[#d4af37]/10 rounded-full flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-[#d4af37] animate-spin" />
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-4">
+        <div className="bg-[#1a1a1a] rounded-2xl p-8 border border-[#d4af37]/20 text-center max-w-md w-full space-y-5">
+          <div className="w-20 h-20 mx-auto bg-green-500/10 rounded-full flex items-center justify-center">
+            <CheckCircle2 className="w-12 h-12 text-green-500" />
           </div>
-          <h1 className="text-2xl font-bold text-[#d4af37]">Payment Successful!</h1>
+
+          <h1 className="text-2xl font-bold text-[#d4af37]">
+            Payment Successful!
+          </h1>
+
           <p className="text-gray-400">
-            Your booking is being processed. Waiting for property owner confirmation.
+            Your booking is being processed. Waiting for property owner
+            confirmation.
           </p>
-          <div className="bg-[#111] rounded-xl p-4 space-y-2 text-left">
+
+          <div className="bg-[#111] rounded-xl p-4 space-y-3 text-left">
             <div className="flex justify-between">
               <span className="text-gray-500 text-sm">Booking ID</span>
-              <span className="text-white text-sm font-mono">{ticket.booking_id}</span>
+              <span className="text-white text-sm font-mono">
+                {ticket.booking_id}
+              </span>
             </div>
+
             <div className="flex justify-between">
               <span className="text-gray-500 text-sm">Property</span>
               <span className="text-white text-sm">{ticket.property_name}</span>
             </div>
+
             <div className="flex justify-between">
               <span className="text-gray-500 text-sm">Advance Paid</span>
-              <span className="text-green-400 text-sm font-bold">₹{ticket.advance_amount}</span>
+              <span className="text-green-400 text-sm font-bold">
+                ₹{Number(ticket.advance_amount).toLocaleString("en-IN")}
+              </span>
             </div>
           </div>
-          <p className="text-gray-500 text-xs">
-            You will receive your e-ticket within 1 hour. This page auto-refreshes.
-          </p>
+
+          <div className="pt-2 text-center">
+            <p className="text-sm text-gray-300 leading-relaxed">
+              📩 Your{" "}
+              <span className="text-[#d4af37] font-semibold">e-ticket</span> and
+              booking confirmation will be sent to your
+              <span className="text-green-400 font-semibold"> WhatsApp</span>
+              within the next hour.
+            </p>
+
+            <p className="text-xs text-gray-500 mt-2">
+              Please check WhatsApp for your booking details and ticket.
+            </p>
+          </div>
+
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-4 flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-[#d4af37] text-black font-semibold hover:bg-[#e5c04a] transition"
+          >
+            <ArrowLeft size={18} />
+            Go Back
+          </button>
         </div>
       </div>
     );
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const bookingData = {
-    propertyTitle: ticket.property_name,
-    name: ticket.guest_name,
-    mobile: ticket.guest_phone,
-    persons: ticket.persons || 0,
-    checkIn: formatDate(ticket.checkin_datetime),
-    checkOut: formatDate(ticket.checkout_datetime),
-    totalPrice: parseFloat(ticket.total_amount) || 0,
-    advanceAmount: parseFloat(ticket.advance_amount) || 0,
-    mapLink: ticket.map_link || undefined,
-  };
-
-  const paymentInfo = {
-    orderId: ticket.booking_id,
-    transactionId: ticket.transaction_id || ticket.order_id || "-",
-    status: ticket.payment_status || "SUCCESS",
-    date: formatDate(ticket.created_at),
-  };
-
   return (
-    <>
-      <style>{`@media print { body { display: none !important; } }`}</style>
-      <div
-        className="min-h-screen bg-[#f0f0f0] py-6 relative print:hidden"
-        style={{
-          filter: isBlurred ? "blur(12px)" : "none",
-          transition: "filter 0.2s ease",
-          userSelect: "none",
-          WebkitUserSelect: "none",
-        }}
-      >
-        <div
-          aria-hidden="true"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: "rotate(-30deg)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "clamp(14px, 3vw, 22px)",
-              color: "rgba(0,0,0,0.06)",
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-              whiteSpace: "nowrap",
-              userSelect: "none",
-              WebkitUserSelect: "none",
-            }}
-          >
-            CONFIDENTIAL &mdash; {ticket.booking_id}
-          </span>
-        </div>
-        <ETicket bookingData={bookingData} paymentInfo={paymentInfo} />
-      </div>
-    </>
+    <ETicket
+      bookingData={{
+        propertyTitle: ticket.property_name,
+        name: ticket.guest_name,
+        mobile: ticket.guest_phone,
+        persons: ticket.persons,
+        checkIn: ticket.checkin_datetime,
+        checkOut: ticket.checkout_datetime,
+        totalPrice: ticket.total_amount,
+        advanceAmount: ticket.advance_amount,
+        mapLink: ticket.map_link,
+      }}
+      paymentInfo={{
+        orderId: ticket.booking_id,
+        transactionId: ticket.transaction_id,
+        status: ticket.payment_status,
+        date: ticket.created_at,
+      }}
+    />
   );
 };
 

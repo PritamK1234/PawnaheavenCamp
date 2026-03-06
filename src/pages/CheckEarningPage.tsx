@@ -60,7 +60,11 @@ interface InProcessBooking {
 }
 
 interface HistoryItem {
-  type: "booking_success" | "booking_cancelled" | "withdrawal_paid" | "withdrawal_rejected";
+  type:
+    | "booking_success"
+    | "booking_cancelled"
+    | "withdrawal_paid"
+    | "withdrawal_rejected";
   property_name?: string;
   guest_name?: string;
   amount: number;
@@ -68,6 +72,10 @@ interface HistoryItem {
   message: string;
   upi_id?: string;
 }
+const validateUPI = (upi: string) => {
+  const upiRegex = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z]{2,64}$/;
+  return upiRegex.test(upi);
+};
 
 const CheckEarningPage = () => {
   const navigate = useNavigate();
@@ -173,7 +181,10 @@ const CheckEarningPage = () => {
 
   const handleWhatsAppShare = () => {
     if (!shareData) return;
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareData.referralLink)}`, "_blank");
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareData.referralLink)}`,
+      "_blank",
+    );
   };
 
   const handleSendOTP = async () => {
@@ -190,7 +201,11 @@ const CheckEarningPage = () => {
       toast.success("OTP sent to your registered mobile");
       setStep("otp");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to send OTP");
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Failed to send OTP",
+      );
     } finally {
       setLoading(false);
     }
@@ -215,7 +230,11 @@ const CheckEarningPage = () => {
       setToken(finalToken);
       fetchDashboard(finalToken);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.response?.data?.error || "Login failed");
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Login failed",
+      );
     } finally {
       setLoading(false);
     }
@@ -223,18 +242,49 @@ const CheckEarningPage = () => {
 
   const handleWithdraw = async () => {
     if (!token) return;
+
+    if (!formData.accountDetails) {
+      toast.error("Please enter UPI ID");
+      return;
+    }
+
+    if (!validateUPI(formData.accountDetails)) {
+      toast.error("Please enter a valid UPI ID (example: name@upi)");
+      return;
+    }
+
+    if (!formData.withdrawAmount || Number(formData.withdrawAmount) < 500) {
+      toast.error("Minimum withdrawal amount is ₹500");
+      return;
+    }
+
+    if (Number(formData.withdrawAmount) > dashboard.available_balance) {
+      toast.error("Withdrawal amount exceeds available balance");
+      return;
+    }
+
     setLoading(true);
+
     try {
       await axios.post(
         "/api/referrals/withdraw",
-        { amount: parseFloat(formData.withdrawAmount), upi: formData.accountDetails },
+        {
+          amount: parseFloat(formData.withdrawAmount),
+          upi: formData.accountDetails,
+        },
         { headers: { Authorization: `Bearer ${token}` } },
       );
+
       toast.success("Withdrawal request submitted!");
       fetchDashboard(token);
       fetchHistory(token);
-      setFormData({ ...formData, withdrawAmount: "", accountDetails: "" });
-    } catch (error: any) {
+
+      setFormData({
+        ...formData,
+        withdrawAmount: "",
+        accountDetails: "",
+      });
+    } catch (error) {
       toast.error(error.response?.data?.error || "Withdrawal failed");
     } finally {
       setLoading(false);
@@ -251,7 +301,11 @@ const CheckEarningPage = () => {
   };
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    new Date(d).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
 
   const formatDateShort = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
@@ -305,8 +359,12 @@ const CheckEarningPage = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-4">
                 <ShieldCheck className="w-8 h-8" />
               </div>
-              <h2 className="text-2xl font-display font-bold">Login to Dashboard</h2>
-              <p className="text-sm text-muted-foreground">Enter your registered mobile number</p>
+              <h2 className="text-2xl font-display font-bold">
+                Login to Dashboard
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Enter your registered mobile number
+              </p>
             </div>
             <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-4">
               <div className="space-y-2">
@@ -320,18 +378,33 @@ const CheckEarningPage = () => {
                   value={formData.code}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, "");
-                    if (value.length <= 10) setFormData({ ...formData, code: value });
+                    if (value.length <= 10)
+                      setFormData({ ...formData, code: value });
                   }}
                   className="h-12 bg-secondary/50 rounded-xl"
                 />
               </div>
-              <Button onClick={handleSendOTP} disabled={loading} className="w-full h-12 rounded-xl font-bold gap-2">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4" />Send OTP</>}
+              <Button
+                onClick={handleSendOTP}
+                disabled={loading}
+                className="w-full h-12 rounded-xl font-bold gap-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send OTP
+                  </>
+                )}
               </Button>
               <div className="text-center pt-2">
                 <span className="text-xs text-muted-foreground">
                   Not registered yet?{" "}
-                  <Link to="/referral/generate" className="text-primary font-bold hover:underline">
+                  <Link
+                    to="/referral/generate"
+                    className="text-primary font-bold hover:underline"
+                  >
                     Create your own referral code
                   </Link>
                 </span>
@@ -347,7 +420,9 @@ const CheckEarningPage = () => {
                 <Lock className="w-8 h-8" />
               </div>
               <h2 className="text-2xl font-display font-bold">Enter OTP</h2>
-              <p className="text-sm text-muted-foreground">Verification code sent to {formData.code}</p>
+              <p className="text-sm text-muted-foreground">
+                Verification code sent to {formData.code}
+              </p>
             </div>
             <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-4">
               <div className="space-y-2">
@@ -355,13 +430,23 @@ const CheckEarningPage = () => {
                 <Input
                   placeholder="000000"
                   value={formData.otp}
-                  onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, otp: e.target.value })
+                  }
                   className="h-12 bg-secondary/50 rounded-xl text-center text-2xl tracking-[0.5em] font-bold"
                   maxLength={6}
                 />
               </div>
-              <Button onClick={handleVerifyOTP} disabled={loading} className="w-full h-12 rounded-xl font-bold">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & Login"}
+              <Button
+                onClick={handleVerifyOTP}
+                disabled={loading}
+                className="w-full h-12 rounded-xl font-bold"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Verify & Login"
+                )}
               </Button>
             </Card>
           </div>
@@ -376,29 +461,44 @@ const CheckEarningPage = () => {
                     <User className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-xs text-white/70 font-bold tracking-widest">Welcome back</p>
+                    <p className="text-xs text-white/70 font-bold tracking-widest">
+                      Welcome back
+                    </p>
                     <p className="text-xl font-display font-bold capitalize">
                       {dashboard.username} ({dashboard.referral_code})
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
-                        dashboard.referral_type === "owner" ? "bg-blue-500/20 text-blue-400" :
-                        dashboard.referral_type === "b2b" ? "bg-amber-500/20 text-amber-400" :
-                        dashboard.referral_type === "owners_b2b" ? "bg-purple-500/20 text-purple-400" :
-                        "bg-emerald-500/20 text-emerald-400"
-                      )}>
-                        {dashboard.referral_type === "owner" ? "Owner" :
-                         dashboard.referral_type === "b2b" ? "B2B Partner" :
-                         dashboard.referral_type === "owners_b2b" ? "Owners B2B" :
-                         "Public"} Referral
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                          dashboard.referral_type === "owner"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : dashboard.referral_type === "b2b"
+                              ? "bg-amber-500/20 text-amber-400"
+                              : dashboard.referral_type === "owners_b2b"
+                                ? "bg-purple-500/20 text-purple-400"
+                                : "bg-emerald-500/20 text-emerald-400",
+                        )}
+                      >
+                        {dashboard.referral_type === "owner"
+                          ? "Owner"
+                          : dashboard.referral_type === "b2b"
+                            ? "B2B Partner"
+                            : dashboard.referral_type === "owners_b2b"
+                              ? "Owners B2B"
+                              : "Public"}{" "}
+                        Referral
                       </span>
-                      <span className="text-[10px] text-white/50">{dashboard.commission_label}</span>
+                      <span className="text-[10px] text-white/50">
+                        {dashboard.commission_label}
+                      </span>
                     </div>
                   </div>
                 </div>
                 <div className="pt-4 border-t border-white/10">
-                  <p className="text-xs text-white/70 font-bold tracking-widest mb-1">Available Balance</p>
+                  <p className="text-xs text-white/70 font-bold tracking-widest mb-1">
+                    Available Balance
+                  </p>
                   <p className="text-4xl font-display font-bold">
                     ₹{dashboard.available_balance.toLocaleString("en-IN")}
                   </p>
@@ -409,19 +509,31 @@ const CheckEarningPage = () => {
 
             <Tabs defaultValue="withdraw" className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-secondary/50 rounded-2xl p-1 h-14">
-                <TabsTrigger value="withdraw" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
+                <TabsTrigger
+                  value="withdraw"
+                  className="rounded-xl font-bold data-[state=active]:bg-primary text-xs"
+                >
                   <Wallet className="w-4 h-4 mr-1" />
                   Withdraw
                 </TabsTrigger>
-                <TabsTrigger value="history" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
+                <TabsTrigger
+                  value="history"
+                  className="rounded-xl font-bold data-[state=active]:bg-primary text-xs"
+                >
                   <History className="w-4 h-4 mr-1" />
                   History
                 </TabsTrigger>
-                <TabsTrigger value="stats" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
+                <TabsTrigger
+                  value="stats"
+                  className="rounded-xl font-bold data-[state=active]:bg-primary text-xs"
+                >
                   <AlertCircle className="w-4 h-4 mr-1" />
                   Stats
                 </TabsTrigger>
-                <TabsTrigger value="share" className="rounded-xl font-bold data-[state=active]:bg-primary text-xs">
+                <TabsTrigger
+                  value="share"
+                  className="rounded-xl font-bold data-[state=active]:bg-primary text-xs"
+                >
                   <Share2 className="w-4 h-4 mr-1" />
                   Share
                 </TabsTrigger>
@@ -430,11 +542,17 @@ const CheckEarningPage = () => {
               <TabsContent value="withdraw" className="mt-6 space-y-6">
                 <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-4">
                   <div className="space-y-2">
-                    <Label>UPI ID / Account Details</Label>
+                    <Label>UPI ID</Label>
                     <Input
-                      placeholder="e.g. user@upi"
+                      placeholder="Enter UPI ID- e.g. user@upi"
                       value={formData.accountDetails}
-                      onChange={(e) => setFormData({ ...formData, accountDetails: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value.trim();
+                        setFormData({
+                          ...formData,
+                          accountDetails: value,
+                        });
+                      }}
                       className="h-12 bg-secondary/50 rounded-xl"
                     />
                   </div>
@@ -443,10 +561,22 @@ const CheckEarningPage = () => {
                     <Input
                       placeholder="e.g. 500"
                       type="number"
+                      min="500"
+                      step="1"
                       value={formData.withdrawAmount}
-                      onChange={(e) => setFormData({ ...formData, withdrawAmount: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || Number(value) >= 0) {
+                          setFormData({ ...formData, withdrawAmount: value });
+                        }
+                      }}
                       className="h-12 bg-secondary/50 rounded-xl"
                     />
+                    {dashboard.available_balance < 500 && (
+                      <p className="text-xs text-blue-400">
+                        Minimum ₹500 balance required to withdraw
+                      </p>
+                    )}
                   </div>
                   <Button
                     onClick={handleWithdraw}
@@ -454,11 +584,17 @@ const CheckEarningPage = () => {
                       loading ||
                       !formData.withdrawAmount ||
                       parseFloat(formData.withdrawAmount) < 500 ||
-                      parseFloat(formData.withdrawAmount) > dashboard.available_balance
+                      parseFloat(formData.withdrawAmount) >
+                        dashboard.available_balance ||
+                      dashboard.available_balance < 500
                     }
                     className="w-full h-14 rounded-2xl font-bold shadow-gold"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Withdraw Amount"}
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Withdraw Amount"
+                    )}
                   </Button>
                 </Card>
 
@@ -470,8 +606,15 @@ const CheckEarningPage = () => {
                     </h3>
                     <Card className="p-4 bg-card border-orange-500/20 rounded-2xl flex justify-between items-center">
                       <div>
-                        <p className="font-bold">₹{dashboard.pending_withdrawal_amount.toLocaleString("en-IN")}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Withdrawal Request</p>
+                        <p className="font-bold">
+                          ₹
+                          {dashboard.pending_withdrawal_amount.toLocaleString(
+                            "en-IN",
+                          )}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                          Withdrawal Request
+                        </p>
                       </div>
                       <span className="text-[10px] bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
                         Pending
@@ -487,18 +630,29 @@ const CheckEarningPage = () => {
                       Referral Earnings In-Process
                     </h3>
                     {inProcess.map((booking) => (
-                      <Card key={booking.booking_id} className="p-4 bg-card border-amber-500/20 rounded-2xl space-y-2">
+                      <Card
+                        key={booking.booking_id}
+                        className="p-4 bg-card border-amber-500/20 rounded-2xl space-y-2"
+                      >
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="font-bold text-sm">{booking.property_name}</p>
-                            <p className="text-xs text-muted-foreground">Guest: {booking.guest_name}</p>
+                            <p className="font-bold text-sm">
+                              {booking.property_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Guest: {booking.guest_name}
+                            </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {formatDateShort(booking.checkin_datetime)} → {formatDateShort(booking.checkout_datetime)}
+                              {formatDateShort(booking.checkin_datetime)} →{" "}
+                              {formatDateShort(booking.checkout_datetime)}
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-amber-500">
-                              ₹{parseFloat(String(booking.referrer_commission)).toLocaleString("en-IN")}
+                              ₹
+                              {parseFloat(
+                                String(booking.referrer_commission),
+                              ).toLocaleString("en-IN")}
                             </p>
                             <span className="text-[9px] bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">
                               Awaiting Check-out
@@ -514,21 +668,40 @@ const CheckEarningPage = () => {
               <TabsContent value="stats" className="mt-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <Card className="p-4 bg-card border-border/50 rounded-2xl text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Total Earned</p>
-                    <p className="text-lg font-bold text-primary">₹{dashboard.total_earnings.toLocaleString("en-IN")}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">
+                      Total Earned
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      ₹{dashboard.total_earnings.toLocaleString("en-IN")}
+                    </p>
                   </Card>
                   <Card className="p-4 bg-card border-border/50 rounded-2xl text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Total Referrals</p>
-                    <p className="text-lg font-bold text-primary">{dashboard.total_referrals}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">
+                      Total Referrals
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {dashboard.total_referrals}
+                    </p>
                   </Card>
                   <Card className="p-4 bg-card border-border/50 rounded-2xl text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Total Withdrawn</p>
-                    <p className="text-lg font-bold text-red-400">₹{dashboard.total_withdrawals.toLocaleString("en-IN")}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">
+                      Total Withdrawn
+                    </p>
+                    <p className="text-lg font-bold text-red-400">
+                      ₹{dashboard.total_withdrawals.toLocaleString("en-IN")}
+                    </p>
                   </Card>
                   <Card className="p-4 bg-card border-border/50 rounded-2xl text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">In-Process</p>
-                    <p className="text-lg font-bold text-amber-400">₹{inProcessAmount.toLocaleString("en-IN")}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{inProcess.length} booking{inProcess.length !== 1 ? "s" : ""}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">
+                      In-Process
+                    </p>
+                    <p className="text-lg font-bold text-amber-400">
+                      ₹{inProcessAmount.toLocaleString("en-IN")}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {inProcess.length} booking
+                      {inProcess.length !== 1 ? "s" : ""}
+                    </p>
                   </Card>
                 </div>
               </TabsContent>
@@ -537,32 +710,63 @@ const CheckEarningPage = () => {
                 {shareData ? (
                   <div className="space-y-6">
                     <Card className="p-6 bg-card border-border/50 rounded-3xl text-center space-y-4">
-                      <Label className="text-xs font-bold tracking-widest text-muted-foreground">Your QR Code</Label>
+                      <Label className="text-xs font-bold tracking-widest text-muted-foreground">
+                        Your QR Code
+                      </Label>
                       <div className="bg-white p-4 rounded-2xl inline-block mx-auto">
-                        <img src={shareData.referralQrCode} alt="Referral QR" className="w-48 h-48" />
+                        <img
+                          src={shareData.referralQrCode}
+                          alt="Referral QR"
+                          className="w-48 h-48"
+                        />
                       </div>
-                      <Button variant="outline" onClick={handleDownloadQR} className="w-full gap-2 rounded-xl">
-                        <Download className="w-4 h-4" />Download QR
+                      <Button
+                        variant="outline"
+                        onClick={handleDownloadQR}
+                        className="w-full gap-2 rounded-xl"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download QR
                       </Button>
                     </Card>
 
                     <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-3">
-                      <Label className="text-xs font-bold tracking-widest text-muted-foreground">Referral Link</Label>
+                      <Label className="text-xs font-bold tracking-widest text-muted-foreground">
+                        Referral Link
+                      </Label>
                       <div className="flex gap-2">
-                        <Input readOnly value={shareData.referralLink} className="bg-secondary/30 border-none" />
-                        <Button size="icon" variant="secondary" onClick={() => handleCopy(shareData.referralLink, "Link")}>
+                        <Input
+                          readOnly
+                          value={shareData.referralLink}
+                          className="bg-secondary/30 border-none"
+                        />
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          onClick={() =>
+                            handleCopy(shareData.referralLink, "Link")
+                          }
+                        >
                           <Copy className="w-4 h-4" />
                         </Button>
                       </div>
                     </Card>
 
                     <Card className="p-6 bg-card border-border/50 rounded-3xl space-y-3">
-                      <Label className="text-xs font-bold tracking-widest text-muted-foreground">Referral Code</Label>
+                      <Label className="text-xs font-bold tracking-widest text-muted-foreground">
+                        Referral Code
+                      </Label>
                       <div className="flex items-center justify-between bg-secondary/30 p-4 rounded-xl">
                         <span className="text-2xl font-display font-bold text-primary tracking-wider">
                           {shareData.referralCode}
                         </span>
-                        <Button size="icon" variant="ghost" onClick={() => handleCopy(shareData.referralCode, "Code")}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() =>
+                            handleCopy(shareData.referralCode, "Code")
+                          }
+                        >
                           <Copy className="w-4 h-4" />
                         </Button>
                       </div>
@@ -593,55 +797,96 @@ const CheckEarningPage = () => {
                     <div className="w-16 h-16 bg-secondary/50 rounded-2xl flex items-center justify-center mb-4">
                       <History className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <p className="font-bold text-muted-foreground">No History Yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">Complete your first referral to see earnings here.</p>
+                    <p className="font-bold text-muted-foreground">
+                      No History Yet
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Complete your first referral to see earnings here.
+                    </p>
                   </div>
                 ) : (
                   historyItems.map((item, idx) => {
-                    const isSuccess = item.type === "booking_success" || item.type === "withdrawal_paid";
+                    const isSuccess =
+                      item.type === "booking_success" ||
+                      item.type === "withdrawal_paid";
                     const isCancelled = item.type === "booking_cancelled";
-                    const isWithdrawal = item.type === "withdrawal_paid" || item.type === "withdrawal_rejected";
+                    const isWithdrawal =
+                      item.type === "withdrawal_paid" ||
+                      item.type === "withdrawal_rejected";
                     return (
-                      <Card key={idx} className={cn(
-                        "p-4 bg-card rounded-2xl flex items-center gap-4",
-                        isSuccess ? "border-emerald-500/20" :
-                        isCancelled ? "border-red-500/20" :
-                        "border-red-500/20"
-                      )}>
-                        <div className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                          isSuccess ? "bg-emerald-500/10 text-emerald-500" :
-                          "bg-red-500/10 text-red-400"
-                        )}>
-                          {item.type === "booking_success" && <CheckCircle2 className="w-5 h-5" />}
-                          {item.type === "booking_cancelled" && <XCircle className="w-5 h-5" />}
-                          {item.type === "withdrawal_paid" && <Wallet className="w-5 h-5" />}
-                          {item.type === "withdrawal_rejected" && <Wallet className="w-5 h-5" />}
+                      <Card
+                        key={idx}
+                        className={cn(
+                          "p-4 bg-card rounded-2xl flex items-center gap-4",
+                          isSuccess
+                            ? "border-emerald-500/20"
+                            : isCancelled
+                              ? "border-red-500/20"
+                              : "border-red-500/20",
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                            isSuccess
+                              ? "bg-emerald-500/10 text-emerald-500"
+                              : "bg-red-500/10 text-red-400",
+                          )}
+                        >
+                          {item.type === "booking_success" && (
+                            <CheckCircle2 className="w-5 h-5" />
+                          )}
+                          {item.type === "booking_cancelled" && (
+                            <XCircle className="w-5 h-5" />
+                          )}
+                          {item.type === "withdrawal_paid" && (
+                            <Wallet className="w-5 h-5" />
+                          )}
+                          {item.type === "withdrawal_rejected" && (
+                            <Wallet className="w-5 h-5" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-sm">{item.message}</p>
                           {item.property_name && (
-                            <p className="text-xs text-muted-foreground truncate">{item.property_name}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {item.property_name}
+                            </p>
                           )}
                           {isWithdrawal && item.upi_id && (
-                            <p className="text-xs text-muted-foreground">UPI: {item.upi_id}</p>
+                            <p className="text-xs text-muted-foreground">
+                              UPI: {item.upi_id}
+                            </p>
                           )}
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{formatDate(item.date)}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {formatDate(item.date)}
+                          </p>
                         </div>
                         <div className="text-right">
-                          <p className={cn(
-                            "font-bold",
-                            isSuccess ? "text-emerald-500" : "text-red-400"
-                          )}>
-                            {isSuccess ? "+" : ""}₹{item.amount.toLocaleString("en-IN")}
+                          <p
+                            className={cn(
+                              "font-bold",
+                              isSuccess ? "text-emerald-500" : "text-red-400",
+                            )}
+                          >
+                            {isSuccess ? "+" : ""}₹
+                            {item.amount.toLocaleString("en-IN")}
                           </p>
-                          <span className={cn(
-                            "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
-                            isSuccess ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-400"
-                          )}>
-                            {item.type === "booking_success" ? "Completed" :
-                             item.type === "booking_cancelled" ? "Cancelled" :
-                             item.type === "withdrawal_paid" ? "Paid" : "Rejected"}
+                          <span
+                            className={cn(
+                              "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                              isSuccess
+                                ? "bg-emerald-500/10 text-emerald-500"
+                                : "bg-red-500/10 text-red-400",
+                            )}
+                          >
+                            {item.type === "booking_success"
+                              ? "Completed"
+                              : item.type === "booking_cancelled"
+                                ? "Cancelled"
+                                : item.type === "withdrawal_paid"
+                                  ? "Paid"
+                                  : "Rejected"}
                           </span>
                         </div>
                       </Card>

@@ -56,8 +56,12 @@ const PropertyCard = ({
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isSnapping, setIsSnapping] = useState(false);
+
   const touchStartX = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+  const isDragging = useRef(false);
+  const didSwipe = useRef(false);
 
   const displayImages =
     images && images.length > 0
@@ -68,15 +72,27 @@ const PropertyCard = ({
 
   const navigationId = slug || id;
 
+  const snapTo = (index: number) => {
+    const clamped = Math.max(0, Math.min(displayImages.length - 1, index));
+    setIsSnapping(true);
+    setCurrentImageIndex(clamped);
+    setDragOffset(0);
+    setTimeout(() => setIsSnapping(false), 320);
+  };
+
   const handleNavigate = () => {
+    if (didSwipe.current) {
+      didSwipe.current = false;
+      return;
+    }
     sessionStorage.setItem("homeScrollPosition", window.scrollY.toString());
-    const unitParam = unitId ? `?unit_id=${unitId}` : '';
+    const unitParam = unitId ? `?unit_id=${unitId}` : "";
     navigate(`/property/${navigationId}${unitParam}`);
   };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const unitParam = unitId ? `?unit_id=${unitId}` : '';
+    const unitParam = unitId ? `?unit_id=${unitId}` : "";
     const url = window.location.origin + `/property/${navigationId}${unitParam}`;
     if (navigator.share) {
       navigator.share({ title, url });
@@ -97,13 +113,52 @@ const PropertyCard = ({
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((p) => (p === 0 ? displayImages.length - 1 : p - 1));
+    snapTo(currentImageIndex === 0 ? displayImages.length - 1 : currentImageIndex - 1);
   };
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex((p) => (p === displayImages.length - 1 ? 0 : p + 1));
+    snapTo(currentImageIndex === displayImages.length - 1 ? 0 : currentImageIndex + 1);
   };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+    isDragging.current = true;
+    didSwipe.current = false;
+    setIsSnapping(false);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || touchStartX.current === null) return;
+    const delta = e.touches[0].clientX - touchStartX.current;
+    setDragOffset(delta);
+  };
+
+  const onTouchEnd = () => {
+    if (!isDragging.current || touchStartX.current === null) return;
+    isDragging.current = false;
+
+    const elapsed = Date.now() - touchStartTime.current;
+    const velocity = Math.abs(dragOffset) / Math.max(elapsed, 1);
+
+    if (Math.abs(dragOffset) > 40 || velocity > 0.3) {
+      didSwipe.current = true;
+      if (dragOffset < 0) {
+        snapTo(currentImageIndex === displayImages.length - 1 ? currentImageIndex : currentImageIndex + 1);
+      } else {
+        snapTo(currentImageIndex === 0 ? 0 : currentImageIndex - 1);
+      }
+    } else {
+      setIsSnapping(true);
+      setDragOffset(0);
+      setTimeout(() => setIsSnapping(false), 320);
+    }
+
+    touchStartX.current = null;
+  };
+
+  const stripTranslate = `calc(${-(currentImageIndex / displayImages.length) * 100}% + ${dragOffset}px)`;
 
   return (
     <div
@@ -112,18 +167,39 @@ const PropertyCard = ({
       onMouseEnter={() => { import('../pages/PropertyDetails'); }}
     >
       <div className="bg-card rounded-[32px] overflow-hidden border border-border/10 hover:border-primary/30 transition-all duration-300 shadow-sm">
-        {/* IMAGE */}
+        {/* IMAGE SLIDER */}
         <div
-          ref={containerRef}
-          className="relative h-64 overflow-hidden bg-black"
+          className="relative h-64 overflow-hidden bg-black select-none"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
-          <OptimizedImage
-            src={displayImages[currentImageIndex]}
-            alt={title}
-            width={400}
-            priority
-            className="w-full h-full"
-          />
+          {/* Horizontal strip */}
+          <div
+            className="flex h-full"
+            style={{
+              width: `${displayImages.length * 100}%`,
+              transform: `translateX(${stripTranslate})`,
+              transition: isSnapping ? "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
+              willChange: "transform",
+            }}
+          >
+            {displayImages.map((src, i) => (
+              <div
+                key={i}
+                className="h-full flex-shrink-0"
+                style={{ width: `${100 / displayImages.length}%` }}
+              >
+                <OptimizedImage
+                  src={src}
+                  alt={`${title} ${i + 1}`}
+                  width={400}
+                  priority={i === 0}
+                  className="w-full h-full"
+                />
+              </div>
+            ))}
+          </div>
 
           {/* NAV ARROWS */}
           {displayImages.length > 1 && (
@@ -140,6 +216,23 @@ const PropertyCard = ({
               >
                 <ChevronRight size={18} />
               </button>
+            </div>
+          )}
+
+          {/* DOT INDICATORS */}
+          {displayImages.length > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1 z-20 pointer-events-none">
+              {displayImages.map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-full transition-all duration-300"
+                  style={{
+                    width: i === currentImageIndex ? 16 : 5,
+                    height: 5,
+                    background: i === currentImageIndex ? "#d4af37" : "rgba(255,255,255,0.6)",
+                  }}
+                />
+              ))}
             </div>
           )}
 

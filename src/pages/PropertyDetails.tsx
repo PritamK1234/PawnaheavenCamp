@@ -102,7 +102,11 @@ interface PropertyUnit {
   activities?: string[];
   highlights?: string[];
   policies?: string[];
-  cancellation_policy?: { full_refund_days: number; half_refund_days: number; no_refund_days: number };
+  cancellation_policy?: {
+    full_refund_days: number;
+    half_refund_days: number;
+    no_refund_days: number;
+  };
   schedule?: { time: string; title: string; icon?: string }[];
   images?: string[];
   calendar?: {
@@ -138,7 +142,11 @@ interface PropertyDetail {
   highlights: string[];
   activities: string[];
   policies?: string[];
-  cancellation_policy?: { full_refund_days: number; half_refund_days: number; no_refund_days: number };
+  cancellation_policy?: {
+    full_refund_days: number;
+    half_refund_days: number;
+    no_refund_days: number;
+  };
   schedule?: { time: string; title: string; icon?: string }[];
   contact?: string;
   owner_whatsapp_number?: string;
@@ -216,7 +224,11 @@ const PropertyDetails = () => {
           const parseCancellationPolicy = (val: any) => {
             if (!val) return undefined;
             if (typeof val === "string") {
-              try { return JSON.parse(val); } catch { return undefined; }
+              try {
+                return JSON.parse(val);
+              } catch {
+                return undefined;
+              }
             }
             return val;
           };
@@ -228,7 +240,9 @@ const PropertyDetails = () => {
             activities: ensureArray(unit.activities),
             highlights: ensureArray(unit.highlights),
             policies: ensureArray(unit.policies),
-            cancellation_policy: parseCancellationPolicy(unit.cancellation_policy),
+            cancellation_policy: parseCancellationPolicy(
+              unit.cancellation_policy,
+            ),
             schedule: ensureArray(unit.schedule),
           }));
 
@@ -1248,7 +1262,7 @@ const PropertyDetails = () => {
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem
                     value="highlights"
-                    className="border-none bg-[#1A1A1A] rounded-2xl md:rounded-[2rem] px-4 md:px-8 border border-gray-800/50 mb-4 overflow-hidden"
+                    className="mb-4 border-none bg-[#1A1A1A] rounded-2xl md:rounded-[2rem] px-4 md:px-8 border border-gray-800/50 overflow-hidden"
                   >
                     <AccordionTrigger className="hover:no-underline py-4 md:py-6 text-sm md:text-lg font-bold text-left">
                       <div className="flex items-center gap-2 md:gap-3 overflow-hidden">
@@ -1283,7 +1297,7 @@ const PropertyDetails = () => {
 
                   <AccordionItem
                     value="policies"
-                    className="border-none bg-[#1A1A1A] rounded-2xl md:rounded-[2rem] px-4 md:px-8 border border-gray-800/50 overflow-hidden"
+                    className="mb-4 border-none bg-[#1A1A1A] rounded-2xl md:rounded-[2rem] px-4 md:px-8 border border-gray-800/50 overflow-hidden"
                   >
                     <AccordionTrigger className="hover:no-underline py-4 md:py-6 text-sm md:text-lg font-bold text-left">
                       <div className="flex items-center gap-2 md:gap-3 overflow-hidden">
@@ -1318,34 +1332,41 @@ const PropertyDetails = () => {
 
                   {(() => {
                     const cp =
-                      propertyData.category === "villa" && selectedUnit?.cancellation_policy
+                      propertyData.category === "villa" &&
+                      selectedUnit?.cancellation_policy
                         ? selectedUnit.cancellation_policy
                         : propertyData.cancellation_policy;
                     if (!cp) return null;
                     return (
                       <AccordionItem
                         value="cancellation"
-                        className="border-none bg-[#1A1A1A] rounded-2xl md:rounded-[2rem] px-4 md:px-8 border border-gray-800/50 overflow-hidden"
+                        className="mb-4 border-none bg-[#1A1A1A] rounded-2xl md:rounded-[2rem] px-4 md:px-8 border border-gray-800/50 overflow-hidden"
                       >
                         <AccordionTrigger className="hover:no-underline py-4 md:py-6 text-sm md:text-lg font-bold text-left">
                           <div className="flex items-center gap-2 md:gap-3 overflow-hidden">
                             <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-[#C5A021] shrink-0" />
-                            <span className="truncate">Cancellation Policy</span>
+                            <span className="truncate">
+                              Cancellation Policy
+                            </span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="pb-6">
                           <ul className="space-y-4">
                             <li className="text-gray-400 text-sm md:text-base flex items-start gap-3">
                               <div className="w-2 h-2 rounded-full bg-green-500 mt-2 shrink-0" />
-                              100% Refund — Upto {cp.full_refund_days} days before check-in
+                              100% Refund — Upto {cp.full_refund_days} days
+                              before check-in
                             </li>
                             <li className="text-gray-400 text-sm md:text-base flex items-start gap-3">
                               <div className="w-2 h-2 rounded-full bg-yellow-500 mt-2 shrink-0" />
-                              50% Refund — Upto {cp.half_refund_days} days before check-in
+                              50% Refund — Upto {cp.half_refund_days} days
+                              before check-in
                             </li>
                             <li className="text-gray-400 text-sm md:text-base flex items-start gap-3">
                               <div className="w-2 h-2 rounded-full bg-red-500 mt-2 shrink-0" />
-                              No Refund — Less than {cp.no_refund_days} day{cp.no_refund_days !== 1 ? "s" : ""} before check-in
+                              No Refund — Less than {cp.no_refund_days} day
+                              {cp.no_refund_days !== 1 ? "s" : ""} before
+                              check-in
                             </li>
                           </ul>
                         </AccordionContent>

@@ -503,6 +503,7 @@ const updateProperty = async (req, res) => {
       activities,
       highlights,
       policies,
+      cancellation_policy,
       schedule,
       description,
       availability,
@@ -538,6 +539,7 @@ const updateProperty = async (req, res) => {
         activities = COALESCE($2, activities), 
         highlights = COALESCE($3, highlights), 
         policies = COALESCE($4, policies), 
+        cancellation_policy = COALESCE($26, cancellation_policy),
         schedule = COALESCE($5, schedule), 
         description = COALESCE($6, description),
         availability = COALESCE($7, availability),
@@ -601,6 +603,7 @@ const updateProperty = async (req, res) => {
         owner_whatsapp_number || null,
         referral_code || null,
         owner_otp_number || null,
+        cancellation_policy !== undefined ? JSON.stringify(cancellation_policy) : null,
       ],
     );
 

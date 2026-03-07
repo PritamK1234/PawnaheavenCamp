@@ -1598,6 +1598,76 @@ const payoutWebhook = async (req, res) => {
   }
 };
 
+const getAllTransactions = async (req, res) => {
+  try {
+    const [bookingsRes, refundsRes, withdrawalsRes] = await Promise.all([
+      query(`
+        SELECT
+          b.booking_id AS id, 'booking' AS _type,
+          b.booking_id, b.guest_name AS customer_name, b.property_name,
+          b.owner_name, b.referral_code, b.advance_amount AS amount,
+          b.booking_status AS status, b.payment_status,
+          b.checkin_datetime AS check_in, b.checkout_datetime AS check_out,
+          b.created_at AS date, b.refund_status, b.refund_amount,
+          b.referrer_commission, b.admin_commission, b.unit_id, b.property_id,
+          ru.username AS referrer_name
+        FROM bookings b
+        LEFT JOIN referral_users ru ON ru.referral_code = b.referral_code
+        WHERE b.payment_status = 'SUCCESS'
+          AND b.booking_status NOT IN ('CANCELLED', 'DELETED')
+        ORDER BY b.created_at DESC
+      `),
+      query(`
+        SELECT
+          b.booking_id AS id, 'refund' AS _type,
+          b.booking_id, b.guest_name AS customer_name, b.property_name,
+          b.owner_name, b.referral_code, b.refund_amount AS amount,
+          b.booking_status AS status, b.payment_status,
+          b.checkin_datetime AS check_in, b.checkout_datetime AS check_out,
+          b.updated_at AS date, b.refund_status, b.refund_amount,
+          b.referrer_commission, b.admin_commission, b.unit_id, b.property_id,
+          b.advance_amount AS original_amount,
+          ru.username AS referrer_name
+        FROM bookings b
+        LEFT JOIN referral_users ru ON ru.referral_code = b.referral_code
+        WHERE b.payment_status = 'SUCCESS'
+          AND b.booking_status = 'CANCELLED'
+          AND b.advance_amount > 0
+        ORDER BY b.updated_at DESC
+      `),
+      query(`
+        SELECT
+          rt.id::text AS id, 'withdrawal' AS _type,
+          NULL AS booking_id, ru.username AS customer_name,
+          NULL AS property_name, NULL AS owner_name,
+          ru.referral_code, rt.amount, rt.status,
+          NULL::varchar AS payment_status,
+          NULL::timestamptz AS check_in, NULL::timestamptz AS check_out,
+          rt.created_at AS date, NULL::varchar AS refund_status,
+          NULL::numeric AS refund_amount, NULL::numeric AS referrer_commission,
+          NULL::numeric AS admin_commission, NULL::integer AS unit_id,
+          NULL::varchar AS property_id,
+          ru.username AS referrer_name, rt.upi_id,
+          ru.referral_type
+        FROM referral_transactions rt
+        JOIN referral_users ru ON ru.id = rt.referral_user_id
+        WHERE rt.type = 'withdrawal'
+        ORDER BY rt.created_at DESC
+      `),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      bookings: bookingsRes.rows,
+      refunds: refundsRes.rows,
+      withdrawals: withdrawalsRes.rows,
+    });
+  } catch (error) {
+    console.error('Error fetching all transactions:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   initiatePaytmPayment,
   paytmRedirect,
@@ -1606,6 +1676,7 @@ module.exports = {
   initiateRefund,
   getRefundRequests,
   getAllBookings,
+  getAllTransactions,
   verifyPaymentStatus,
   denyRefund,
   getRequestHistory,

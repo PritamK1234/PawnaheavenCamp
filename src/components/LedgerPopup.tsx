@@ -347,6 +347,7 @@ export const LedgerPopup = ({
   };
 
   const handleOpenCancelModal = async (entry: any) => {
+    onClose();
     setCancelPreview(null);
     setCancelConfirmEntry(entry);
     if (!entry.booking_id) return;
@@ -461,16 +462,30 @@ export const LedgerPopup = ({
     setShowAddForm(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (entry: any) => {
     if (!confirm("Are you sure you want to delete this entry?")) return;
     try {
-      const res = await fetch(`/api/bookings/ledger/${id}`, {
-        method: "DELETE",
-      });
+      let res: Response;
+      if (entry.source === 'website' && entry.booking_id) {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('ownerToken');
+        res = await fetch('/api/bookings/delete-booking', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ booking_id: entry.booking_id }),
+        });
+      } else {
+        res = await fetch(`/api/bookings/ledger/${entry.id}`, { method: "DELETE" });
+      }
       const data = await res.json();
       if (data.success) {
         toast.success("Entry deleted");
         fetchEntries();
+        onCancelSuccess?.();
+      } else {
+        toast.error(data.error || "Failed to delete entry");
       }
     } catch (error) {
       toast.error("Failed to delete entry");
@@ -796,23 +811,25 @@ export const LedgerPopup = ({
                 <div className="space-y-3">
                   {entries.map((entry, i) => {
                     const isCancelled = entry.booking_status === 'CANCELLED';
+                    const isDeleted = entry.status === 'deleted' || entry.booking_status === 'DELETED';
+                    const isRed = isCancelled || isDeleted;
                     return (
                     <div
                       key={entry.id ?? `b-${i}`}
                       className={`rounded-2xl p-4 flex items-center justify-between ${
-                        isCancelled
+                        isRed
                           ? 'bg-red-900/20 border border-red-500/30'
                           : 'bg-white/5 border border-white/10'
                       }`}
                     >
                       <div className="flex items-center gap-4">
                         <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold ${
-                          isCancelled ? 'bg-red-500/10 text-red-400' : 'bg-gold/10 text-gold'
+                          isRed ? 'bg-red-500/10 text-red-400' : 'bg-gold/10 text-gold'
                         }`}>
                           #{i + 1}
                         </div>
                         <div>
-                          <p className={`font-bold ${isCancelled ? 'text-red-300' : 'text-white'}`}>
+                          <p className={`font-bold ${isRed ? 'text-red-300' : 'text-white'}`}>
                             {entry.customer_name}
                           </p>
                           <div className="flex items-center gap-3 mt-1">
@@ -823,14 +840,19 @@ export const LedgerPopup = ({
                               <CreditCard className="w-3 h-3" />{" "}
                               {entry.payment_mode}
                             </span>
-                            {entry.source === 'website' && !isCancelled && (
+                            {entry.source === 'website' && !isRed && (
                               <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full font-bold tracking-wider">
                                 ONLINE
                               </span>
                             )}
-                            {isCancelled && (
+                            {isCancelled && !isDeleted && (
                               <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-bold tracking-wider">
                                 CANCELLED
+                              </span>
+                            )}
+                            {isDeleted && (
+                              <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-bold tracking-wider">
+                                DELETED
                               </span>
                             )}
                           </div>
@@ -838,7 +860,7 @@ export const LedgerPopup = ({
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className={`font-black ${isCancelled ? 'text-red-400 line-through' : 'text-gold'}`}>
+                          <p className={`font-black ${isRed ? 'text-red-400 line-through' : 'text-gold'}`}>
                             ₹{entry.amount}
                           </p>
                           <p className="text-[8px] text-white/20 capatalize font-bold tracking-tighter mt-1">
@@ -846,23 +868,27 @@ export const LedgerPopup = ({
                             {format(new Date(entry.check_out), "dd MMM")}
                           </p>
                         </div>
-                        {entry.source !== 'website' && (
+                        {!isDeleted && (
                           <div className="flex flex-col gap-2 border-l border-white/10 pl-3">
-                            <button
-                              onClick={() => handleEdit(entry)}
-                              className="text-white/60 hover:text-gold transition-colors"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(entry.id)}
-                              className="text-white/60 hover:text-red-500 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {entry.source !== 'website' && (
+                              <button
+                                onClick={() => handleEdit(entry)}
+                                className="text-white/60 hover:text-gold transition-colors"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                            )}
+                            {!isCancelled && (
+                              <button
+                                onClick={() => handleDelete(entry)}
+                                className="text-white/60 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         )}
-                        {isAdmin && !!entry.booking_id && !isCancelled && (
+                        {isAdmin && !!entry.booking_id && !isCancelled && !isDeleted && (
                           <div className="border-l border-white/10 pl-3">
                             <button
                               onClick={() => handleOpenCancelModal(entry)}

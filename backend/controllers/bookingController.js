@@ -627,9 +627,12 @@ const getLedgerEntries = async (req, res) => {
 
     let ledgerQuery = `
       SELECT le.id, le.customer_name, le.persons, le.check_in, le.check_out,
-             le.payment_mode, le.amount, le.unit_id, le.booking_id, 'offline' AS source
+             le.payment_mode, le.amount, le.unit_id, le.booking_id, le.note, le.status,
+             'offline' AS source,
+             COALESCE(b2.booking_status, 'ACTIVE') AS booking_status
       FROM ledger_entries le
       JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id)
+      LEFT JOIN bookings b2 ON b2.booking_id = le.booking_id
       WHERE (p.id::text = $1 OR p.property_id = $1)
       AND le.check_in <= $2 AND le.check_out > $2
     `;
@@ -648,7 +651,7 @@ const getLedgerEntries = async (req, res) => {
       FROM bookings b
       JOIN properties p ON (p.id::text = b.property_id OR p.property_id = b.property_id)
       WHERE (p.id::text = $1 OR p.property_id = $1)
-      AND b.booking_status IN ('TICKET_GENERATED', 'CANCELLED')
+      AND b.booking_status IN ('TICKET_GENERATED', 'CANCELLED', 'DELETED')
       AND b.checkin_datetime::date <= $2 AND b.checkout_datetime::date > $2
       AND NOT EXISTS (
         SELECT 1 FROM ledger_entries le2
@@ -885,7 +888,7 @@ const deleteLedgerEntry = async (req, res) => {
       }
     }
 
-    await query('DELETE FROM ledger_entries WHERE id = $1', [id]);
+    await query("UPDATE ledger_entries SET status = 'deleted' WHERE id = $1", [id]);
     res.json({ success: true, message: 'Entry deleted' });
   } catch (error) {
     console.error('Error deleting ledger entry:', error);
@@ -1902,6 +1905,69 @@ const handleNoShow = async (req, res) => {
   }
 };
 
+const handleDeleteBooking = async (req, res) => {
+  try {
+    const { booking_id } = req.body;
+    if (!booking_id) {
+      return res.status(400).json({ success: false, error: 'booking_id is required' });
+    }
+
+    const bookingRes = await query('SELECT * FROM bookings WHERE booking_id = $1', [booking_id]);
+    if (bookingRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+    const booking = bookingRes.rows[0];
+
+    if (booking.booking_status === 'CANCELLED' || booking.booking_status === 'DELETED') {
+      return res.status(400).json({ success: false, error: `Booking is already ${booking.booking_status.toLowerCase()}` });
+    }
+
+    const ledgerRes = await query(
+      'SELECT unit_id, check_in, check_out, persons FROM ledger_entries WHERE booking_id = $1 LIMIT 1',
+      [booking_id]
+    );
+
+    const unitId = ledgerRes.rows.length > 0 ? ledgerRes.rows[0].unit_id : booking.unit_id;
+    const checkIn = ledgerRes.rows.length > 0
+      ? new Date(ledgerRes.rows[0].check_in)
+      : new Date(booking.checkin_datetime);
+    const checkOut = ledgerRes.rows.length > 0
+      ? new Date(ledgerRes.rows[0].check_out)
+      : new Date(booking.checkout_datetime);
+    const persons = ledgerRes.rows.length > 0
+      ? (ledgerRes.rows[0].persons || 1)
+      : (booking.persons || 1);
+
+    if (unitId) {
+      let current = new Date(checkIn);
+      while (current < checkOut) {
+        await query(
+          'UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3',
+          [persons, unitId, current.toISOString().split('T')[0]]
+        );
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    await query(
+      "UPDATE bookings SET booking_status = 'DELETED', updated_at = NOW() WHERE booking_id = $1",
+      [booking_id]
+    );
+
+    if (ledgerRes.rows.length > 0) {
+      await query(
+        "UPDATE ledger_entries SET status = 'deleted' WHERE booking_id = $1",
+        [booking_id]
+      );
+    }
+
+    res.json({ success: true, message: 'Booking deleted' });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getLedgerEntries,
   addLedgerEntry,
@@ -1920,4 +1986,5 @@ module.exports = {
   handleNoShow,
   handleAdminCancel,
   getCancelPreview,
+  handleDeleteBooking,
 };

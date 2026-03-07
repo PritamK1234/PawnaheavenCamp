@@ -258,6 +258,7 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   amount NUMERIC NOT NULL,
   booking_id VARCHAR(50),
   note TEXT,
+  status VARCHAR(20) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

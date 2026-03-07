@@ -628,7 +628,7 @@ const getLedgerEntries = async (req, res) => {
     let ledgerQuery = `
       SELECT le.id, le.customer_name, le.persons, le.check_in, le.check_out,
              le.payment_mode, le.amount, le.unit_id, le.booking_id, le.note, le.status,
-             'offline' AS source,
+             CASE WHEN le.booking_id IS NOT NULL THEN 'website' ELSE 'offline' END AS source,
              COALESCE(b2.booking_status, 'ACTIVE') AS booking_status
       FROM ledger_entries le
       JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id)
@@ -910,6 +910,15 @@ const deleteLedgerEntry = async (req, res) => {
     }
 
     await query("UPDATE ledger_entries SET status = 'deleted' WHERE id = $1", [id]);
+
+    if (old.booking_id) {
+      await query(
+        "UPDATE bookings SET booking_status = 'DELETED', updated_at = NOW() WHERE booking_id = $1 AND booking_status NOT IN ('CANCELLED', 'DELETED')",
+        [old.booking_id]
+      );
+      console.log(`[DeleteLedger] Marked booking ${old.booking_id} as DELETED`);
+    }
+
     res.json({ success: true, message: 'Entry deleted' });
   } catch (error) {
     console.error('Error deleting ledger entry:', error);

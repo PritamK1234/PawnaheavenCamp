@@ -346,25 +346,22 @@ export const LedgerPopup = ({
     }
   };
 
-  const handleOpenCancelModal = (entry: any) => {
+  const handleOpenCancelModal = async (entry: any) => {
     setCancelPreview(null);
-    onClose();
-    setTimeout(async () => {
-      setCancelConfirmEntry(entry);
-      if (!entry.booking_id) return;
-      setCancelPreviewLoading(true);
-      try {
-        const token = localStorage.getItem('adminToken');
-        const r = await fetch(`/api/bookings/cancel-preview/${entry.booking_id}`, {
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        });
-        const data = await r.json();
-        if (r.ok) setCancelPreview(data);
-      } catch {
-      } finally {
-        setCancelPreviewLoading(false);
-      }
-    }, 200);
+    setCancelConfirmEntry(entry);
+    if (!entry.booking_id) return;
+    setCancelPreviewLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const r = await fetch(`/api/bookings/cancel-preview/${entry.booking_id}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const data = await r.json();
+      if (r.ok) setCancelPreview(data);
+    } catch {
+    } finally {
+      setCancelPreviewLoading(false);
+    }
   };
 
   const handleAdminCancel = async (bookingId: string) => {

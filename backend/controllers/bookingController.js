@@ -627,11 +627,9 @@ const getLedgerEntries = async (req, res) => {
 
     let ledgerQuery = `
       SELECT le.id, le.customer_name, le.persons, le.check_in, le.check_out,
-             le.payment_mode, le.amount, le.unit_id, le.booking_id, 'offline' AS source,
-             b.booking_status
+             le.payment_mode, le.amount, le.unit_id, le.booking_id, 'offline' AS source
       FROM ledger_entries le
       JOIN properties p ON (p.id::text = le.property_id OR p.property_id = le.property_id)
-      LEFT JOIN bookings b ON b.booking_id = le.booking_id
       WHERE (p.id::text = $1 OR p.property_id = $1)
       AND le.check_in <= $2 AND le.check_out > $2
     `;
@@ -1627,6 +1625,11 @@ const handleAdminCancel = async (req, res) => {
         [booking_id]
       );
 
+      await client.query(
+        `DELETE FROM ledger_entries WHERE booking_id = $1`,
+        [booking_id]
+      );
+
       if (existingLedgerRes.rows.length > 0) {
         const ledgerRow = existingLedgerRes.rows[0];
         if (ledgerRow.unit_id) {
@@ -1674,12 +1677,14 @@ const handleAdminCancel = async (req, res) => {
       );
       console.log(`[AdminCancel] Owner referral lookup result: ${ownerRefRes.rows.length} row(s)`);
 
+      let ledgerNote = 'Booking Cancelled';
       let ownerEarning = 0;
       let refundCase = 0;
       let refundAmount = 0;
       let referralSource = null;
 
       if (cancellationResult) {
+        ledgerNote = cancellationResult.ledger_note;
         ownerEarning = cancellationResult.owner_amount;
         refundCase = cancellationResult.refund_case;
         refundAmount = cancellationResult.refund_amount;
@@ -1687,6 +1692,7 @@ const handleAdminCancel = async (req, res) => {
       } else if (ownerRefRes.rows.length > 0) {
         ownerEarning = advanceAmount > 0 ? Math.round(advanceAmount * 0.25 * 100) / 100 : 0;
         referralSource = 'admin_cancel_compensation';
+        ledgerNote = 'Booking Cancelled';
         refundCase = 0;
       }
 
@@ -1709,6 +1715,23 @@ const handleAdminCancel = async (req, res) => {
           console.log(`[Commission] Admin-cancel compensation skipped for booking ${booking.booking_id} — already exists`);
         }
       }
+
+      await client.query(
+        `INSERT INTO ledger_entries
+           (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount, booking_id, note)
+         VALUES ($1, $2, $3, $4, $5, $6, 'offline', $7, $8, $9)`,
+        [
+          booking.property_id,
+          booking.unit_id || null,
+          booking.guest_name,
+          booking.persons || 1,
+          booking.checkin_datetime ? new Date(booking.checkin_datetime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          booking.checkout_datetime ? new Date(booking.checkout_datetime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          advanceAmount,
+          booking_id,
+          ledgerNote,
+        ]
+      );
 
       await client.query('COMMIT');
 

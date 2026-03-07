@@ -1620,10 +1620,43 @@ const handleAdminCancel = async (req, res) => {
         [booking_id]
       );
 
+      const existingLedgerRes = await client.query(
+        `SELECT unit_id, check_in, check_out, persons FROM ledger_entries WHERE booking_id = $1 LIMIT 1`,
+        [booking_id]
+      );
+
       await client.query(
         `DELETE FROM ledger_entries WHERE booking_id = $1`,
         [booking_id]
       );
+
+      if (existingLedgerRes.rows.length > 0) {
+        const ledgerRow = existingLedgerRes.rows[0];
+        if (ledgerRow.unit_id) {
+          let current = new Date(ledgerRow.check_in);
+          const end = new Date(ledgerRow.check_out);
+          while (current < end) {
+            await client.query(
+              `UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3`,
+              [ledgerRow.persons, ledgerRow.unit_id, current.toISOString().split('T')[0]]
+            );
+            current.setDate(current.getDate() + 1);
+          }
+          console.log(`[AdminCancel] Restored calendar availability for unit ${ledgerRow.unit_id} from ${ledgerRow.check_in} to ${ledgerRow.check_out}`);
+        }
+      } else if (booking.unit_id && booking.checkin_datetime && booking.checkout_datetime) {
+        let current = new Date(booking.checkin_datetime);
+        const end = new Date(booking.checkout_datetime);
+        const persons = booking.persons || 1;
+        while (current < end) {
+          await client.query(
+            `UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3`,
+            [persons, booking.unit_id, current.toISOString().split('T')[0]]
+          );
+          current.setDate(current.getDate() + 1);
+        }
+        console.log(`[AdminCancel] Restored calendar availability from booking dates for unit ${booking.unit_id}`);
+      }
 
       await client.query(
         `UPDATE referral_transactions
@@ -1632,10 +1665,17 @@ const handleAdminCancel = async (req, res) => {
         [booking.id]
       );
 
+      const rawPhone = (booking.owner_phone || '').trim();
+      const digits = rawPhone.replace(/\D/g, '');
+      const phone10 = digits.length >= 10 ? digits.slice(-10) : digits;
+      const phone91 = `91${phone10}`;
+      console.log(`[AdminCancel] Looking up owner phone: raw="${rawPhone}" 10d="${phone10}" 91="${phone91}"`);
+
       const ownerRefRes = await client.query(
-        `SELECT id FROM referral_users WHERE referral_otp_number = $1 AND referral_type = 'owner'`,
-        [booking.owner_phone]
+        `SELECT id FROM referral_users WHERE referral_otp_number = ANY($1) AND referral_type = 'owner' LIMIT 1`,
+        [[rawPhone, phone10, phone91]]
       );
+      console.log(`[AdminCancel] Owner referral lookup result: ${ownerRefRes.rows.length} row(s)`);
 
       let ledgerNote = 'Booking Cancelled';
       let ownerEarning = 0;

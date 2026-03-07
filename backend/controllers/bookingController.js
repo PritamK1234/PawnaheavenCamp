@@ -877,6 +877,7 @@ const deleteLedgerEntry = async (req, res) => {
     
     // Restore availability
     if (old.unit_id) {
+      // Camping/cottage: restore unit_calendar
       let current = new Date(old.check_in);
       const end = new Date(old.check_out);
       while (current < end) {
@@ -885,6 +886,26 @@ const deleteLedgerEntry = async (req, res) => {
           [old.persons, old.unit_id, current.toISOString().split('T')[0]]
         );
         current.setDate(current.getDate() + 1);
+      }
+      console.log(`[DeleteLedger] Restored camping unit_calendar for unit ${old.unit_id}`);
+    } else if (old.property_id) {
+      // Villa: lookup property category and restore availability_calendar
+      const propRes = await query(
+        `SELECT id, category FROM properties WHERE property_id = $1 OR id::text = $1 LIMIT 1`,
+        [old.property_id]
+      );
+      if (propRes.rows.length > 0 && propRes.rows[0].category === 'villa') {
+        const propertyDbId = propRes.rows[0].id;
+        let current = new Date(old.check_in);
+        const end = new Date(old.check_out);
+        while (current < end) {
+          await query(
+            'UPDATE availability_calendar SET is_booked = false, updated_at = NOW() WHERE property_id = $1 AND date = $2',
+            [propertyDbId, current.toISOString().split('T')[0]]
+          );
+          current.setDate(current.getDate() + 1);
+        }
+        console.log(`[DeleteLedger] Restored villa availability_calendar for property ${old.property_id}`);
       }
     }
 

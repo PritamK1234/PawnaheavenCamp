@@ -257,7 +257,7 @@ const OwnerCalendar = () => {
                   unitName={
                     units.find((u) => u.id.toString() === selectedUnitId)?.name
                   }
-                  isAdmin={true}
+                  isAdmin={false}
                   propertyName={property?.title}
                 />
               </div>

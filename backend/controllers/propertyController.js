@@ -336,6 +336,7 @@ const getPropertyById = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0)
               ) >= pu.total_persons,
               'available_quantity', GREATEST(0, pu.total_persons - (
@@ -345,6 +346,7 @@ const getPropertyById = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0)
               )),
               'total_capacity', pu.total_persons,
@@ -354,11 +356,13 @@ const getPropertyById = async (req, res) => {
                 COALESCE((
                   SELECT SUM(persons) FROM ledger_entries le
                   WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) < pu.total_persons
                 AND (
                   COALESCE((
                     SELECT SUM(persons) FROM ledger_entries le
                     WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                    AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                   ), 0) + COALESCE((
                     SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                     FROM bookings b WHERE b.unit_id = pu.id
@@ -374,6 +378,7 @@ const getPropertyById = async (req, res) => {
                 COALESCE((
                   SELECT SUM(persons) FROM ledger_entries le
                   WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) + COALESCE((
                   SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                   FROM bookings b WHERE b.unit_id = pu.id
@@ -412,6 +417,7 @@ const getPropertyById = async (req, res) => {
             WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
             AND le.check_in <= d.date 
             AND le.check_out > d.date
+            AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
           ), 0) + COALESCE((
             SELECT COUNT(*)
             FROM bookings b
@@ -429,6 +435,7 @@ const getPropertyById = async (req, res) => {
                   WHERE p_inner.id = p.id
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) + COALESCE((
                   SELECT SUM(COALESCE(b.persons, 1))
                   FROM bookings b
@@ -699,6 +706,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0)
               ) >= pu.total_persons,
               'available_quantity', GREATEST(0, pu.total_persons - (
@@ -708,6 +716,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0)
               )),
               'total_capacity', pu.total_persons,
@@ -717,11 +726,13 @@ const getPublicPropertyBySlug = async (req, res) => {
                 COALESCE((
                   SELECT SUM(persons) FROM ledger_entries le
                   WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) < pu.total_persons
                 AND (
                   COALESCE((
                     SELECT SUM(persons) FROM ledger_entries le
                     WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                    AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                   ), 0) + COALESCE((
                     SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                     FROM bookings b WHERE b.unit_id = pu.id
@@ -737,6 +748,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 COALESCE((
                   SELECT SUM(persons) FROM ledger_entries le
                   WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) + COALESCE((
                   SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                   FROM bookings b WHERE b.unit_id = pu.id
@@ -776,6 +788,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0)
               ) > 0,
               'available_quantity', CASE WHEN (
@@ -785,6 +798,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0)
               ) > 0 THEN 0 ELSE pu.total_persons END,
               'total_capacity', pu.total_persons,
@@ -794,6 +808,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 COALESCE((
                   SELECT COUNT(*) FROM ledger_entries le
                   WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) = 0
                 AND EXISTS (
                   SELECT 1 FROM bookings b2
@@ -810,6 +825,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                 COALESCE((
                   SELECT COUNT(*) FROM ledger_entries le
                   WHERE le.unit_id = pu.id AND le.check_in <= d.date AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) = 0
                 AND EXISTS (
                   SELECT 1 FROM bookings b2
@@ -855,6 +871,7 @@ const getPublicPropertyBySlug = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
+              AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
             ), 0)
           ) > 0,
                 'available_quantity', CASE WHEN (
@@ -864,6 +881,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                     WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
                     AND le.check_in <= d.date 
                     AND le.check_out > d.date
+                    AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                   ), 0)
                 ) > 0 THEN 0 ELSE p.max_capacity END,
                 'total_capacity', p.max_capacity,
@@ -875,6 +893,7 @@ const getPublicPropertyBySlug = async (req, res) => {
                     SELECT COUNT(*) FROM ledger_entries le
                     WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
                     AND le.check_in <= d.date AND le.check_out > d.date
+                    AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                   ), 0) = 0
                   AND EXISTS (
                     SELECT 1 FROM bookings b2
@@ -1455,7 +1474,8 @@ const getUnitCalendarData = async (req, res) => {
 
     const ledgerResult = await query(
       `SELECT check_in, check_out, persons FROM ledger_entries
-       WHERE ${ledgerWhereClause} AND check_out >= $2 AND check_in <= $3`,
+       WHERE ${ledgerWhereClause} AND check_out >= $2 AND check_in <= $3
+       AND (status IS NULL OR status NOT IN ('cancelled', 'deleted'))`,
       isVillaUnit
         ? [unitId, startDate.toISOString().split("T")[0], endDate.toISOString().split("T")[0], propertyInternalId]
         : [unitId, startDate.toISOString().split("T")[0], endDate.toISOString().split("T")[0]],

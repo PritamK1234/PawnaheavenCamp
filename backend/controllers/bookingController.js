@@ -1730,8 +1730,8 @@ const handleAdminCancel = async (req, res) => {
 
       await client.query(
         `INSERT INTO ledger_entries
-           (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount, booking_id, note)
-         VALUES ($1, $2, $3, $4, $5, $6, 'offline', $7, $8, $9)`,
+           (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount, booking_id, note, status)
+         VALUES ($1, $2, $3, $4, $5, $6, 'offline', $7, $8, $9, 'cancelled')`,
         [
           booking.property_id,
           booking.unit_id || null,

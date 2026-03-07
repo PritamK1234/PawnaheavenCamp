@@ -34,6 +34,7 @@ const getVillaById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             ) > 0,
             'available_quantity', CASE WHEN (
@@ -43,6 +44,7 @@ const getVillaById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             ) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
@@ -55,6 +57,7 @@ const getVillaById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) = 0
               AND EXISTS (
                 SELECT 1 FROM bookings b2
@@ -74,6 +77,7 @@ const getVillaById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) = 0
               AND EXISTS (
                 SELECT 1 FROM bookings b2
@@ -111,6 +115,7 @@ const getVillaById = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
+              AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
             ), 0)
           ) > 0,
           'available_quantity', CASE WHEN (
@@ -120,6 +125,7 @@ const getVillaById = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
+              AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
             ), 0)
           ) > 0 THEN 0 ELSE p.max_capacity END,
           'total_capacity', p.max_capacity,
@@ -133,6 +139,7 @@ const getVillaById = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
+              AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
             ), 0) = 0
             AND EXISTS (
               SELECT 1 FROM bookings b2
@@ -225,6 +232,7 @@ const getPublicVillaBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             ) > 0,
             'available_quantity', CASE WHEN (
@@ -234,6 +242,7 @@ const getPublicVillaBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             ) > 0 THEN 0 ELSE pu.total_persons END,
             'total_capacity', pu.total_persons,
@@ -246,6 +255,7 @@ const getPublicVillaBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) = 0
               AND EXISTS (
                 SELECT 1 FROM bookings b2
@@ -265,6 +275,7 @@ const getPublicVillaBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) = 0
               AND EXISTS (
                 SELECT 1 FROM bookings b2
@@ -302,6 +313,7 @@ const getPublicVillaBySlug = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
+              AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
             ), 0)
           ) > 0,
           'available_quantity', CASE WHEN (
@@ -311,6 +323,7 @@ const getPublicVillaBySlug = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
+              AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
             ), 0)
           ) > 0 THEN 0 ELSE p.max_capacity END,
           'total_capacity', p.max_capacity,
@@ -324,6 +337,7 @@ const getPublicVillaBySlug = async (req, res) => {
               WHERE (le.property_id = p.id::text OR le.property_id = p.property_id)
               AND le.check_in <= d.date 
               AND le.check_out > d.date
+              AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
             ), 0) = 0
             AND EXISTS (
               SELECT 1 FROM bookings b2

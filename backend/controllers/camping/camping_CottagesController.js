@@ -34,6 +34,7 @@ const getCampingById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             ) >= pu.total_persons,
             'available_quantity', GREATEST(0, pu.total_persons - (
@@ -43,6 +44,7 @@ const getCampingById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             )),
             'soft_available_quantity', GREATEST(0, pu.total_persons - (
@@ -52,6 +54,7 @@ const getCampingById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) + COALESCE((
                 SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                 FROM bookings b
@@ -71,6 +74,7 @@ const getCampingById = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) < pu.total_persons
               AND (
                 COALESCE((
@@ -79,6 +83,7 @@ const getCampingById = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) + COALESCE((
                   SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                   FROM bookings b
@@ -176,6 +181,7 @@ const getPublicCampingBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             ) >= pu.total_persons,
             'available_quantity', GREATEST(0, pu.total_persons - (
@@ -185,6 +191,7 @@ const getPublicCampingBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0)
             )),
             'soft_available_quantity', GREATEST(0, pu.total_persons - (
@@ -194,6 +201,7 @@ const getPublicCampingBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) + COALESCE((
                 SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                 FROM bookings b
@@ -213,6 +221,7 @@ const getPublicCampingBySlug = async (req, res) => {
                 WHERE le.unit_id = pu.id 
                 AND le.check_in <= d.date 
                 AND le.check_out > d.date
+                AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
               ), 0) < pu.total_persons
               AND (
                 COALESCE((
@@ -221,6 +230,7 @@ const getPublicCampingBySlug = async (req, res) => {
                   WHERE le.unit_id = pu.id 
                   AND le.check_in <= d.date 
                   AND le.check_out > d.date
+                  AND (le.status IS NULL OR le.status NOT IN ('cancelled', 'deleted'))
                 ), 0) + COALESCE((
                   SELECT SUM(COALESCE(b.persons, b.veg_guest_count + b.nonveg_guest_count, 1))
                   FROM bookings b
@@ -531,7 +541,8 @@ const getUnitCalendarData = async (req, res) => {
 
     const ledgerResult = await query(
       `SELECT check_in, check_out, persons FROM ledger_entries
-       WHERE unit_id = $1 AND check_out >= $2 AND check_in <= $3`,
+       WHERE unit_id = $1 AND check_out >= $2 AND check_in <= $3
+       AND (status IS NULL OR status NOT IN ('cancelled', 'deleted'))`,
       [unitId, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]
     );
 

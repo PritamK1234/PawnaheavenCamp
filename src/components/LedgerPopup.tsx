@@ -80,6 +80,8 @@ export const LedgerPopup = ({
   const [isExporting, setIsExporting] = useState(false);
   const [cancelConfirmEntry, setCancelConfirmEntry] = useState<any>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelPreview, setCancelPreview] = useState<any>(null);
+  const [cancelPreviewLoading, setCancelPreviewLoading] = useState(false);
 
   const currentOccupancy = entries.reduce(
     (sum, entry) => sum + (entry.persons || 0),
@@ -341,6 +343,24 @@ export const LedgerPopup = ({
     }
   };
 
+  const handleOpenCancelModal = async (entry: any) => {
+    setCancelPreview(null);
+    setCancelConfirmEntry(entry);
+    if (!entry.booking_id) return;
+    setCancelPreviewLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const r = await fetch(`/api/bookings/cancel-preview/${entry.booking_id}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const data = await r.json();
+      if (r.ok) setCancelPreview(data);
+    } catch {
+    } finally {
+      setCancelPreviewLoading(false);
+    }
+  };
+
   const handleAdminCancel = async (bookingId: string) => {
     setCancelLoading(true);
     try {
@@ -359,6 +379,7 @@ export const LedgerPopup = ({
       });
       toast.success('Booking cancelled successfully');
       setCancelConfirmEntry(null);
+      setCancelPreview(null);
       fetchEntries();
     } catch (e: any) {
       toast.error(e.message || 'Failed to cancel booking');
@@ -839,7 +860,7 @@ export const LedgerPopup = ({
                         {isAdmin && !!entry.booking_id && !isCancelled && (
                           <div className="border-l border-white/10 pl-3">
                             <button
-                              onClick={() => setCancelConfirmEntry(entry)}
+                              onClick={() => handleOpenCancelModal(entry)}
                               className="text-red-400 hover:text-red-300 transition-colors"
                               title="Cancel Booking"
                             >
@@ -889,7 +910,7 @@ export const LedgerPopup = ({
       {cancelConfirmEntry && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center px-4"
-          onClick={() => setCancelConfirmEntry(null)}
+          onClick={() => { setCancelConfirmEntry(null); setCancelPreview(null); }}
         >
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
           <div
@@ -902,22 +923,88 @@ export const LedgerPopup = ({
               </div>
               <h3 className="text-base font-bold text-white">Cancel Booking?</h3>
             </div>
-            <p className="text-xs text-gray-400 mb-2 leading-relaxed">
-              Owner reported that the customer did not attend the booking. Cancel this booking?
+
+            {cancelPreviewLoading && (
+              <div className="flex items-center justify-center py-4 mb-4">
+                <Loader2 className="w-5 h-5 animate-spin text-white/40" />
+                <span className="text-xs text-white/40 ml-2">Calculating refund...</span>
+              </div>
+            )}
+
+            {!cancelPreviewLoading && cancelPreview && cancelPreview.has_policy && (
+              <div className="mb-4 rounded-2xl overflow-hidden border border-white/10">
+                <div className="px-4 py-2 bg-white/5 border-b border-white/10">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Cancellation Policy</p>
+                </div>
+                <div className="px-4 py-3 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-white/60">Days before check-in</span>
+                    <span className="text-xs font-bold text-white">{cancelPreview.days_before_checkin} day{cancelPreview.days_before_checkin !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-white/60">Booking amount</span>
+                    <span className="text-xs font-bold text-white">₹{(cancelPreview.total_amount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className={`mt-2 rounded-xl px-3 py-2 flex justify-between items-center ${
+                    cancelPreview.refund_case === 1 ? 'bg-green-500/10 border border-green-500/30' :
+                    cancelPreview.refund_case === 2 ? 'bg-yellow-500/10 border border-yellow-500/30' :
+                    'bg-red-500/10 border border-red-500/30'
+                  }`}>
+                    <div>
+                      <p className={`text-[10px] font-bold uppercase tracking-widest ${
+                        cancelPreview.refund_case === 1 ? 'text-green-400' :
+                        cancelPreview.refund_case === 2 ? 'text-yellow-400' :
+                        'text-red-400'
+                      }`}>{cancelPreview.label}</p>
+                      <p className="text-[10px] text-white/40 mt-0.5">
+                        {cancelPreview.refund_case === 1 && 'Customer receives full refund'}
+                        {cancelPreview.refund_case === 2 && '50% to customer · 50% to owner'}
+                        {cancelPreview.refund_case === 3 && 'No refund · Full amount to owner'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-xs text-white/60">Customer refund</span>
+                    <span className={`text-xs font-bold ${cancelPreview.refund_case === 1 ? 'text-green-400' : cancelPreview.refund_case === 2 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      ₹{(cancelPreview.refund_amount || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-white/60">Owner payout</span>
+                    <span className={`text-xs font-bold ${cancelPreview.owner_amount > 0 ? 'text-emerald-400' : 'text-white/40'}`}>
+                      ₹{(cancelPreview.owner_amount || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!cancelPreviewLoading && cancelPreview && !cancelPreview.has_policy && (
+              <div className="mb-4 rounded-2xl px-4 py-3 bg-white/5 border border-white/10">
+                <p className="text-xs text-white/60 leading-relaxed">No cancellation policy is set for this property. The booking will be cancelled and 25% of the total amount will be credited to the owner as compensation.</p>
+              </div>
+            )}
+
+            {!cancelPreviewLoading && !cancelPreview && (
+              <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                Are you sure you want to cancel this booking? This action cannot be undone.
+              </p>
+            )}
+
+            <p className="text-[10px] text-gray-600 mb-5 leading-relaxed">
+              WhatsApp notifications will be sent to the guest, owner, and admin.
             </p>
-            <p className="text-[10px] text-gray-600 mb-6 leading-relaxed">
-              This will cancel the referral commission, credit 25% of total booking amount to the owner as compensation, and send WhatsApp notifications. This action cannot be undone.
-            </p>
+
             <div className="flex gap-3">
               <button
-                onClick={() => setCancelConfirmEntry(null)}
+                onClick={() => { setCancelConfirmEntry(null); setCancelPreview(null); }}
                 className="flex-1 h-11 rounded-2xl bg-[#2A2A2A] border border-white/10 text-white text-xs font-bold uppercase tracking-widest active:scale-95 transition-all"
               >
                 Keep Booking
               </button>
               <button
                 onClick={() => handleAdminCancel(cancelConfirmEntry.booking_id)}
-                disabled={cancelLoading}
+                disabled={cancelLoading || cancelPreviewLoading}
                 className="flex-1 h-11 rounded-2xl bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold uppercase tracking-widest active:scale-95 transition-all disabled:opacity-50"
               >
                 {cancelLoading ? (

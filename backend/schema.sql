@@ -257,6 +257,7 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   payment_mode TEXT NOT NULL CHECK (payment_mode = ANY (ARRAY['online'::text, 'offline'::text])),
   amount NUMERIC NOT NULL,
   booking_id VARCHAR(50),
+  note TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

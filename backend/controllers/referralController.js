@@ -248,7 +248,7 @@ const ReferralController = {
     try {
       const userId = req.user.id;
 
-      const [availableRes, cancelledRes, noShowCompRes, withdrawalRes] = await Promise.all([
+      const [availableRes, cancelledRes, noShowCompRes, withdrawalRes, cancel50Res, cancelFullRes] = await Promise.all([
         query(
           `SELECT rt.amount, rt.created_at AS date, rt.source,
                   b.property_name, b.guest_name
@@ -257,7 +257,7 @@ const ReferralController = {
            WHERE rt.referral_user_id = $1
              AND rt.type = 'earning'
              AND rt.status = 'available'
-             AND rt.source != 'no_show_compensation'
+             AND rt.source NOT IN ('no_show_compensation', 'cancellation_50_payout', 'cancellation_owner_compensation')
            ORDER BY rt.created_at DESC`,
           [userId]
         ),
@@ -291,6 +291,28 @@ const ReferralController = {
            ORDER BY created_at DESC`,
           [userId]
         ),
+        query(
+          `SELECT rt.amount, rt.created_at AS date, b.property_name, b.guest_name
+           FROM referral_transactions rt
+           LEFT JOIN bookings b ON b.id = rt.booking_id
+           WHERE rt.referral_user_id = $1
+             AND rt.type = 'earning'
+             AND rt.status = 'available'
+             AND rt.source = 'cancellation_50_payout'
+           ORDER BY rt.created_at DESC`,
+          [userId]
+        ),
+        query(
+          `SELECT rt.amount, rt.created_at AS date, b.property_name, b.guest_name
+           FROM referral_transactions rt
+           LEFT JOIN bookings b ON b.id = rt.booking_id
+           WHERE rt.referral_user_id = $1
+             AND rt.type = 'earning'
+             AND rt.status = 'available'
+             AND rt.source = 'cancellation_owner_compensation'
+           ORDER BY rt.created_at DESC`,
+          [userId]
+        ),
       ]);
 
       const history = [
@@ -322,6 +344,22 @@ const ReferralController = {
           date: r.date,
           message: r.status === 'completed' ? 'Withdrawal Paid' : 'Withdrawal Rejected',
           upi_id: r.upi_id,
+        })),
+        ...cancel50Res.rows.map(r => ({
+          type: 'cancellation_payout',
+          property_name: r.property_name,
+          guest_name: r.guest_name,
+          amount: parseFloat(r.amount) || 0,
+          date: r.date,
+          message: 'Booking Cancelled – 50% Payout',
+        })),
+        ...cancelFullRes.rows.map(r => ({
+          type: 'cancellation_compensation',
+          property_name: r.property_name,
+          guest_name: r.guest_name,
+          amount: parseFloat(r.amount) || 0,
+          date: r.date,
+          message: 'Booking Cancelled – Owner Compensation',
         })),
       ];
 

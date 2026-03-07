@@ -1386,6 +1386,118 @@ const getOwnerUnits = async (req, res) => {
   }
 };
 
+async function fetchCancellationPolicy(unitId, propertyId) {
+  if (unitId) {
+    const unitRes = await query(
+      `SELECT cancellation_policy FROM property_units WHERE id = $1`,
+      [unitId]
+    );
+    if (unitRes.rows.length > 0 && unitRes.rows[0].cancellation_policy) {
+      return unitRes.rows[0].cancellation_policy;
+    }
+  }
+  const propRes = await query(
+    `SELECT cancellation_policy FROM properties WHERE id::text = $1 OR property_id = $1 LIMIT 1`,
+    [propertyId]
+  );
+  if (propRes.rows.length > 0 && propRes.rows[0].cancellation_policy) {
+    return propRes.rows[0].cancellation_policy;
+  }
+  return null;
+}
+
+function computeCancellationCase(policy, checkinDatetime, totalAmount) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkin = new Date(checkinDatetime);
+  checkin.setHours(0, 0, 0, 0);
+  const daysBeforeCheckin = Math.floor((checkin - today) / (1000 * 60 * 60 * 24));
+
+  const fullRefundDays = parseInt(policy.full_refund_days) || 0;
+  const halfRefundDays = parseInt(policy.half_refund_days) || 0;
+  const total = parseFloat(totalAmount) || 0;
+
+  if (daysBeforeCheckin >= fullRefundDays) {
+    return {
+      refund_case: 1,
+      label: 'Full Refund',
+      refund_amount: total,
+      owner_amount: 0,
+      days_before_checkin: daysBeforeCheckin,
+      ledger_note: 'Booking Cancelled – Full Refund',
+      referral_source: null,
+    };
+  } else if (daysBeforeCheckin >= halfRefundDays) {
+    const half = Math.round(total * 0.5 * 100) / 100;
+    return {
+      refund_case: 2,
+      label: '50% Refund',
+      refund_amount: half,
+      owner_amount: half,
+      days_before_checkin: daysBeforeCheckin,
+      ledger_note: 'Booking Cancelled – 50% Owner Payout',
+      referral_source: 'cancellation_50_payout',
+    };
+  } else {
+    return {
+      refund_case: 3,
+      label: 'No Refund',
+      refund_amount: 0,
+      owner_amount: total,
+      days_before_checkin: daysBeforeCheckin,
+      ledger_note: 'Booking Cancelled – Full Owner Compensation',
+      referral_source: 'cancellation_owner_compensation',
+    };
+  }
+}
+
+const getCancelPreview = async (req, res) => {
+  try {
+    const { booking_id } = req.params;
+    if (!booking_id) {
+      return res.status(400).json({ error: 'booking_id is required' });
+    }
+
+    const bookingRes = await query(
+      `SELECT * FROM bookings WHERE booking_id = $1`,
+      [booking_id]
+    );
+    if (bookingRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    const booking = bookingRes.rows[0];
+    const totalAmount = resolveCommissionTotal(booking);
+    const policy = await fetchCancellationPolicy(booking.unit_id, booking.property_id);
+
+    if (!policy) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const checkin = new Date(booking.checkin_datetime);
+      checkin.setHours(0, 0, 0, 0);
+      const daysBeforeCheckin = Math.floor((checkin - today) / (1000 * 60 * 60 * 24));
+      return res.json({
+        has_policy: false,
+        days_before_checkin: daysBeforeCheckin,
+        total_amount: totalAmount,
+        checkin_date: booking.checkin_datetime,
+      });
+    }
+
+    const result = computeCancellationCase(policy, booking.checkin_datetime, totalAmount);
+
+    return res.json({
+      has_policy: true,
+      policy,
+      total_amount: totalAmount,
+      checkin_date: booking.checkin_datetime,
+      ...result,
+    });
+  } catch (error) {
+    console.error('[CancelPreview] Error:', error.message);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+};
+
 const handleAdminCancel = async (req, res) => {
   try {
     const { booking_id } = req.body;
@@ -1404,6 +1516,14 @@ const handleAdminCancel = async (req, res) => {
 
     if (booking.booking_status === 'CANCELLED') {
       return res.status(400).json({ error: 'Booking is already cancelled' });
+    }
+
+    const totalAmount = resolveCommissionTotal(booking);
+    const policy = await fetchCancellationPolicy(booking.unit_id, booking.property_id);
+
+    let cancellationResult = null;
+    if (policy && booking.checkin_datetime) {
+      cancellationResult = computeCancellationCase(policy, booking.checkin_datetime, totalAmount);
     }
 
     const client = await pool.connect();
@@ -1433,29 +1553,62 @@ const handleAdminCancel = async (req, res) => {
         `SELECT id FROM referral_users WHERE referral_otp_number = $1 AND referral_type = 'owner'`,
         [booking.owner_phone]
       );
-      if (ownerRefRes.rows.length > 0) {
+
+      let ledgerNote = 'Booking Cancelled';
+      let ownerEarning = 0;
+      let refundCase = 0;
+      let refundAmount = 0;
+      let referralSource = null;
+
+      if (cancellationResult) {
+        ledgerNote = cancellationResult.ledger_note;
+        ownerEarning = cancellationResult.owner_amount;
+        refundCase = cancellationResult.refund_case;
+        refundAmount = cancellationResult.refund_amount;
+        referralSource = cancellationResult.referral_source;
+      } else if (ownerRefRes.rows.length > 0) {
+        ownerEarning = totalAmount > 0 ? Math.round(totalAmount * 0.25 * 100) / 100 : 0;
+        referralSource = 'admin_cancel_compensation';
+        ledgerNote = 'Booking Cancelled';
+        refundCase = 0;
+      }
+
+      if (ownerRefRes.rows.length > 0 && ownerEarning > 0 && referralSource) {
         const ownerReferralId = ownerRefRes.rows[0].id;
-        const totalAmount = resolveCommissionTotal(booking);
-        const ownerEarning = totalAmount > 0 ? Math.round(totalAmount * 0.25 * 100) / 100 : 0;
-        if (ownerEarning > 0) {
-          const cancelCompInsert = await client.query(
-            `INSERT INTO referral_transactions
-               (referral_user_id, booking_id, amount, type, status, source)
-             VALUES ($1, $2, $3, 'earning', 'available', 'admin_cancel_compensation')
-             ON CONFLICT DO NOTHING
-             RETURNING id`,
-            [ownerReferralId, booking.id, ownerEarning]
+        const cancelCompInsert = await client.query(
+          `INSERT INTO referral_transactions
+             (referral_user_id, booking_id, amount, type, status, source)
+           VALUES ($1, $2, $3, 'earning', 'available', $4)
+           ON CONFLICT DO NOTHING
+           RETURNING id`,
+          [ownerReferralId, booking.id, ownerEarning, referralSource]
+        );
+        if (cancelCompInsert.rows.length > 0) {
+          await client.query(
+            `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
+            [ownerEarning, ownerReferralId]
           );
-          if (cancelCompInsert.rows.length > 0) {
-            await client.query(
-              `UPDATE referral_users SET balance = balance + $1 WHERE id = $2`,
-              [ownerEarning, ownerReferralId]
-            );
-          } else {
-            console.log(`[Commission] Admin-cancel compensation skipped for booking ${booking.booking_id} — already exists`);
-          }
+        } else {
+          console.log(`[Commission] Admin-cancel compensation skipped for booking ${booking.booking_id} — already exists`);
         }
       }
+
+      await client.query(
+        `INSERT INTO ledger_entries
+           (property_id, unit_id, customer_name, persons, check_in, check_out, payment_mode, amount, booking_id, note)
+         VALUES ($1, $2, $3, $4, $5, $6, 'offline', $7, $8, $9)`,
+        [
+          booking.property_id,
+          booking.unit_id || null,
+          booking.guest_name,
+          booking.persons || 1,
+          booking.checkin_datetime ? new Date(booking.checkin_datetime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          booking.checkout_datetime ? new Date(booking.checkout_datetime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          totalAmount,
+          booking_id,
+          ledgerNote,
+        ]
+      );
 
       await client.query('COMMIT');
 
@@ -1468,27 +1621,50 @@ const handleAdminCancel = async (req, res) => {
         : 'N/A';
       const propertyName = booking.property_name || 'the property';
 
+      let guestMsg = `Your booking for *${propertyName}* from *${checkinStr} to ${checkoutStr}* has been cancelled by the admin.`;
+      if (refundCase === 1) {
+        guestMsg += ` You are eligible for a *full refund of ₹${totalAmount.toLocaleString('en-IN')}*. Please contact support to process your refund.`;
+      } else if (refundCase === 2) {
+        guestMsg += ` As per the cancellation policy, you are eligible for a *50% refund of ₹${refundAmount.toLocaleString('en-IN')}*. Please contact support to process your refund.`;
+      } else if (refundCase === 3) {
+        guestMsg += ` As per the cancellation policy, no refund is applicable for this booking.`;
+      } else {
+        guestMsg += ` If you have any questions, please contact support.`;
+      }
+
+      let ownerMsg = `Booking *${booking_id}* has been cancelled by admin.`;
+      if (refundCase === 1) {
+        ownerMsg += ` Full refund will be processed for the guest. No compensation recorded for this cancellation.`;
+      } else if (refundCase === 2) {
+        ownerMsg += ` As per the cancellation policy, 50% (₹${ownerEarning.toLocaleString('en-IN')}) has been credited to your referral dashboard.`;
+      } else if (refundCase === 3) {
+        ownerMsg += ` As per the cancellation policy, the full booking amount (₹${ownerEarning.toLocaleString('en-IN')}) has been credited to your referral dashboard.`;
+      } else {
+        ownerMsg += ` Your eligible cancellation earning has been recorded.`;
+      }
+
       if (booking.guest_phone) {
-        await whatsapp.sendTextMessage(
-          booking.guest_phone,
-          `Your booking for *${propertyName}* from *${checkinStr} to ${checkoutStr}* has been cancelled because the property owner reported that the guest did not attend. If this is incorrect please contact support.`
-        );
+        await whatsapp.sendTextMessage(booking.guest_phone, guestMsg);
       }
       if (booking.owner_phone) {
-        await whatsapp.sendTextMessage(
-          booking.owner_phone,
-          `Booking *${booking_id}* has been cancelled by admin after your report that the guest did not attend. Your eligible cancellation earning has been recorded.`
-        );
+        await whatsapp.sendTextMessage(booking.owner_phone, ownerMsg);
       }
       const adminPhone = process.env.ADMIN_PHONE;
       if (adminPhone) {
+        const caseLabel = refundCase === 1 ? 'Full Refund' : refundCase === 2 ? '50% Refund' : refundCase === 3 ? 'No Refund' : 'Legacy (25% Owner)';
         await whatsapp.sendTextMessage(
           adminPhone,
-          `Booking *${booking_id}* cancelled successfully. Referral commission cancelled.`
+          `Booking *${booking_id}* cancelled. Case: ${caseLabel}. Refund to guest: ₹${refundAmount}. Owner payout: ₹${ownerEarning}.`
         );
       }
 
-      return res.json({ success: true, message: 'Booking cancelled successfully' });
+      return res.json({
+        success: true,
+        message: 'Booking cancelled successfully',
+        refund_case: refundCase,
+        refund_amount: refundAmount,
+        owner_amount: ownerEarning,
+      });
     } catch (innerErr) {
       await client.query('ROLLBACK');
       throw innerErr;
@@ -1605,4 +1781,5 @@ module.exports = {
   getOwnerUnits,
   handleNoShow,
   handleAdminCancel,
+  getCancelPreview,
 };

@@ -18,6 +18,7 @@ router.put('/update-status', bookingController.updateBookingStatus);
 router.post('/process-confirmed', bookingController.processConfirmedBooking);
 router.post('/process-cancelled', bookingController.processCancelledBooking);
 router.post('/no-show', bookingController.handleNoShow);
+router.get('/cancel-preview/:booking_id', bookingController.getCancelPreview);
 router.post('/admin-cancel', bookingController.handleAdminCancel);
 
 module.exports = router;

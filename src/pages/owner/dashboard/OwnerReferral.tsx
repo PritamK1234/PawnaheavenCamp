@@ -44,7 +44,7 @@ interface InProcessBooking {
 }
 
 interface HistoryItem {
-  type: "booking_success" | "booking_cancelled" | "withdrawal_paid" | "withdrawal_rejected";
+  type: "booking_success" | "booking_cancelled" | "withdrawal_paid" | "withdrawal_rejected" | "no_show_bonus" | "cancellation_payout" | "cancellation_compensation";
   property_name?: string;
   guest_name?: string;
   amount: number;
@@ -392,18 +392,30 @@ const OwnerReferral = () => {
               ) : (
                 historyItems.map((item, idx) => {
                   const isSuccess = item.type === "booking_success" || item.type === "withdrawal_paid";
+                  const isPayout = item.type === "cancellation_payout" || item.type === "cancellation_compensation" || item.type === "no_show_bonus";
+                  const isCancelled = item.type === "booking_cancelled" || item.type === "withdrawal_rejected";
+
+                  const borderColor = isSuccess ? "border-emerald-500/20" : isPayout ? "border-amber-500/20" : "border-red-500/20";
+                  const iconBg = isSuccess ? "bg-emerald-500/10 text-emerald-500" : isPayout ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400";
+                  const amountColor = isSuccess ? "text-emerald-500" : isPayout ? "text-amber-400" : "text-red-400";
+                  const badgeBg = isSuccess ? "bg-emerald-500/10 text-emerald-500" : isPayout ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400";
+
+                  const badgeLabel =
+                    item.type === "booking_success" ? "Completed" :
+                    item.type === "booking_cancelled" ? "Cancelled" :
+                    item.type === "withdrawal_paid" ? "Paid" :
+                    item.type === "withdrawal_rejected" ? "Rejected" :
+                    item.type === "cancellation_payout" ? "50% Payout" :
+                    item.type === "cancellation_compensation" ? "Owner Comp." :
+                    item.type === "no_show_bonus" ? "No-Show Bonus" : "";
+
                   return (
-                    <Card key={idx} className={cn(
-                      "p-4 bg-card rounded-2xl flex items-center gap-4",
-                      isSuccess ? "border-emerald-500/20" : "border-red-500/20"
-                    )}>
-                      <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                        isSuccess ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-400"
-                      )}>
+                    <Card key={idx} className={cn("p-4 bg-card rounded-2xl flex items-center gap-4", borderColor)}>
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", iconBg)}>
                         {item.type === "booking_success" && <CheckCircle2 className="w-5 h-5" />}
-                        {item.type === "booking_cancelled" && <XCircle className="w-5 h-5" />}
+                        {isCancelled && <XCircle className="w-5 h-5" />}
                         {(item.type === "withdrawal_paid" || item.type === "withdrawal_rejected") && <Wallet className="w-5 h-5" />}
+                        {isPayout && <AlertCircle className="w-5 h-5" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm">{item.message}</p>
@@ -416,16 +428,11 @@ const OwnerReferral = () => {
                         <p className="text-[10px] text-muted-foreground mt-0.5">{formatDate(item.date)}</p>
                       </div>
                       <div className="text-right">
-                        <p className={cn("font-bold", isSuccess ? "text-emerald-500" : "text-red-400")}>
-                          {isSuccess ? "+" : ""}₹{item.amount.toLocaleString("en-IN")}
+                        <p className={cn("font-bold", amountColor)}>
+                          {(isSuccess || isPayout) ? "+" : ""}₹{item.amount.toLocaleString("en-IN")}
                         </p>
-                        <span className={cn(
-                          "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
-                          isSuccess ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-400"
-                        )}>
-                          {item.type === "booking_success" ? "Completed" :
-                           item.type === "booking_cancelled" ? "Cancelled" :
-                           item.type === "withdrawal_paid" ? "Paid" : "Rejected"}
+                        <span className={cn("text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full", badgeBg)}>
+                          {badgeLabel}
                         </span>
                       </div>
                     </Card>

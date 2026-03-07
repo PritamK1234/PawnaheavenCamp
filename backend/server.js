@@ -172,8 +172,24 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
+// Startup migrations — runs before accepting traffic
+async function runStartupMigrations() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      ALTER TABLE ledger_entries ADD COLUMN IF NOT EXISTS status VARCHAR(50)
+    `);
+    console.log('[Migration] OK: ledger_entries.status column ensured');
+  } catch (err) {
+    console.error('[Migration] FAILED: ledger_entries.status —', err.message);
+  } finally {
+    client.release();
+  }
+}
+
 // Start server
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
+  await runStartupMigrations();
   console.log(`\n=================================`);
   console.log(`LoonCamp API Server`);
   console.log(`=================================`);

@@ -5,9 +5,15 @@ const { pool } = require("../db");
 
 const MSG91_BASE_URL = "https://control.msg91.com/api/v5/otp";
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY;
+const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID;
 const IS_TEST_MODE = process.env.OTP_TEST_MODE === "true";
 const TEST_OTP = "123456";
 const RATE_LIMIT_PER_HOUR = 4;
+
+if (!IS_TEST_MODE) {
+  if (!MSG91_AUTH_KEY) console.warn('[OTP] WARNING: MSG91_AUTH_KEY is not set — OTP sending will fail in production');
+  if (!MSG91_TEMPLATE_ID) console.warn('[OTP] WARNING: MSG91_TEMPLATE_ID is not set — OTP sending will fail in production');
+}
 
 function validateMobile(mobile) {
   if (!mobile || typeof mobile !== "string") return null;
@@ -67,8 +73,9 @@ const OtpService = {
     }
 
     try {
+      const templateParam = MSG91_TEMPLATE_ID ? `&template_id=${MSG91_TEMPLATE_ID}` : '';
       const response = await axios.post(
-        `${MSG91_BASE_URL}?mobile=${formatMobileForMsg91(cleanMobile)}&authkey=${MSG91_AUTH_KEY}`,
+        `${MSG91_BASE_URL}?mobile=${formatMobileForMsg91(cleanMobile)}&authkey=${MSG91_AUTH_KEY}${templateParam}`,
         {},
         { headers: { "Content-Type": "application/json" } }
       );

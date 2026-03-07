@@ -1466,7 +1466,8 @@ const getCancelPreview = async (req, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
     const booking = bookingRes.rows[0];
-    const totalAmount = resolveCommissionTotal(booking);
+    const advanceAmount = parseFloat(booking.advance_amount) || 0;
+    const totalBookingAmount = parseFloat(booking.total_amount) || 0;
     const policy = await fetchCancellationPolicy(booking.unit_id, booking.property_id);
 
     if (!policy) {
@@ -1478,17 +1479,19 @@ const getCancelPreview = async (req, res) => {
       return res.json({
         has_policy: false,
         days_before_checkin: daysBeforeCheckin,
-        total_amount: totalAmount,
+        advance_amount: advanceAmount,
+        total_amount: totalBookingAmount,
         checkin_date: booking.checkin_datetime,
       });
     }
 
-    const result = computeCancellationCase(policy, booking.checkin_datetime, totalAmount);
+    const result = computeCancellationCase(policy, booking.checkin_datetime, advanceAmount);
 
     return res.json({
       has_policy: true,
       policy,
-      total_amount: totalAmount,
+      advance_amount: advanceAmount,
+      total_amount: totalBookingAmount,
       checkin_date: booking.checkin_datetime,
       ...result,
     });
@@ -1518,12 +1521,12 @@ const handleAdminCancel = async (req, res) => {
       return res.status(400).json({ error: 'Booking is already cancelled' });
     }
 
-    const totalAmount = resolveCommissionTotal(booking);
+    const advanceAmount = parseFloat(booking.advance_amount) || 0;
     const policy = await fetchCancellationPolicy(booking.unit_id, booking.property_id);
 
     let cancellationResult = null;
     if (policy && booking.checkin_datetime) {
-      cancellationResult = computeCancellationCase(policy, booking.checkin_datetime, totalAmount);
+      cancellationResult = computeCancellationCase(policy, booking.checkin_datetime, advanceAmount);
     }
 
     const client = await pool.connect();
@@ -1567,7 +1570,7 @@ const handleAdminCancel = async (req, res) => {
         refundAmount = cancellationResult.refund_amount;
         referralSource = cancellationResult.referral_source;
       } else if (ownerRefRes.rows.length > 0) {
-        ownerEarning = totalAmount > 0 ? Math.round(totalAmount * 0.25 * 100) / 100 : 0;
+        ownerEarning = advanceAmount > 0 ? Math.round(advanceAmount * 0.25 * 100) / 100 : 0;
         referralSource = 'admin_cancel_compensation';
         ledgerNote = 'Booking Cancelled';
         refundCase = 0;
@@ -1604,7 +1607,7 @@ const handleAdminCancel = async (req, res) => {
           booking.persons || 1,
           booking.checkin_datetime ? new Date(booking.checkin_datetime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           booking.checkout_datetime ? new Date(booking.checkout_datetime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          totalAmount,
+          advanceAmount,
           booking_id,
           ledgerNote,
         ]
@@ -1623,7 +1626,7 @@ const handleAdminCancel = async (req, res) => {
 
       let guestMsg = `Your booking for *${propertyName}* from *${checkinStr} to ${checkoutStr}* has been cancelled by the admin.`;
       if (refundCase === 1) {
-        guestMsg += ` You are eligible for a *full refund of ₹${totalAmount.toLocaleString('en-IN')}*. Please contact support to process your refund.`;
+        guestMsg += ` You are eligible for a *full refund of ₹${advanceAmount.toLocaleString('en-IN')}*. Please contact support to process your refund.`;
       } else if (refundCase === 2) {
         guestMsg += ` As per the cancellation policy, you are eligible for a *50% refund of ₹${refundAmount.toLocaleString('en-IN')}*. Please contact support to process your refund.`;
       } else if (refundCase === 3) {

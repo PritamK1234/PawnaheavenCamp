@@ -942,8 +942,12 @@ export const LedgerPopup = ({
                     <span className="text-xs font-bold text-white">{cancelPreview.days_before_checkin} day{cancelPreview.days_before_checkin !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-white/60">Booking amount</span>
-                    <span className="text-xs font-bold text-white">₹{(cancelPreview.total_amount || 0).toLocaleString('en-IN')}</span>
+                    <span className="text-xs text-white/60">Advance paid</span>
+                    <span className="text-xs font-bold text-white">₹{(cancelPreview.advance_amount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-white/40">Total booking value</span>
+                    <span className="text-xs text-white/40">₹{(cancelPreview.total_amount || 0).toLocaleString('en-IN')}</span>
                   </div>
                   <div className={`mt-2 rounded-xl px-3 py-2 flex justify-between items-center ${
                     cancelPreview.refund_case === 1 ? 'bg-green-500/10 border border-green-500/30' :

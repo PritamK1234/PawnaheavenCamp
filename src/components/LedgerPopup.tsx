@@ -86,7 +86,12 @@ export const LedgerPopup = ({
   const [cancelPreview, setCancelPreview] = useState<any>(null);
   const [cancelPreviewLoading, setCancelPreviewLoading] = useState(false);
 
-  const currentOccupancy = entries.reduce(
+  const activeEntries = entries.filter(e =>
+    e.booking_status !== 'CANCELLED' &&
+    e.status !== 'deleted' &&
+    e.booking_status !== 'DELETED'
+  );
+  const currentOccupancy = activeEntries.reduce(
     (sum, entry) => sum + (entry.persons || 0),
     0,
   );
@@ -530,7 +535,7 @@ export const LedgerPopup = ({
               </p>
               <div className="flex items-center gap-2">
                 {isVilla ? (
-                  entries.length > 0 ? (
+                  activeEntries.length > 0 ? (
                     <span className="text-xl font-black text-[#FF0000] capatalize tracking-wider">
                       Booked
                     </span>

@@ -1604,6 +1604,13 @@ const handleAdminCancel = async (req, res) => {
       return res.status(400).json({ error: 'Booking is already cancelled' });
     }
 
+    const propRes = await query(
+      `SELECT id, category FROM properties WHERE property_id = $1 OR id::text = $1 LIMIT 1`,
+      [booking.property_id]
+    );
+    const isVillaBooking = propRes.rows.length > 0 && propRes.rows[0].category === 'villa';
+    const propertyDbId = propRes.rows.length > 0 ? propRes.rows[0].id : null;
+
     const advanceAmount = parseFloat(booking.advance_amount) || 0;
     const policy = await fetchCancellationPolicy(booking.unit_id, booking.property_id);
 
@@ -1633,32 +1640,34 @@ const handleAdminCancel = async (req, res) => {
         [booking_id]
       );
 
-      if (existingLedgerRes.rows.length > 0) {
-        const ledgerRow = existingLedgerRes.rows[0];
-        if (ledgerRow.unit_id) {
-          let current = new Date(ledgerRow.check_in);
-          const end = new Date(ledgerRow.check_out);
-          while (current < end) {
+      {
+        const ledgerRow = existingLedgerRes.rows.length > 0 ? existingLedgerRes.rows[0] : null;
+        const restoreCheckIn = ledgerRow ? new Date(ledgerRow.check_in) : new Date(booking.checkin_datetime);
+        const restoreCheckOut = ledgerRow ? new Date(ledgerRow.check_out) : new Date(booking.checkout_datetime);
+        const restorePersons = ledgerRow ? (ledgerRow.persons || 1) : (booking.persons || 1);
+        const restoreUnitId = ledgerRow ? ledgerRow.unit_id : booking.unit_id;
+
+        if (isVillaBooking && propertyDbId) {
+          let current = new Date(restoreCheckIn);
+          while (current < restoreCheckOut) {
             await client.query(
-              `UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3`,
-              [ledgerRow.persons, ledgerRow.unit_id, current.toISOString().split('T')[0]]
+              `UPDATE availability_calendar SET is_booked = false, updated_at = NOW() WHERE property_id = $1 AND date = $2`,
+              [propertyDbId, current.toISOString().split('T')[0]]
             );
             current.setDate(current.getDate() + 1);
           }
-          console.log(`[AdminCancel] Restored calendar availability for unit ${ledgerRow.unit_id} from ${ledgerRow.check_in} to ${ledgerRow.check_out}`);
+          console.log(`[AdminCancel] Restored villa availability_calendar for property ${booking.property_id}`);
+        } else if (restoreUnitId) {
+          let current = new Date(restoreCheckIn);
+          while (current < restoreCheckOut) {
+            await client.query(
+              `UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3`,
+              [restorePersons, restoreUnitId, current.toISOString().split('T')[0]]
+            );
+            current.setDate(current.getDate() + 1);
+          }
+          console.log(`[AdminCancel] Restored camping unit_calendar for unit ${restoreUnitId}`);
         }
-      } else if (booking.unit_id && booking.checkin_datetime && booking.checkout_datetime) {
-        let current = new Date(booking.checkin_datetime);
-        const end = new Date(booking.checkout_datetime);
-        const persons = booking.persons || 1;
-        while (current < end) {
-          await client.query(
-            `UPDATE unit_calendar SET available_quantity = available_quantity + $1 WHERE unit_id = $2 AND date = $3`,
-            [persons, booking.unit_id, current.toISOString().split('T')[0]]
-          );
-          current.setDate(current.getDate() + 1);
-        }
-        console.log(`[AdminCancel] Restored calendar availability from booking dates for unit ${booking.unit_id}`);
       }
 
       await client.query(
@@ -1922,23 +1931,35 @@ const handleDeleteBooking = async (req, res) => {
       return res.status(400).json({ success: false, error: `Booking is already ${booking.booking_status.toLowerCase()}` });
     }
 
+    const delPropRes = await query(
+      `SELECT id, category FROM properties WHERE property_id = $1 OR id::text = $1 LIMIT 1`,
+      [booking.property_id]
+    );
+    const isVillaDel = delPropRes.rows.length > 0 && delPropRes.rows[0].category === 'villa';
+    const delPropertyDbId = delPropRes.rows.length > 0 ? delPropRes.rows[0].id : null;
+
     const ledgerRes = await query(
       'SELECT unit_id, check_in, check_out, persons FROM ledger_entries WHERE booking_id = $1 LIMIT 1',
       [booking_id]
     );
 
-    const unitId = ledgerRes.rows.length > 0 ? ledgerRes.rows[0].unit_id : booking.unit_id;
-    const checkIn = ledgerRes.rows.length > 0
-      ? new Date(ledgerRes.rows[0].check_in)
-      : new Date(booking.checkin_datetime);
-    const checkOut = ledgerRes.rows.length > 0
-      ? new Date(ledgerRes.rows[0].check_out)
-      : new Date(booking.checkout_datetime);
-    const persons = ledgerRes.rows.length > 0
-      ? (ledgerRes.rows[0].persons || 1)
-      : (booking.persons || 1);
+    const ledgerRow = ledgerRes.rows.length > 0 ? ledgerRes.rows[0] : null;
+    const unitId = ledgerRow ? ledgerRow.unit_id : booking.unit_id;
+    const checkIn = ledgerRow ? new Date(ledgerRow.check_in) : new Date(booking.checkin_datetime);
+    const checkOut = ledgerRow ? new Date(ledgerRow.check_out) : new Date(booking.checkout_datetime);
+    const persons = ledgerRow ? (ledgerRow.persons || 1) : (booking.persons || 1);
 
-    if (unitId) {
+    if (isVillaDel && delPropertyDbId) {
+      let current = new Date(checkIn);
+      while (current < checkOut) {
+        await query(
+          'UPDATE availability_calendar SET is_booked = false, updated_at = NOW() WHERE property_id = $1 AND date = $2',
+          [delPropertyDbId, current.toISOString().split('T')[0]]
+        );
+        current.setDate(current.getDate() + 1);
+      }
+      console.log(`[DeleteBooking] Restored villa availability_calendar for property ${booking.property_id}`);
+    } else if (unitId) {
       let current = new Date(checkIn);
       while (current < checkOut) {
         await query(
@@ -1947,6 +1968,7 @@ const handleDeleteBooking = async (req, res) => {
         );
         current.setDate(current.getDate() + 1);
       }
+      console.log(`[DeleteBooking] Restored camping unit_calendar for unit ${unitId}`);
     }
 
     await query(

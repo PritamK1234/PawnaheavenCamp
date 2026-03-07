@@ -1,0 +1,57 @@
+pawnahavencamp=# \d properties
+                                              Table "public.properties"
+        Column         |            Type             | Collation | Nullable |                Default
+-----------------------+-----------------------------+-----------+----------+----------------------------------------
+ id                    | integer                     |           | not null | nextval('properties_id_seq'::regclass)
+ title                 | character varying(500)      |           | not null |
+ slug                  | character varying(500)      |           | not null |
+ property_id           | character varying(50)       |           |          |
+ description           | text                        |           | not null |
+ category              | character varying(50)       |           | not null |
+ location              | character varying(255)      |           | not null |
+ rating                | numeric(2,1)                |           |          | 4.5
+ price                 | character varying(50)       |           | not null |
+ weekday_price         | character varying(50)       |           |          |
+ weekend_price         | character varying(50)       |           |          |
+ price_note            | character varying(255)      |           | not null |
+ capacity              | integer                     |           | not null |
+ max_capacity          | integer                     |           |          |
+ check_in_time         | character varying(50)       |           |          | '2:00 PM'::character varying
+ check_out_time        | character varying(50)       |           |          | '11:00 AM'::character varying
+ status                | character varying(50)       |           |          | 'Verified'::character varying
+ is_top_selling        | boolean                     |           |          | false
+ is_active             | boolean                     |           |          | true
+ is_available          | boolean                     |           |          | true
+ contact               | character varying(255)      |           |          | '+91 8806092609'::character varying
+ owner_name            | character varying(255)      |           |          |
+ owner_whatsapp_number | character varying(20)       |           |          |
+ map_link              | text                        |           |          |
+ amenities             | text                        |           | not null |
+ activities            | text                        |           | not null |
+ highlights            | text                        |           | not null |
+ policies              | text                        |           |          |
+ schedule              | text                        |           |          |
+ availability          | text                        |           |          |
+ availability_calendar | jsonb                       |           |          |
+ special_dates         | jsonb                       |           |          | '[]'::jsonb
+ created_at            | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at            | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ owner_otp_number      | text                        |           |          |
+ referral_code         | character varying(50)       |           |          |
+ cancellation_policy   | jsonb                       |           |          |
+Indexes:
+    "properties_pkey" PRIMARY KEY, btree (id)
+    "idx_properties_category" btree (category)
+    "idx_properties_is_active" btree (is_active)
+    "idx_properties_slug" btree (slug)
+    "properties_property_id_key" UNIQUE CONSTRAINT, btree (property_id)
+    "properties_slug_key" UNIQUE CONSTRAINT, btree (slug)
+Check constraints:
+    "properties_category_check" CHECK (category::text = ANY (ARRAY['campings_cottages'::character varying, 'villa'::character varying]::text[]))
+    "properties_rating_check" CHECK (rating >= 0::numeric AND rating <= 5::numeric)
+Referenced by:
+    TABLE "availability_calendar" CONSTRAINT "availability_calendar_property_id_fkey" FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+    TABLE "property_images" CONSTRAINT "property_images_property_id_fkey" FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+    TABLE "property_units" CONSTRAINT "property_units_property_id_fkey" FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+
+pawnahavencamp=#

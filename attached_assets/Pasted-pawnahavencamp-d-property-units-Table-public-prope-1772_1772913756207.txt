@@ -1,0 +1,38 @@
+pawnahavencamp=# \d property_units
+                                             Table "public.property_units"
+       Column        |            Type             | Collation | Nullable |                  Default
+---------------------+-----------------------------+-----------+----------+--------------------------------------------
+ id                  | integer                     |           | not null | nextval('property_units_id_seq'::regclass)
+ property_id         | integer                     |           | not null |
+ name                | character varying(255)      |           | not null |
+ available_persons   | integer                     |           | not null |
+ total_persons       | integer                     |           |          | 0
+ amenities           | text                        |           |          |
+ images              | text                        |           |          |
+ price_per_person    | character varying(50)       |           |          |
+ weekday_price       | character varying(50)       |           |          |
+ weekend_price       | character varying(50)       |           |          |
+ special_price       | character varying(50)       |           |          |
+ special_dates       | jsonb                       |           |          | '[]'::jsonb
+ created_at          | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at          | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ description         | text                        |           |          |
+ check_in_time       | character varying(50)       |           |          |
+ check_out_time      | character varying(50)       |           |          |
+ highlights          | text                        |           |          |
+ activities          | text                        |           |          |
+ policies            | text                        |           |          |
+ schedule            | text                        |           |          |
+ rating              | numeric(2,1)                |           |          |
+ price_note          | character varying(255)      |           |          |
+ location            | character varying(255)      |           |          |
+ google_maps_link    | text                        |           |          |
+ title               | character varying(255)      |           |          |
+ cancellation_policy | jsonb                       |           |          |
+Indexes:
+    "property_units_pkey" PRIMARY KEY, btree (id)
+    "idx_property_units_property_id" btree (property_id)
+Foreign-key constraints:
+    "property_units_property_id_fkey" FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "unit_calendar" CONSTRAINT "unit_calendar_unit_id_fkey" FOREIGN KEY (unit_id) REFERENCES property_units(id) ON DELETE CASCADE

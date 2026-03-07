@@ -1,0 +1,54 @@
+pawnahavencamp=# \d bookings
+                                               Table "public.bookings"
+         Column          |            Type             | Collation | Nullable |               Default
+-------------------------+-----------------------------+-----------+----------+--------------------------------------
+ id                      | integer                     |           | not null | nextval('bookings_id_seq'::regclass)
+ booking_id              | character varying(50)       |           | not null |
+ property_id             | character varying(50)       |           | not null |
+ property_name           | character varying(255)      |           | not null |
+ property_type           | character varying(50)       |           | not null |
+ guest_name              | character varying(255)      |           | not null |
+ guest_phone             | character varying(20)       |           | not null |
+ owner_phone             | character varying(20)       |           | not null |
+ admin_phone             | character varying(20)       |           | not null |
+ checkin_datetime        | timestamp without time zone |           | not null |
+ checkout_datetime       | timestamp without time zone |           | not null |
+ advance_amount          | numeric(10,2)               |           | not null |
+ total_amount            | numeric(10,2)               |           |          |
+ persons                 | integer                     |           |          |
+ max_capacity            | integer                     |           |          |
+ veg_guest_count         | integer                     |           |          |
+ nonveg_guest_count      | integer                     |           |          |
+ owner_name              | character varying(255)      |           |          |
+ map_link                | text                        |           |          |
+ property_address        | text                        |           |          |
+ referral_code           | character varying(50)       |           |          |
+ referral_discount       | numeric(10,2)               |           |          | 0
+ payment_status          | character varying(50)       |           |          | 'INITIATED'::character varying
+ booking_status          | character varying(50)       |           |          | 'PAYMENT_PENDING'::character varying
+ order_id                | character varying(100)      |           |          |
+ transaction_id          | character varying(100)      |           |          |
+ refund_id               | character varying(100)      |           |          |
+ refund_status           | character varying(50)       |           |          |
+ refund_amount           | numeric(10,2)               |           |          |
+ payment_method          | character varying(50)       |           |          |
+ admin_commission        | numeric(10,2)               |           |          |
+ referrer_commission     | numeric(10,2)               |           |          |
+ commission_status       | character varying(50)       |           |          |
+ unit_id                 | integer                     |           |          |
+ action_token            | character varying(100)      |           |          |
+ action_token_used       | boolean                     |           |          | false
+ action_token_expires_at | timestamp without time zone |           |          |
+ webhook_processed       | boolean                     |           |          | false
+ created_at              | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at              | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "bookings_pkey" PRIMARY KEY, btree (id)
+    "bookings_booking_id_key" UNIQUE CONSTRAINT, btree (booking_id)
+    "idx_bookings_action_token" btree (action_token)
+    "idx_bookings_booking_id" btree (booking_id)
+    "idx_bookings_guest_phone" btree (guest_phone)
+    "idx_bookings_order_id" btree (order_id)
+    "idx_bookings_status" btree (booking_status)
+
+pawnahavencamp=#

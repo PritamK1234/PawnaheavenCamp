@@ -1,0 +1,47 @@
+pawnahavencamp-# -- bookings: 7 missing columns
+pawnahavencamp-# ALTER TABLE bookings ADD COLUMN IF NOT EXISTS soft_lock_expires_at TIMESTAMP;
+ERROR:  syntax error at or near "C"
+LINE 1: C:
+        ^
+pawnahavencamp=# ALTER TABLE bookings ADD COLUMN IF NOT EXISTS referral_type TEXT;
+D COLUMN IF NOT EXISTS whatsapp_messALTER TABLE
+pawnahavencamp=# ALTER TABLE bookings ADD COLUMN IF NOT EXISTS ticket_token VARCHAR(100);
+age_ids JSONB DEFAULT '{}';
+ALTER TALTER TABLE
+pawnahavencamp=# ALTER TABLE bookings ADD COLUMN IF NOT EXISTS whatsapp_message_ids JSONB DEFAULT '{}';
+ABLE bookings ADD COLUMN IF NOT EXISTS commission_paid BOOLEAN DEFAULT faALTER TABLE
+pawnahavencamp=# ALTER TABLE bookings ADD COLUMN IF NOT EXISTS commission_paid BOOLEAN DEFAULT false;
+ALTER TABLE
+pawnahavencamp=# ALTER TABLE bookings ADD COLUMN IF NOT EXISTS commission_paid_at TIMESTAMP;
+ALTER TABLE
+pawnahavencamp=# ALTER TABLE bookings ADD COLUMN IF NOT EXISTS utr_number VARCHAR(100);
+ALTER TABLE
+pawnahavencamp=#
+pawnahavencamp=# -- ledger_entries: 2 missing columns
+pawnahavencamp=# ALTER TABLE ledger_entries ADD COLUMN IF NOT EXISTS booking_id VARCHAR(50);
+ALTER TABLE
+pawnahavencamp=# ALTER TABLE ledger_entries ADD COLUMN IF NOT EXISTS note TEXT;
+ers: 3 missing columns
+ALTER TABLE referral_ALTER TABLE
+pawnahavencamp=#
+pawnahavencamp=# -- referral_users: 3 missing columns
+pawnahavencamp=# ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS parent_referral_id INTEGER;
+ALTER TABLE
+pawnahavencamp=# ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS owner_id INTEGER;
+E referALTER TABLE
+pawnahavencamp=# ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS visible_to_owner BOOLEAN DEFAULT true;
+ALTER TABLE
+pawnahavencamp=#
+pawnahavencamp=# -- referral_transactions: 1 missing column
+pawnahavencamp=# ALTER TABLE referral_transactions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE
+pawnahavencamp=#
+pawnahavencamp=# -- Create missing webhook_events table
+pawnahavencamp=# CREATE TABLE IF NOT EXISTS webhook_events (
+pawnahavencamp(#   id SERIAL PRIMARY KEY,
+pawnahavencamp(#   event_type VARCHAR(100),
+pawnahavencamp(#   payload JSONB,
+pawnahavencamp(#   processed BOOLEAN DEFAULT false,
+pawnahavencamp(#   booking_id VARCHAR(50),
+pawnahavencamp(#   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+pawnahavencamp(# );

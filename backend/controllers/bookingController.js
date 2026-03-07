@@ -1711,11 +1711,18 @@ const handleAdminCancel = async (req, res) => {
       const digits = rawPhone.replace(/\D/g, '');
       const phone10 = digits.length >= 10 ? digits.slice(-10) : digits;
       const phone91 = `91${phone10}`;
-      console.log(`[AdminCancel] Looking up owner phone: raw="${rawPhone}" 10d="${phone10}" 91="${phone91}"`);
+      console.log(`[AdminCancel] Looking up owner — phone="${phone10}", property_id="${booking.property_id}", propertyDbId=${propertyDbId}`);
 
       const ownerRefRes = await client.query(
-        `SELECT id FROM referral_users WHERE referral_otp_number = ANY($1) AND referral_type = 'owner' LIMIT 1`,
-        [[rawPhone, phone10, phone91]]
+        `SELECT id FROM referral_users
+         WHERE referral_type = 'owner'
+         AND (
+           referral_otp_number = ANY($1)
+           OR property_id = $2
+           OR (linked_property_id IS NOT NULL AND linked_property_id = $3)
+         )
+         LIMIT 1`,
+        [[rawPhone, phone10, phone91], booking.property_id, propertyDbId]
       );
       console.log(`[AdminCancel] Owner referral lookup result: ${ownerRefRes.rows.length} row(s)`);
 

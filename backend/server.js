@@ -172,16 +172,52 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// Startup migrations — runs before accepting traffic
+// Startup migrations — safe to run on every restart (all use IF NOT EXISTS)
 async function runStartupMigrations() {
   const client = await pool.connect();
+  const migrations = [
+    // ledger_entries
+    `ALTER TABLE ledger_entries ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active'`,
+    `ALTER TABLE ledger_entries ADD COLUMN IF NOT EXISTS booking_id VARCHAR(50)`,
+    `ALTER TABLE ledger_entries ADD COLUMN IF NOT EXISTS note TEXT`,
+    // bookings
+    `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS soft_lock_expires_at TIMESTAMP`,
+    `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS referral_type TEXT`,
+    `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS ticket_token VARCHAR(100)`,
+    `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS whatsapp_message_ids JSONB DEFAULT '{}'`,
+    `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS commission_paid BOOLEAN DEFAULT false`,
+    `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS commission_paid_at TIMESTAMP`,
+    `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS utr_number VARCHAR(100)`,
+    // referral_users
+    `ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS parent_referral_id INTEGER`,
+    `ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS owner_id INTEGER`,
+    `ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS visible_to_owner BOOLEAN DEFAULT true`,
+    // referral_transactions
+    `ALTER TABLE referral_transactions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`,
+    // webhook_events table
+    `CREATE TABLE IF NOT EXISTS webhook_events (
+      id SERIAL PRIMARY KEY,
+      event_type VARCHAR(100),
+      payload JSONB,
+      processed BOOLEAN DEFAULT false,
+      booking_id VARCHAR(50),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+  ];
+
+  let applied = 0;
+  let failed = 0;
   try {
-    await client.query(`
-      ALTER TABLE ledger_entries ADD COLUMN IF NOT EXISTS status VARCHAR(50)
-    `);
-    console.log('[Migration] OK: ledger_entries.status column ensured');
-  } catch (err) {
-    console.error('[Migration] FAILED: ledger_entries.status —', err.message);
+    for (const sql of migrations) {
+      try {
+        await client.query(sql);
+        applied++;
+      } catch (err) {
+        console.error(`[Migration] FAILED: ${sql.slice(0, 60).trim()}... — ${err.message}`);
+        failed++;
+      }
+    }
+    console.log(`[Migration] Complete: ${applied} statements OK${failed ? `, ${failed} failed` : ''}`);
   } finally {
     client.release();
   }

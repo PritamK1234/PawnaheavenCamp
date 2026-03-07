@@ -1,6 +1,86 @@
 const crypto = require('crypto');
+const axios = require('axios');
+const PaytmChecksum = require('paytmchecksum');
 const { query, pool } = require('../db');
 const { WhatsAppService } = require('../utils/whatsappService');
+
+function getPaytmBaseUrl() {
+  const gatewayUrl = process.env.PAYTM_GATEWAY_URL || '';
+  if (gatewayUrl.includes('securegw.paytm.in') && !gatewayUrl.includes('securegw-stage')) {
+    return 'https://securegw.paytm.in';
+  }
+  return 'https://securestage.paytmpayments.com';
+}
+
+async function processPaytmRefund(booking, refundAmount) {
+  try {
+    if (booking.payment_status !== 'SUCCESS') {
+      console.log(`[PaytmRefund] Skipping — payment_status is ${booking.payment_status}`);
+      return { skipped: true, reason: 'no_successful_payment' };
+    }
+    if (!booking.transaction_id || !booking.order_id) {
+      console.log(`[PaytmRefund] Skipping — missing transaction_id or order_id`);
+      return { skipped: true, reason: 'missing_ids' };
+    }
+    if (booking.refund_status === 'REFUND_SUCCESSFUL') {
+      console.log(`[PaytmRefund] Skipping — refund already completed`);
+      return { skipped: true, reason: 'already_refunded' };
+    }
+
+    const mid = process.env.PAYTM_MID;
+    const merchantKey = process.env.PAYTM_MERCHANT_KEY;
+    if (!mid || !merchantKey) {
+      console.log('[PaytmRefund] Skipping — Paytm credentials not configured');
+      return { skipped: true, reason: 'not_configured' };
+    }
+
+    const refundId = `REFUND_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    const amount = parseFloat(refundAmount).toFixed(2);
+
+    const paytmBody = {
+      mid,
+      txnType: 'REFUND',
+      orderId: booking.order_id,
+      txnId: booking.transaction_id,
+      refId: refundId,
+      refundAmount: amount,
+    };
+
+    const checksum = await PaytmChecksum.generateSignature(JSON.stringify(paytmBody), merchantKey);
+    const paytmRequest = { body: paytmBody, head: { signature: checksum } };
+
+    console.log(`[PaytmRefund] Initiating refund for booking ${booking.booking_id}, amount ₹${amount}`);
+
+    const paytmResponse = await axios.post(
+      `${getPaytmBaseUrl()}/refund/apply`,
+      paytmRequest,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const responseBody = paytmResponse.data.body;
+    const refundResult = responseBody?.resultInfo;
+
+    if (refundResult?.resultStatus === 'TXN_SUCCESS' || refundResult?.resultStatus === 'PENDING') {
+      const refundStatus = refundResult.resultStatus === 'TXN_SUCCESS' ? 'REFUND_SUCCESSFUL' : 'REFUND_INITIATED';
+      await query(
+        `UPDATE bookings SET refund_id = $1, refund_status = $2, refund_amount = $3, updated_at = NOW() WHERE booking_id = $4`,
+        [refundId, refundStatus, amount, booking.booking_id]
+      );
+      console.log(`[PaytmRefund] Success — status: ${refundStatus}, refundId: ${refundId}`);
+      return { success: true, refund_id: refundId, refund_status: refundStatus, amount };
+    } else {
+      await query(
+        `UPDATE bookings SET refund_status = 'REFUND_FAILED', updated_at = NOW() WHERE booking_id = $1`,
+        [booking.booking_id]
+      );
+      console.log(`[PaytmRefund] Failed — resultStatus: ${refundResult?.resultStatus}, msg: ${refundResult?.resultMsg}`);
+      return { success: false, reason: refundResult?.resultMsg };
+    }
+  } catch (err) {
+    console.error(`[PaytmRefund] Error for booking ${booking.booking_id}:`, err.message);
+    return { success: false, reason: err.message };
+  }
+}
 
 const REFERRAL_RATES = {
   owner:      0.25,
@@ -1615,6 +1695,15 @@ const handleAdminCancel = async (req, res) => {
 
       await client.query('COMMIT');
 
+      let paytmRefundResult = null;
+      if (refundCase === 1) {
+        paytmRefundResult = await processPaytmRefund(booking, advanceAmount);
+      } else if (refundCase === 2) {
+        const halfAmount = Math.round(advanceAmount * 0.5 * 100) / 100;
+        paytmRefundResult = await processPaytmRefund(booking, halfAmount);
+      }
+      console.log(`[AdminCancel] Paytm refund result:`, paytmRefundResult);
+
       const whatsapp = new WhatsAppService();
       const checkinStr = booking.checkin_datetime
         ? new Date(booking.checkin_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
@@ -1626,9 +1715,15 @@ const handleAdminCancel = async (req, res) => {
 
       let guestMsg = `Your booking for *${propertyName}* from *${checkinStr} to ${checkoutStr}* has been cancelled by the admin.`;
       if (refundCase === 1) {
-        guestMsg += ` You are eligible for a *full refund of ₹${advanceAmount.toLocaleString('en-IN')}*. Please contact support to process your refund.`;
+        const refundInitiated = paytmRefundResult?.success;
+        guestMsg += refundInitiated
+          ? ` A *full refund of ₹${advanceAmount.toLocaleString('en-IN')}* has been initiated to your original payment method and will be credited within 5–7 business days.`
+          : ` You are eligible for a *full refund of ₹${advanceAmount.toLocaleString('en-IN')}*. Please contact support if you don't receive it within 7 business days.`;
       } else if (refundCase === 2) {
-        guestMsg += ` As per the cancellation policy, you are eligible for a *50% refund of ₹${refundAmount.toLocaleString('en-IN')}*. Please contact support to process your refund.`;
+        const refundInitiated = paytmRefundResult?.success;
+        guestMsg += refundInitiated
+          ? ` As per the cancellation policy, a *50% refund of ₹${refundAmount.toLocaleString('en-IN')}* has been initiated to your original payment method and will be credited within 5–7 business days.`
+          : ` As per the cancellation policy, you are eligible for a *50% refund of ₹${refundAmount.toLocaleString('en-IN')}*. Please contact support if you don't receive it within 7 business days.`;
       } else if (refundCase === 3) {
         guestMsg += ` As per the cancellation policy, no refund is applicable for this booking.`;
       } else {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { format, addDays } from "date-fns";
 import {
   Drawer,
@@ -907,9 +908,9 @@ export const LedgerPopup = ({
         </DrawerFooter>
       </DrawerContent>
 
-      {cancelConfirmEntry && (
+      {cancelConfirmEntry && createPortal(
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center px-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
           onClick={() => { setCancelConfirmEntry(null); setCancelPreview(null); }}
         >
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
@@ -1019,7 +1020,8 @@ export const LedgerPopup = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </Drawer>
   );

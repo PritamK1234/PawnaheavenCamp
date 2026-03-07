@@ -36,7 +36,7 @@ const UserRepository = {
     const earningsQuery = `
       SELECT COALESCE(SUM(amount), 0) as total
       FROM referral_transactions
-      WHERE referral_user_id = $1 AND type = 'earning' AND status = 'completed'
+      WHERE referral_user_id = $1 AND type = 'earning' AND status = 'available'
     `;
     const withdrawalsQuery = `
       SELECT COALESCE(SUM(amount), 0) as total
@@ -46,7 +46,9 @@ const UserRepository = {
     const referralsQuery = `
       SELECT COUNT(*) as total
       FROM referral_transactions
-      WHERE referral_user_id = $1 AND type = 'earning' AND source = 'booking'
+      WHERE referral_user_id = $1 AND type = 'earning'
+        AND source IN ('booking_confirm', 'legacy_checkout')
+        AND status NOT IN ('canceled', 'no_show_canceled')
     `;
 
     const [earnings, withdrawals, referrals] = await Promise.all([

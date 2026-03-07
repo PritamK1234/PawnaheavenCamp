@@ -24,10 +24,10 @@ const WithdrawalRepository = {
   async getDashboardStats(userId) {
     const text = `
       SELECT 
-        COALESCE(SUM(CASE WHEN type = 'earning' AND status = 'completed' THEN amount ELSE 0 END), 0) as total_earnings,
+        COALESCE(SUM(CASE WHEN type = 'earning' AND status = 'available' THEN amount ELSE 0 END), 0) as total_earnings,
         COALESCE(SUM(CASE WHEN type = 'withdrawal' AND status = 'completed' THEN amount ELSE 0 END), 0) as total_withdrawals,
         COALESCE(SUM(CASE WHEN type = 'withdrawal' AND status = 'pending' THEN amount ELSE 0 END), 0) as pending_withdrawals,
-        (SELECT COUNT(*) FROM referral_transactions WHERE referral_user_id = $1 AND type = 'earning' AND source = 'booking') as total_referrals
+        (SELECT COUNT(*) FROM referral_transactions WHERE referral_user_id = $1 AND type = 'earning' AND source IN ('booking_confirm', 'legacy_checkout') AND status NOT IN ('canceled', 'no_show_canceled')) as total_referrals
       FROM referral_transactions
       WHERE referral_user_id = $1
     `;

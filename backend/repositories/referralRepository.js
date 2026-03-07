@@ -15,7 +15,7 @@ const ReferralRepository = {
         FROM referral_users u
         JOIN referral_transactions t ON u.id = t.referral_user_id
         WHERE u.status = 'active' 
-          AND t.status = 'completed' 
+          AND t.status = 'available' 
           AND t.type = 'earning'
           AND t.created_at >= date_trunc('month', now())
         GROUP BY u.username
@@ -26,11 +26,11 @@ const ReferralRepository = {
       // All time earnings - withdrawals
       text = `
         SELECT u.username, 
-          COALESCE(SUM(CASE WHEN t.type = 'earning' THEN t.amount ELSE 0 END), 0) - 
-          COALESCE(SUM(CASE WHEN t.type = 'withdrawal' THEN t.amount ELSE 0 END), 0) as earnings
+          COALESCE(SUM(CASE WHEN t.type = 'earning' AND t.status = 'available' THEN t.amount ELSE 0 END), 0) - 
+          COALESCE(SUM(CASE WHEN t.type = 'withdrawal' AND t.status = 'completed' THEN t.amount ELSE 0 END), 0) as earnings
         FROM referral_users u
-        JOIN referral_transactions t ON u.id = t.referral_user_id
-        WHERE u.status = 'active' AND t.status = 'completed'
+        LEFT JOIN referral_transactions t ON u.id = t.referral_user_id
+        WHERE u.status = 'active'
         GROUP BY u.username
         ORDER BY earnings DESC
         LIMIT 20

@@ -19,9 +19,9 @@ const AdminService = {
         u.visible_to_owner,
         u.created_at,
         owner_ru.username AS parent_owner_name,
-        COALESCE(SUM(CASE WHEN t.type = 'earning' AND t.status = 'completed' THEN t.amount ELSE 0 END), 0) - 
+        COALESCE(SUM(CASE WHEN t.type = 'earning' AND t.status = 'available' THEN t.amount ELSE 0 END), 0) - 
         COALESCE(SUM(CASE WHEN t.type = 'withdrawal' AND t.status = 'completed' THEN t.amount ELSE 0 END), 0) as balance,
-        (SELECT COUNT(*) FROM referral_transactions WHERE referral_user_id = u.id AND type = 'earning' AND source = 'booking') as total_referrals
+        (SELECT COUNT(*) FROM referral_transactions WHERE referral_user_id = u.id AND type = 'earning' AND source IN ('booking_confirm', 'legacy_checkout') AND status NOT IN ('canceled', 'no_show_canceled')) as total_referrals
       FROM referral_users u
       LEFT JOIN referral_users owner_ru ON owner_ru.id = u.parent_referral_id
       LEFT JOIN referral_transactions t ON u.id = t.referral_user_id

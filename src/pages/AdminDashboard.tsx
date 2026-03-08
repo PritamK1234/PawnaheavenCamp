@@ -155,11 +155,15 @@ const AdminDashboard = () => {
       const result = await response.json();
       setTxBookings(Array.isArray(result.bookings) ? result.bookings : []);
       setTxRefunds(Array.isArray(result.refunds) ? result.refunds : []);
-      setTxWithdrawals(Array.isArray(result.withdrawals) ? result.withdrawals : []);
+      setTxWithdrawals(
+        Array.isArray(result.withdrawals) ? result.withdrawals : [],
+      );
       setBookingsData(Array.isArray(result.bookings) ? result.bookings : []);
     } catch (error) {
       console.error("Fetch transactions error:", error);
-      setTxBookings([]); setTxRefunds([]); setTxWithdrawals([]);
+      setTxBookings([]);
+      setTxRefunds([]);
+      setTxWithdrawals([]);
     } finally {
       setIsBookingsLoading(false);
     }
@@ -1994,23 +1998,37 @@ const AdminDashboard = () => {
               ) : (
                 (() => {
                   const allSorted = [
-                    ...txBookings.map(r => ({ ...r, _type: "booking" })),
-                    ...txRefunds.map(r => ({ ...r, _type: "refund" })),
-                    ...txWithdrawals.map(r => ({ ...r, _type: "withdrawal" })),
-                  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                    ...txBookings.map((r) => ({ ...r, _type: "booking" })),
+                    ...txRefunds.map((r) => ({ ...r, _type: "refund" })),
+                    ...txWithdrawals.map((r) => ({
+                      ...r,
+                      _type: "withdrawal",
+                    })),
+                  ].sort(
+                    (a, b) =>
+                      new Date(b.date).getTime() - new Date(a.date).getTime(),
+                  );
 
                   const filtered =
-                    transactionSubTab === "bookings" ? txBookings.map(r => ({ ...r, _type: "booking" })) :
-                    transactionSubTab === "refunds" ? txRefunds.map(r => ({ ...r, _type: "refund" })) :
-                    transactionSubTab === "withdrawals" ? txWithdrawals.map(r => ({ ...r, _type: "withdrawal" })) :
-                    allSorted;
+                    transactionSubTab === "bookings"
+                      ? txBookings.map((r) => ({ ...r, _type: "booking" }))
+                      : transactionSubTab === "refunds"
+                        ? txRefunds.map((r) => ({ ...r, _type: "refund" }))
+                        : transactionSubTab === "withdrawals"
+                          ? txWithdrawals.map((r) => ({
+                              ...r,
+                              _type: "withdrawal",
+                            }))
+                          : allSorted;
 
                   if (filtered.length === 0) {
                     return (
                       <div className="flex flex-col items-center justify-center py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/10 text-white/30">
                         <CreditCard className="w-12 h-12 mb-3 opacity-20" />
                         <p className="font-display text-base font-bold">
-                          No {transactionSubTab === "all" ? "" : transactionSubTab} records yet
+                          No{" "}
+                          {transactionSubTab === "all" ? "" : transactionSubTab}{" "}
+                          records yet
                         </p>
                       </div>
                     );
@@ -2022,49 +2040,92 @@ const AdminDashboard = () => {
                     const isWithdrawal = tx._type === "withdrawal";
                     const amount = parseFloat(tx.amount || 0);
                     const dateStr = tx.date
-                      ? new Date(tx.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                      ? new Date(tx.date).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
                       : "-";
-                    const label = isBooking ? (tx.property_name || "Booking") :
-                                  isRefund ? (tx.property_name || "Refund") :
-                                  (tx.customer_name || "Withdrawal");
-                    const sub = isBooking ? `${tx.customer_name} • ${dateStr}` :
-                                isRefund ? `${tx.customer_name} • Refund` :
-                                `${tx.customer_name} • UPI: ${tx.upi_id || "-"}`;
-                    const statusColor = isBooking ? "bg-emerald-500/10 text-emerald-500" :
-                                        isRefund ? "bg-blue-500/10 text-blue-400" :
-                                        "bg-amber-500/10 text-amber-400";
-                    const amtColor = isBooking ? "text-emerald-400" : isRefund ? "text-blue-400" : "text-amber-400";
+                    const label = tx.customer_name || "Customer";
+
+                    const sub = isBooking
+                      ? `${tx.property_name} • ${dateStr}`
+                      : isRefund
+                        ? `${tx.property_name} • Refund`
+                        : `UPI: ${tx.upi_id || "-"}`;
+                    const statusColor = isBooking
+                      ? "bg-emerald-500/10 text-emerald-500"
+                      : isRefund
+                        ? "bg-blue-500/10 text-blue-400"
+                        : "bg-amber-500/10 text-amber-400";
+                    const amtColor = isBooking
+                      ? "text-emerald-400"
+                      : isRefund
+                        ? "text-blue-400"
+                        : "text-amber-400";
                     const amtPrefix = isBooking ? "+" : isRefund ? "↩" : "↑";
-                    const badgeLabel = isBooking ? (tx.status?.replace(/_/g, " ") || "CONFIRMED") :
-                                       isRefund ? (tx.refund_status || tx.status || "CANCELLED") :
-                                       (tx.status?.toUpperCase() || "PENDING");
+                    const badgeLabel = isBooking
+                      ? tx.status?.replace(/_/g, " ") || "CONFIRMED"
+                      : isRefund
+                        ? tx.refund_status || tx.status || "CANCELLED"
+                        : tx.status?.toUpperCase() || "PENDING";
 
                     return (
                       <div
                         key={`${tx._type}-${tx.id}-${idx}`}
                         onClick={() => setSelectedTx(tx)}
-                        className="glass-dark rounded-2xl border border-white/5 p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-gold/20 hover:bg-white/5 transition-all"
+                        className="glass-dark rounded-2xl border border-white/5 p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-gold/30 hover:bg-white/5 hover:scale-[1.01] transition-all duration-200"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 flex-shrink-0", statusColor)}>
-                            {isBooking ? <ArrowDownLeft className="w-5 h-5" /> :
-                             isRefund ? <ArrowUpRight className="w-5 h-5" /> :
-                             <DollarSign className="w-5 h-5" />}
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 flex-shrink-0",
+                              statusColor,
+                            )}
+                          >
+                            {isBooking ? (
+                              <ArrowDownLeft className="w-5 h-5" />
+                            ) : isRefund ? (
+                              <ArrowUpRight className="w-5 h-5" />
+                            ) : (
+                              <DollarSign className="w-5 h-5" />
+                            )}
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-bold text-white truncate">{label}</h4>
-                              <Badge variant="outline" className="text-[8px] h-4 border-white/10 text-white/40 capitalize flex-shrink-0">{tx._type}</Badge>
+                              <h4 className="text-sm font-semibold text-white truncate tracking-wide">
+                                {label}
+                              </h4>
+                              <Badge
+                                variant="outline"
+                                className="text-[8px] h-4 border-white/10 text-white/40 capitalize flex-shrink-0"
+                              >
+                                {tx._type}
+                              </Badge>
                             </div>
-                            <p className="text-[10px] text-muted-foreground truncate">{sub}</p>
-                            {tx.booking_id && <p className="text-[9px] text-white/30 font-mono">{tx.booking_id}</p>}
+                            <p className="text-[11px] text-white/50 truncate font-medium">
+                              {sub}
+                            </p>
+                            {tx.booking_id && (
+                              <p className="text-[9px] text-white/30 font-mono">
+                                {tx.booking_id}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className={cn("font-bold text-sm", amtColor)}>
+                          <p
+                            className={cn(
+                              "font-bold text-sm tracking-wide",
+                              amtColor,
+                            )}
+                          >
                             {amtPrefix}₹{amount.toLocaleString("en-IN")}
                           </p>
-                          <Badge variant="outline" className="text-[8px] h-4 mt-0.5 border-white/10 text-white/40 max-w-[90px] truncate">
+                          <Badge
+                            variant="outline"
+                            className="text-[8px] h-4 mt-0.5 border-white/10 text-white/40 max-w-[90px] truncate"
+                          >
                             {badgeLabel}
                           </Badge>
                         </div>
@@ -2125,76 +2186,158 @@ const AdminDashboard = () => {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!selectedTx} onOpenChange={(open) => !open && setSelectedTx(null)}>
+        <Dialog
+          open={!!selectedTx}
+          onOpenChange={(open) => !open && setSelectedTx(null)}
+        >
           <DialogContent className="sm:max-w-[440px] bg-charcoal border-white/10 rounded-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-gold font-display capitalize">
-                {selectedTx?._type === "booking" ? "Booking Details" :
-                 selectedTx?._type === "refund" ? "Refund Details" : "Withdrawal Details"}
+                {selectedTx?._type === "booking"
+                  ? "Booking Details"
+                  : selectedTx?._type === "refund"
+                    ? "Refund Details"
+                    : "Withdrawal Details"}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                {selectedTx?.date ? new Date(selectedTx.date).toLocaleString("en-IN") : ""}
+                {selectedTx?.date
+                  ? new Date(selectedTx.date).toLocaleString("en-IN")
+                  : ""}
               </DialogDescription>
             </DialogHeader>
-            {selectedTx && (() => {
-              const isBooking = selectedTx._type === "booking";
-              const isRefund = selectedTx._type === "refund";
-              const isWithdrawal = selectedTx._type === "withdrawal";
-              const rows: { label: string; value: string | null | undefined }[] = [];
-              if (!isWithdrawal) {
-                rows.push(
-                  { label: "Property", value: selectedTx.property_name },
-                  { label: "Guest", value: selectedTx.customer_name },
-                  { label: "Owner", value: selectedTx.owner_name },
-                  { label: "Booking ID", value: selectedTx.booking_id },
-                  { label: "Check-in", value: selectedTx.check_in ? new Date(selectedTx.check_in).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : null },
-                  { label: "Check-out", value: selectedTx.check_out ? new Date(selectedTx.check_out).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : null },
-                );
-                if (isBooking) {
+            {selectedTx &&
+              (() => {
+                const isBooking = selectedTx._type === "booking";
+                const isRefund = selectedTx._type === "refund";
+                const isWithdrawal = selectedTx._type === "withdrawal";
+                const rows: {
+                  label: string;
+                  value: string | null | undefined;
+                }[] = [];
+                if (!isWithdrawal) {
                   rows.push(
-                    { label: "Advance Paid", value: `₹${parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}` },
-                    { label: "Status", value: selectedTx.status?.replace(/_/g, " ") },
-                    { label: "Admin Commission", value: selectedTx.admin_commission ? `₹${parseFloat(selectedTx.admin_commission).toLocaleString("en-IN")}` : null },
-                    { label: "Referrer Commission", value: selectedTx.referrer_commission ? `₹${parseFloat(selectedTx.referrer_commission).toLocaleString("en-IN")}` : null },
+                    { label: "Property", value: selectedTx.property_name },
+                    { label: "Guest", value: selectedTx.customer_name },
+                    { label: "Owner", value: selectedTx.owner_name },
+                    { label: "Booking ID", value: selectedTx.booking_id },
+                    {
+                      label: "Check-in",
+                      value: selectedTx.check_in
+                        ? new Date(selectedTx.check_in).toLocaleDateString(
+                            "en-IN",
+                            { day: "2-digit", month: "short", year: "numeric" },
+                          )
+                        : null,
+                    },
+                    {
+                      label: "Check-out",
+                      value: selectedTx.check_out
+                        ? new Date(selectedTx.check_out).toLocaleDateString(
+                            "en-IN",
+                            { day: "2-digit", month: "short", year: "numeric" },
+                          )
+                        : null,
+                    },
                   );
-                }
-                if (isRefund) {
+                  if (isBooking) {
+                    rows.push(
+                      {
+                        label: "Advance Paid",
+                        value: `₹${parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}`,
+                      },
+                      {
+                        label: "Status",
+                        value: selectedTx.status?.replace(/_/g, " "),
+                      },
+                      {
+                        label: "Admin Commission",
+                        value: selectedTx.admin_commission
+                          ? `₹${parseFloat(selectedTx.admin_commission).toLocaleString("en-IN")}`
+                          : null,
+                      },
+                      {
+                        label: "Referrer Commission",
+                        value: selectedTx.referrer_commission
+                          ? `₹${parseFloat(selectedTx.referrer_commission).toLocaleString("en-IN")}`
+                          : null,
+                      },
+                    );
+                  }
+                  if (isRefund) {
+                    rows.push(
+                      {
+                        label: "Original Paid",
+                        value: `₹${parseFloat(selectedTx.original_amount || 0).toLocaleString("en-IN")}`,
+                      },
+                      {
+                        label: "Refund Amount",
+                        value: selectedTx.refund_amount
+                          ? `₹${parseFloat(selectedTx.refund_amount).toLocaleString("en-IN")}`
+                          : "No Refund",
+                      },
+                      {
+                        label: "Refund Status",
+                        value: selectedTx.refund_status || selectedTx.status,
+                      },
+                      {
+                        label: "Booking Status",
+                        value: selectedTx.status?.replace(/_/g, " "),
+                      },
+                    );
+                  }
+                  if (selectedTx.referral_code) {
+                    rows.push(
+                      {
+                        label: "Referral Code",
+                        value: selectedTx.referral_code,
+                      },
+                      { label: "Referrer", value: selectedTx.referrer_name },
+                    );
+                  }
+                } else {
                   rows.push(
-                    { label: "Original Paid", value: `₹${parseFloat(selectedTx.original_amount || 0).toLocaleString("en-IN")}` },
-                    { label: "Refund Amount", value: selectedTx.refund_amount ? `₹${parseFloat(selectedTx.refund_amount).toLocaleString("en-IN")}` : "No Refund" },
-                    { label: "Refund Status", value: selectedTx.refund_status || selectedTx.status },
-                    { label: "Booking Status", value: selectedTx.status?.replace(/_/g, " ") },
-                  );
-                }
-                if (selectedTx.referral_code) {
-                  rows.push(
+                    { label: "Partner", value: selectedTx.customer_name },
                     { label: "Referral Code", value: selectedTx.referral_code },
-                    { label: "Referrer", value: selectedTx.referrer_name },
+                    {
+                      label: "Amount",
+                      value: `₹${parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}`,
+                    },
+                    { label: "UPI ID", value: selectedTx.upi_id },
+                    {
+                      label: "Status",
+                      value: selectedTx.status?.toUpperCase(),
+                    },
+                    { label: "Type", value: selectedTx.referral_type },
                   );
                 }
-              } else {
-                rows.push(
-                  { label: "Partner", value: selectedTx.customer_name },
-                  { label: "Referral Code", value: selectedTx.referral_code },
-                  { label: "Amount", value: `₹${parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}` },
-                  { label: "UPI ID", value: selectedTx.upi_id },
-                  { label: "Status", value: selectedTx.status?.toUpperCase() },
-                  { label: "Type", value: selectedTx.referral_type },
+                return (
+                  <div className="mt-2 space-y-2">
+                    {rows
+                      .filter((r) => r.value)
+                      .map(({ label, value }) => (
+                        <div
+                          key={label}
+                          className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
+                        >
+                          <span className="text-xs text-muted-foreground">
+                            {label}
+                          </span>
+                          <span className="text-xs font-medium text-white text-right max-w-[60%] truncate">
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
                 );
-              }
-              return (
-                <div className="mt-2 space-y-2">
-                  {rows.filter(r => r.value).map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                      <span className="text-xs text-muted-foreground">{label}</span>
-                      <span className="text-xs font-medium text-white text-right max-w-[60%] truncate">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
+              })()}
             <div className="mt-4">
-              <Button variant="outline" className="w-full rounded-xl border-white/10" onClick={() => setSelectedTx(null)}>Close</Button>
+              <Button
+                variant="outline"
+                className="w-full rounded-xl border-white/10"
+                onClick={() => setSelectedTx(null)}
+              >
+                Close
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

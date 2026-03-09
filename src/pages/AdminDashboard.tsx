@@ -115,6 +115,16 @@ const AdminDashboard = () => {
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
 
+  const [deletePropertyConfirm, setDeletePropertyConfirm] = useState<{
+    open: boolean;
+    propertyId: number | null;
+    propertyName: string;
+  }>({
+    open: false,
+    propertyId: null,
+    propertyName: "",
+  });
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -525,9 +535,6 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteProperty = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this property?"))
-      return;
-
     const token = localStorage.getItem("adminToken");
     try {
       const response = await fetch(`/api/properties/delete/${id}`, {
@@ -544,6 +551,11 @@ const AdminDashboard = () => {
     } catch (error) {
       toast({ title: "Error deleting property", variant: "destructive" });
     }
+    setDeletePropertyConfirm({
+      open: false,
+      propertyId: null,
+      propertyName: "",
+    });
   };
 
   const handleToggleStatus = async (
@@ -1068,12 +1080,19 @@ const AdminDashboard = () => {
                               setShowPropertyForm(true);
                             }}
                           >
-                            <Edit3 className="w-4 h-4 mr-2 text-gold" /> Edit
+                            <Edit3 className="w-4 h-4 mr-2 text-blue-500" />{" "}
+                            Edit
                           </Button>
                           <Button
                             variant="outline"
                             className="flex-1 rounded-xl h-11 border-white/10 text-red-500 hover:text-white font-bold transition-colors"
-                            onClick={() => handleDeleteProperty(property.id)}
+                            onClick={() =>
+                              setDeletePropertyConfirm({
+                                open: true,
+                                propertyId: property.id,
+                                propertyName: property.title,
+                              })
+                            }
                           >
                             <Trash2 className="w-4 h-4 mr-2" /> Delete
                           </Button>
@@ -2224,7 +2243,13 @@ const AdminDashboard = () => {
               <DialogDescription className="text-sm text-muted-foreground">
                 Are you sure you want to permanently delete the referral for{" "}
                 <span className="font-bold text-white">
-                  {deleteConfirm.username}
+                  {deleteConfirm.username
+                    ?.split(" ")
+                    .map(
+                      (word: string) =>
+                        word.charAt(0).toUpperCase() + word.slice(1),
+                    )
+                    .join(" ")}
                 </span>
                 ? This action cannot be undone.
               </DialogDescription>
@@ -2965,6 +2990,61 @@ const AdminDashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
+        <Dialog
+          open={deletePropertyConfirm.open}
+          onOpenChange={(open) =>
+            !open &&
+            setDeletePropertyConfirm({
+              open: false,
+              propertyId: null,
+              propertyName: "",
+            })
+          }
+        >
+          <DialogContent className="sm:max-w-[400px] bg-charcoal border-white/10 rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-red-500 font-display">
+                Delete Property
+              </DialogTitle>
+
+              <DialogDescription className="text-sm text-muted-foreground">
+                Are you sure you want to permanently delete{" "}
+                <span className="font-bold text-white">
+                  {deletePropertyConfirm.propertyName}
+                </span>
+                ? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex gap-3 mt-4">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl border-white/10"
+                onClick={() =>
+                  setDeletePropertyConfirm({
+                    open: false,
+                    propertyId: null,
+                    propertyName: "",
+                  })
+                }
+              >
+                Cancel
+              </Button>
+
+              <Button
+                className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+                onClick={() =>
+                  deletePropertyConfirm.propertyId &&
+                  handleDeleteProperty(deletePropertyConfirm.propertyId)
+                }
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <div className="mt-8 text-center pb-8">
           <Button
             variant="ghost"

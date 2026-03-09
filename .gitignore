@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+latest
+latest.json
+toolchain.json
+.replit

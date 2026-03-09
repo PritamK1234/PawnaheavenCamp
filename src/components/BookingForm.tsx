@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, isWeekend } from "date-fns";
 import { Calendar as CalendarIcon, Users, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -20,10 +20,17 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+interface SpecialDate {
+  date: string;
+  price: string;
+}
+
 interface BookingFormProps {
   propertyName: string;
   propertyId: string;
   pricePerPerson: number;
+  weekendPrice?: number;
+  specialDates?: SpecialDate[];
   propertyCategory?: string;
   maxCapacity?: number;
   onClose?: () => void;
@@ -37,6 +44,8 @@ export function BookingForm({
   propertyName,
   propertyId,
   pricePerPerson,
+  weekendPrice,
+  specialDates = [],
   propertyCategory = "camping",
   maxCapacity = 4,
   onClose,
@@ -83,31 +92,54 @@ export function BookingForm({
 
   const isVilla = propertyCategory?.toLowerCase() === "villa";
 
+  const getPriceForNight = (date: Date): number => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    if (Array.isArray(specialDates) && specialDates.length > 0) {
+      const special = specialDates.find(sd => sd.date === dateStr);
+      if (special?.price) {
+        const p = parseInt(String(special.price).replace(/[^\d]/g, ""));
+        if (p > 0) return p;
+      }
+    }
+    if (isWeekend(date) && weekendPrice && weekendPrice > 0) return weekendPrice;
+    return pricePerPerson;
+  };
+
   useEffect(() => {
-    let days = 1;
-    if (formData.checkIn && formData.checkOut) {
-      const diffTime = Math.abs(
-        formData.checkOut.getTime() - formData.checkIn.getTime(),
-      );
-      days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (days < 1) days = 1;
+    const totalPersons =
+      (formData.vegPersons || 0) + (formData.nonVegPersons || 0);
+
+    if (formData.persons !== totalPersons && !isVilla) {
+      setFormData((prev) => ({ ...prev, persons: totalPersons }));
     }
 
     let total = 0;
-    if (isVilla) {
-      total = pricePerPerson * days;
-    } else {
-      const totalPersons =
-        (formData.vegPersons || 0) + (formData.nonVegPersons || 0);
-      total = totalPersons * pricePerPerson;
-      // Keep persons count in sync for other logic if needed
-      if (formData.persons !== totalPersons) {
-        setFormData((prev) => ({ ...prev, persons: totalPersons }));
+
+    if (formData.checkIn && formData.checkOut) {
+      const current = new Date(formData.checkIn);
+      current.setHours(12, 0, 0, 0);
+      const end = new Date(formData.checkOut);
+      end.setHours(12, 0, 0, 0);
+
+      while (current < end) {
+        const nightPrice = getPriceForNight(current);
+        if (isVilla) {
+          total += nightPrice;
+        } else {
+          total += totalPersons * nightPrice;
+        }
+        current.setDate(current.getDate() + 1);
       }
+
+      if (total === 0) {
+        total = isVilla ? pricePerPerson : totalPersons * pricePerPerson;
+      }
+    } else {
+      total = isVilla ? pricePerPerson : totalPersons * pricePerPerson;
     }
 
     setTotalPrice(total);
-    setAdvanceAmount(Math.round(total * 0.3)); // 30% advance
+    setAdvanceAmount(Math.round(total * 0.3));
   }, [
     formData.persons,
     formData.vegPersons,
@@ -115,6 +147,8 @@ export function BookingForm({
     formData.checkIn,
     formData.checkOut,
     pricePerPerson,
+    weekendPrice,
+    specialDates,
     isVilla,
   ]);
 

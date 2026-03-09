@@ -100,6 +100,7 @@ interface PropertyUnit {
   price_per_person: string;
   weekday_price?: string;
   weekend_price?: string;
+  special_dates?: Array<{ date: string; price: string }>;
   available_persons: number;
   total_persons: number;
   capacity?: number;
@@ -157,6 +158,9 @@ interface PropertyDetail {
     no_refund_days: number;
   };
   schedule?: { time: string; title: string; icon?: string }[];
+  weekday_price?: string;
+  weekend_price?: string;
+  special_dates?: Array<{ date: string; price: string }>;
   contact?: string;
   owner_whatsapp_number?: string;
   owner_name?: string;
@@ -337,6 +341,22 @@ const PropertyDetails = () => {
 
   const isVilla = propertyData.category === "villa";
   const hasUnits = propertyData.units && propertyData.units.length > 0;
+
+  const bookingWeekendPrice = (() => {
+    const raw = selectedUnit?.weekend_price || propertyData.weekend_price || "";
+    const n = parseInt(String(raw).replace(/[^\d]/g, ""));
+    return n > 0 ? n : undefined;
+  })();
+
+  const bookingSpecialDates: Array<{ date: string; price: string }> = (() => {
+    const raw = selectedUnit?.special_dates || propertyData.special_dates;
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === "string") {
+      try { return JSON.parse(raw); } catch { return []; }
+    }
+    return [];
+  })();
+
   const displayPrice = selectedUnit
     ? isVilla
       ? selectedUnit.weekday_price ||
@@ -564,6 +584,8 @@ const PropertyDetails = () => {
                             ? parseInt(displayPrice.replace(/[^\d]/g, "")) || 0
                             : Number(displayPrice) || 0
                         }
+                        weekendPrice={bookingWeekendPrice}
+                        specialDates={bookingSpecialDates}
                         propertyCategory={propertyData.category}
                         maxCapacity={displayCapacityValue}
                         selectedUnitId={selectedUnit?.id}
@@ -821,6 +843,8 @@ const PropertyDetails = () => {
                       ? parseInt(displayPrice.replace(/[^\d]/g, "")) || 0
                       : Number(displayPrice) || 0
                   }
+                  weekendPrice={bookingWeekendPrice}
+                  specialDates={bookingSpecialDates}
                   propertyCategory={propertyData.category}
                   maxCapacity={displayCapacityValue}
                   selectedUnitId={selectedUnit?.id}

@@ -842,7 +842,11 @@ interface VillaUnitFormState {
   activities: string[];
   highlights: string[];
   policies: string[];
-  cancellation_policy: { full_refund_days: number; half_refund_days: number; no_refund_days: number };
+  cancellation_policy: {
+    full_refund_days: number;
+    half_refund_days: number;
+    no_refund_days: number;
+  };
   schedule: { time: string; title: string }[];
   images: string[];
   special_dates: { date: string; price: string }[];
@@ -866,7 +870,11 @@ const createDefaultVillaUnitForm = (): VillaUnitFormState => ({
   activities: [""],
   highlights: [""],
   policies: [""],
-  cancellation_policy: { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 },
+  cancellation_policy: {
+    full_refund_days: 7,
+    half_refund_days: 3,
+    no_refund_days: 1,
+  },
   schedule: [{ time: "", title: "" }],
   images: [],
   special_dates: [],
@@ -936,9 +944,9 @@ const VillaUnitManager = ({
           ? parseJson(unit.policies)
           : [""],
         cancellation_policy: unit.cancellation_policy
-          ? (typeof unit.cancellation_policy === "string"
-              ? JSON.parse(unit.cancellation_policy)
-              : unit.cancellation_policy)
+          ? typeof unit.cancellation_policy === "string"
+            ? JSON.parse(unit.cancellation_policy)
+            : unit.cancellation_policy
           : { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 },
         schedule: parseJson(unit.schedule).length
           ? parseJson(unit.schedule)
@@ -1777,12 +1785,23 @@ const VillaUnitManager = ({
             <Label className="capitalize">Cancellation Policy</Label>
             <div className="space-y-2">
               {[
-                { label: "100% Refund — Upto", field: "full_refund_days" as const },
-                { label: "50% Refund — Upto", field: "half_refund_days" as const },
-                { label: "No Refund — Less than", field: "no_refund_days" as const },
+                {
+                  label: "100% Refund — Upto",
+                  field: "full_refund_days" as const,
+                },
+                {
+                  label: "50% Refund — Upto",
+                  field: "half_refund_days" as const,
+                },
+                {
+                  label: "No Refund — Less than",
+                  field: "no_refund_days" as const,
+                },
               ].map(({ label, field }) => (
                 <div key={field} className="flex items-center gap-2">
-                  <span className="text-sm text-white/70 w-44 shrink-0">{label}</span>
+                  <span className="text-sm text-white/70 w-44 shrink-0">
+                    {label}
+                  </span>
                   <Input
                     type="number"
                     min={0}
@@ -2046,7 +2065,15 @@ const AdminPropertyForm = ({
     activities: [""],
     highlights: [""],
     policies: [""],
-    cancellation_policy: { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 } as { full_refund_days: number; half_refund_days: number; no_refund_days: number },
+    cancellation_policy: {
+      full_refund_days: 7,
+      half_refund_days: 3,
+      no_refund_days: 1,
+    } as {
+      full_refund_days: number;
+      half_refund_days: number;
+      no_refund_days: number;
+    },
     schedule: [{ time: "", title: "" }],
     images: [] as string[],
     special_dates: [] as { date: string; price: string }[],
@@ -2202,9 +2229,9 @@ const AdminPropertyForm = ({
         highlights: property.highlights?.length ? property.highlights : [""],
         policies: property.policies?.length ? property.policies : [""],
         cancellation_policy: property.cancellation_policy
-          ? (typeof property.cancellation_policy === "string"
-              ? JSON.parse(property.cancellation_policy)
-              : property.cancellation_policy)
+          ? typeof property.cancellation_policy === "string"
+            ? JSON.parse(property.cancellation_policy)
+            : property.cancellation_policy
           : { full_refund_days: 7, half_refund_days: 3, no_refund_days: 1 },
         schedule: property.schedule?.length
           ? property.schedule
@@ -2320,7 +2347,9 @@ const AdminPropertyForm = ({
       if (!payload.description)
         (payload as any).description =
           "Villa property - details managed at unit level";
-      if (!payload.location) (payload as any).location = "See unit details";
+      if (!payload.location) {
+        (payload as any).location = formData.location || "";
+      }
       if (!payload.price_note) (payload as any).price_note = "See unit details";
       if (!(payload as any).price) (payload as any).price = "See Units";
     }
@@ -3161,12 +3190,23 @@ const AdminPropertyForm = ({
                 </h2>
                 <div className="space-y-4">
                   {[
-                    { label: "100% Refund — Upto", field: "full_refund_days" as const },
-                    { label: "50% Refund — Upto", field: "half_refund_days" as const },
-                    { label: "No Refund — Less than", field: "no_refund_days" as const },
+                    {
+                      label: "100% Refund — Upto",
+                      field: "full_refund_days" as const,
+                    },
+                    {
+                      label: "50% Refund — Upto",
+                      field: "half_refund_days" as const,
+                    },
+                    {
+                      label: "No Refund — Less than",
+                      field: "no_refund_days" as const,
+                    },
                   ].map(({ label, field }) => (
                     <div key={field} className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground w-52 shrink-0">{label}</span>
+                      <span className="text-sm text-muted-foreground w-52 shrink-0">
+                        {label}
+                      </span>
                       <Input
                         type="number"
                         min={0}
@@ -3182,7 +3222,9 @@ const AdminPropertyForm = ({
                         }
                         className="h-12 bg-secondary/50 rounded-xl w-28"
                       />
-                      <span className="text-sm text-muted-foreground">days</span>
+                      <span className="text-sm text-muted-foreground">
+                        days
+                      </span>
                     </div>
                   ))}
                 </div>

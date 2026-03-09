@@ -39,7 +39,10 @@ const GenerateCodePage = () => {
       toast.error("Please fill all fields");
       return;
     }
-    if (!/[A-Za-z]/.test(formData.referralCode) || !/[0-9]/.test(formData.referralCode)) {
+    if (
+      !/[A-Za-z]/.test(formData.referralCode) ||
+      !/[0-9]/.test(formData.referralCode)
+    ) {
       toast.error("Referral code must contain both letters and numbers");
       return;
     }
@@ -54,7 +57,11 @@ const GenerateCodePage = () => {
 
       setStep("otp");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to send OTP");
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Failed to send OTP",
+      );
     } finally {
       setLoading(false);
     }
@@ -134,41 +141,15 @@ const GenerateCodePage = () => {
             <>
               <div className="space-y-2">
                 <Label
-                  htmlFor="referralCode"
-                  className="text-sm font-bold flex items-center gap-2"
-                >
-                  <ShieldCheck className="w-4 h-4 text-primary" />
-                  Enter Referral Code
-                </Label>
-                <Input
-                  id="referralCode"
-                  placeholder="Create your referral code"
-                  className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg Capatalize"
-                  value={formData.referralCode}
-                  maxLength={15}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      referralCode: e.target.value
-                        .toUpperCase()
-                        .replace(/[^A-Z0-9]/g, "")
-                        .slice(0, 15),
-                    })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label
                   htmlFor="username"
                   className="text-sm font-bold flex items-center gap-2"
                 >
                   <User className="w-4 h-4 text-primary" />
-                  Create Your User Name
+                  Full Name
                 </Label>
                 <Input
                   id="username"
-                  placeholder="Enter username"
+                  placeholder="Enter Your Full Name"
                   className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg"
                   value={formData.username}
                   onChange={(e) =>
@@ -183,7 +164,7 @@ const GenerateCodePage = () => {
                   className="text-sm font-bold flex items-center gap-2"
                 >
                   <Smartphone className="w-4 h-4 text-primary" />
-                  Enter Mobile Number
+                  Mobile Number
                 </Label>
                 <Input
                   id="mobile"
@@ -191,7 +172,7 @@ const GenerateCodePage = () => {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={10}
-                  placeholder="Enter mobile number"
+                  placeholder="Enter Mobile Number to get OTP"
                   className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg"
                   value={formData.mobile}
                   onChange={(e) => {
@@ -200,6 +181,32 @@ const GenerateCodePage = () => {
                       setFormData({ ...formData, mobile: value });
                     }
                   }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="referralCode"
+                  className="text-sm font-bold flex items-center gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  Create Your Referral Code
+                </Label>
+                <Input
+                  id="referralCode"
+                  placeholder="e.g. ABC123"
+                  className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-lg Capatalize"
+                  value={formData.referralCode}
+                  maxLength={15}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      referralCode: e.target.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, "")
+                        .slice(0, 15),
+                    })
+                  }
                 />
               </div>
 

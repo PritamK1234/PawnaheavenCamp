@@ -49,6 +49,15 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 
+const formatPrice = (price: string | number) => {
+  const num =
+    typeof price === "string"
+      ? parseInt(price.replace(/[^\d]/g, "")) || 0
+      : price;
+
+  return new Intl.NumberFormat("en-IN").format(num);
+};
+
 // Helper for mapping icons
 const getIcon = (amenity: string) => {
   const a = amenity.toLowerCase();
@@ -428,7 +437,7 @@ const PropertyDetails = () => {
                       displayPrice.startsWith("₹")
                         ? ""
                         : "₹"}
-                      {displayPrice}
+                      {formatPrice(displayPrice)}
                     </span>
                     <span className="text-gray-400 text-sm">
                       /{displayPriceNote}
@@ -601,12 +610,15 @@ const PropertyDetails = () => {
                         </Button>
                         <Button
                           className="h-16 rounded-2xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-95"
-                          onClick={() =>
-                            window.open(
-                              "https://api.whatsapp.com/send?phone=918806092609",
-                              "_blank",
-                            )
-                          }
+                          onClick={() => {
+                            const phone = "918806092609";
+
+                            const message = `Hello PawnaHavenCamp,\n\nI would like to enquire about booking:\n🏡 Property: ${propertyData.title}\n🏠 Unit: ${selectedUnit?.name || "Default Stay"}\n📍 Location: ${propertyData.location}\n💰 Price: ₹${formatPrice(displayPrice)}\n\n🔗 ${window.location.href}\n\nPlease share availability and booking details.`;
+
+                            const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+
+                            window.open(url, "_blank");
+                          }}
                         >
                           <MessageCircle className="w-6 h-6" />
                           WhatsApp
@@ -730,10 +742,10 @@ const PropertyDetails = () => {
                     size="sm"
                     onClick={() => setSelectedUnit(unit)}
                     className={cn(
-                      "rounded-xl px-5 py-2.5 h-auto text-xs font-bold tracking-tight transition-all",
+                      "rounded-xl px-5 py-2.5 h-auto text-xs font-bold tracking-tight transition-all duration-300",
                       selectedUnit?.id === unit.id
-                        ? "bg-primary text-primary-foreground shadow-gold"
-                        : "bg-secondary/50 border-border/50 hover:bg-secondary",
+                        ? "bg-[#C5A021] text-black shadow-[0_4px_0_rgb(146,120,33),0_8px_15px_rgba(0,0,0,0.3)]"
+                        : "bg-[#1A1A1A] text-white border border-[#D4AF37]/30 hover:bg-[#2A2A2A] hover:border-[#C5A021] hover:text-white",
                     )}
                   >
                     {unit.name}
@@ -750,7 +762,7 @@ const PropertyDetails = () => {
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-display font-bold text-[#C5A021] tracking-tight">
                 {displayPrice.startsWith("₹") ? "" : "₹"}
-                {displayPrice}
+                {formatPrice(displayPrice)}
               </span>
               <span className="text-white-foreground font-medium text-lg">
                 / {isVilla ? "villa" : "person"}
@@ -825,10 +837,19 @@ const PropertyDetails = () => {
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full h-[52px] rounded-2xl bg-secondary/50 border-2 border-primary/20 hover:bg-secondary text-foreground font-bold flex items-center justify-center gap-3"
+                  className="w-full h-[52px] rounded-2xl bg-[#1A1A1A] border-2 border-[#D4AF37]/40 
+                  text-white font-bold flex items-center justify-center gap-3
+                  hover:bg-[#D4AF37] hover:text-black
+                  transition-all duration-300
+                  shadow-[0_4px_0_rgb(146,120,33),0_10px_20px_rgba(0,0,0,0.4)]
+                  hover:shadow-[0_6px_0_rgb(146,120,33),0_15px_25px_rgba(0,0,0,0.5)]
+                  active:translate-y-1 active:shadow-inner
+                  group"
                 >
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                  View Availability Calendar
+                  <CalendarIcon className="w-5 h-5 text-[#D4AF37] group-hover:text-black transition-colors" />
+                  <span className="transition-colors">
+                    View Availability Calendar
+                  </span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] bg-card border-border/50">
@@ -857,25 +878,42 @@ const PropertyDetails = () => {
             <div className="grid grid-cols-2 gap-4">
               <Button
                 variant="outline"
-                className="h-[52px] rounded-2xl text-base font-bold bg-[#1A1A1A] border-2 border-[#D4AF37] text-white hover:bg-[#2A2A2A] transition-all active:translate-y-1 active:shadow-inner shadow-[0_4px_0_rgb(146,120,33),0_8px_15px_rgba(0,0,0,0.3)] flex items-center justify-center gap-2 group relative overflow-hidden"
+                className="h-[52px] rounded-2xl text-base font-bold 
+                bg-[#1A1A1A] border-2 border-[#D4AF37] text-white
+                hover:bg-[#D4AF37] hover:text-black
+                transition-all duration-300
+                shadow-[0_4px_0_rgb(146,120,33),0_10px_20px_rgba(0,0,0,0.3)]
+                hover:shadow-[0_6px_0_rgb(146,120,33),0_15px_25px_rgba(0,0,0,0.4)]
+                active:translate-y-1 active:shadow-inner
+                flex items-center justify-center gap-2 group relative overflow-hidden"
                 onClick={() => window.open(`tel:+918806092609`, "_self")}
               >
                 <div className="absolute inset-0 bg-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Phone className="w-4 h-4 text-[#D4AF37] group-hover:scale-110 transition-transform relative z-10" />
+                <Phone className="w-4 h-4 text-[#D4AF37] group-hover:text-black transition-colors" />
                 <span className="relative z-10">Call Host</span>
               </Button>
               <Button
                 variant="outline"
-                className="h-[52px] rounded-2xl text-base font-bold bg-[#1A1A1A] border-2 border-[#00C853] text-white hover:bg-[#2A2A2A] transition-all active:translate-y-1 active:shadow-inner shadow-[0_4px_0_rgb(0,150,60),0_8px_15px_rgba(0,0,0,0.3)] flex items-center justify-center gap-2 group relative overflow-hidden"
-                onClick={() =>
-                  window.open(
-                    `https://api.whatsapp.com/send?phone=918806092609`,
-                    "_blank",
-                  )
-                }
+                className="h-[52px] rounded-2xl text-base font-bold 
+                bg-[#1A1A1A] border-2 border-[#00C853] text-white
+                hover:bg-[#00C853] hover:text-black
+                transition-all duration-300
+                shadow-[0_4px_0_rgb(0,150,60),0_10px_20px_rgba(0,0,0,0.3)]
+                hover:shadow-[0_6px_0_rgb(0,150,60),0_15px_25px_rgba(0,0,0,0.4)]
+                active:translate-y-1 active:shadow-inner
+                flex items-center justify-center gap-2 group relative overflow-hidden"
+                onClick={() => {
+                  const phone = "918806092609";
+
+                  const message = `Hello PawnaHavenCamp,\n\nI would like to enquire about booking:\n🏡 Property: ${propertyData.title}\n🏠 Unit: ${selectedUnit?.name || "Default Stay"}\n📍 Location: ${propertyData.location}\n💰 Price: ₹${formatPrice(displayPrice)}\n\n🔗 ${window.location.href}\n\nPlease share availability and booking details.`;
+
+                  const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+
+                  window.open(url, "_blank");
+                }}
               >
                 <div className="absolute inset-0 bg-[#00C853]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <MessageCircle className="w-4 h-4 text-[#00C853] group-hover:scale-110 transition-transform relative z-10" />
+                <MessageCircle className="w-4 h-4 text-[#00C853] group-hover:text-black transition-colors" />
                 <span className="relative z-10">WhatsApp</span>
               </Button>
             </div>
@@ -1041,7 +1079,16 @@ const PropertyDetails = () => {
               className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white"
               onClick={() => {
                 const shareUrl = window.location.href;
-                const text = `🏡 *${propertyData.title}*\n📍 ${propertyData.location}\n💰 *${propertyData.price}* ${propertyData.priceNote}\n\nCheck out this beautiful property on PawnaHavenCamp:\n${shareUrl}`;
+
+                const location =
+                  propertyData.location || selectedUnit?.location;
+                const price =
+                  selectedUnit?.weekday_price ||
+                  selectedUnit?.price_per_person ||
+                  propertyData.price ||
+                  displayPrice;
+
+                const text = `🏡 *${propertyData.title}*\n📍 ${location}\n💰 *${price}* ${propertyData.priceNote}\n\nCheck out this beautiful property on PawnaHavenCamp:\n${shareUrl}`;
                 window.open(
                   `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
                   "_blank",

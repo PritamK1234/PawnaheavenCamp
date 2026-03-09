@@ -115,6 +115,18 @@ const AdminDashboard = () => {
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
 
+  const [referralActionConfirm, setReferralActionConfirm] = useState<{
+    open: boolean;
+    id: number | null;
+    name: string;
+    action: "blocked" | "active" | null;
+  }>({
+    open: false,
+    id: null,
+    name: "",
+    action: null,
+  });
+
   const [deletePropertyConfirm, setDeletePropertyConfirm] = useState<{
     open: boolean;
     propertyId: number | null;
@@ -1534,10 +1546,12 @@ const AdminDashboard = () => {
                                     size="sm"
                                     className="h-7 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                     onClick={() =>
-                                      handleUpdateReferralStatus(
-                                        referral.id,
-                                        "blocked",
-                                      )
+                                      setReferralActionConfirm({
+                                        open: true,
+                                        id: referral.id,
+                                        name: referral.referral_code,
+                                        action: "blocked",
+                                      })
                                     }
                                   >
                                     <XCircle className="w-3 h-3 mr-1" />
@@ -1549,10 +1563,12 @@ const AdminDashboard = () => {
                                     size="sm"
                                     className="h-7 text-[10px] text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
                                     onClick={() =>
-                                      handleUpdateReferralStatus(
-                                        referral.id,
-                                        "active",
-                                      )
+                                      setReferralActionConfirm({
+                                        open: true,
+                                        id: referral.id,
+                                        name: referral.referral_code,
+                                        action: "active",
+                                      })
                                     }
                                   >
                                     <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -2960,28 +2976,29 @@ const AdminDashboard = () => {
         </Dialog>
 
         <Dialog open={logoutConfirm} onOpenChange={setLogoutConfirm}>
-          <DialogContent className="sm:max-w-[400px] bg-charcoal border-white/10 rounded-3xl">
+          <DialogContent className="sm:max-w-[400px] bg-[#0B0B0B] border border-white/10 text-white rounded-2xl">
             <DialogHeader>
-              <DialogTitle className="text-gold font-display">
-                Confirm Logout
+              <DialogTitle className="text-gold text-lg font-semibold">
+                Confirm Logout?
               </DialogTitle>
 
-              <DialogDescription className="text-sm text-muted-foreground">
+              <DialogDescription className="text-white/70">
                 Are you sure you want to logout from the admin dashboard?
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-3 pt-4">
+              {/* Cancel */}
               <Button
-                variant="outline"
-                className="flex-1 rounded-xl border-white/10"
+                className="flex-1 bg-gold text-black border border-gold/20 hover:bg-gold/50 rounded-xl transition-all"
                 onClick={() => setLogoutConfirm(false)}
               >
                 Cancel
               </Button>
 
+              {/* Logout */}
               <Button
-                className="flex-1 rounded-xl bg-gold text-black hover:opacity-90"
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-xl"
                 onClick={handleLogout}
               >
                 <LogOut className="w-4 h-4 mr-1" />
@@ -3040,6 +3057,94 @@ const AdminDashboard = () => {
               >
                 <Trash2 className="w-4 h-4 mr-1" />
                 Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={referralActionConfirm.open}
+          onOpenChange={(open) =>
+            !open &&
+            setReferralActionConfirm({
+              open: false,
+              id: null,
+              name: "",
+              action: null,
+            })
+          }
+        >
+          <DialogContent className="sm:max-w-[400px] bg-[#0B0B0B] border border-white/10 text-white rounded-2xl">
+            <DialogHeader>
+              <DialogTitle
+                className={`text-lg font-semibold ${
+                  referralActionConfirm.action === "blocked"
+                    ? "text-red-500"
+                    : "text-emerald-400"
+                }`}
+              >
+                {referralActionConfirm.action === "blocked"
+                  ? "Block Referral?"
+                  : "Unblock Referral?"}
+              </DialogTitle>
+
+              <DialogDescription className="text-white/70">
+                Are you sure you want to{" "}
+                <span className="font-bold capitalize">
+                  {referralActionConfirm.action}
+                </span>{" "}
+                referral{" "}
+                <span className="font-bold text-white">
+                  {referralActionConfirm.name}
+                </span>
+                ?
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                className="flex-1 bg-gold text-black border border-gold/20 hover:bg-gold/50 rounded-xl transition-all"
+                onClick={() =>
+                  setReferralActionConfirm({
+                    open: false,
+                    id: null,
+                    name: "",
+                    action: null,
+                  })
+                }
+              >
+                Cancel
+              </Button>
+
+              <Button
+                className={`flex-1 rounded-xl text-white ${
+                  referralActionConfirm.action === "blocked"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-emerald-500 hover:bg-emerald-600"
+                }`}
+                onClick={() => {
+                  if (
+                    referralActionConfirm.id &&
+                    referralActionConfirm.action
+                  ) {
+                    handleUpdateReferralStatus(
+                      referralActionConfirm.id,
+                      referralActionConfirm.action,
+                    );
+                  }
+
+                  // close popup
+                  setReferralActionConfirm({
+                    open: false,
+                    id: null,
+                    name: "",
+                    action: null,
+                  });
+                }}
+              >
+                {referralActionConfirm.action === "blocked"
+                  ? "Block"
+                  : "Unblock"}
               </Button>
             </div>
           </DialogContent>

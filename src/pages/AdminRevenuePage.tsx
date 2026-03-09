@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { adminPaths } from "@/lib/adminPaths";
 import {
@@ -21,15 +21,63 @@ const MONTHS = [
 
 const YEARS = [2025, 2026, 2027];
 
+interface RevenueData {
+  grossRevenue: number;
+  refundPayable: number;
+  referralPayable: number;
+}
+
 const AdminRevenuePage = () => {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [showPicker, setShowPicker] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [revenueData, setRevenueData] = useState<RevenueData>({
+    grossRevenue: 0,
+    refundPayable: 0,
+    referralPayable: 0,
+  });
 
-  const grossRevenue = 1875000;
-  const refundPayable = 120000;
-  const referralPayable = 230000;
+  useEffect(() => {
+    const fetchRevenue = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+        const res = await fetch(
+          `/api/payments/revenue-summary?month=${selectedMonth + 1}&year=${selectedYear}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) {
+          console.error("[Revenue] API error:", res.status);
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (data.success) {
+          setRevenueData({
+            grossRevenue: data.grossRevenue ?? 0,
+            refundPayable: data.refundPayable ?? 0,
+            referralPayable: data.referralPayable ?? 0,
+          });
+        }
+      } catch (err) {
+        console.error("[Revenue] Fetch failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRevenue();
+  }, [selectedMonth, selectedYear]);
+
+  const { grossRevenue, refundPayable, referralPayable } = revenueData;
   const netRevenue = grossRevenue - refundPayable - referralPayable;
   const adminAPercent = 80;
   const adminBPercent = 20;
@@ -39,6 +87,14 @@ const AdminRevenuePage = () => {
   const formatCurrency = (amount: number) => {
     return "₹ " + amount.toLocaleString("en-IN");
   };
+
+  const Shimmer = () => (
+    <div className="h-9 w-40 bg-white/10 rounded-xl animate-pulse" />
+  );
+
+  const SmallShimmer = () => (
+    <div className="h-6 w-28 bg-white/10 rounded-lg animate-pulse" />
+  );
 
   return (
     <div className="min-h-screen bg-black text-white pb-10">
@@ -92,7 +148,7 @@ const AdminRevenuePage = () => {
                     }}
                     className={cn(
                       "py-2.5 rounded-xl text-[11px] font-bold transition-all",
-                      selectedMonth === i && selectedYear === selectedYear
+                      selectedMonth === i
                         ? "bg-gold text-black"
                         : "bg-white/5 text-white/60 hover:bg-white/10"
                     )}
@@ -112,9 +168,13 @@ const AdminRevenuePage = () => {
             </div>
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-gold/70">Gross Revenue</p>
           </div>
-          <p className="text-3xl font-display font-bold text-white tracking-tight">
-            {formatCurrency(grossRevenue)}
-          </p>
+          {loading ? (
+            <Shimmer />
+          ) : (
+            <p className="text-3xl font-display font-bold text-white tracking-tight">
+              {formatCurrency(grossRevenue)}
+            </p>
+          )}
         </Card>
 
         <div className="space-y-3">
@@ -129,7 +189,7 @@ const AdminRevenuePage = () => {
                 <p className="text-[11px] font-bold text-white/50 uppercase tracking-wider">Refund Payable</p>
               </div>
             </div>
-            <p className="text-base font-bold text-red-400">{formatCurrency(refundPayable)}</p>
+            {loading ? <SmallShimmer /> : <p className="text-base font-bold text-red-400">{formatCurrency(refundPayable)}</p>}
           </Card>
 
           <Card className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 flex items-center justify-between">
@@ -141,7 +201,7 @@ const AdminRevenuePage = () => {
                 <p className="text-[11px] font-bold text-white/50 uppercase tracking-wider">Referral Payable</p>
               </div>
             </div>
-            <p className="text-base font-bold text-amber-400">{formatCurrency(referralPayable)}</p>
+            {loading ? <SmallShimmer /> : <p className="text-base font-bold text-amber-400">{formatCurrency(referralPayable)}</p>}
           </Card>
         </div>
 
@@ -154,9 +214,13 @@ const AdminRevenuePage = () => {
               </div>
               <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-400/70">Net Revenue</p>
             </div>
-            <p className="text-3xl font-display font-bold text-emerald-400 tracking-tight">
-              {formatCurrency(netRevenue)}
-            </p>
+            {loading ? (
+              <Shimmer />
+            ) : (
+              <p className="text-3xl font-display font-bold text-emerald-400 tracking-tight">
+                {formatCurrency(netRevenue)}
+              </p>
+            )}
           </Card>
         </div>
 
@@ -177,7 +241,7 @@ const AdminRevenuePage = () => {
                   <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{adminAPercent}% Share</p>
                 </div>
               </div>
-              <p className="text-base font-bold text-gold">{formatCurrency(adminAAmount)}</p>
+              {loading ? <SmallShimmer /> : <p className="text-base font-bold text-gold">{formatCurrency(adminAAmount)}</p>}
             </div>
 
             <div className="p-4 flex items-center justify-between">
@@ -190,7 +254,7 @@ const AdminRevenuePage = () => {
                   <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{adminBPercent}% Share</p>
                 </div>
               </div>
-              <p className="text-base font-bold text-blue-400">{formatCurrency(adminBAmount)}</p>
+              {loading ? <SmallShimmer /> : <p className="text-base font-bold text-blue-400">{formatCurrency(adminBAmount)}</p>}
             </div>
           </Card>
 

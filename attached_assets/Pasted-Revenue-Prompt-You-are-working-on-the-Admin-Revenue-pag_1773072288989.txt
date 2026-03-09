@@ -1,0 +1,120 @@
+Revenue Prompt
+
+You are working on the Admin Revenue page of our villa booking platform.
+
+Goal: Replace the hardcoded values with real calculated data from the database.
+
+Financial logic of our platform:
+
+1. Customer Payment
+   Customers only pay 30% advance at booking time.
+
+Example
+Villa price = ₹10,000
+Customer pays = ₹3,000 (advance)
+
+Only this 30% advance counts as revenue in the admin system.
+
+---
+
+2. Gross Revenue
+
+Gross Revenue =
+Sum of all advance payments received from confirmed bookings for the selected month.
+
+Exclude:
+
+ Cancelled bookings before payment
+ Failed payments
+
+Include:
+
+ Completed bookings
+ Upcoming bookings (if advance already paid)
+
+---
+
+3. Refund Payable
+
+Refund Payable =
+Total refunds we must return to customers for that month.
+
+Cases:
+
+ Booking cancelled after payment
+ Admin approved refund
+
+---
+
+4. Referral Payable
+
+Referral Payable =
+Total commission earned by all referral partners for bookings in that month.
+
+Rules:
+
+ Commission calculated per booking
+ Only count confirmed bookings
+ If referral already withdrawn, exclude it
+ Only show pending payable referral amount
+
+---
+
+5. Net Revenue
+
+Net Revenue = Gross Revenue - Refund Payable - Referral Payable
+
+---
+
+6. Admin Revenue Split
+
+After calculating Net Revenue:
+
+Admin A = 70% of Net Revenue
+Admin B = 30% of Net Revenue
+
+Example:
+
+Net Revenue = ₹10,00,000
+
+Admin A = ₹7,00,000
+Admin B = ₹3,00,000
+
+---
+
+7. Monthly Filter
+
+The page already has:
+
+selectedMonth
+selectedYear
+
+Use these to filter:
+
+booking_date
+payment_date
+refund_date
+
+---
+
+
+8. Frontend
+
+Replace the hardcoded values:
+
+const grossRevenue = 1875000
+const refundPayable = 120000
+const referralPayable = 230000
+
+With real data
+---
+
+9. Important
+
+Money calculations must be accurate and double safe because this page controls business accounting.
+
+Avoid double counting bookings, refunds or referral withdrawals.
+
+Implement backend aggregation + API endpoint + connect frontend.
+
+

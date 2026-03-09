@@ -1138,8 +1138,8 @@ const PropertyDetails = () => {
               {/* Title Section */}
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display text-white">
-                  {propertyData.category === "villa" && selectedUnit?.title
-                    ? selectedUnit.title
+                  {propertyData.category === "villa" && selectedUnit?.name
+                    ? selectedUnit.name
                     : propertyData.title}
                 </h1>
                 <p className="text-gray-400 leading-relaxed font-light text-lg">

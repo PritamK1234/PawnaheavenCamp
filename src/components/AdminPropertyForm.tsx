@@ -1026,10 +1026,10 @@ const VillaUnitManager = ({
       return;
     }
 
-    if (!form.title.trim()) {
-      toast({ title: "Property title is required", variant: "destructive" });
-      return;
-    }
+    // if (!form.title.trim()) {
+    //   toast({ title: "Property title is required", variant: "destructive" });
+    //   return;
+    // }
 
     const total = parseInt(form.total_persons);
     if (isNaN(total) || total <= 0) {

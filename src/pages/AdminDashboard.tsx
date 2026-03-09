@@ -1170,16 +1170,23 @@ const AdminDashboard = () => {
                         .toLowerCase()
                         .includes(ownerSearchTerm.toLowerCase()),
                     )
-                    .map((p) => p.owner_otp_number || p.owner_whatsapp_number),
+                    .map((p) => {
+                      const mobile = p.owner_otp_number || p.owner_whatsapp_number || "";
+                      const name = (p.owner_name || "").toLowerCase().trim();
+                      return `${name}||${mobile}`;
+                    }),
                 ),
-              ).map((mobile, idx) => {
+              ).map((ownerKey, idx) => {
+                const [ownerNameKey, mobile] = ownerKey.split("||");
                 const ownerProp = properties.find(
                   (p) =>
-                    (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
+                    (p.owner_name || "").toLowerCase().trim() === ownerNameKey &&
+                    (p.owner_otp_number || p.owner_whatsapp_number || "") === mobile,
                 );
                 const ownerProperties = properties.filter(
                   (p) =>
-                    (p.owner_otp_number || p.owner_whatsapp_number) === mobile,
+                    (p.owner_name || "").toLowerCase().trim() === ownerNameKey &&
+                    (p.owner_otp_number || p.owner_whatsapp_number || "") === mobile,
                 );
 
                 return (

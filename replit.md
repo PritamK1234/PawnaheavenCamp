@@ -182,30 +182,43 @@ Preferred communication style: Simple, everyday language.
 - **Refund Flow** (Feb 2026): Owner cancels → booking_status=CANCELLED_BY_OWNER, refund_status=REFUND_INITIATED → Admin sees in Requests Center Refunds tab → Process Refund (Paytm API) or Deny → moves to History tab. Statuses: REFUND_INITIATED, REFUND_SUCCESSFUL, REFUND_FAILED, REFUND_DENIED
 - **Admin Requests Center** (Feb 2026): `src/pages/RequestsPage.tsx` — 3 tabs (Withdrawals, Refunds, History) wired to real backend APIs. Endpoints: `/api/payments/refund/requests`, `/api/payments/refund/initiate`, `/api/payments/refund/deny`, `/api/payments/withdrawal/requests`, `/api/payments/withdrawal/process`, `/api/payments/withdrawal/reject`, `/api/payments/requests/history`
 
-### PWA (Progressive Web App) - Feb 2026
-- **3-Domain PWA Architecture** (production VPS deployment):
+### PWA (Progressive Web App) - Feb/Mar 2026
+- **4-Domain PWA Architecture** (production VPS deployment):
   - Public: `pawnahavencamp.com` → `manifest-public.json` (name: PawnaHavenCamp, theme: #0f172a)
   - Owner: `pawnahavencamp.shop` → `manifest-owner.json` (name: PawnaHavenCamp Owner, theme: #15803d)
   - Admin: `pawnahavencamp.cloud` → `manifest-admin.json` (name: PawnaHavenCamp Admin, theme: #7c3aed)
-- **Multi-Build Architecture** (Feb 2026):
+  - Referral: `referraldashboard.shop` → `manifest-referral.json` (name: Referral Dashboard, theme: #f59e0b)
+- **Multi-Build Architecture** (Feb/Mar 2026):
   - `index.html` → Public site entry point (references `manifest-public.json`)
   - `owner.html` → Owner dashboard entry point (references `manifest-owner.json`)
   - `admin.html` → Admin panel entry point (references `manifest-admin.json`)
+  - `referral.html` → Referral dashboard entry point (references `manifest-referral.json`)
   - `vite.config.public.ts` → Builds public site to `dist/public/`
   - `vite.config.owner.ts` → Builds owner dashboard to `dist/owner/`
   - `vite.config.admin.ts` → Builds admin panel to `dist/admin/` (defines `VITE_ADMIN_BASE=""` for clean routes)
+  - `vite.config.referral.ts` → Builds referral dashboard to `dist/referral/`
   - `src/main-owner.tsx` + `src/AppOwner.tsx` → Owner-only React app entry
   - `src/main-admin.tsx` + `src/AppAdmin.tsx` → Admin-only React app entry
+  - `src/main-referral.tsx` + `src/AppReferral.tsx` → Referral-only React app entry
   - `src/lib/adminPaths.ts` → Centralized admin route paths, reads `VITE_ADMIN_BASE` env var
-  - Build scripts: `npm run build:public`, `npm run build:owner`, `npm run build:admin`, `npm run build:all`
+  - Build scripts: `npm run build:public`, `npm run build:owner`, `npm run build:admin`, `npm run build:referral`, `npm run build:all`
+- **Referral PWA Architecture** (Mar 2026):
+  - Entry: `referral.html` → `src/main-referral.tsx` → `src/AppReferral.tsx`
+  - Routes: `/` (redirects based on token) → `/login` or `/dashboard`
+  - Login page: `src/pages/referral/ReferralLogin.tsx` — mobile OTP flow using existing `/api/referrals/` endpoints
+  - Dashboard page: `src/pages/referral/ReferralDashboard.tsx` — balance, withdraw, history, stats, share tabs
+  - Auth: uses `referral_token` in localStorage (same key as CheckEarningPage for session sharing)
+  - Token validation: if 401 from `/api/referrals/dashboard`, clears token and redirects to `/login`
+  - Nginx config for VPS: see `REFERRAL_PWA_NGINX.md`
 - **Admin Route Environment Variable** (`VITE_ADMIN_BASE`):
   - `vite.config.ts` (Replit dev): defines as `/admin` → routes are `/admin/login`, `/admin/dashboard`, etc.
   - `vite.config.admin.ts` (VPS admin build): defines as `""` → routes are `/login`, `/dashboard`, etc.
   - Same code, same git repo — build config determines route prefix. No divergent code needed.
-- **VPS NGINX Config**: 3 separate server blocks, each pointing to its own build folder:
+- **VPS NGINX Config**: 4 separate server blocks, each pointing to its own build folder:
   - `pawnahavencamp.com` → `dist/public/`
   - `pawnahavencamp.shop` → `dist/owner/`
   - `pawnahavencamp.cloud` → `dist/admin/`
+  - `referraldashboard.shop` → `dist/referral/`
 - **Unified Service Worker**: `public/sw.js` uses `self.location.hostname` for automatic per-domain cache isolation
 - **Icons**: `public/icons/Public_sites_icon.png`, `Owner_dashboard_icon.png`, `Admin_dashboard_app-icon.png` (also copied to `admin/public/icons/`)
 - **Install Button**: `src/components/PWAInstallButton.tsx` - unified component with iOS Safari modal support

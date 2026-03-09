@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ShieldCheck, Lock, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { toast } from "sonner";
+import { useNavigate, Link } from "react-router-dom";
 
 const ReferralLogin = () => {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ const ReferralLogin = () => {
       toast.error(
         error.response?.data?.message ||
           error.response?.data?.error ||
-          "Failed to send OTP. Make sure your number is registered."
+          "Failed to send OTP. Make sure your number is registered.",
       );
     } finally {
       setLoading(false);
@@ -63,7 +63,7 @@ const ReferralLogin = () => {
       const loginRes = await axios.post(
         "/api/referrals/login",
         {},
-        { headers: { Authorization: `Bearer ${otpToken}` } }
+        { headers: { Authorization: `Bearer ${otpToken}` } },
       );
       const finalToken = loginRes.data.token;
       localStorage.setItem("referral_token", finalToken);
@@ -73,7 +73,7 @@ const ReferralLogin = () => {
       toast.error(
         error.response?.data?.message ||
           error.response?.data?.error ||
-          "Login failed. Please check your OTP."
+          "Login failed. Please check your OTP.",
       );
     } finally {
       setLoading(false);
@@ -127,6 +127,7 @@ const ReferralLogin = () => {
                     className="h-12 bg-secondary/50 rounded-xl"
                   />
                 </div>
+
                 <Button
                   onClick={handleSendOTP}
                   disabled={loading}
@@ -141,6 +142,16 @@ const ReferralLogin = () => {
                     </>
                   )}
                 </Button>
+
+                {/* NEW BUTTON */}
+                <div className="text-center pt-2">
+                  <Link
+                    to="/generate-code"
+                    className="text-sm text-amber-400 hover:text-amber-300 underline transition"
+                  >
+                    Not created referral code yet? Create one
+                  </Link>
+                </div>
               </Card>
             </div>
           )}
@@ -162,7 +173,9 @@ const ReferralLogin = () => {
                   <Input
                     placeholder="000000"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onChange={(e) =>
+                      setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
                     onKeyDown={(e) => e.key === "Enter" && handleVerifyOTP()}
                     className="h-12 bg-secondary/50 rounded-xl text-center text-2xl tracking-[0.5em] font-bold"
                     maxLength={6}
@@ -181,7 +194,10 @@ const ReferralLogin = () => {
                   )}
                 </Button>
                 <button
-                  onClick={() => { setStep("verify"); setOtp(""); }}
+                  onClick={() => {
+                    setStep("verify");
+                    setOtp("");
+                  }}
                   className="w-full text-center text-sm text-muted-foreground hover:text-white transition-colors pt-1"
                 >
                   ← Change mobile number

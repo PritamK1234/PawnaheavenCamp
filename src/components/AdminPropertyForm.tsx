@@ -1378,17 +1378,6 @@ const VillaUnitManager = ({
                 className="bg-white/5 border-white/10"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-gray-400 text-xs font-bold">
-                Property Title *
-              </Label>
-              <Input
-                value={activeForm.title}
-                onChange={(e) => updateField("title", e.target.value)}
-                placeholder="e.g. Luxury Mountain Villa"
-                className="bg-white/5 border-white/10 h-11 text-white"
-              />
-            </div>
             <div className="space-y-2 md:col-span-2">
               <Label className="text-gray-400 text-xs font-bold">
                 Description
@@ -1502,45 +1491,6 @@ const VillaUnitManager = ({
                   }
                 }}
                 placeholder="Enter weekend price!"
-                className="bg-white/5 border-white/10 h-11 text-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-gray-400 text-xs font-bold">
-                Special Price
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                inputMode="numeric"
-                value={
-                  activeForm.special_price === "0"
-                    ? ""
-                    : activeForm.special_price
-                }
-                onFocus={() => {
-                  if (activeForm.special_price === "0") {
-                    updateField("special_price", "");
-                  }
-                }}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/^-/g, "");
-
-                  if (val === "") {
-                    updateField("special_price", "");
-                    return;
-                  }
-
-                  if (/^\d+$/.test(val)) {
-                    updateField("special_price", val);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (["e", "E", "+", "-", "."].includes(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                placeholder="Special price"
                 className="bg-white/5 border-white/10 h-11 text-white"
               />
             </div>

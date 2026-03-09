@@ -516,20 +516,6 @@ const VillaOwnerUnits = () => {
 
                 <div className="space-y-2">
                   <Label className="text-gray-400 text-xs font-bold">
-                    Property Title *
-                  </Label>
-                  <Input
-                    value={unitForm.title}
-                    onChange={(e) =>
-                      setUnitForm({ ...unitForm, title: e.target.value })
-                    }
-                    placeholder="e.g. Luxury Mountain Villa"
-                    className="bg-white/5 border-white/10 h-11 text-white"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-gray-400 text-xs font-bold">
                     Description
                   </Label>
                   <Textarea
@@ -634,62 +620,33 @@ const VillaOwnerUnits = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-400 text-xs font-bold">
-                      Special Price
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="Special price"
-                      value={
-                        unitForm.special_price === "0"
-                          ? ""
-                          : unitForm.special_price
+                <div className="space-y-2">
+                  <Label className="text-xs capitalize font-bold flex items-center gap-2">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    <span className="text-blue-400">Max Capacity</span>
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="Max number of guests"
+                    value={
+                      unitForm.max_capacity === "0"
+                        ? ""
+                        : unitForm.max_capacity
+                    }
+                    onFocus={() => {
+                      if (unitForm.max_capacity === "0") {
+                        setUnitForm({ ...unitForm, max_capacity: "" });
                       }
-                      onFocus={() => {
-                        if (unitForm.special_price === "0") {
-                          setUnitForm({ ...unitForm, special_price: "" });
-                        }
-                      }}
-                      onChange={(e) =>
-                        setUnitForm({
-                          ...unitForm,
-                          special_price: e.target.value.replace(/^-/g, ""),
-                        })
-                      }
-                      className="bg-white/5 border-white/10 h-11 text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs capitalize font-bold flex items-center gap-2">
-                      <Users className="w-4 h-4 text-blue-400" />
-                      <span className="text-blue-400">Max Capacity</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="Max number of guests"
-                      value={
-                        unitForm.max_capacity === "0"
-                          ? ""
-                          : unitForm.max_capacity
-                      }
-                      onFocus={() => {
-                        if (unitForm.max_capacity === "0") {
-                          setUnitForm({ ...unitForm, max_capacity: "" });
-                        }
-                      }}
-                      onChange={(e) =>
-                        setUnitForm({
-                          ...unitForm,
-                          max_capacity: e.target.value.replace(/^-/g, ""),
-                        })
-                      }
-                      className="bg-white/5 border-white/10 text-blue-400 font-bold h-11"
-                    />
-                  </div>
+                    }}
+                    onChange={(e) =>
+                      setUnitForm({
+                        ...unitForm,
+                        max_capacity: e.target.value.replace(/^-/g, ""),
+                      })
+                    }
+                    className="bg-white/5 border-white/10 text-blue-400 font-bold h-11"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

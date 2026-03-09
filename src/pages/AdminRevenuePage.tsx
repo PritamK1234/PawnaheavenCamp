@@ -79,8 +79,8 @@ const AdminRevenuePage = () => {
 
   const { grossRevenue, refundPayable, referralPayable } = revenueData;
   const netRevenue = grossRevenue - refundPayable - referralPayable;
-  const adminAPercent = 80;
-  const adminBPercent = 20;
+  const adminAPercent = 70;
+  const adminBPercent = 30;
   const adminAAmount = Math.round(netRevenue * adminAPercent / 100);
   const adminBAmount = netRevenue - adminAAmount;
 

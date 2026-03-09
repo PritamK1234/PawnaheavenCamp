@@ -791,10 +791,10 @@ const PropertyDetails = () => {
               </span>
             </div>
 
-            {selectedUnit && (
+            {selectedUnit && isVilla && (
               <div className="mt-4 p-4 rounded-2xl bg-secondary/30 border border-border/50">
                 <span className="text-[10px] capatalize tracking-widest font-bold text-white-foreground block mb-2">
-                  {isVilla ? "Villa Capacity" : "Available Capacity"}
+                  Villa Capacity
                 </span>
                 <div className="text-2xl font-bold flex items-center gap-3">
                   {displayCapacity}

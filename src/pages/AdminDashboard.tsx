@@ -80,7 +80,7 @@ const AdminDashboard = () => {
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [ownerSearchTerm, setOwnerSearchTerm] = useState("");
   const [referralSubTab, setReferralSubTab] = useState("all");
-  const [transactionSubTab, setTransactionSubTab] = useState("all");
+  const [transactionSubTab, setTransactionSubTab] = useState("bookings");
   const [referralUsers, setReferralUsers] = useState<any[]>([]);
   const [isReferralLoading, setIsReferralLoading] = useState(false);
   const [b2bSubTab, setB2bSubTab] = useState("b2b");
@@ -112,6 +112,7 @@ const AdminDashboard = () => {
   const [txBookings, setTxBookings] = useState<any[]>([]);
   const [txRefunds, setTxRefunds] = useState<any[]>([]);
   const [txWithdrawals, setTxWithdrawals] = useState<any[]>([]);
+  const [txCancelled, setTxCancelled] = useState<any[]>([]);
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
 
@@ -180,12 +181,14 @@ const AdminDashboard = () => {
       setTxWithdrawals(
         Array.isArray(result.withdrawals) ? result.withdrawals : [],
       );
+      setTxCancelled(Array.isArray(result.cancelled) ? result.cancelled : []);
       setBookingsData(Array.isArray(result.bookings) ? result.bookings : []);
     } catch (error) {
       console.error("Fetch transactions error:", error);
       setTxBookings([]);
       setTxRefunds([]);
       setTxWithdrawals([]);
+      setTxCancelled([]);
     } finally {
       setIsBookingsLoading(false);
     }
@@ -1171,7 +1174,8 @@ const AdminDashboard = () => {
                         .includes(ownerSearchTerm.toLowerCase()),
                     )
                     .map((p) => {
-                      const mobile = p.owner_otp_number || p.owner_whatsapp_number || "";
+                      const mobile =
+                        p.owner_otp_number || p.owner_whatsapp_number || "";
                       const name = (p.owner_name || "").toLowerCase().trim();
                       return `${name}||${mobile}`;
                     }),
@@ -1180,13 +1184,17 @@ const AdminDashboard = () => {
                 const [ownerNameKey, mobile] = ownerKey.split("||");
                 const ownerProp = properties.find(
                   (p) =>
-                    (p.owner_name || "").toLowerCase().trim() === ownerNameKey &&
-                    (p.owner_otp_number || p.owner_whatsapp_number || "") === mobile,
+                    (p.owner_name || "").toLowerCase().trim() ===
+                      ownerNameKey &&
+                    (p.owner_otp_number || p.owner_whatsapp_number || "") ===
+                      mobile,
                 );
                 const ownerProperties = properties.filter(
                   (p) =>
-                    (p.owner_name || "").toLowerCase().trim() === ownerNameKey &&
-                    (p.owner_otp_number || p.owner_whatsapp_number || "") === mobile,
+                    (p.owner_name || "").toLowerCase().trim() ===
+                      ownerNameKey &&
+                    (p.owner_otp_number || p.owner_whatsapp_number || "") ===
+                      mobile,
                 );
 
                 return (
@@ -1365,7 +1373,7 @@ const AdminDashboard = () => {
               </TabsList>
             </Tabs>
 
-            {transactionSubTab === "all" && (
+            {referralSubTab === "all" && (
               <>
                 <div className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -1607,8 +1615,8 @@ const AdminDashboard = () => {
               </>
             )}
 
-            {(transactionSubTab === "requests" ||
-              transactionSubTab === "history") && (
+            {(referralSubTab === "requests" ||
+              referralSubTab === "history") && (
               <div className="space-y-3">
                 <div className="p-8 text-center glass-dark rounded-3xl border border-white/5">
                   <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5 text-white/20">
@@ -2091,7 +2099,7 @@ const AdminDashboard = () => {
               className="w-full"
             >
               <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5">
-                {["all", "bookings", "refunds", "withdrawals"].map((tab) => (
+                {["bookings", "refunds", "withdrawals", "cancelled"].map((tab) => (
                   <TabsTrigger
                     key={tab}
                     value={tab}
@@ -2110,18 +2118,6 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 (() => {
-                  const allSorted = [
-                    ...txBookings.map((r) => ({ ...r, _type: "booking" })),
-                    ...txRefunds.map((r) => ({ ...r, _type: "refund" })),
-                    ...txWithdrawals.map((r) => ({
-                      ...r,
-                      _type: "withdrawal",
-                    })),
-                  ].sort(
-                    (a, b) =>
-                      new Date(b.date).getTime() - new Date(a.date).getTime(),
-                  );
-
                   const filtered =
                     transactionSubTab === "bookings"
                       ? txBookings.map((r) => ({ ...r, _type: "booking" }))
@@ -2132,16 +2128,14 @@ const AdminDashboard = () => {
                               ...r,
                               _type: "withdrawal",
                             }))
-                          : allSorted;
+                          : txCancelled.map((r) => ({ ...r, _type: "cancelled" }));
 
                   if (filtered.length === 0) {
                     return (
                       <div className="flex flex-col items-center justify-center py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/10 text-white/30">
                         <CreditCard className="w-12 h-12 mb-3 opacity-20" />
                         <p className="font-display text-base font-bold">
-                          No{" "}
-                          {transactionSubTab === "all" ? "" : transactionSubTab}{" "}
-                          records yet
+                          No {transactionSubTab} records yet
                         </p>
                       </div>
                     );
@@ -2151,6 +2145,7 @@ const AdminDashboard = () => {
                     const isBooking = tx._type === "booking";
                     const isRefund = tx._type === "refund";
                     const isWithdrawal = tx._type === "withdrawal";
+                    const isCancelled = tx._type === "cancelled";
                     const amount = parseFloat(tx.amount || 0);
                     const dateStr = tx.date
                       ? new Date(tx.date).toLocaleDateString("en-IN", {
@@ -2165,23 +2160,31 @@ const AdminDashboard = () => {
                       ? `${tx.property_name} • ${dateStr}`
                       : isRefund
                         ? `${tx.property_name} • Refund`
-                        : `UPI: ${tx.upi_id || "-"}`;
+                        : isCancelled
+                          ? `${tx.property_name} • Cancelled`
+                          : `UPI: ${tx.upi_id || "-"}`;
                     const statusColor = isBooking
                       ? "bg-emerald-500/10 text-emerald-500"
                       : isRefund
                         ? "bg-blue-500/10 text-blue-400"
-                        : "bg-amber-500/10 text-amber-400";
+                        : isCancelled
+                          ? "bg-red-500/10 text-red-400"
+                          : "bg-amber-500/10 text-amber-400";
                     const amtColor = isBooking
                       ? "text-emerald-400"
                       : isRefund
                         ? "text-blue-400"
-                        : "text-amber-400";
-                    const amtPrefix = isBooking ? "+" : isRefund ? "↩" : "↑";
+                        : isCancelled
+                          ? "text-red-400"
+                          : "text-amber-400";
+                    const amtPrefix = isBooking ? "+" : isRefund ? "↩" : isCancelled ? "✕" : "↑";
                     const badgeLabel = isBooking
                       ? tx.status?.replace(/_/g, " ") || "CONFIRMED"
                       : isRefund
                         ? tx.refund_status || tx.status || "CANCELLED"
-                        : tx.status?.toUpperCase() || "PENDING";
+                        : isCancelled
+                          ? tx.status?.replace(/_/g, " ") || "CANCELLED"
+                          : tx.status?.toUpperCase() || "PENDING";
 
                     return (
                       <div
@@ -2200,6 +2203,8 @@ const AdminDashboard = () => {
                               <ArrowDownLeft className="w-5 h-5" />
                             ) : isRefund ? (
                               <ArrowUpRight className="w-5 h-5" />
+                            ) : isCancelled ? (
+                              <XCircle className="w-5 h-5" />
                             ) : (
                               <DollarSign className="w-5 h-5" />
                             )}
@@ -2258,12 +2263,13 @@ const AdminDashboard = () => {
             setDeleteConfirm({ open: false, referralId: null, username: "" })
           }
         >
-          <DialogContent className="sm:max-w-[400px] bg-charcoal border-white/10 rounded-3xl">
+          <DialogContent className="sm:max-w-[420px] bg-[#0B0B0B] border border-white/10 text-white rounded-2xl">
             <DialogHeader>
-              <DialogTitle className="text-red-500 font-display">
-                Delete Referral
+              <DialogTitle className="text-red-500 text-lg font-bold">
+                Delete Referral?
               </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+
+              <DialogDescription className="text-white/80 text-sm leading-relaxed">
                 Are you sure you want to permanently delete the referral for{" "}
                 <span className="font-bold text-white">
                   {deleteConfirm.username
@@ -2277,10 +2283,10 @@ const AdminDashboard = () => {
                 ? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex gap-3 mt-4">
+
+            <div className="flex gap-4 mt-6">
               <Button
-                variant="outline"
-                className="flex-1 rounded-xl border-white/10"
+                className="flex-1 h-12 rounded-xl bg-[#C28B2C] hover:bg-[#b17c22] text-black font-semibold"
                 onClick={() =>
                   setDeleteConfirm({
                     open: false,
@@ -2291,14 +2297,15 @@ const AdminDashboard = () => {
               >
                 Cancel
               </Button>
+
               <Button
-                className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+                className="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold"
                 onClick={() =>
                   deleteConfirm.referralId &&
                   handleDeleteReferral(deleteConfirm.referralId)
                 }
               >
-                <Trash2 className="w-4 h-4 mr-1" />
+                <Trash2 className="w-4 h-4 mr-2" />
                 Delete
               </Button>
             </div>

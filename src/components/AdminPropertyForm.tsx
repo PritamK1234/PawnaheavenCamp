@@ -45,6 +45,15 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import TimePicker from "@/components/TimePicker";
 
 interface AdminPropertyFormProps {
@@ -82,6 +91,7 @@ const UnitManager = ({
     special_dates: [] as { date: string; price: string }[],
   });
   const { toast } = useToast();
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   const handleSaveUnit = async () => {
     // =========================
@@ -408,7 +418,7 @@ const UnitManager = ({
                 type="button"
                 size="icon"
                 variant="ghost"
-                onClick={() => propertyAPI.deleteUnit(unit.id).then(onRefresh)}
+                onClick={() => setDeleteConfirm(unit.id)}
                 className="h-8 w-8 text-red-500/40 hover:text-red-500 hover:bg-red-500/10"
               >
                 <Trash2 className="w-4 h-4" />
@@ -893,6 +903,7 @@ const VillaUnitManager = ({
   const [unitFormData, setUnitFormData] = useState<
     Record<number, VillaUnitFormState>
   >({});
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [isAddingUnit, setIsAddingUnit] = useState(false);
   const [newUnitName, setNewUnitName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -993,19 +1004,25 @@ const VillaUnitManager = ({
     }
   };
 
-  const handleDeleteUnit = async (unitId: number) => {
-    if (!confirm("Are you sure you want to delete this unit?")) return;
+  const handleDeleteUnit = async () => {
+    if (!deleteConfirm) return;
+
     try {
-      const res = await villaAPI.deleteUnit(unitId);
+      const res = await villaAPI.deleteUnit(deleteConfirm);
+
       if (res.success) {
         toast({ title: "Unit deleted" });
-        if (activeUnitId === unitId) setActiveUnitId(null);
+
+        if (activeUnitId === deleteConfirm) {
+          setActiveUnitId(null);
+        }
+
         const newData = { ...unitFormData };
-        delete newData[unitId];
+        delete newData[deleteConfirm];
         setUnitFormData(newData);
+
         onRefresh();
-      } else {
-        toast({ title: "Failed to delete unit", variant: "destructive" });
+        setDeleteConfirm(null);
       }
     } catch (e) {
       toast({ title: "Error deleting unit", variant: "destructive" });
@@ -1026,10 +1043,10 @@ const VillaUnitManager = ({
       return;
     }
 
-    // if (!form.title.trim()) {
-    //   toast({ title: "Property title is required", variant: "destructive" });
-    //   return;
-    // }
+    if (!form.title.trim()) {
+      toast({ title: "Property title is required", variant: "destructive" });
+      return;
+    }
 
     const total = parseInt(form.total_persons);
     if (isNaN(total) || total <= 0) {
@@ -1297,7 +1314,7 @@ const VillaUnitManager = ({
               </button>
               <button
                 type="button"
-                onClick={() => handleDeleteUnit(unit.id)}
+                onClick={() => setDeleteConfirm(unit.id)}
                 className="p-1 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
               >
                 <Trash2 className="w-3 h-3" />
@@ -1971,6 +1988,35 @@ const VillaUnitManager = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <AlertDialogContent className="bg-[#0B0B0B] border border-white/10 text-white rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-500">
+              Delete Unit?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="text-white/70">
+              Are you sure you want to delete this unit? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex gap-3 pt-4">
+            <AlertDialogCancel className="flex-1">Cancel</AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={handleDeleteUnit}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

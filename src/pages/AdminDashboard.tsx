@@ -2343,8 +2343,9 @@ const AdminDashboard = () => {
                     const remaining = total - advance;
                     const referralComm = parseFloat(selectedTx.referrer_commission || 0);
                     const adminComm = parseFloat(selectedTx.admin_commission || 0);
-                    const referralPct = advance > 0 ? ((referralComm / advance) * 100).toFixed(0) : "0";
-                    const adminPct = advance > 0 ? ((adminComm / advance) * 100).toFixed(0) : "0";
+                    const rType = (selectedTx.referral_type || "").toLowerCase();
+                    const referralPct = rType === "owner" ? 25 : (rType === "b2b" || rType === "owners_b2b") ? 22 : 15;
+                    const adminPct = rType === "owner" ? 5 : (rType === "b2b" || rType === "owners_b2b") ? 8 : 15;
                     const commStatus = selectedTx.commission_status || "PENDING";
 
                     return (

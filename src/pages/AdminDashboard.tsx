@@ -2605,6 +2605,37 @@ const AdminDashboard = () => {
                                 </span>
                               </div>
 
+                              {(() => {
+                                const bookingAmt = parseFloat(selectedTx.booking_amount || selectedTx.original_amount || 0);
+                                const refundAmt = parseFloat(selectedTx.refund_amount || 0);
+                                const ownerAmt = Math.max(0, bookingAmt - refundAmt);
+                                const customerPct = bookingAmt > 0 ? Math.round((refundAmt / bookingAmt) * 100) : 0;
+                                const ownerPct = 100 - customerPct;
+                                return (
+                                  <>
+                                    <div className="flex justify-between text-sm items-center">
+                                      <span className="text-white/60">Customer Refund Amount</span>
+                                      <div className="flex flex-col items-end gap-0.5">
+                                        <span className="text-emerald-400 font-bold">
+                                          ₹{refundAmt.toLocaleString("en-IN")}
+                                        </span>
+                                        <span className="text-emerald-300/60 text-[10px]">({customerPct}% of advance)</span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex justify-between text-sm items-center">
+                                      <span className="text-white/60">Owner Refund Amount</span>
+                                      <div className="flex flex-col items-end gap-0.5">
+                                        <span className={ownerAmt > 0 ? "text-amber-400 font-bold" : "text-white/40 font-medium"}>
+                                          ₹{ownerAmt.toLocaleString("en-IN")}
+                                        </span>
+                                        <span className="text-white/40 text-[10px]">({ownerPct}% of advance)</span>
+                                      </div>
+                                    </div>
+                                  </>
+                                );
+                              })()}
+
                               <div className="flex justify-between text-sm">
                                 <span className="text-white/60">Payment Method</span>
                                 <span className="text-purple-400 font-medium uppercase">{selectedTx.payment_method || "-"}</span>

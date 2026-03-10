@@ -2332,651 +2332,333 @@ const AdminDashboard = () => {
               </DialogDescription>
             </DialogHeader>
             {selectedTx &&
-              (() => {
-                const isBooking = selectedTx._type === "booking";
-                const isRefund = selectedTx._type === "refund";
-                const isWithdrawal = selectedTx._type === "withdrawal";
-                const rows: {
-                  label: string;
-                  value: string | null | undefined;
-                }[] = [];
-                if (!isWithdrawal) {
-                  rows.push(
-                    { label: "Property", value: selectedTx.property_name },
-                    { label: "Guest", value: selectedTx.customer_name },
-                    { label: "Owner", value: selectedTx.owner_name },
-                    { label: "Booking ID", value: selectedTx.booking_id },
-                    {
-                      label: "Check-in",
-                      value: selectedTx.check_in
-                        ? new Date(selectedTx.check_in).toLocaleDateString(
-                            "en-IN",
-                            { day: "2-digit", month: "short", year: "numeric" },
-                          )
-                        : null,
-                    },
-                    {
-                      label: "Check-out",
-                      value: selectedTx.check_out
-                        ? new Date(selectedTx.check_out).toLocaleDateString(
-                            "en-IN",
-                            { day: "2-digit", month: "short", year: "numeric" },
-                          )
-                        : null,
-                    },
-                  );
+                (() => {
+                  const isBooking = selectedTx._type === "booking";
+                  const isRefund = selectedTx._type === "refund";
+                  const isWithdrawal = selectedTx._type === "withdrawal";
+
                   if (isBooking) {
-                    rows.push(
-                      {
-                        label: "Advance Paid",
-                        value: `₹${parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}`,
-                      },
-                      {
-                        label: "Status",
-                        value: selectedTx.status?.replace(/_/g, " "),
-                      },
-                      {
-                        label: "Admin Commission",
-                        value: selectedTx.admin_commission
-                          ? `₹${parseFloat(selectedTx.admin_commission).toLocaleString("en-IN")}`
-                          : null,
-                      },
-                      {
-                        label: "Referrer Commission",
-                        value: selectedTx.referrer_commission
-                          ? `₹${parseFloat(selectedTx.referrer_commission).toLocaleString("en-IN")}`
-                          : null,
-                      },
-                    );
-                  }
-                  if (isRefund) {
-                    rows.push(
-                      {
-                        label: "Original Paid",
-                        value: `₹${parseFloat(selectedTx.original_amount || 0).toLocaleString("en-IN")}`,
-                      },
-                      {
-                        label: "Refund Amount",
-                        value: selectedTx.refund_amount
-                          ? `₹${parseFloat(selectedTx.refund_amount).toLocaleString("en-IN")}`
-                          : "No Refund",
-                      },
-                      {
-                        label: "Refund Status",
-                        value: selectedTx.refund_status || selectedTx.status,
-                      },
-                      {
-                        label: "Booking Status",
-                        value: selectedTx.status?.replace(/_/g, " "),
-                      },
-                    );
-                  }
-                  if (selectedTx.referral_code) {
-                    rows.push(
-                      {
-                        label: "Referral Code",
-                        value: selectedTx.referral_code,
-                      },
-                      { label: "Referrer", value: selectedTx.referrer_name },
-                    );
-                  }
-                } else {
-                  rows.push(
-                    { label: "Partner", value: selectedTx.customer_name },
-                    { label: "Referral Code", value: selectedTx.referral_code },
-                    {
-                      label: "Amount",
-                      value: `₹${parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}`,
-                    },
-                    { label: "UPI ID", value: selectedTx.upi_id },
-                    {
-                      label: "Status",
-                      value: selectedTx.status?.toUpperCase(),
-                    },
-                    { label: "Type", value: selectedTx.referral_type },
-                  );
-                }
-                return (
-                  <div className="mt-2 space-y-4">
-                    {isWithdrawal && (
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Withdrawal Information
-                        </p>
+                    const advance = parseFloat(selectedTx.amount || 0);
+                    const total = parseFloat(selectedTx.total_amount || 0);
+                    const remaining = total - advance;
+                    const referralComm = parseFloat(selectedTx.referrer_commission || 0);
+                    const adminComm = parseFloat(selectedTx.admin_commission || 0);
+                    const referralPct = advance > 0 ? ((referralComm / advance) * 100).toFixed(0) : "0";
+                    const adminPct = advance > 0 ? ((adminComm / advance) * 100).toFixed(0) : "0";
+                    const commStatus = selectedTx.commission_status || "PENDING";
 
-                        <div className="flex justify-between text-sm">
-                          <span className="text-white/60">Referrer</span>
-                          <span className="text-white font-medium">
-                            {selectedTx.customer_name}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">Referral Code</span>
-                          <span className="text-gold font-medium">
-                            {selectedTx.referral_code}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">Referral Type</span>
-                          <span className="text-purple-400 font-medium capitalize">
-                            {selectedTx.referral_type}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">Amount</span>
-                          <span className="text-emerald-400 font-bold">
-                            ₹
-                            {parseFloat(selectedTx.amount || 0).toLocaleString(
-                              "en-IN",
-                            )}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">UPI ID</span>
-                          <span>{selectedTx.upi_id || "-"}</span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">Status</span>
-                          <span className="text-amber-400">
-                            {selectedTx.status?.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {/* FINANCIAL SUMMARY */}
-
-                    {isBooking && (
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                          <p className="text-[10px] text-muted-foreground">
-                            Advance Paid
+                    return (
+                      <div className="mt-2 space-y-4">
+                        {/* 1. BOOKING DETAILS */}
+                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                            Booking Details
                           </p>
-                          <p className="text-sm font-bold text-emerald-400">
-                            ₹
-                            {parseFloat(selectedTx.amount || 0).toLocaleString(
-                              "en-IN",
-                            )}
-                          </p>
-                        </div>
 
-                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                          <p className="text-[10px] text-muted-foreground">
-                            Admin Commission
-                          </p>
-                          <p className="text-sm font-bold text-gold">
-                            ₹
-                            {parseFloat(
-                              selectedTx.admin_commission || 0,
-                            ).toLocaleString("en-IN")}
-                          </p>
-                        </div>
+                          <div className="flex justify-between text-sm items-start">
+                            <span className="text-white/60">Property</span>
+                            <span className="text-white font-medium text-right max-w-[55%]">
+                              {selectedTx.property_name || "-"}
+                            </span>
+                          </div>
 
-                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                          <p className="text-[10px] text-muted-foreground">
-                            Referral Commission
-                          </p>
-                          <p className="text-sm font-bold text-blue-400">
-                            ₹
-                            {parseFloat(
-                              selectedTx.referrer_commission || 0,
-                            ).toLocaleString("en-IN")}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">Guest</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.customer_name || "-"}
+                            </span>
+                          </div>
 
-                    {/* OWNER PAYOUT */}
-
-                    {isBooking && (
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                        <p className="text-xs text-muted-foreground mb-1">
-                          Owner Payout
-                        </p>
-
-                        <p className="text-lg font-bold text-emerald-400">
-                          ₹
-                          {(
-                            parseFloat(selectedTx.amount || 0) -
-                            parseFloat(selectedTx.admin_commission || 0) -
-                            parseFloat(selectedTx.referrer_commission || 0)
-                          ).toLocaleString("en-IN")}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Booking Financial Summary */}
-
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Booking Financial Summary
-                      </p>
-
-                      {(() => {
-                        const advance = parseFloat(selectedTx.amount || 0);
-
-                        const admin = parseFloat(
-                          selectedTx.admin_commission || 0,
-                        );
-
-                        const referral = parseFloat(
-                          selectedTx.referrer_commission || 0,
-                        );
-
-                        const refund = parseFloat(
-                          selectedTx.refund_amount || 0,
-                        );
-
-                        const owner = advance - admin - referral;
-
-                        const adminNet = admin - referral - refund;
-
-                        return (
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">
-                                Customer Paid
-                              </span>
-                              <span className="text-emerald-400 font-medium">
-                                ₹{advance.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">
-                                Admin Commission
-                              </span>
-                              <span className="text-gold font-medium">
-                                ₹{admin.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">
-                                Referral Commission
-                              </span>
-                              <span className="text-blue-400 font-medium">
-                                ₹{referral.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Refund</span>
-                              <span className="text-red-400 font-medium">
-                                ₹{refund.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">
-                                Owner Payout
-                              </span>
-                              <span className="text-emerald-400 font-medium">
-                                ₹{owner.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-
-                            <div className="border-t border-white/10 pt-1 flex justify-between text-sm">
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">Guest Mobile</span>
+                            <div className="flex items-center gap-2">
                               <span className="text-white font-medium">
-                                Admin Net Income
+                                {selectedTx.guest_phone || "-"}
                               </span>
-
-                              <span
-                                className={
-                                  adminNet >= 0
-                                    ? "text-emerald-400 font-bold"
-                                    : "text-red-400 font-bold"
-                                }
-                              >
-                                ₹{adminNet.toLocaleString("en-IN")}
-                              </span>
+                              {selectedTx.guest_phone && (
+                                <a
+                                  href={`tel:${selectedTx.guest_phone}`}
+                                  className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors"
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                                </a>
+                              )}
                             </div>
                           </div>
-                        );
-                      })()}
-                    </div>
-                    {/* Owner Settlement */}
 
-                    {isBooking && (
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Owner Settlement
-                        </p>
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">Owner</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.owner_name || "-"}
+                            </span>
+                          </div>
 
-                        {(() => {
-                          const advance = parseFloat(selectedTx.amount || 0);
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">Owner Mobile</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-medium">
+                                {selectedTx.owner_phone || "-"}
+                              </span>
+                              {selectedTx.owner_phone && (
+                                <a
+                                  href={`tel:${selectedTx.owner_phone}`}
+                                  className="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center hover:bg-blue-500/30 transition-colors"
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-blue-400" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
 
-                          const admin = parseFloat(
-                            selectedTx.admin_commission || 0,
-                          );
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">Booking ID</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs text-white">
+                                {selectedTx.booking_id}
+                              </span>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="w-6 h-6"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(selectedTx.booking_id);
+                                  toast({ title: "Booking ID copied" });
+                                }}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
 
-                          const referral = parseFloat(
-                            selectedTx.referrer_commission || 0,
-                          );
+                          {selectedTx.check_in && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/60">Check-in</span>
+                              <span className="text-white font-medium">
+                                {new Date(selectedTx.check_in).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                              </span>
+                            </div>
+                          )}
 
-                          const ownerBalance = advance - admin - referral;
+                          {selectedTx.check_out && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/60">Check-out</span>
+                              <span className="text-white font-medium">
+                                {new Date(selectedTx.check_out).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                              </span>
+                            </div>
+                          )}
 
-                          // withdrawals for this booking owner
-                          const withdrawn = txWithdrawals
-                            .filter(
-                              (w) => w.owner_name === selectedTx.owner_name,
-                            )
-                            .reduce((s, w) => s + parseFloat(w.amount || 0), 0);
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Booking Status</span>
+                            <span className="text-amber-400 font-medium text-right max-w-[55%]">
+                              {selectedTx.status?.replace(/_/g, " ") || "-"}
+                            </span>
+                          </div>
 
-                          const pending = ownerBalance - withdrawn;
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Payment Status</span>
+                            <span className="text-emerald-400 font-medium">
+                              {selectedTx.payment_status || "-"}
+                            </span>
+                          </div>
+                        </div>
 
-                          return (
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">
-                                  Owner Balance
+                        {/* 2. BOOKING FINANCIAL SUMMARY */}
+                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                            Booking Financial Summary
+                          </p>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Customer Paid Advance (30%)</span>
+                            <span className="text-emerald-400 font-bold">
+                              ₹{advance.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Remaining Amount (70%)</span>
+                            <span className="text-amber-400 font-medium">
+                              ₹{remaining > 0 ? remaining.toLocaleString("en-IN") : "-"}
+                            </span>
+                          </div>
+
+                          <div className="border-t border-white/10 pt-2 flex justify-between text-sm">
+                            <span className="text-white font-semibold">Total Amount (100%)</span>
+                            <span className="text-white font-bold">
+                              ₹{total > 0 ? total.toLocaleString("en-IN") : "-"}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Payment Method</span>
+                            <span className="text-purple-400 font-medium uppercase">
+                              {selectedTx.payment_method || "-"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 3. REFERRAL INFORMATION */}
+                        {selectedTx.referral_code && (
+                          <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                            <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                              Referral Information
+                            </p>
+
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/60">Referrer Name</span>
+                              <span className="text-white font-medium">
+                                {selectedTx.referrer_name || "-"}
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/60">Referral Code</span>
+                              <span className="text-gold font-medium">
+                                {selectedTx.referral_code}
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/60">Referral Type</span>
+                              <span className="text-purple-400 font-medium capitalize">
+                                {selectedTx.referral_type || "Public"}
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between text-sm items-center">
+                              <span className="text-white/60">Referral Commission</span>
+                              <div className="flex flex-col items-end gap-0.5">
+                                <span className="text-blue-400 font-bold">
+                                  ₹{referralComm.toLocaleString("en-IN")}
+                                  <span className="text-blue-300/70 font-normal ml-1 text-xs">({referralPct}%)</span>
                                 </span>
-                                <span className="text-emerald-400 font-bold">
-                                  ₹{ownerBalance.toLocaleString("en-IN")}
+                                <span className={cn(
+                                  "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                  commStatus === "PAID"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-amber-500/20 text-amber-400"
+                                )}>
+                                  {commStatus}
                                 </span>
                               </div>
+                            </div>
 
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Withdrawn</span>
-                                <span className="text-red-400 font-medium">
-                                  ₹{withdrawn.toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">
-                                  Pending Payout
-                                </span>
+                            <div className="flex justify-between text-sm items-center">
+                              <span className="text-white/60">Admin Commission</span>
+                              <div className="flex flex-col items-end gap-0.5">
                                 <span className="text-gold font-bold">
-                                  ₹{pending.toLocaleString("en-IN")}
+                                  ₹{adminComm.toLocaleString("en-IN")}
+                                  <span className="text-gold/70 font-normal ml-1 text-xs">({adminPct}%)</span>
+                                </span>
+                                <span className={cn(
+                                  "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                  commStatus === "PAID"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-amber-500/20 text-amber-400"
+                                )}>
+                                  {commStatus}
                                 </span>
                               </div>
                             </div>
-                          );
-                        })()}
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {/* Commission Breakdown */}
+                    );
+                  }
 
-                    {isBooking && (
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Commission Breakdown
-                        </p>
+                  return (
+                    <div className="mt-2 space-y-4">
+                      {isWithdrawal && (
+                        <div className="bg-white/5 border border-white/5 rounded-xl p-3">
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Withdrawal Information
+                          </p>
 
-                        {(() => {
-                          const advance = parseFloat(selectedTx.amount || 0);
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referrer</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.customer_name}
+                            </span>
+                          </div>
 
-                          const admin = parseFloat(
-                            selectedTx.admin_commission || 0,
-                          );
+                          <div className="flex justify-between text-sm mt-1">
+                            <span className="text-white/60">Referral Code</span>
+                            <span className="text-gold font-medium">
+                              {selectedTx.referral_code}
+                            </span>
+                          </div>
 
-                          const referral = parseFloat(
-                            selectedTx.referrer_commission || 0,
-                          );
+                          <div className="flex justify-between text-sm mt-1">
+                            <span className="text-white/60">Referral Type</span>
+                            <span className="text-purple-400 font-medium capitalize">
+                              {selectedTx.referral_type}
+                            </span>
+                          </div>
 
-                          const owner = advance - admin - referral;
+                          <div className="flex justify-between text-sm mt-1">
+                            <span className="text-white/60">Amount</span>
+                            <span className="text-emerald-400 font-bold">
+                              ₹
+                              {parseFloat(selectedTx.amount || 0).toLocaleString(
+                                "en-IN",
+                              )}
+                            </span>
+                          </div>
 
-                          const adminPercent = advance
-                            ? ((admin / advance) * 100).toFixed(0)
-                            : 0;
+                          <div className="flex justify-between text-sm mt-1">
+                            <span className="text-white/60">UPI ID</span>
+                            <span>{selectedTx.upi_id || "-"}</span>
+                          </div>
 
-                          const referralPercent = advance
-                            ? ((referral / advance) * 100).toFixed(0)
-                            : 0;
-
-                          const ownerPercent = advance
-                            ? ((owner / advance) * 100).toFixed(0)
-                            : 0;
-
-                          return (
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">
-                                  Admin ({adminPercent}%)
-                                </span>
-                                <span className="text-gold font-medium">
-                                  ₹{admin.toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">
-                                  Referral ({referralPercent}%)
-                                </span>
-                                <span className="text-blue-400 font-medium">
-                                  ₹{referral.toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">
-                                  Owner ({ownerPercent}%)
-                                </span>
-                                <span className="text-emerald-400 font-bold">
-                                  ₹{owner.toLocaleString("en-IN")}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    )}
-                    {/* Referral Information */}
-
-                    {selectedTx.referral_code && (
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Referral Information
-                        </p>
-
-                        <div className="flex justify-between text-sm">
-                          <span className="text-white/60">Referrer</span>
-                          <span className="text-white font-medium">
-                            {selectedTx.referrer_name || "-"}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">Referral Code</span>
-                          <span className="text-gold font-medium">
-                            {selectedTx.referral_code}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">
-                            Referral Commission
-                          </span>
-                          <span className="text-blue-400 font-bold">
-                            ₹
-                            {parseFloat(
-                              selectedTx.referrer_commission || 0,
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">
-                            Admin Commission
-                          </span>
-                          <span className="text-gold font-bold">
-                            ₹
-                            {parseFloat(
-                              selectedTx.admin_commission || 0,
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {/* BOOKING DETAILS */}
-
-                    <div className="space-y-3">
-                      <p className="text-[10px] uppercase text-muted-foreground">
-                        Booking Details
-                      </p>
-
-                      <div className="flex justify-between text-sm">
-                        <span>Property</span>
-                        <span className="font-medium">
-                          {selectedTx.property_name}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between text-sm">
-                        <span>Guest</span>
-                        <span>{selectedTx.customer_name}</span>
-                      </div>
-
-                      <div className="flex justify-between text-sm">
-                        <span>Owner</span>
-                        <span>{selectedTx.owner_name}</span>
-                      </div>
-
-                      <div className="flex justify-between text-sm items-center">
-                        <span>Booking ID</span>
-
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono">
-                            {selectedTx.booking_id}
-                          </span>
-
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                selectedTx.booking_id,
-                              );
-                              toast({ title: "Booking ID copied" });
-                            }}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {selectedTx.check_in && (
-                        <div className="flex justify-between text-sm">
-                          <span>Check-in</span>
-                          <span>
-                            {new Date(selectedTx.check_in).toLocaleDateString(
-                              "en-IN",
-                            )}
-                          </span>
+                          <div className="flex justify-between text-sm mt-1">
+                            <span className="text-white/60">Status</span>
+                            <span className="text-amber-400">
+                              {selectedTx.status?.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
                       )}
 
-                      {selectedTx.check_out && (
-                        <div className="flex justify-between text-sm">
-                          <span>Check-out</span>
-                          <span>
-                            {new Date(selectedTx.check_out).toLocaleDateString(
-                              "en-IN",
-                            )}
-                          </span>
+                      {/* REFUND SECTION */}
+
+                      {isRefund && (
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+                          <p className="text-xs text-red-300 mb-2">
+                            Refund Summary
+                          </p>
+
+                          <div className="flex justify-between text-sm">
+                            <span>Original Paid</span>
+                            <span>
+                              ₹
+                              {parseFloat(
+                                selectedTx.original_amount || 0,
+                              ).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span>Refunded</span>
+                            <span>
+                              ₹
+                              {parseFloat(
+                                selectedTx.refund_amount || 0,
+                              ).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span>Status</span>
+                            <span className="text-red-400">
+                              {selectedTx.refund_status}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
-
-                    {/* REFERRAL INFORMATION */}
-
-                    {selectedTx.referral_code && (
-                      <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Referral Information
-                        </p>
-
-                        <div className="flex justify-between text-sm">
-                          <span className="text-white/60">Referrer</span>
-                          <span className="text-white font-medium">
-                            {selectedTx.referrer_name || "-"}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">Referral Code</span>
-                          <span className="text-gold font-medium">
-                            {selectedTx.referral_code}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">Referral Type</span>
-                          <span className="text-purple-400 font-medium capitalize">
-                            {selectedTx.referral_type || "Public"}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">
-                            Referral Commission
-                          </span>
-                          <span className="text-blue-400 font-bold">
-                            ₹
-                            {parseFloat(
-                              selectedTx.referrer_commission || 0,
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-white/60">
-                            Admin Commission
-                          </span>
-                          <span className="text-gold font-bold">
-                            ₹
-                            {parseFloat(
-                              selectedTx.admin_commission || 0,
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* REFUND SECTION */}
-
-                    {isRefund && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-                        <p className="text-xs text-red-300 mb-2">
-                          Refund Summary
-                        </p>
-
-                        <div className="flex justify-between text-sm">
-                          <span>Original Paid</span>
-                          <span>
-                            ₹
-                            {parseFloat(
-                              selectedTx.original_amount || 0,
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm">
-                          <span>Refunded</span>
-                          <span>
-                            ₹
-                            {parseFloat(
-                              selectedTx.refund_amount || 0,
-                            ).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-sm">
-                          <span>Status</span>
-                          <span className="text-red-400">
-                            {selectedTx.refund_status}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+                  );
+                })()}
             <div className="mt-4">
               <Button
                 variant="outline"

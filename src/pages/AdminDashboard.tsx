@@ -35,7 +35,6 @@ import {
   ArrowUpRight,
   Filter,
   ArrowDownLeft,
-  Bell,
   Copy,
   Handshake,
 } from "lucide-react";
@@ -656,27 +655,6 @@ const AdminDashboard = () => {
             </h1>
           </div>
           <div className="flex items-center gap-1 sm:gap-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 sm:w-10 sm:h-10 text-gold hover:text-gold-light hover:bg-gold/10 relative"
-                        onClick={() => navigate(adminPaths.requests)}
-                      >
-                        <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Requests Center</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </PopoverTrigger>
-            </Popover>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -2569,96 +2547,223 @@ const AdminDashboard = () => {
                   }
 
                   return (
-                    <div className="mt-2 space-y-4">
-                      {isWithdrawal && (
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                          <p className="text-xs text-muted-foreground mb-2">
-                            Withdrawal Information
-                          </p>
+                      <div className="mt-2 space-y-4">
 
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Referrer</span>
-                            <span className="text-white font-medium">
-                              {selectedTx.customer_name}
-                            </span>
-                          </div>
+                        {/* REFUND DETAILS */}
+                        {isRefund && (
+                          <>
+                            <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                              <p className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-1">
+                                Refund Details
+                              </p>
 
-                          <div className="flex justify-between text-sm mt-1">
-                            <span className="text-white/60">Referral Code</span>
-                            <span className="text-gold font-medium">
-                              {selectedTx.referral_code}
-                            </span>
-                          </div>
+                              <div className="flex justify-between text-sm items-center">
+                                <span className="text-white/60">Booking ID</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-xs text-white">{selectedTx.booking_id}</span>
+                                  <Button size="icon" variant="ghost" className="w-6 h-6"
+                                    onClick={() => { navigator.clipboard.writeText(selectedTx.booking_id); toast({ title: "Booking ID copied" }); }}>
+                                    <Copy className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
 
-                          <div className="flex justify-between text-sm mt-1">
-                            <span className="text-white/60">Referral Type</span>
-                            <span className="text-purple-400 font-medium capitalize">
-                              {selectedTx.referral_type}
-                            </span>
-                          </div>
+                              <div className="flex justify-between text-sm items-start">
+                                <span className="text-white/60">Property</span>
+                                <span className="text-white font-medium text-right max-w-[55%]">{selectedTx.property_name || "-"}</span>
+                              </div>
 
-                          <div className="flex justify-between text-sm mt-1">
-                            <span className="text-white/60">Amount</span>
-                            <span className="text-emerald-400 font-bold">
-                              ₹
-                              {parseFloat(selectedTx.amount || 0).toLocaleString(
-                                "en-IN",
-                              )}
-                            </span>
-                          </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Guest Name</span>
+                                <span className="text-white font-medium">{selectedTx.customer_name || "-"}</span>
+                              </div>
 
-                          <div className="flex justify-between text-sm mt-1">
-                            <span className="text-white/60">UPI ID</span>
-                            <span>{selectedTx.upi_id || "-"}</span>
-                          </div>
+                              <div className="flex justify-between text-sm items-center">
+                                <span className="text-white/60">Guest Mobile</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white font-medium">{selectedTx.guest_phone || "-"}</span>
+                                  {selectedTx.guest_phone && (
+                                    <a href={`tel:${selectedTx.guest_phone}`}
+                                      className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors">
+                                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
 
-                          <div className="flex justify-between text-sm mt-1">
-                            <span className="text-white/60">Status</span>
-                            <span className="text-amber-400">
-                              {selectedTx.status?.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                      )}
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Booking Amount</span>
+                                <span className="text-white font-medium">
+                                  ₹{parseFloat(selectedTx.booking_amount || selectedTx.original_amount || 0).toLocaleString("en-IN")}
+                                </span>
+                              </div>
 
-                      {/* REFUND SECTION */}
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Refund Amount</span>
+                                <span className="text-blue-400 font-bold">
+                                  ₹{parseFloat(selectedTx.refund_amount || 0).toLocaleString("en-IN")}
+                                </span>
+                              </div>
 
-                      {isRefund && (
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-                          <p className="text-xs text-red-300 mb-2">
-                            Refund Summary
-                          </p>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Payment Method</span>
+                                <span className="text-purple-400 font-medium uppercase">{selectedTx.payment_method || "-"}</span>
+                              </div>
 
-                          <div className="flex justify-between text-sm">
-                            <span>Original Paid</span>
-                            <span>
-                              ₹
-                              {parseFloat(
-                                selectedTx.original_amount || 0,
-                              ).toLocaleString("en-IN")}
-                            </span>
-                          </div>
+                              <div className="flex justify-between text-sm items-center">
+                                <span className="text-white/60">Refund Status</span>
+                                <span className={cn(
+                                  "text-xs px-2 py-0.5 rounded-full font-semibold",
+                                  selectedTx.refund_status === "REFUND_SUCCESSFUL"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : selectedTx.refund_status === "REFUND_FAILED"
+                                      ? "bg-red-500/20 text-red-400"
+                                      : selectedTx.refund_status === "REFUND_INITIATED"
+                                        ? "bg-blue-500/20 text-blue-400"
+                                        : "bg-amber-500/20 text-amber-400"
+                                )}>
+                                  {(selectedTx.refund_status || "PENDING").replace(/_/g, " ")}
+                                </span>
+                              </div>
 
-                          <div className="flex justify-between text-sm">
-                            <span>Refunded</span>
-                            <span>
-                              ₹
-                              {parseFloat(
-                                selectedTx.refund_amount || 0,
-                              ).toLocaleString("en-IN")}
-                            </span>
-                          </div>
+                              <div className="flex justify-between text-sm items-center">
+                                <span className="text-white/60">Refund Transaction ID</span>
+                                {selectedTx.refund_id ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-mono text-xs text-white">{selectedTx.refund_id}</span>
+                                    <Button size="icon" variant="ghost" className="w-6 h-6"
+                                      onClick={() => { navigator.clipboard.writeText(selectedTx.refund_id); toast({ title: "Refund ID copied" }); }}>
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span className="text-white/40 text-xs">Not yet assigned</span>
+                                )}
+                              </div>
 
-                          <div className="flex justify-between text-sm">
-                            <span>Status</span>
-                            <span className="text-red-400">
-                              {selectedTx.refund_status}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Initiated By</span>
+                                <span className={cn(
+                                  "font-medium",
+                                  selectedTx.refund_initiated_by === "Owner"
+                                    ? "text-amber-400"
+                                    : "text-blue-400"
+                                )}>
+                                  {selectedTx.refund_initiated_by || "Admin"}
+                                </span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Refund Date</span>
+                                <span className="text-white font-medium">
+                                  {selectedTx.date
+                                    ? new Date(selectedTx.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                                    : "-"}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* WITHDRAWAL DETAILS */}
+                        {isWithdrawal && (
+                          <>
+                            <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                              <p className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-1">
+                                Withdrawal Details
+                              </p>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Referral User</span>
+                                <span className="text-white font-medium">{selectedTx.customer_name || "-"}</span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Referral Code</span>
+                                <span className="text-gold font-medium">{selectedTx.referral_code || "-"}</span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Referral Type</span>
+                                <span className="text-purple-400 font-medium capitalize">{selectedTx.referral_type || "-"}</span>
+                              </div>
+
+                              <div className="flex justify-between text-sm items-center">
+                                <span className="text-white/60">Mobile</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white font-medium">{selectedTx.mobile || "-"}</span>
+                                  {selectedTx.mobile && (
+                                    <a href={`tel:${selectedTx.mobile}`}
+                                      className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors">
+                                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Withdraw Amount</span>
+                                <span className="text-emerald-400 font-bold">
+                                  ₹{parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}
+                                </span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Available Balance</span>
+                                <span className="text-gold font-medium">
+                                  ₹{parseFloat(selectedTx.available_balance || 0).toLocaleString("en-IN")}
+                                </span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">UPI / Bank</span>
+                                <span className="text-white font-medium">{selectedTx.upi_id || "-"}</span>
+                              </div>
+
+                              <div className="flex justify-between text-sm items-center">
+                                <span className="text-white/60">Withdrawal Status</span>
+                                <span className={cn(
+                                  "text-xs px-2 py-0.5 rounded-full font-semibold",
+                                  selectedTx.status === "completed"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : selectedTx.status === "failed"
+                                      ? "bg-red-500/20 text-red-400"
+                                      : selectedTx.status === "processing"
+                                        ? "bg-blue-500/20 text-blue-400"
+                                        : "bg-amber-500/20 text-amber-400"
+                                )}>
+                                  {(selectedTx.status || "PENDING").toUpperCase()}
+                                </span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Transaction ID</span>
+                                <span className="text-white/40 text-xs">Auto-processed via API</span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Requested Date</span>
+                                <span className="text-white font-medium">
+                                  {selectedTx.date
+                                    ? new Date(selectedTx.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                                    : "-"}
+                                </span>
+                              </div>
+
+                              <div className="flex justify-between text-sm">
+                                <span className="text-white/60">Processed Date</span>
+                                <span className="text-white font-medium">
+                                  {selectedTx.processed_date && selectedTx.status === "completed"
+                                    ? new Date(selectedTx.processed_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                                    : "-"}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                      </div>
+                    );
                 })()}
             <div className="mt-4">
               <Button

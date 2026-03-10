@@ -22,7 +22,6 @@ const GenerateCodePage = lazy(() => import("./pages/GenerateCodePage"));
 const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const RequestsPage = lazy(() => import("./pages/RequestsPage"));
 const AdminRevenuePage = lazy(() => import("./pages/AdminRevenuePage"));
 const AdminContactsPage = lazy(() => import("./pages/AdminContactsPage"));
 const PaymentProcessing = lazy(() => import("./pages/PaymentProcessing"));
@@ -124,7 +123,6 @@ const App = () => {
               {/* Admin Routes */}
               <Route path={adminPaths.login} element={<PageWrapper><AdminLogin /></PageWrapper>} />
               <Route path={adminPaths.dashboard} element={<PageWrapper><AdminDashboard /></PageWrapper>} />
-              <Route path={adminPaths.requests} element={<PageWrapper><RequestsPage /></PageWrapper>} />
               <Route path={adminPaths.revenue} element={<PageWrapper><AdminRevenuePage /></PageWrapper>} />
               <Route path={adminPaths.contacts} element={<PageWrapper><AdminContactsPage /></PageWrapper>} />
               

@@ -1069,6 +1069,14 @@ const handleOwnerAction = async (req, res) => {
 
       await cancelInProcessCommission(booking.id);
 
+      if (booking.payment_status === 'SUCCESS' && booking.advance_amount > 0) {
+        try {
+          await processPaytmRefund(booking, parseFloat(booking.advance_amount));
+        } catch (refundErr) {
+          console.error('[OwnerCancel] Auto-refund failed:', refundErr.message);
+        }
+      }
+
       const ownerName = booking.owner_name || 'The owner';
 
       if (booking.payment_status === 'SUCCESS') {

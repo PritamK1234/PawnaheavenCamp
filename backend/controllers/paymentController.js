@@ -1624,18 +1624,26 @@ const getAllTransactions = async (req, res) => {
       query(`
         SELECT
           b.booking_id AS id, 'refund' AS _type,
-          b.booking_id, b.guest_name AS customer_name, b.property_name,
-          b.owner_name, b.referral_code, b.refund_amount AS amount,
+          b.booking_id, b.guest_name AS customer_name, b.guest_phone,
+          b.property_name, b.owner_name, b.referral_code,
+          b.refund_amount AS amount,
           b.booking_status AS status, b.payment_status,
           b.checkin_datetime AS check_in, b.checkout_datetime AS check_out,
           b.updated_at AS date, b.refund_status, b.refund_amount,
+          b.advance_amount AS booking_amount,
+          b.payment_method, b.transaction_id, b.refund_id,
+          CASE
+            WHEN b.booking_status = 'CANCELLED_BY_OWNER' THEN 'Owner'
+            WHEN b.booking_status IN ('CANCELLED','CANCELLED_NO_REFUND','OWNER_CANCELLED','REFUND_INITIATED') THEN 'Admin'
+            ELSE 'System'
+          END AS refund_initiated_by,
           b.referrer_commission, b.admin_commission, b.unit_id, b.property_id,
           b.advance_amount AS original_amount,
           ru.username AS referrer_name
         FROM bookings b
         LEFT JOIN referral_users ru ON ru.referral_code = b.referral_code
         WHERE b.payment_status = 'SUCCESS'
-          AND b.booking_status = 'CANCELLED'
+          AND b.refund_status IS NOT NULL
           AND b.advance_amount > 0
         ORDER BY b.updated_at DESC
       `),
@@ -1652,7 +1660,16 @@ const getAllTransactions = async (req, res) => {
           NULL::numeric AS admin_commission, NULL::integer AS unit_id,
           NULL::varchar AS property_id,
           ru.username AS referrer_name, rt.upi_id,
-          ru.referral_type
+          ru.referral_type, ru.referral_otp_number AS mobile,
+          rt.updated_at AS processed_date,
+          COALESCE((
+            SELECT SUM(rt2.amount) FROM referral_transactions rt2
+            WHERE rt2.referral_user_id = ru.id AND rt2.type = 'earning' AND rt2.status = 'available'
+          ), 0) -
+          COALESCE((
+            SELECT SUM(rt3.amount) FROM referral_transactions rt3
+            WHERE rt3.referral_user_id = ru.id AND rt3.type = 'withdrawal' AND rt3.status = 'completed'
+          ), 0) AS available_balance
         FROM referral_transactions rt
         JOIN referral_users ru ON ru.id = rt.referral_user_id
         WHERE rt.type = 'withdrawal'

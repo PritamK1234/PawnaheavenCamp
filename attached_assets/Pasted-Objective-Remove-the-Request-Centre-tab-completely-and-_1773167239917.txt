@@ -1,0 +1,104 @@
+Objective
+Remove the "Request Centre" tab completely and move its functionality into the "Transactions" tab.
+
+Important Rule
+Do NOT modify the existing "Bookings" tab modal. All changes apply only to the "Refunds" and "Withdrawals" tabs inside the "Transactions" section.
+
+--------------------------------------------
+
+1. Remove Request Centre
+- Delete the "Request Centre" tab and its routes/components.
+- All refund and withdrawal operations must now appear inside:
+Admin Dashboard → Transactions → Refunds / Withdrawals tabs.
+
+--------------------------------------------
+
+2. Refunds Tab (Automatic Refund System)
+
+Refunds should be triggered automatically in the following cases:
+
+Case 1
+When the Owner clicks the "Cancel Booking" button from Owner WhatsApp flow.
+
+Case 2
+When the Admin cancels a booking from:
+Admin Dashboard → Ledger → "Cancel Booking" icon.
+
+Refund Rule
+Refund should only be processed if the cancellation policy allows a refund.
+
+Refund Execution
+Use Paytm Refund API to process refunds automatically.
+
+Refunds Tab Modal should open with the following fields:
+
+Booking ID
+Property Name
+Guest Name
+Guest Mobile(calling functionality)
+Booking Amount
+Refund Amount
+Payment Method
+Refund Status (Pending / Processing / Success / Failed)
+Refund Transaction ID
+Refund Initiated By (Owner / Admin)
+Refund Date
+
+--------------------------------------------
+
+3. Withdrawals Tab (Referral Payout System)
+
+Withdrawals are requested by referral users from the Referral Dashboard by clicking the "Withdraw Amount" button.
+
+Supported Referral Types
+Public Referral
+B2B Referral
+Owner B2B
+Owner Referral
+
+Withdrawal Processing
+withdrawals should be triggered automatically using RazorpayX API.
+
+Withdrawals Tab Modal should open with the following fields:
+
+Referral User Name
+Referral Code
+Referral Type
+Referral Mobile(calling functionality)
+Withdraw Amount
+Available Balance
+Bank Account / UPI
+Withdrawal Status (Pending / Processing / Completed / Failed)
+RazorpayX Transaction ID
+Requested Date
+Processed Date
+
+--------------------------------------------
+
+4. Admin Actions
+
+Refunds Tab
+- View refund details
+- Track refund status
+- No manual refund processing(because this will done automatically using API)
+
+
+Withdrawals Tab
+- View withdrawal requests
+- Track withdrawls status
+- No manual withdrawal processing(because this will done automatically using API)
+--------------------------------------------
+
+--------------------------------------------
+
+6. UI Structure
+
+Transactions
+    ├── Bookings (Existing - Do Not Modify)
+    ├── Refunds (New automatic refund tracking)
+    └── Withdrawals (Referral payout system)
+
+--------------------------------------------
+
+Goal
+Centralize all financial transactions (Bookings, Refunds, Withdrawals) inside the "Transactions" tab with automated processing using Paytm API and RazorpayX API.

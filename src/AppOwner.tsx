@@ -18,6 +18,8 @@ const OwnerMain = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-o
 const OwnerProfile = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Profile"));
 const OwnerUnits = lazy(() => import("./pages/owner/dashboard/Campings_Cottages-owners-dashboard/Units"));
 const OwnerBookings = lazy(() => import("./pages/owner/dashboard/bookings/Bookings"));
+const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
+const GenerateCodePage = lazy(() => import("./pages/GenerateCodePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const VillaOwnerMain = lazy(() => import("./pages/owner/dashboard/Villas-owners-dashboard/Main"));
@@ -68,6 +70,8 @@ const AppOwner = () => {
                 <Route path="/owner/units/villa" element={<PageWrapper><VillaOwnerUnits /></PageWrapper>} />
               </Route>
 
+              <Route path="/referral/check" element={<PageWrapper><CheckEarningPage /></PageWrapper>} />
+              <Route path="/referral/generate" element={<PageWrapper><GenerateCodePage /></PageWrapper>} />
               <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
             </Routes>
           </BrowserRouter>

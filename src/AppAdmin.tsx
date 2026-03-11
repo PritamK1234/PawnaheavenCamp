@@ -19,6 +19,8 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const RequestsPage = lazy(() => import("./pages/RequestsPage"));
 const AdminRevenuePage = lazy(() => import("./pages/AdminRevenuePage"));
 const AdminContactsPage = lazy(() => import("./pages/AdminContactsPage"));
+const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
+const GenerateCodePage = lazy(() => import("./pages/GenerateCodePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -91,6 +93,8 @@ const AppAdmin = () => {
                   </PageWrapper>
                 }
               />
+              <Route path="/referral/check" element={<PageWrapper><CheckEarningPage /></PageWrapper>} />
+              <Route path="/referral/generate" element={<PageWrapper><GenerateCodePage /></PageWrapper>} />
               <Route
                 path="*"
                 element={

@@ -331,7 +331,7 @@ const CheckEarningPage = () => {
               onClick={() => {
                 if (isFromAdmin) window.close();
                 else if (isFromOwner) navigate(-1);
-                else navigate("/referral");
+                else navigate("/");
               }}
               className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all"
             >

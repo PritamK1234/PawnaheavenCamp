@@ -10,6 +10,7 @@ import PageSkeleton from "./components/PageSkeleton";
 const ReferralLogin = lazy(() => import("./pages/referral/ReferralLogin"));
 const ReferralDashboard = lazy(() => import("./pages/referral/ReferralDashboard"));
 const GenerateCodePage = lazy(() => import("./pages/GenerateCodePage"));
+const CheckEarningPage = lazy(() => import("./pages/CheckEarningPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,8 @@ const AppReferral = () => {
               <Route path="/login" element={<PageWrapper><ReferralLogin /></PageWrapper>} />
               <Route path="/dashboard" element={<PageWrapper><ReferralDashboard /></PageWrapper>} />
               <Route path="/generate" element={<PageWrapper><GenerateCodePage /></PageWrapper>} />
+              <Route path="/referral/check" element={<PageWrapper><CheckEarningPage /></PageWrapper>} />
+              <Route path="/referral/generate" element={<PageWrapper><GenerateCodePage /></PageWrapper>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>

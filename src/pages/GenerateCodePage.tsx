@@ -92,7 +92,7 @@ const GenerateCodePage = () => {
       );
 
       toast.success("Referral account created successfully!");
-      navigate("/referral");
+      navigate("/referral/check");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Registration failed");
     } finally {
@@ -110,7 +110,7 @@ const GenerateCodePage = () => {
       <div className="sticky top-0 z-50 bg-black border-b border-border/50">
         <div className="container mx-auto px-6 py-4 flex items-center gap-4">
           <Link
-            to="/referral"
+            to="/referral/check"
             className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground/70 hover:bg-primary hover:text-primary-foreground transition-all"
           >
             <ChevronLeft className="w-6 h-6" />

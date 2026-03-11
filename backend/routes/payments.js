@@ -47,11 +47,14 @@ router.get('/revenue-summary', authMiddleware, async (req, res) => {
       `SELECT COALESCE(SUM(refund_amount), 0) AS total
        FROM bookings
        WHERE payment_status = 'SUCCESS'
-         AND refund_status IS NOT NULL
-         AND refund_status <> 'REFUND_SUCCESSFUL'
-         AND EXTRACT(MONTH FROM created_at) = $1
-         AND EXTRACT(YEAR FROM created_at) = $2`,
-      [month, year]
+         AND refund_status = 'REFUND_INITIATED'`
+    );
+
+    const withdrawPendingResult = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM referral_transactions
+       WHERE type = 'withdrawal'
+         AND status IN ('pending', 'processing')`
     );
 
     const referralResult = await pool.query(
@@ -70,18 +73,20 @@ router.get('/revenue-summary', authMiddleware, async (req, res) => {
     );
 
     const grossRevenue = Math.round(parseFloat(grossResult.rows[0].total));
-    const refundPayable = Math.round(parseFloat(refundResult.rows[0].total));
+    const refundPending = Math.round(parseFloat(refundResult.rows[0].total));
     const referralPayable = Math.round(parseFloat(referralResult.rows[0].total));
     const inProcessReferral = Math.round(parseFloat(inProcessResult.rows[0].total));
+    const withdrawPending = Math.round(parseFloat(withdrawPendingResult.rows[0].total));
 
     return res.json({
       success: true,
       month,
       year,
       grossRevenue,
-      refundPayable,
+      refundPending,
       referralPayable,
       inProcessReferral,
+      withdrawPending,
     });
   } catch (err) {
     console.error('[Revenue Summary] Error:', err);

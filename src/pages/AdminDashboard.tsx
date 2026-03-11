@@ -216,11 +216,19 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       if (data.updated) {
-        toast({ title: "Refund status updated", description: `Status: ${data.status?.replace(/_/g, " ")}` });
+        toast({
+          title: "Refund status updated",
+          description: `Status: ${data.status?.replace(/_/g, " ")}`,
+        });
         await fetchBookings();
-        setSelectedTx((prev: any) => prev ? { ...prev, refund_status: data.status } : prev);
+        setSelectedTx((prev: any) =>
+          prev ? { ...prev, refund_status: data.status } : prev,
+        );
       } else {
-        toast({ title: "No change", description: `Current status: ${data.status?.replace(/_/g, " ")}` });
+        toast({
+          title: "No change",
+          description: `Current status: ${data.status?.replace(/_/g, " ")}`,
+        });
       }
     } catch {
       toast({ title: "Failed to check refund status", variant: "destructive" });
@@ -239,14 +247,31 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       if (data.updated) {
-        toast({ title: "Withdrawal status updated", description: `Status: ${data.status?.toUpperCase()}` });
+        toast({
+          title: "Withdrawal status updated",
+          description: `Status: ${data.status?.toUpperCase()}`,
+        });
         await fetchBookings();
-        setSelectedTx((prev: any) => prev ? { ...prev, status: data.status, payout_status: data.payout_status } : prev);
+        setSelectedTx((prev: any) =>
+          prev
+            ? {
+                ...prev,
+                status: data.status,
+                payout_status: data.payout_status,
+              }
+            : prev,
+        );
       } else {
-        toast({ title: "No change", description: `Current status: ${data.status?.toUpperCase()}` });
+        toast({
+          title: "No change",
+          description: `Current status: ${data.status?.toUpperCase()}`,
+        });
       }
     } catch {
-      toast({ title: "Failed to check withdrawal status", variant: "destructive" });
+      toast({
+        title: "Failed to check withdrawal status",
+        variant: "destructive",
+      });
     } finally {
       setCheckingStatus(false);
     }
@@ -2064,15 +2089,17 @@ const AdminDashboard = () => {
               className="w-full"
             >
               <TabsList className="bg-white/5 p-1 rounded-xl w-full border border-white/5">
-                {["bookings", "refunds", "withdrawals", "cancelled"].map((tab) => (
-                  <TabsTrigger
-                    key={tab}
-                    value={tab}
-                    className="rounded-lg flex-1 text-[10px] capitalize data-[state=active]:bg-gold data-[state=active]:text-black"
-                  >
-                    {tab}
-                  </TabsTrigger>
-                ))}
+                {["bookings", "refunds", "withdrawals", "cancelled"].map(
+                  (tab) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab}
+                      className="rounded-lg flex-1 text-[10px] capitalize data-[state=active]:bg-gold data-[state=active]:text-black"
+                    >
+                      {tab}
+                    </TabsTrigger>
+                  ),
+                )}
               </TabsList>
             </Tabs>
 
@@ -2084,9 +2111,30 @@ const AdminDashboard = () => {
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
-                    <SelectItem value="all" className="text-xs">All Months</SelectItem>
-                    {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
-                      <SelectItem key={m} value={String(i + 1)} className="text-xs">{m}</SelectItem>
+                    <SelectItem value="all" className="text-xs">
+                      All Months
+                    </SelectItem>
+                    {[
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December",
+                    ].map((m, i) => (
+                      <SelectItem
+                        key={m}
+                        value={String(i + 1)}
+                        className="text-xs"
+                      >
+                        {m}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -2096,9 +2144,16 @@ const AdminDashboard = () => {
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
-                    <SelectItem value="all" className="text-xs">All Years</SelectItem>
-                    {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() - i).map((y) => (
-                      <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                    <SelectItem value="all" className="text-xs">
+                      All Years
+                    </SelectItem>
+                    {Array.from(
+                      { length: 4 },
+                      (_, i) => new Date().getFullYear() - i,
+                    ).map((y) => (
+                      <SelectItem key={y} value={String(y)} className="text-xs">
+                        {y}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -2128,37 +2183,69 @@ const AdminDashboard = () => {
                       : transactionSubTab === "refunds"
                         ? txRefunds.map((r) => ({ ...r, _type: "refund" }))
                         : transactionSubTab === "withdrawals"
-                          ? txWithdrawals.map((r) => ({ ...r, _type: "withdrawal" }))
-                          : txCancelled.map((r) => ({ ...r, _type: "cancelled" }));
+                          ? txWithdrawals.map((r) => ({
+                              ...r,
+                              _type: "withdrawal",
+                            }))
+                          : txCancelled.map((r) => ({
+                              ...r,
+                              _type: "cancelled",
+                            }));
 
                   const filtered = base.filter((tx) => {
                     const d = tx.date ? new Date(tx.date) : null;
-                    if (txFilterMonth !== "all" && d && d.getMonth() + 1 !== parseInt(txFilterMonth)) return false;
-                    if (txFilterYear !== "all" && d && d.getFullYear() !== parseInt(txFilterYear)) return false;
+                    if (
+                      txFilterMonth !== "all" &&
+                      d &&
+                      d.getMonth() + 1 !== parseInt(txFilterMonth)
+                    )
+                      return false;
+                    if (
+                      txFilterYear !== "all" &&
+                      d &&
+                      d.getFullYear() !== parseInt(txFilterYear)
+                    )
+                      return false;
                     if (txSearch.trim()) {
                       const q = txSearch.trim().toLowerCase();
                       const haystack = [
-                        tx.booking_id, tx.customer_name, tx.owner_name,
-                        tx.property_name, tx.upi_id, tx.transaction_id,
-                        tx.referral_code, tx.referrer_name,
-                      ].map((v) => (v || "").toLowerCase()).join(" ");
+                        tx.booking_id,
+                        tx.customer_name,
+                        tx.owner_name,
+                        tx.property_name,
+                        tx.upi_id,
+                        tx.transaction_id,
+                        tx.referral_code,
+                        tx.referrer_name,
+                      ]
+                        .map((v) => (v || "").toLowerCase())
+                        .join(" ");
                       if (!haystack.includes(q)) return false;
                     }
                     return true;
                   });
 
-                  const hasActiveFilters = txFilterMonth !== "all" || txFilterYear !== "all" || txSearch.trim() !== "";
+                  const hasActiveFilters =
+                    txFilterMonth !== "all" ||
+                    txFilterYear !== "all" ||
+                    txSearch.trim() !== "";
 
                   if (filtered.length === 0) {
                     return (
                       <div className="flex flex-col items-center justify-center py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/10 text-white/30">
                         <CreditCard className="w-12 h-12 mb-3 opacity-20" />
                         <p className="font-display text-base font-bold">
-                          {hasActiveFilters ? "No results match your filters" : `No ${transactionSubTab} records yet`}
+                          {hasActiveFilters
+                            ? "No results match your filters"
+                            : `No ${transactionSubTab} records yet`}
                         </p>
                         {hasActiveFilters && (
                           <button
-                            onClick={() => { setTxFilterMonth("all"); setTxFilterYear("all"); setTxSearch(""); }}
+                            onClick={() => {
+                              setTxFilterMonth("all");
+                              setTxFilterYear("all");
+                              setTxSearch("");
+                            }}
                             className="mt-2 text-xs text-gold/60 hover:text-gold underline"
                           >
                             Clear filters
@@ -2204,7 +2291,13 @@ const AdminDashboard = () => {
                         : isCancelled
                           ? "text-red-400"
                           : "text-amber-400";
-                    const amtPrefix = isBooking ? "+" : isRefund ? "↩" : isCancelled ? "✕" : "↑";
+                    const amtPrefix = isBooking
+                      ? "+"
+                      : isRefund
+                        ? "↩"
+                        : isCancelled
+                          ? "✕"
+                          : "↑";
                     const badgeLabel = isBooking
                       ? tx.status?.replace(/_/g, " ") || "CONFIRMED"
                       : isRefund
@@ -2361,30 +2454,681 @@ const AdminDashboard = () => {
               </DialogDescription>
             </DialogHeader>
             {selectedTx &&
-                (() => {
-                  const isBooking = selectedTx._type === "booking";
-                  const isRefund = selectedTx._type === "refund";
-                  const isWithdrawal = selectedTx._type === "withdrawal";
-                  const isCancelled = selectedTx._type === "cancelled";
+              (() => {
+                const isBooking = selectedTx._type === "booking";
+                const isRefund = selectedTx._type === "refund";
+                const isWithdrawal = selectedTx._type === "withdrawal";
+                const isCancelled = selectedTx._type === "cancelled";
 
-                  if (isBooking) {
-                    const advance = parseFloat(selectedTx.amount || 0);
-                    const total = parseFloat(selectedTx.total_amount || 0);
-                    const remaining = total - advance;
-                    const referralComm = parseFloat(selectedTx.referrer_commission || 0);
-                    const adminComm = parseFloat(selectedTx.admin_commission || 0);
-                    const rType = (selectedTx.referral_type || "").toLowerCase();
-                    const referralPct = rType === "owner" ? 25 : (rType === "b2b" || rType === "owners_b2b") ? 22 : 15;
-                    const adminPct = rType === "owner" ? 5 : (rType === "b2b" || rType === "owners_b2b") ? 8 : 15;
-                    const commStatus = selectedTx.commission_status || "PENDING";
+                if (isBooking) {
+                  const advance = parseFloat(selectedTx.amount || 0);
+                  const total = parseFloat(selectedTx.total_amount || 0);
+                  const remaining = total - advance;
+                  const referralComm = parseFloat(
+                    selectedTx.referrer_commission || 0,
+                  );
+                  const adminComm = parseFloat(
+                    selectedTx.admin_commission || 0,
+                  );
+                  const rType = (selectedTx.referral_type || "").toLowerCase();
+                  const referralPct =
+                    rType === "owner"
+                      ? 25
+                      : rType === "b2b" || rType === "owners_b2b"
+                        ? 22
+                        : 15;
+                  const adminPct =
+                    rType === "owner"
+                      ? 5
+                      : rType === "b2b" || rType === "owners_b2b"
+                        ? 8
+                        : 15;
+                  const commStatus = selectedTx.commission_status || "PENDING";
 
-                    return (
-                      <div className="mt-2 space-y-4">
-                        {/* 1. BOOKING DETAILS */}
+                  return (
+                    <div className="mt-2 space-y-4">
+                      {/* 1. BOOKING DETAILS */}
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                          Booking Details
+                        </p>
+
+                        <div className="flex justify-between text-sm items-start">
+                          <span className="text-white/60">Property</span>
+                          <span className="text-white font-medium text-right max-w-[55%]">
+                            {selectedTx.property_name || "-"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Guest</span>
+                          <span className="text-white font-medium">
+                            {selectedTx.customer_name || "-"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Guest Mobile</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-medium">
+                              {selectedTx.guest_phone || "-"}
+                            </span>
+                            {selectedTx.guest_phone && (
+                              <a
+                                href={`tel:${selectedTx.guest_phone}`}
+                                className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Owner</span>
+                          <span className="text-white font-medium">
+                            {selectedTx.owner_name || "-"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Owner Mobile</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-medium">
+                              {selectedTx.owner_phone || "-"}
+                            </span>
+                            {selectedTx.owner_phone && (
+                              <a
+                                href={`tel:${selectedTx.owner_phone}`}
+                                className="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center hover:bg-blue-500/30 transition-colors"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-blue-400" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Booking ID</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs text-white">
+                              {selectedTx.booking_id}
+                            </span>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="w-6 h-6"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  selectedTx.booking_id,
+                                );
+                                toast({ title: "Booking ID copied" });
+                              }}
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {selectedTx.check_in && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Check-in</span>
+                            <span className="text-white font-medium">
+                              {new Date(selectedTx.check_in).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
+                            </span>
+                          </div>
+                        )}
+
+                        {selectedTx.check_out && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Check-out</span>
+                            <span className="text-white font-medium">
+                              {new Date(
+                                selectedTx.check_out,
+                              ).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">Booking Status</span>
+                          <span className="text-amber-400 font-medium text-right max-w-[55%]">
+                            {selectedTx.status?.replace(/_/g, " ") || "-"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">Payment Status</span>
+                          <span className="text-emerald-400 font-medium">
+                            {selectedTx.payment_status || "-"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 2. BOOKING FINANCIAL SUMMARY */}
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                          Booking Financial Summary
+                        </p>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">
+                            Customer Paid Advance (30%)
+                          </span>
+                          <span className="text-emerald-400 font-bold">
+                            ₹{advance.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">
+                            Remaining Amount (70%)
+                          </span>
+                          <span className="text-amber-400 font-medium">
+                            ₹
+                            {remaining > 0
+                              ? remaining.toLocaleString("en-IN")
+                              : "-"}
+                          </span>
+                        </div>
+
+                        <div className="border-t border-white/10 pt-2 flex justify-between text-sm">
+                          <span className="text-white font-semibold">
+                            Total Amount (100%)
+                          </span>
+                          <span className="text-white font-bold">
+                            ₹{total > 0 ? total.toLocaleString("en-IN") : "-"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">Payment Method</span>
+                          <span className="text-purple-400 font-medium uppercase">
+                            {selectedTx.payment_method || "-"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 3. REFERRAL INFORMATION */}
+                      {selectedTx.referral_code && (
                         <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
                           <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
-                            Booking Details
+                            Referral Information
                           </p>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referrer Name</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.referrer_name || "-"}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referral Code</span>
+                            <span className="text-gold font-medium">
+                              {selectedTx.referral_code}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referral Type</span>
+                            <span className="text-purple-400 font-medium capitalize">
+                              {selectedTx.referral_type || "Public"}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">
+                              Referral Commission
+                            </span>
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="text-blue-400 font-bold">
+                                ₹{referralComm.toLocaleString("en-IN")}
+                                <span className="text-blue-300/70 font-normal ml-1 text-xs">
+                                  ({referralPct}%)
+                                </span>
+                              </span>
+                              <span
+                                className={cn(
+                                  "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                  commStatus === "PAID"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-amber-500/20 text-amber-400",
+                                )}
+                              >
+                                {commStatus}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">
+                              Admin Commission
+                            </span>
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="text-gold font-bold">
+                                ₹{adminComm.toLocaleString("en-IN")}
+                                <span className="text-gold/70 font-normal ml-1 text-xs">
+                                  ({adminPct}%)
+                                </span>
+                              </span>
+                              <span
+                                className={cn(
+                                  "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                  commStatus === "PAID"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-amber-500/20 text-amber-400",
+                                )}
+                              >
+                                {commStatus}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                if (isCancelled) {
+                  const advance = parseFloat(selectedTx.amount || 0);
+                  const refundAmt = parseFloat(selectedTx.refund_amount || 0);
+                  const isOwnerCancel =
+                    selectedTx.status === "CANCELLED_BY_OWNER";
+                  const isNoRefund =
+                    selectedTx.status === "CANCELLED_NO_REFUND";
+                  const customerRefund = isOwnerCancel ? advance : refundAmt;
+                  const ownerGets = Math.max(0, advance - customerRefund);
+                  const customerPct =
+                    advance > 0
+                      ? Math.round((customerRefund / advance) * 100)
+                      : 0;
+                  const ownerPct = 100 - customerPct;
+
+                  return (
+                    <div className="mt-2 space-y-4">
+                      {/* BANNER */}
+                      {isOwnerCancel ? (
+                        <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+                          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-semibold text-amber-300">
+                              Owner Cancelled
+                            </p>
+                            <p className="text-xs text-amber-400/70 mt-0.5">
+                              100% advance refunded to customer as per
+                              owner-cancellation policy
+                            </p>
+                          </div>
+                        </div>
+                      ) : isNoRefund ? (
+                        <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                          <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-semibold text-red-300">
+                              Admin Cancelled — No Refund
+                            </p>
+                            <p className="text-xs text-red-400/70 mt-0.5">
+                              Full advance retained per cancellation policy
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                          <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-semibold text-red-300">
+                              Admin Cancelled
+                            </p>
+                            <p className="text-xs text-red-400/70 mt-0.5">
+                              Refund processed as per cancellation policy
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* BOOKING DETAILS */}
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                          Booking Details
+                        </p>
+                        <div className="flex justify-between text-sm items-start">
+                          <span className="text-white/60">Property</span>
+                          <span className="text-white font-medium text-right max-w-[55%]">
+                            {selectedTx.property_name || "-"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Guest</span>
+                          <span className="text-white font-medium">
+                            {selectedTx.customer_name || "-"}
+                          </span>
+                        </div>
+                        cl
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Guest Mobile</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-medium">
+                              {selectedTx.guest_phone || "-"}
+                            </span>
+                            {selectedTx.guest_phone && (
+                              <a
+                                href={`tel:${selectedTx.guest_phone}`}
+                                className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Owner</span>
+                          <span className="text-white font-medium">
+                            {selectedTx.owner_name || "-"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Owner Mobile</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-medium">
+                              {selectedTx.owner_phone || "-"}
+                            </span>
+                            {selectedTx.owner_phone && (
+                              <a
+                                href={`tel:${selectedTx.owner_phone}`}
+                                className="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center hover:bg-blue-500/30 transition-colors"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-blue-400" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Booking ID</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs text-white">
+                              {selectedTx.booking_id}
+                            </span>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="w-6 h-6"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  selectedTx.booking_id,
+                                );
+                                toast({ title: "Booking ID copied" });
+                              }}
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        {selectedTx.check_in && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Check-in</span>
+                            <span className="text-white font-medium">
+                              {new Date(selectedTx.check_in).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {selectedTx.check_out && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Check-out</span>
+                            <span className="text-white font-medium">
+                              {new Date(
+                                selectedTx.check_out,
+                              ).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">Cancelled By</span>
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              isOwnerCancel ? "text-amber-400" : "text-red-400",
+                            )}
+                          >
+                            {selectedTx.refund_initiated_by || "Admin"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">
+                            Cancellation Date
+                          </span>
+                          <span className="text-white font-medium">
+                            {selectedTx.date
+                              ? new Date(selectedTx.date).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )
+                              : "-"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* FINANCIAL SUMMARY */}
+                      <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                          Financial Summary
+                        </p>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">Advance Paid</span>
+                          <span className="text-white font-bold">
+                            ₹{advance.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+
+                        <div className="border-t border-white/10 pt-2 flex justify-between text-sm items-center">
+                          <span className="text-white/60">Customer Refund</span>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span
+                              className={cn(
+                                "font-bold",
+                                customerRefund > 0
+                                  ? "text-emerald-400"
+                                  : "text-white/40",
+                              )}
+                            >
+                              ₹{customerRefund.toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-white/40 text-[10px]">
+                              ({customerPct}% of advance)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Owner Gets</span>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span
+                              className={cn(
+                                "font-bold",
+                                ownerGets > 0
+                                  ? "text-amber-400"
+                                  : "text-white/40",
+                              )}
+                            >
+                              ₹{ownerGets.toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-white/40 text-[10px]">
+                              ({ownerPct}% of advance)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/60">Payment Method</span>
+                          <span className="text-purple-400 font-medium uppercase">
+                            {selectedTx.payment_method || "-"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-white/60">Refund Status</span>
+                          <span
+                            className={cn(
+                              "text-xs px-2 py-0.5 rounded-full font-semibold",
+                              selectedTx.refund_status === "REFUND_SUCCESSFUL"
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : selectedTx.refund_status === "REFUND_FAILED"
+                                  ? "bg-red-500/20 text-red-400"
+                                  : selectedTx.refund_status ===
+                                      "REFUND_INITIATED"
+                                    ? "bg-blue-500/20 text-blue-400"
+                                    : isNoRefund
+                                      ? "bg-red-500/10 text-red-400/70"
+                                      : "bg-white/5 text-white/40",
+                            )}
+                          >
+                            {isNoRefund
+                              ? "NO REFUND"
+                              : selectedTx.refund_status
+                                ? selectedTx.refund_status.replace(/_/g, " ")
+                                : customerRefund > 0
+                                  ? "PENDING"
+                                  : "N/A"}
+                          </span>
+                        </div>
+
+                        {selectedTx.refund_status === "REFUND_INITIATED" && (
+                          <div className="flex justify-end">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5"
+                              disabled={checkingStatus}
+                              onClick={() =>
+                                handleCheckRefundStatus(selectedTx.booking_id)
+                              }
+                            >
+                              <RefreshCw
+                                className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`}
+                              />
+                              {checkingStatus ? "Checking..." : "Check Status"}
+                            </Button>
+                          </div>
+                        )}
+
+                        {selectedTx.transaction_id && customerRefund > 0 && (
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">
+                              Payment Txn ID
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs text-white">
+                                {selectedTx.transaction_id}
+                              </span>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="w-6 h-6"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    selectedTx.transaction_id,
+                                  );
+                                  toast({ title: "Transaction ID copied" });
+                                }}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* REFERRAL INFORMATION */}
+                      {selectedTx.referral_code && (
+                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
+                            Referral Information
+                          </p>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referrer Name</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.referrer_name || "-"}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referral Code</span>
+                            <span className="text-gold font-medium">
+                              {selectedTx.referral_code}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referral Type</span>
+                            <span className="text-purple-400 font-medium capitalize">
+                              {selectedTx.referral_type || "Public"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="mt-2 space-y-4">
+                    {/* REFUND DETAILS */}
+                    {isRefund && (
+                      <>
+                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-1">
+                            Refund Details
+                          </p>
+
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">Booking ID</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs text-white">
+                                {selectedTx.booking_id}
+                              </span>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="w-6 h-6"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    selectedTx.booking_id,
+                                  );
+                                  toast({ title: "Booking ID copied" });
+                                }}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
 
                           <div className="flex justify-between text-sm items-start">
                             <span className="text-white/60">Property</span>
@@ -2393,8 +3137,8 @@ const AdminDashboard = () => {
                             </span>
                           </div>
 
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Guest</span>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Guest Name</span>
                             <span className="text-white font-medium">
                               {selectedTx.customer_name || "-"}
                             </span>
@@ -2417,371 +3161,115 @@ const AdminDashboard = () => {
                             </div>
                           </div>
 
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Owner</span>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">
+                              Booking Amount
+                            </span>
                             <span className="text-white font-medium">
-                              {selectedTx.owner_name || "-"}
-                            </span>
-                          </div>
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Owner Mobile</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-white font-medium">
-                                {selectedTx.owner_phone || "-"}
-                              </span>
-                              {selectedTx.owner_phone && (
-                                <a
-                                  href={`tel:${selectedTx.owner_phone}`}
-                                  className="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center hover:bg-blue-500/30 transition-colors"
-                                >
-                                  <Phone className="w-3.5 h-3.5 text-blue-400" />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Booking ID</span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono text-xs text-white">
-                                {selectedTx.booking_id}
-                              </span>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="w-6 h-6"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(selectedTx.booking_id);
-                                  toast({ title: "Booking ID copied" });
-                                }}
-                              >
-                                <Copy className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          {selectedTx.check_in && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Check-in</span>
-                              <span className="text-white font-medium">
-                                {new Date(selectedTx.check_in).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                              </span>
-                            </div>
-                          )}
-
-                          {selectedTx.check_out && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Check-out</span>
-                              <span className="text-white font-medium">
-                                {new Date(selectedTx.check_out).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                              </span>
-                            </div>
-                          )}
-
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Booking Status</span>
-                            <span className="text-amber-400 font-medium text-right max-w-[55%]">
-                              {selectedTx.status?.replace(/_/g, " ") || "-"}
+                              ₹
+                              {parseFloat(
+                                selectedTx.booking_amount ||
+                                  selectedTx.original_amount ||
+                                  0,
+                              ).toLocaleString("en-IN")}
                             </span>
                           </div>
 
                           <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Payment Status</span>
-                            <span className="text-emerald-400 font-medium">
-                              {selectedTx.payment_status || "-"}
+                            <span className="text-white/60">Refund Amount</span>
+                            <span className="text-blue-400 font-bold">
+                              ₹
+                              {parseFloat(
+                                selectedTx.refund_amount || 0,
+                              ).toLocaleString("en-IN")}
                             </span>
                           </div>
-                        </div>
 
-                        {/* 2. BOOKING FINANCIAL SUMMARY */}
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                          <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
-                            Booking Financial Summary
-                          </p>
+                          {(() => {
+                            const bookingAmt = parseFloat(
+                              selectedTx.booking_amount ||
+                                selectedTx.original_amount ||
+                                0,
+                            );
+                            const refundAmt = parseFloat(
+                              selectedTx.refund_amount || 0,
+                            );
+                            const ownerAmt = Math.max(
+                              0,
+                              bookingAmt - refundAmt,
+                            );
+                            const customerPct =
+                              bookingAmt > 0
+                                ? Math.round((refundAmt / bookingAmt) * 100)
+                                : 0;
+                            const ownerPct = 100 - customerPct;
+                            return (
+                              <>
+                                <div className="flex justify-between text-sm items-center">
+                                  <span className="text-white/60">
+                                    Customer Refund Amount
+                                  </span>
+                                  <div className="flex flex-col items-end gap-0.5">
+                                    <span className="text-emerald-400 font-bold">
+                                      ₹{refundAmt.toLocaleString("en-IN")}
+                                    </span>
+                                    <span className="text-emerald-300/60 text-[10px]">
+                                      ({customerPct}% of advance)
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-between text-sm items-center">
+                                  <span className="text-white/60">
+                                    Owner Refund Amount
+                                  </span>
+                                  <div className="flex flex-col items-end gap-0.5">
+                                    <span
+                                      className={
+                                        ownerAmt > 0
+                                          ? "text-amber-400 font-bold"
+                                          : "text-white/40 font-medium"
+                                      }
+                                    >
+                                      ₹{ownerAmt.toLocaleString("en-IN")}
+                                    </span>
+                                    <span className="text-white/40 text-[10px]">
+                                      ({ownerPct}% of advance)
+                                    </span>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
 
                           <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Customer Paid Advance (30%)</span>
-                            <span className="text-emerald-400 font-bold">
-                              ₹{advance.toLocaleString("en-IN")}
+                            <span className="text-white/60">
+                              Payment Method
                             </span>
-                          </div>
-
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Remaining Amount (70%)</span>
-                            <span className="text-amber-400 font-medium">
-                              ₹{remaining > 0 ? remaining.toLocaleString("en-IN") : "-"}
-                            </span>
-                          </div>
-
-                          <div className="border-t border-white/10 pt-2 flex justify-between text-sm">
-                            <span className="text-white font-semibold">Total Amount (100%)</span>
-                            <span className="text-white font-bold">
-                              ₹{total > 0 ? total.toLocaleString("en-IN") : "-"}
-                            </span>
-                          </div>
-
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Payment Method</span>
                             <span className="text-purple-400 font-medium uppercase">
                               {selectedTx.payment_method || "-"}
                             </span>
                           </div>
-                        </div>
-
-                        {/* 3. REFERRAL INFORMATION */}
-                        {selectedTx.referral_code && (
-                          <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                            <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">
-                              Referral Information
-                            </p>
-
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Referrer Name</span>
-                              <span className="text-white font-medium">
-                                {selectedTx.referrer_name || "-"}
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Referral Code</span>
-                              <span className="text-gold font-medium">
-                                {selectedTx.referral_code}
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Referral Type</span>
-                              <span className="text-purple-400 font-medium capitalize">
-                                {selectedTx.referral_type || "Public"}
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm items-center">
-                              <span className="text-white/60">Referral Commission</span>
-                              <div className="flex flex-col items-end gap-0.5">
-                                <span className="text-blue-400 font-bold">
-                                  ₹{referralComm.toLocaleString("en-IN")}
-                                  <span className="text-blue-300/70 font-normal ml-1 text-xs">({referralPct}%)</span>
-                                </span>
-                                <span className={cn(
-                                  "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-                                  commStatus === "PAID"
-                                    ? "bg-emerald-500/20 text-emerald-400"
-                                    : "bg-amber-500/20 text-amber-400"
-                                )}>
-                                  {commStatus}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex justify-between text-sm items-center">
-                              <span className="text-white/60">Admin Commission</span>
-                              <div className="flex flex-col items-end gap-0.5">
-                                <span className="text-gold font-bold">
-                                  ₹{adminComm.toLocaleString("en-IN")}
-                                  <span className="text-gold/70 font-normal ml-1 text-xs">({adminPct}%)</span>
-                                </span>
-                                <span className={cn(
-                                  "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-                                  commStatus === "PAID"
-                                    ? "bg-emerald-500/20 text-emerald-400"
-                                    : "bg-amber-500/20 text-amber-400"
-                                )}>
-                                  {commStatus}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  if (isCancelled) {
-                    const advance = parseFloat(selectedTx.amount || 0);
-                    const refundAmt = parseFloat(selectedTx.refund_amount || 0);
-                    const isOwnerCancel = selectedTx.status === "CANCELLED_BY_OWNER";
-                    const isNoRefund = selectedTx.status === "CANCELLED_NO_REFUND";
-                    const customerRefund = isOwnerCancel ? advance : refundAmt;
-                    const ownerGets = Math.max(0, advance - customerRefund);
-                    const customerPct = advance > 0 ? Math.round((customerRefund / advance) * 100) : 0;
-                    const ownerPct = 100 - customerPct;
-
-                    return (
-                      <div className="mt-2 space-y-4">
-
-                        {/* BANNER */}
-                        {isOwnerCancel ? (
-                          <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
-                            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-semibold text-amber-300">Owner Cancelled</p>
-                              <p className="text-xs text-amber-400/70 mt-0.5">100% advance refunded to customer as per owner-cancellation policy</p>
-                            </div>
-                          </div>
-                        ) : isNoRefund ? (
-                          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
-                            <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-semibold text-red-300">Admin Cancelled — No Refund</p>
-                              <p className="text-xs text-red-400/70 mt-0.5">Full advance retained per cancellation policy</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
-                            <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-semibold text-red-300">Admin Cancelled</p>
-                              <p className="text-xs text-red-400/70 mt-0.5">Refund processed as per cancellation policy</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* BOOKING DETAILS */}
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                          <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">Booking Details</p>
-
-                          <div className="flex justify-between text-sm items-start">
-                            <span className="text-white/60">Property</span>
-                            <span className="text-white font-medium text-right max-w-[55%]">{selectedTx.property_name || "-"}</span>
-                          </div>
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Guest</span>
-                            <span className="text-white font-medium">{selectedTx.customer_name || "-"}</span>
-                          </div>cl
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Guest Mobile</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-white font-medium">{selectedTx.guest_phone || "-"}</span>
-                              {selectedTx.guest_phone && (
-                                <a href={`tel:${selectedTx.guest_phone}`}
-                                  className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors">
-                                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Owner</span>
-                            <span className="text-white font-medium">{selectedTx.owner_name || "-"}</span>
-                          </div>
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Owner Mobile</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-white font-medium">{selectedTx.owner_phone || "-"}</span>
-                              {selectedTx.owner_phone && (
-                                <a href={`tel:${selectedTx.owner_phone}`}
-                                  className="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center hover:bg-blue-500/30 transition-colors">
-                                  <Phone className="w-3.5 h-3.5 text-blue-400" />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Booking ID</span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono text-xs text-white">{selectedTx.booking_id}</span>
-                              <Button size="icon" variant="ghost" className="w-6 h-6"
-                                onClick={() => { navigator.clipboard.writeText(selectedTx.booking_id); toast({ title: "Booking ID copied" }); }}>
-                                <Copy className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          {selectedTx.check_in && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Check-in</span>
-                              <span className="text-white font-medium">
-                                {new Date(selectedTx.check_in).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                              </span>
-                            </div>
-                          )}
-                          {selectedTx.check_out && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Check-out</span>
-                              <span className="text-white font-medium">
-                                {new Date(selectedTx.check_out).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                              </span>
-                            </div>
-                          )}
-
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Cancelled By</span>
-                            <span className={cn(
-                              "font-semibold",
-                              isOwnerCancel ? "text-amber-400" : "text-red-400"
-                            )}>
-                              {selectedTx.refund_initiated_by || "Admin"}
-                            </span>
-                          </div>
-
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Cancellation Date</span>
-                            <span className="text-white font-medium">
-                              {selectedTx.date ? new Date(selectedTx.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* FINANCIAL SUMMARY */}
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                          <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">Financial Summary</p>
-
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Advance Paid</span>
-                            <span className="text-white font-bold">₹{advance.toLocaleString("en-IN")}</span>
-                          </div>
-
-                          <div className="border-t border-white/10 pt-2 flex justify-between text-sm items-center">
-                            <span className="text-white/60">Customer Refund</span>
-                            <div className="flex flex-col items-end gap-0.5">
-                              <span className={cn("font-bold", customerRefund > 0 ? "text-emerald-400" : "text-white/40")}>
-                                ₹{customerRefund.toLocaleString("en-IN")}
-                              </span>
-                              <span className="text-white/40 text-[10px]">({customerPct}% of advance)</span>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-white/60">Owner Gets</span>
-                            <div className="flex flex-col items-end gap-0.5">
-                              <span className={cn("font-bold", ownerGets > 0 ? "text-amber-400" : "text-white/40")}>
-                                ₹{ownerGets.toLocaleString("en-IN")}
-                              </span>
-                              <span className="text-white/40 text-[10px]">({ownerPct}% of advance)</span>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/60">Payment Method</span>
-                            <span className="text-purple-400 font-medium uppercase">{selectedTx.payment_method || "-"}</span>
-                          </div>
 
                           <div className="flex justify-between text-sm items-center">
                             <span className="text-white/60">Refund Status</span>
-                            <span className={cn(
-                              "text-xs px-2 py-0.5 rounded-full font-semibold",
-                              selectedTx.refund_status === "REFUND_SUCCESSFUL"
-                                ? "bg-emerald-500/20 text-emerald-400"
-                                : selectedTx.refund_status === "REFUND_FAILED"
-                                  ? "bg-red-500/20 text-red-400"
-                                  : selectedTx.refund_status === "REFUND_INITIATED"
-                                    ? "bg-blue-500/20 text-blue-400"
-                                    : isNoRefund
-                                      ? "bg-red-500/10 text-red-400/70"
-                                      : "bg-white/5 text-white/40"
-                            )}>
-                              {isNoRefund
-                                ? "NO REFUND"
-                                : selectedTx.refund_status
-                                  ? selectedTx.refund_status.replace(/_/g, " ")
-                                  : customerRefund > 0 ? "PENDING" : "N/A"}
+                            <span
+                              className={cn(
+                                "text-xs px-2 py-0.5 rounded-full font-semibold",
+                                selectedTx.refund_status === "REFUND_SUCCESSFUL"
+                                  ? "bg-emerald-500/20 text-emerald-400"
+                                  : selectedTx.refund_status === "REFUND_FAILED"
+                                    ? "bg-red-500/20 text-red-400"
+                                    : selectedTx.refund_status ===
+                                        "REFUND_INITIATED"
+                                      ? "bg-blue-500/20 text-blue-400"
+                                      : "bg-amber-500/20 text-amber-400",
+                              )}
+                            >
+                              {(selectedTx.refund_status || "PENDING").replace(
+                                /_/g,
+                                " ",
+                              )}
                             </span>
                           </div>
 
@@ -2792,350 +3280,281 @@ const AdminDashboard = () => {
                                 variant="outline"
                                 className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5"
                                 disabled={checkingStatus}
-                                onClick={() => handleCheckRefundStatus(selectedTx.booking_id)}
+                                onClick={() =>
+                                  handleCheckRefundStatus(selectedTx.booking_id)
+                                }
                               >
-                                <RefreshCw className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`} />
-                                {checkingStatus ? "Checking..." : "Check Status"}
+                                <RefreshCw
+                                  className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`}
+                                />
+                                {checkingStatus
+                                  ? "Checking..."
+                                  : "Check Status"}
                               </Button>
                             </div>
                           )}
 
-                          {selectedTx.transaction_id && customerRefund > 0 && (
-                            <div className="flex justify-between text-sm items-center">
-                              <span className="text-white/60">Payment Txn ID</span>
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">
+                              Refund Transaction ID
+                            </span>
+                            {selectedTx.refund_id ? (
                               <div className="flex items-center gap-1.5">
-                                <span className="font-mono text-xs text-white">{selectedTx.transaction_id}</span>
-                                <Button size="icon" variant="ghost" className="w-6 h-6"
-                                  onClick={() => { navigator.clipboard.writeText(selectedTx.transaction_id); toast({ title: "Transaction ID copied" }); }}>
+                                <span className="font-mono text-xs text-white">
+                                  {selectedTx.refund_id}
+                                </span>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="w-6 h-6"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      selectedTx.refund_id,
+                                    );
+                                    toast({ title: "Refund ID copied" });
+                                  }}
+                                >
                                   <Copy className="w-3 h-3" />
                                 </Button>
                               </div>
-                            </div>
-                          )}
+                            ) : (
+                              <span className="text-white/40 text-xs">
+                                Not yet assigned
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Initiated By</span>
+                            <span
+                              className={cn(
+                                "font-medium",
+                                selectedTx.refund_initiated_by === "Owner"
+                                  ? "text-amber-400"
+                                  : "text-blue-400",
+                              )}
+                            >
+                              {selectedTx.refund_initiated_by || "Admin"}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Refund Date</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.date
+                                ? new Date(selectedTx.date).toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    },
+                                  )
+                                : "-"}
+                            </span>
+                          </div>
                         </div>
+                      </>
+                    )}
 
-                        {/* REFERRAL INFORMATION */}
-                        {selectedTx.referral_code && (
-                          <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                            <p className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">Referral Information</p>
+                    {/* WITHDRAWAL DETAILS */}
+                    {isWithdrawal && (
+                      <>
+                        <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-1">
+                            Withdrawal Details
+                          </p>
 
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Referrer Name</span>
-                              <span className="text-white font-medium">{selectedTx.referrer_name || "-"}</span>
-                            </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referral User</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.customer_name || "-"}
+                            </span>
+                          </div>
 
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Referral Code</span>
-                              <span className="text-gold font-medium">{selectedTx.referral_code}</span>
-                            </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referral Code</span>
+                            <span className="text-gold font-medium">
+                              {selectedTx.referral_code || "-"}
+                            </span>
+                          </div>
 
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Referral Type</span>
-                              <span className="text-purple-400 font-medium capitalize">{selectedTx.referral_type || "Public"}</span>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Referral Type</span>
+                            <span className="text-purple-400 font-medium capitalize">
+                              {selectedTx.referral_type || "-"}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">Mobile</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-medium">
+                                {selectedTx.mobile || "-"}
+                              </span>
+                              {selectedTx.mobile && (
+                                <a
+                                  href={`tel:${selectedTx.mobile}`}
+                                  className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors"
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                                </a>
+                              )}
                             </div>
                           </div>
-                        )}
 
-                      </div>
-                    );
-                  }
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">
+                              Withdraw Amount
+                            </span>
+                            <span className="text-emerald-400 font-bold">
+                              ₹
+                              {parseFloat(
+                                selectedTx.amount || 0,
+                              ).toLocaleString("en-IN")}
+                            </span>
+                          </div>
 
-                  return (
-                      <div className="mt-2 space-y-4">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">
+                              Available Balance
+                            </span>
+                            <span className="text-gold font-medium">
+                              ₹
+                              {parseFloat(
+                                selectedTx.available_balance || 0,
+                              ).toLocaleString("en-IN")}
+                            </span>
+                          </div>
 
-                        {/* REFUND DETAILS */}
-                        {isRefund && (
-                          <>
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                              <p className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-1">
-                                Refund Details
-                              </p>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">UPI / Bank</span>
+                            <span className="text-white font-medium">
+                              {selectedTx.upi_id || "-"}
+                            </span>
+                          </div>
 
-                              <div className="flex justify-between text-sm items-center">
-                                <span className="text-white/60">Booking ID</span>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono text-xs text-white">{selectedTx.booking_id}</span>
-                                  <Button size="icon" variant="ghost" className="w-6 h-6"
-                                    onClick={() => { navigator.clipboard.writeText(selectedTx.booking_id); toast({ title: "Booking ID copied" }); }}>
-                                    <Copy className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              </div>
-
-                              <div className="flex justify-between text-sm items-start">
-                                <span className="text-white/60">Property</span>
-                                <span className="text-white font-medium text-right max-w-[55%]">{selectedTx.property_name || "-"}</span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Guest Name</span>
-                                <span className="text-white font-medium">{selectedTx.customer_name || "-"}</span>
-                              </div>
-
-                              <div className="flex justify-between text-sm items-center">
-                                <span className="text-white/60">Guest Mobile</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-white font-medium">{selectedTx.guest_phone || "-"}</span>
-                                  {selectedTx.guest_phone && (
-                                    <a href={`tel:${selectedTx.guest_phone}`}
-                                      className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors">
-                                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Booking Amount</span>
-                                <span className="text-white font-medium">
-                                  ₹{parseFloat(selectedTx.booking_amount || selectedTx.original_amount || 0).toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Refund Amount</span>
-                                <span className="text-blue-400 font-bold">
-                                  ₹{parseFloat(selectedTx.refund_amount || 0).toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              {(() => {
-                                const bookingAmt = parseFloat(selectedTx.booking_amount || selectedTx.original_amount || 0);
-                                const refundAmt = parseFloat(selectedTx.refund_amount || 0);
-                                const ownerAmt = Math.max(0, bookingAmt - refundAmt);
-                                const customerPct = bookingAmt > 0 ? Math.round((refundAmt / bookingAmt) * 100) : 0;
-                                const ownerPct = 100 - customerPct;
-                                return (
-                                  <>
-                                    <div className="flex justify-between text-sm items-center">
-                                      <span className="text-white/60">Customer Refund Amount</span>
-                                      <div className="flex flex-col items-end gap-0.5">
-                                        <span className="text-emerald-400 font-bold">
-                                          ₹{refundAmt.toLocaleString("en-IN")}
-                                        </span>
-                                        <span className="text-emerald-300/60 text-[10px]">({customerPct}% of advance)</span>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex justify-between text-sm items-center">
-                                      <span className="text-white/60">Owner Refund Amount</span>
-                                      <div className="flex flex-col items-end gap-0.5">
-                                        <span className={ownerAmt > 0 ? "text-amber-400 font-bold" : "text-white/40 font-medium"}>
-                                          ₹{ownerAmt.toLocaleString("en-IN")}
-                                        </span>
-                                        <span className="text-white/40 text-[10px]">({ownerPct}% of advance)</span>
-                                      </div>
-                                    </div>
-                                  </>
-                                );
-                              })()}
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Payment Method</span>
-                                <span className="text-purple-400 font-medium uppercase">{selectedTx.payment_method || "-"}</span>
-                              </div>
-
-                              <div className="flex justify-between text-sm items-center">
-                                <span className="text-white/60">Refund Status</span>
-                                <span className={cn(
-                                  "text-xs px-2 py-0.5 rounded-full font-semibold",
-                                  selectedTx.refund_status === "REFUND_SUCCESSFUL"
-                                    ? "bg-emerald-500/20 text-emerald-400"
-                                    : selectedTx.refund_status === "REFUND_FAILED"
-                                      ? "bg-red-500/20 text-red-400"
-                                      : selectedTx.refund_status === "REFUND_INITIATED"
-                                        ? "bg-blue-500/20 text-blue-400"
-                                        : "bg-amber-500/20 text-amber-400"
-                                )}>
-                                  {(selectedTx.refund_status || "PENDING").replace(/_/g, " ")}
-                                </span>
-                              </div>
-
-                              {selectedTx.refund_status === "REFUND_INITIATED" && (
-                                <div className="flex justify-end">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5"
-                                    disabled={checkingStatus}
-                                    onClick={() => handleCheckRefundStatus(selectedTx.booking_id)}
-                                  >
-                                    <RefreshCw className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`} />
-                                    {checkingStatus ? "Checking..." : "Check Status"}
-                                  </Button>
-                                </div>
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">
+                              Withdrawal Status
+                            </span>
+                            <span
+                              className={cn(
+                                "text-xs px-2 py-0.5 rounded-full font-semibold",
+                                selectedTx.status === "completed"
+                                  ? "bg-emerald-500/20 text-emerald-400"
+                                  : selectedTx.status === "rejected" ||
+                                      selectedTx.status === "failed"
+                                    ? "bg-red-500/20 text-red-400"
+                                    : selectedTx.status === "processing"
+                                      ? "bg-blue-500/20 text-blue-400"
+                                      : "bg-amber-500/20 text-amber-400",
                               )}
+                            >
+                              {(selectedTx.status || "PENDING").toUpperCase()}
+                            </span>
+                          </div>
 
-                              <div className="flex justify-between text-sm items-center">
-                                <span className="text-white/60">Refund Transaction ID</span>
-                                {selectedTx.refund_id ? (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-mono text-xs text-white">{selectedTx.refund_id}</span>
-                                    <Button size="icon" variant="ghost" className="w-6 h-6"
-                                      onClick={() => { navigator.clipboard.writeText(selectedTx.refund_id); toast({ title: "Refund ID copied" }); }}>
-                                      <Copy className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <span className="text-white/40 text-xs">Not yet assigned</span>
-                                )}
+                          {(selectedTx.status === "processing" ||
+                            selectedTx.payout_id) &&
+                            selectedTx.status !== "completed" && (
+                              <div className="flex justify-end">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5"
+                                  disabled={checkingStatus}
+                                  onClick={() =>
+                                    handleCheckWithdrawalStatus(selectedTx.id)
+                                  }
+                                >
+                                  <RefreshCw
+                                    className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`}
+                                  />
+                                  {checkingStatus
+                                    ? "Checking..."
+                                    : "Check Status"}
+                                </Button>
                               </div>
+                            )}
 
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Initiated By</span>
-                                <span className={cn(
-                                  "font-medium",
-                                  selectedTx.refund_initiated_by === "Owner"
-                                    ? "text-amber-400"
-                                    : "text-blue-400"
-                                )}>
-                                  {selectedTx.refund_initiated_by || "Admin"}
+                          <div className="flex justify-between text-sm items-center">
+                            <span className="text-white/60">
+                              RazorpayX Payout ID
+                            </span>
+                            {selectedTx.payout_id ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-xs text-white">
+                                  {selectedTx.payout_id}
                                 </span>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="w-6 h-6"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      selectedTx.payout_id,
+                                    );
+                                    toast({ title: "Payout ID copied" });
+                                  }}
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
                               </div>
+                            ) : (
+                              <span className="text-white/40 text-xs">
+                                {selectedTx.status === "pending"
+                                  ? "Awaiting processing"
+                                  : "Not yet assigned"}
+                              </span>
+                            )}
+                          </div>
 
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Refund Date</span>
-                                <span className="text-white font-medium">
-                                  {selectedTx.date
-                                    ? new Date(selectedTx.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                                    : "-"}
-                                </span>
-                              </div>
-                            </div>
-                          </>
-                        )}
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">
+                              Requested Date
+                            </span>
+                            <span className="text-white font-medium">
+                              {selectedTx.date
+                                ? new Date(selectedTx.date).toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    },
+                                  )
+                                : "-"}
+                            </span>
+                          </div>
 
-                        {/* WITHDRAWAL DETAILS */}
-                        {isWithdrawal && (
-                          <>
-                            <div className="bg-white/5 border border-white/5 rounded-xl p-4 space-y-3">
-                              <p className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-1">
-                                Withdrawal Details
-                              </p>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Referral User</span>
-                                <span className="text-white font-medium">{selectedTx.customer_name || "-"}</span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Referral Code</span>
-                                <span className="text-gold font-medium">{selectedTx.referral_code || "-"}</span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Referral Type</span>
-                                <span className="text-purple-400 font-medium capitalize">{selectedTx.referral_type || "-"}</span>
-                              </div>
-
-                              <div className="flex justify-between text-sm items-center">
-                                <span className="text-white/60">Mobile</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-white font-medium">{selectedTx.mobile || "-"}</span>
-                                  {selectedTx.mobile && (
-                                    <a href={`tel:${selectedTx.mobile}`}
-                                      className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30 transition-colors">
-                                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Withdraw Amount</span>
-                                <span className="text-emerald-400 font-bold">
-                                  ₹{parseFloat(selectedTx.amount || 0).toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Available Balance</span>
-                                <span className="text-gold font-medium">
-                                  ₹{parseFloat(selectedTx.available_balance || 0).toLocaleString("en-IN")}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">UPI / Bank</span>
-                                <span className="text-white font-medium">{selectedTx.upi_id || "-"}</span>
-                              </div>
-
-                              <div className="flex justify-between text-sm items-center">
-                                <span className="text-white/60">Withdrawal Status</span>
-                                <span className={cn(
-                                  "text-xs px-2 py-0.5 rounded-full font-semibold",
-                                  selectedTx.status === "completed"
-                                    ? "bg-emerald-500/20 text-emerald-400"
-                                    : selectedTx.status === "rejected" || selectedTx.status === "failed"
-                                      ? "bg-red-500/20 text-red-400"
-                                      : selectedTx.status === "processing"
-                                        ? "bg-blue-500/20 text-blue-400"
-                                        : "bg-amber-500/20 text-amber-400"
-                                )}>
-                                  {(selectedTx.status || "PENDING").toUpperCase()}
-                                </span>
-                              </div>
-
-                              {(selectedTx.status === "processing" || selectedTx.payout_id) && selectedTx.status !== "completed" && (
-                                <div className="flex justify-end">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5"
-                                    disabled={checkingStatus}
-                                    onClick={() => handleCheckWithdrawalStatus(selectedTx.id)}
-                                  >
-                                    <RefreshCw className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`} />
-                                    {checkingStatus ? "Checking..." : "Check Status"}
-                                  </Button>
-                                </div>
-                              )}
-
-                              <div className="flex justify-between text-sm items-center">
-                                <span className="text-white/60">RazorpayX Payout ID</span>
-                                {selectedTx.payout_id ? (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-mono text-xs text-white">{selectedTx.payout_id}</span>
-                                    <Button size="icon" variant="ghost" className="w-6 h-6"
-                                      onClick={() => { navigator.clipboard.writeText(selectedTx.payout_id); toast({ title: "Payout ID copied" }); }}>
-                                      <Copy className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <span className="text-white/40 text-xs">
-                                    {selectedTx.status === "pending" ? "Awaiting processing" : "Not yet assigned"}
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Requested Date</span>
-                                <span className="text-white font-medium">
-                                  {selectedTx.date
-                                    ? new Date(selectedTx.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                                    : "-"}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Processed Date</span>
-                                <span className="text-white font-medium">
-                                  {selectedTx.processed_date && selectedTx.status === "completed"
-                                    ? new Date(selectedTx.processed_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                                    : "-"}
-                                </span>
-                              </div>
-                            </div>
-                          </>
-                        )}
-
-                      </div>
-                    );
-                })()}
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">
+                              Processed Date
+                            </span>
+                            <span className="text-white font-medium">
+                              {selectedTx.processed_date &&
+                              selectedTx.status === "completed"
+                                ? new Date(
+                                    selectedTx.processed_date,
+                                  ).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                : "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             <div className="mt-4">
               <Button
                 variant="outline"
-                className="w-full rounded-xl border-white/10"
+                className="w-full bg-gold text-black border border-gold/20 hover:bg-gold/50 rounded-xl transition-all"
                 onClick={() => setSelectedTx(null)}
               >
                 Close

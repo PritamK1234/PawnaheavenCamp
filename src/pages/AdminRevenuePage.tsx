@@ -10,6 +10,7 @@ import {
   CircleDot,
   Users,
   Clock,
+  ArrowUpFromLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,7 +25,8 @@ const YEARS = [2025, 2026, 2027];
 
 interface RevenueData {
   grossRevenue: number;
-  refundPayable: number;
+  refundPending: number;
+  withdrawPending: number;
   referralPayable: number;
   inProcessReferral: number;
 }
@@ -37,7 +39,8 @@ const AdminRevenuePage = () => {
   const [loading, setLoading] = useState(true);
   const [revenueData, setRevenueData] = useState<RevenueData>({
     grossRevenue: 0,
-    refundPayable: 0,
+    refundPending: 0,
+    withdrawPending: 0,
     referralPayable: 0,
     inProcessReferral: 0,
   });
@@ -66,7 +69,8 @@ const AdminRevenuePage = () => {
         if (data.success) {
           setRevenueData({
             grossRevenue: data.grossRevenue ?? 0,
-            refundPayable: data.refundPayable ?? 0,
+            refundPending: data.refundPending ?? 0,
+            withdrawPending: data.withdrawPending ?? 0,
             referralPayable: data.referralPayable ?? 0,
             inProcessReferral: data.inProcessReferral ?? 0,
           });
@@ -81,8 +85,8 @@ const AdminRevenuePage = () => {
     fetchRevenue();
   }, [selectedMonth, selectedYear]);
 
-  const { grossRevenue, refundPayable, referralPayable, inProcessReferral } = revenueData;
-  const netRevenue = grossRevenue - refundPayable - referralPayable;
+  const { grossRevenue, refundPending, withdrawPending, referralPayable, inProcessReferral } = revenueData;
+  const netRevenue = grossRevenue - refundPending - referralPayable;
   const adminAPercent = 70;
   const adminBPercent = 30;
   const adminAAmount = Math.round(netRevenue * adminAPercent / 100);
@@ -190,10 +194,24 @@ const AdminRevenuePage = () => {
                 <RotateCcw className="w-4 h-4 text-red-400" />
               </div>
               <div>
-                <p className="text-[11px] font-bold text-white/50 uppercase tracking-wider">Refund Payable</p>
+                <p className="text-[11px] font-bold text-white/50 uppercase tracking-wider">Refund Pending</p>
+                <p className="text-[9px] text-white/25 font-medium mt-0.5">Initiated refunds awaiting Paytm</p>
               </div>
             </div>
-            {loading ? <SmallShimmer /> : <p className="text-base font-bold text-red-400">{formatCurrency(refundPayable)}</p>}
+            {loading ? <SmallShimmer /> : <p className="text-base font-bold text-red-400">{formatCurrency(refundPending)}</p>}
+          </Card>
+
+          <Card className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/15">
+                <ArrowUpFromLine className="w-4 h-4 text-orange-400" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-white/50 uppercase tracking-wider">Withdraw Pending</p>
+                <p className="text-[9px] text-white/25 font-medium mt-0.5">Payouts awaiting RazorpayX</p>
+              </div>
+            </div>
+            {loading ? <SmallShimmer /> : <p className="text-base font-bold text-orange-400">{formatCurrency(withdrawPending)}</p>}
           </Card>
 
           <Card className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 flex items-center justify-between">

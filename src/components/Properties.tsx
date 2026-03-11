@@ -213,7 +213,6 @@ const Properties = () => {
                     image={property.image}
                     images={property.images}
                     title={property._isUnitCard ? property._unitName : property.title}
-                    subtitle={property._isUnitCard ? property.title : undefined}
                     location={property.location}
                     price={cardPrice}
                     priceNote={property.category === 'campings_cottages' ? 'person' : (property._isUnitCard ? 'villa' : (property.price_note || property.priceNote))}

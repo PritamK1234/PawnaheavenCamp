@@ -1353,12 +1353,8 @@ const AdminDashboard = () => {
                                   );
                                   const data = await res.json();
                                   if (data.success && data.token) {
-                                    localStorage.setItem(
-                                      "referral_token",
-                                      data.token,
-                                    );
                                     window.open(
-                                      "/referral/check?from=admin",
+                                      `https://referraldashboard.shop/dashboard?admin_token=${encodeURIComponent(data.token)}`,
                                       "_blank",
                                     );
                                   }
@@ -1592,12 +1588,8 @@ const AdminDashboard = () => {
                                   );
                                   const data = await res.json();
                                   if (data.success && data.token) {
-                                    localStorage.setItem(
-                                      "referral_token",
-                                      data.token,
-                                    );
                                     window.open(
-                                      "/referral/check?from=admin",
+                                      `https://referraldashboard.shop/dashboard?admin_token=${encodeURIComponent(data.token)}`,
                                       "_blank",
                                     );
                                   }

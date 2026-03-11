@@ -95,6 +95,12 @@ const ReferralDashboard = () => {
   const getToken = () => localStorage.getItem("referral_token");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const adminToken = params.get("admin_token");
+    if (adminToken) {
+      localStorage.setItem("referral_token", adminToken);
+      window.history.replaceState({}, "", "/dashboard");
+    }
     const token = getToken();
     if (!token) {
       navigate("/login", { replace: true });

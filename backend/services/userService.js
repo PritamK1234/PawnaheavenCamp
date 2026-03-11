@@ -62,7 +62,7 @@ const UserService = {
       commission_label: commissionLabel,
       total_earnings: earnings,
       total_withdrawals: withdrawals,
-      available_balance: earnings - withdrawals,
+      available_balance: Math.max(0, earnings - withdrawals - pending),
       pending_withdrawal_amount: pending,
       total_referrals: parseInt(stats.total_referrals)
     };

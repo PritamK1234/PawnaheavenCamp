@@ -179,12 +179,20 @@ const ReferralDashboard = () => {
 
     setWithdrawLoading(true);
     try {
-      await axios.post(
+      const response = await axios.post(
         "/api/referrals/withdraw",
         { amount: parseFloat(withdrawForm.amount), upi: withdrawForm.upi },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Withdrawal request submitted!");
+      const status = response.data?.status;
+      const msg = response.data?.message || "Withdrawal initiated!";
+      if (status === "completed") {
+        toast.success("Withdrawal Successful! 💰 Amount will be credited to your UPI shortly.");
+      } else if (status === "processing") {
+        toast.success(msg);
+      } else {
+        toast.success(msg);
+      }
       setWithdrawForm({ upi: "", amount: "" });
       fetchDashboard(token);
       fetchHistory(token);

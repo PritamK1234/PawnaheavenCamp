@@ -11,7 +11,9 @@ const WithdrawalController = {
       const result = await WithdrawalService.requestWithdrawal(req.user.id, parseFloat(amount), upi);
       res.json({
         success: true,
-        message: 'Withdrawal request submitted successfully',
+        message: result.message || 'Withdrawal initiated successfully',
+        status: result.status,
+        payout_id: result.payout_id || null,
         transaction: result
       });
     } catch (error) {

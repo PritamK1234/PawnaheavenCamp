@@ -19,6 +19,8 @@ router.get('/withdrawal/requests', authMiddleware, paymentController.getWithdraw
 router.post('/withdrawal/process', authMiddleware, paymentController.processWithdrawal);
 router.post('/withdrawal/reject', authMiddleware, paymentController.rejectWithdrawal);
 router.post('/withdrawal/webhook', paymentController.payoutWebhook);
+router.get('/refund/status/:booking_id', authMiddleware, paymentController.checkRefundStatus);
+router.get('/withdrawal/status/:id', authMiddleware, paymentController.checkWithdrawalStatus);
 router.get('/bookings', authMiddleware, paymentController.getAllBookings);
 router.get('/transactions', authMiddleware, paymentController.getAllTransactions);
 router.post('/commissions/distribute', authMiddleware, paymentController.triggerCommissions);

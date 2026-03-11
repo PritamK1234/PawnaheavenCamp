@@ -19,6 +19,10 @@
 - `OTP_TEST_MODE=true` — enables OTP bypass for testing
 - `PAYTM_CHANNEL_ID=WEB`
 - Cloudinary, WhatsApp and Paytm keys need to be added as secrets for full functionality
+- `RAZORPAY_KEY_ID` — RazorpayX API Key ID (for payouts/withdrawals)
+- `RAZORPAY_KEY_SECRET` — RazorpayX API Key Secret
+- `RAZORPAY_ACCOUNT_NUMBER` — RazorpayX Virtual Account Number (from RazorpayX dashboard)
+- `RAZORPAY_WEBHOOK_SECRET` — RazorpayX webhook secret (for signature verification on payout events)
 
 ## Overview
 

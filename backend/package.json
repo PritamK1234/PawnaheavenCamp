@@ -29,6 +29,7 @@
     "paytmchecksum": "^1.5.1",
     "pg": "^8.11.3",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

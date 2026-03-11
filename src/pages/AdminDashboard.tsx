@@ -37,6 +37,7 @@ import {
   ArrowDownLeft,
   Copy,
   Handshake,
+  RefreshCw,
 } from "lucide-react";
 import AdminPropertyForm from "@/components/AdminPropertyForm";
 import { Input } from "@/components/ui/input";
@@ -113,6 +114,7 @@ const AdminDashboard = () => {
   const [txWithdrawals, setTxWithdrawals] = useState<any[]>([]);
   const [txCancelled, setTxCancelled] = useState<any[]>([]);
   const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   const [referralActionConfirm, setReferralActionConfirm] = useState<{
@@ -190,6 +192,52 @@ const AdminDashboard = () => {
       setTxCancelled([]);
     } finally {
       setIsBookingsLoading(false);
+    }
+  };
+
+  const handleCheckRefundStatus = async (bookingId: string) => {
+    const token = localStorage.getItem("adminToken");
+    if (!token || !bookingId) return;
+    setCheckingStatus(true);
+    try {
+      const res = await fetch(`/api/payments/refund/status/${bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.updated) {
+        toast({ title: "Refund status updated", description: `Status: ${data.status?.replace(/_/g, " ")}` });
+        await fetchBookings();
+        setSelectedTx((prev: any) => prev ? { ...prev, refund_status: data.status } : prev);
+      } else {
+        toast({ title: "No change", description: `Current status: ${data.status?.replace(/_/g, " ")}` });
+      }
+    } catch {
+      toast({ title: "Failed to check refund status", variant: "destructive" });
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
+  const handleCheckWithdrawalStatus = async (id: string) => {
+    const token = localStorage.getItem("adminToken");
+    if (!token || !id) return;
+    setCheckingStatus(true);
+    try {
+      const res = await fetch(`/api/payments/withdrawal/status/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.updated) {
+        toast({ title: "Withdrawal status updated", description: `Status: ${data.status?.toUpperCase()}` });
+        await fetchBookings();
+        setSelectedTx((prev: any) => prev ? { ...prev, status: data.status, payout_status: data.payout_status } : prev);
+      } else {
+        toast({ title: "No change", description: `Current status: ${data.status?.toUpperCase()}` });
+      }
+    } catch {
+      toast({ title: "Failed to check withdrawal status", variant: "destructive" });
+    } finally {
+      setCheckingStatus(false);
     }
   };
 
@@ -2657,6 +2705,21 @@ const AdminDashboard = () => {
                                 </span>
                               </div>
 
+                              {selectedTx.refund_status === "REFUND_INITIATED" && (
+                                <div className="flex justify-end">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5"
+                                    disabled={checkingStatus}
+                                    onClick={() => handleCheckRefundStatus(selectedTx.booking_id)}
+                                  >
+                                    <RefreshCw className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`} />
+                                    {checkingStatus ? "Checking..." : "Check Status"}
+                                  </Button>
+                                </div>
+                              )}
+
                               <div className="flex justify-between text-sm items-center">
                                 <span className="text-white/60">Refund Transaction ID</span>
                                 {selectedTx.refund_id ? (
@@ -2757,7 +2820,7 @@ const AdminDashboard = () => {
                                   "text-xs px-2 py-0.5 rounded-full font-semibold",
                                   selectedTx.status === "completed"
                                     ? "bg-emerald-500/20 text-emerald-400"
-                                    : selectedTx.status === "failed"
+                                    : selectedTx.status === "rejected" || selectedTx.status === "failed"
                                       ? "bg-red-500/20 text-red-400"
                                       : selectedTx.status === "processing"
                                         ? "bg-blue-500/20 text-blue-400"
@@ -2767,9 +2830,36 @@ const AdminDashboard = () => {
                                 </span>
                               </div>
 
-                              <div className="flex justify-between text-sm">
-                                <span className="text-white/60">Transaction ID</span>
-                                <span className="text-white/40 text-xs">Auto-processed via API</span>
+                              {(selectedTx.status === "processing" || selectedTx.payout_id) && selectedTx.status !== "completed" && (
+                                <div className="flex justify-end">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-1.5"
+                                    disabled={checkingStatus}
+                                    onClick={() => handleCheckWithdrawalStatus(selectedTx.id)}
+                                  >
+                                    <RefreshCw className={`w-3 h-3 ${checkingStatus ? "animate-spin" : ""}`} />
+                                    {checkingStatus ? "Checking..." : "Check Status"}
+                                  </Button>
+                                </div>
+                              )}
+
+                              <div className="flex justify-between text-sm items-center">
+                                <span className="text-white/60">RazorpayX Payout ID</span>
+                                {selectedTx.payout_id ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-mono text-xs text-white">{selectedTx.payout_id}</span>
+                                    <Button size="icon" variant="ghost" className="w-6 h-6"
+                                      onClick={() => { navigator.clipboard.writeText(selectedTx.payout_id); toast({ title: "Payout ID copied" }); }}>
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span className="text-white/40 text-xs">
+                                    {selectedTx.status === "pending" ? "Awaiting processing" : "Not yet assigned"}
+                                  </span>
+                                )}
                               </div>
 
                               <div className="flex justify-between text-sm">

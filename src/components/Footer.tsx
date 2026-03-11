@@ -26,21 +26,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-6 group">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:scale-110 shadow-lg"
-                style={{
-                  background: "linear-gradient(145deg, #1a1a1a, #0d0d0d)",
-                  border: "2px solid rgba(212, 175, 55, 0.8)",
-                  boxShadow:
-                    "0 4px 10px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.1)",
-                }}
-              >
-                <img
-                  src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
-                  alt="Pawna Haven Camp"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              </div>
+              <img
+                src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
+                alt="Pawna Haven Camp"
+                className="w-12 h-12 object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+              />
               <span className="font-display text-2xl font-bold text-foreground">
                 PawnaHavenCamp
               </span>

@@ -45,6 +45,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -114,6 +121,9 @@ const AdminDashboard = () => {
   const [txRefunds, setTxRefunds] = useState<any[]>([]);
   const [txWithdrawals, setTxWithdrawals] = useState<any[]>([]);
   const [txCancelled, setTxCancelled] = useState<any[]>([]);
+  const [txFilterMonth, setTxFilterMonth] = useState("all");
+  const [txFilterYear, setTxFilterYear] = useState("all");
+  const [txSearch, setTxSearch] = useState("");
   const [selectedTx, setSelectedTx] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
@@ -2048,78 +2058,6 @@ const AdminDashboard = () => {
                 Transactions
               </h3>
             </div>
-            {/* Settlement Overview */}
-
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-              <div className="bg-white/5 p-3 rounded-xl text-center border border-white/5">
-                <p className="text-xs text-muted-foreground">Customer Paid</p>
-                <p className="text-lg font-bold text-emerald-400">
-                  ₹
-                  {txBookings
-                    .reduce((s, b) => s + parseFloat(b.amount || 0), 0)
-                    .toLocaleString("en-IN")}
-                </p>
-              </div>
-
-              <div className="bg-white/5 p-3 rounded-xl text-center border border-white/5">
-                <p className="text-xs text-muted-foreground">
-                  Admin Commission
-                </p>
-                <p className="text-lg font-bold text-gold">
-                  ₹
-                  {txBookings
-                    .reduce(
-                      (s, b) => s + parseFloat(b.admin_commission || 0),
-                      0,
-                    )
-                    .toLocaleString("en-IN")}
-                </p>
-              </div>
-
-              <div className="bg-white/5 p-3 rounded-xl text-center border border-white/5">
-                <p className="text-xs text-muted-foreground">
-                  Referral Commission
-                </p>
-                <p className="text-lg font-bold text-blue-400">
-                  ₹
-                  {txBookings
-                    .reduce(
-                      (s, b) => s + parseFloat(b.referrer_commission || 0),
-                      0,
-                    )
-                    .toLocaleString("en-IN")}
-                </p>
-              </div>
-
-              <div className="bg-white/5 p-3 rounded-xl text-center border border-white/5">
-                <p className="text-xs text-muted-foreground">Owner Balance</p>
-                <p className="text-lg font-bold text-purple-400">
-                  ₹
-                  {txBookings
-                    .reduce(
-                      (s, b) =>
-                        s +
-                        (parseFloat(b.amount || 0) -
-                          parseFloat(b.admin_commission || 0) -
-                          parseFloat(b.referrer_commission || 0)),
-                      0,
-                    )
-                    .toLocaleString("en-IN")}
-                </p>
-              </div>
-
-              <div className="bg-white/5 p-3 rounded-xl text-center border border-white/5">
-                <p className="text-xs text-muted-foreground">
-                  Owner Withdrawals
-                </p>
-                <p className="text-lg font-bold text-red-400">
-                  ₹
-                  {txWithdrawals
-                    .reduce((s, w) => s + parseFloat(w.amount || 0), 0)
-                    .toLocaleString("en-IN")}
-                </p>
-              </div>
-            </div>
             <Tabs
               value={transactionSubTab}
               onValueChange={setTransactionSubTab}
@@ -2138,6 +2076,45 @@ const AdminDashboard = () => {
               </TabsList>
             </Tabs>
 
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="flex items-center gap-2 flex-1">
+                <Select value={txFilterMonth} onValueChange={setTxFilterMonth}>
+                  <SelectTrigger className="h-9 w-[130px] bg-white/5 border-white/10 text-white text-xs rounded-xl">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                    <SelectItem value="all" className="text-xs">All Months</SelectItem>
+                    {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)} className="text-xs">{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={txFilterYear} onValueChange={setTxFilterYear}>
+                  <SelectTrigger className="h-9 w-[100px] bg-white/5 border-white/10 text-white text-xs rounded-xl">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                    <SelectItem value="all" className="text-xs">All Years</SelectItem>
+                    {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                      <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="relative flex-1 sm:max-w-[260px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                <Input
+                  placeholder="Search by name, ID, property…"
+                  value={txSearch}
+                  onChange={(e) => setTxSearch(e.target.value)}
+                  className="h-9 pl-8 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-xs rounded-xl"
+                />
+              </div>
+            </div>
+
             <div className="space-y-3">
               {isBookingsLoading ? (
                 <div className="flex justify-center py-12">
@@ -2145,25 +2122,48 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 (() => {
-                  const filtered =
+                  const base =
                     transactionSubTab === "bookings"
                       ? txBookings.map((r) => ({ ...r, _type: "booking" }))
                       : transactionSubTab === "refunds"
                         ? txRefunds.map((r) => ({ ...r, _type: "refund" }))
                         : transactionSubTab === "withdrawals"
-                          ? txWithdrawals.map((r) => ({
-                              ...r,
-                              _type: "withdrawal",
-                            }))
+                          ? txWithdrawals.map((r) => ({ ...r, _type: "withdrawal" }))
                           : txCancelled.map((r) => ({ ...r, _type: "cancelled" }));
+
+                  const filtered = base.filter((tx) => {
+                    const d = tx.date ? new Date(tx.date) : null;
+                    if (txFilterMonth !== "all" && d && d.getMonth() + 1 !== parseInt(txFilterMonth)) return false;
+                    if (txFilterYear !== "all" && d && d.getFullYear() !== parseInt(txFilterYear)) return false;
+                    if (txSearch.trim()) {
+                      const q = txSearch.trim().toLowerCase();
+                      const haystack = [
+                        tx.booking_id, tx.customer_name, tx.owner_name,
+                        tx.property_name, tx.upi_id, tx.transaction_id,
+                        tx.referral_code, tx.referrer_name,
+                      ].map((v) => (v || "").toLowerCase()).join(" ");
+                      if (!haystack.includes(q)) return false;
+                    }
+                    return true;
+                  });
+
+                  const hasActiveFilters = txFilterMonth !== "all" || txFilterYear !== "all" || txSearch.trim() !== "";
 
                   if (filtered.length === 0) {
                     return (
                       <div className="flex flex-col items-center justify-center py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/10 text-white/30">
                         <CreditCard className="w-12 h-12 mb-3 opacity-20" />
                         <p className="font-display text-base font-bold">
-                          No {transactionSubTab} records yet
+                          {hasActiveFilters ? "No results match your filters" : `No ${transactionSubTab} records yet`}
                         </p>
+                        {hasActiveFilters && (
+                          <button
+                            onClick={() => { setTxFilterMonth("all"); setTxFilterYear("all"); setTxSearch(""); }}
+                            className="mt-2 text-xs text-gold/60 hover:text-gold underline"
+                          >
+                            Clear filters
+                          </button>
+                        )}
                       </div>
                     );
                   }

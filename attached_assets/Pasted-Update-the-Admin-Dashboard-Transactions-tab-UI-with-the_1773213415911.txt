@@ -1,0 +1,98 @@
+Update the **Admin Dashboard → Transactions tab UI** with the following changes.
+
+### 1. Remove Existing Summary Cards
+
+Delete the following cards that appear **above the tab selector**:
+
+* Customer Paid
+* Admin Commission
+* Referral Commission
+* Owner Balance
+* Owner Withdrawals
+
+These cards should be **completely removed from the UI** and not rendered.
+
+---
+
+### 2. Add Filters Below Tab Selector
+
+Directly **below the tab selector** (Bookings, Refunds, Withdraws, Cancelled), add a **filter section** containing two elements:
+
+#### A. Month & Year Selector
+
+Add dropdown selectors to filter transaction data by **month and year**.
+
+Example UI:
+
+Month: [ January ▼ ]  |  Year: [ 2026 ▼ ]
+
+
+Behavior:
+
+* When month or year changes, reload the list data for the currently selected tab.
+* This filter must work for all tabs:
+
+  * Bookings
+  * Refunds
+  * Withdraws
+  * Cancelled
+
+---
+
+#### B. Search Bar
+
+Add a **search input field** to search within the currently selected tab list.
+
+Example placeholder:
+
+Search bookings, refunds, withdraws...
+
+Search should work against:
+
+* Booking ID
+* Customer Name
+* Owner Name
+* Property Name
+* UPI ID
+* Transaction ID
+
+The search should filter results **in real time or on enter**.
+
+---
+
+### 3. Layout Structure
+
+Final layout should be:
+
+```
+Transactions Page
+
+Tabs
+-----------------------------------
+Bookings | Refunds | Withdraws | Cancelled
+-----------------------------------
+
+Filters Section
+-----------------------------------
+Month Dropdown | Year Dropdown | Search Bar
+-----------------------------------
+
+-----------------------------------
+ Search Bar
+-----------------------------------
+
+Table/List Data
+-----------------------------------
+```
+
+---
+
+### 4. UI Design Rules
+
+* Maintain existing **dark theme styling**
+* Use same UI components already used in project (Input, Select, etc.)
+* Filters should be **responsive**
+* Search bar should be **right aligned**
+* Month & Year selectors should be **left aligned**
+
+---

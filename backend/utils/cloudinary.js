@@ -16,9 +16,9 @@ console.log('Cloudinary Config Check:', {
 });
 
 const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const MAX_IMAGES_PER_ENTITY = 30;
-const COMPRESS_THRESHOLD = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_IMAGES_PER_ENTITY = 20;
+const COMPRESS_THRESHOLD = 20 * 1024 * 1024;
 
 const memoryStorage = multer.memoryStorage();
 
@@ -98,7 +98,7 @@ const processAndUpload = async (file) => {
   }
 
   if (buffer.length > MAX_FILE_SIZE) {
-    throw new Error('Image exceeds 50 MB even after compression. Please use a smaller image.');
+    throw new Error('Image exceeds 20 MB even after compression. Please use a smaller image.');
   }
 
   const originalName = file.originalname.split('.')[0].replace(/[^a-zA-Z0-9-_]/g, '');

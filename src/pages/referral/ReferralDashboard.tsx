@@ -117,9 +117,11 @@ const ReferralDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDashboard(res.data);
-    } catch {
-      localStorage.removeItem("referral_token");
-      navigate("/login", { replace: true });
+    } catch (err: any) {
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        localStorage.removeItem("referral_token");
+        navigate("/login", { replace: true });
+      }
     } finally {
       setLoading(false);
     }

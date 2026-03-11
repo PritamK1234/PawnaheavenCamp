@@ -6,7 +6,6 @@ const destinations = [
     name: "Pawna Lake",
     location: "Maharashtra, India",
     image: CLOUDINARY_IMAGES.DESTINATIONS.PAWNA_LAKE,
-    properties: 25,
     description: "Serene lakeside camping with mountain views",
   },
   {
@@ -14,7 +13,6 @@ const destinations = [
     name: "Lonavala",
     location: "Maharashtra, India",
     image: CLOUDINARY_IMAGES.DESTINATIONS.LONAVALA,
-    properties: 30,
     description: "Hillside villas and premium cottages",
   },
 ];
@@ -76,14 +74,6 @@ const Destinations = () => {
                     <p className="text-muted-foreground mb-4 max-w-sm">
                       {destination.description}
                     </p>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-medium text-foreground">
-                        <span className="text-gradient-gold font-bold">{destination.properties}</span> Properties
-                      </span>
-                      <span className="text-sm font-medium text-primary elegant-underline">
-                        Explore →
-                      </span>
-                    </div>
                   </div>
                 </div>
 

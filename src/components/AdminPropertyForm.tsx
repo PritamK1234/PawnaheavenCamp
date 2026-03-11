@@ -1043,11 +1043,6 @@ const VillaUnitManager = ({
       return;
     }
 
-    if (!form.title.trim()) {
-      toast({ title: "Property title is required", variant: "destructive" });
-      return;
-    }
-
     const total = parseInt(form.total_persons);
     if (isNaN(total) || total <= 0) {
       toast({
@@ -1100,13 +1095,13 @@ const VillaUnitManager = ({
       return;
     }
 
-    // if (!form.images.length) {
-    //   toast({
-    //     title: "At least one image is required",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
+    if (!form.images.length) {
+      toast({
+        title: "At least one image is required",
+        variant: "destructive",
+      });
+      return;
+    }
 
     for (const sd of form.special_dates) {
       if (!sd.date || !sd.price) {

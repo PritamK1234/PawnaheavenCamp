@@ -10,25 +10,25 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/Admin_dashboard_app-icon.png",
+      "src": "https://res.cloudinary.com/dwlvmhcav/image/upload/f_auto,q_auto/pawnahaven/Admin_dashboard_app-icon",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/Admin_dashboard_app-icon.png",
+      "src": "https://res.cloudinary.com/dwlvmhcav/image/upload/f_auto,q_auto/pawnahaven/Admin_dashboard_app-icon",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/Admin_dashboard_app-icon.png",
+      "src": "https://res.cloudinary.com/dwlvmhcav/image/upload/f_auto,q_auto/pawnahaven/Admin_dashboard_app-icon",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/Admin_dashboard_app-icon.png",
+      "src": "https://res.cloudinary.com/dwlvmhcav/image/upload/f_auto,q_auto/pawnahaven/Admin_dashboard_app-icon",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

@@ -1,12 +1,11 @@
-import pawnaLake from "@/assets/pawna-lake.jpg";
-import lonavala from "@/assets/lonavala.jpg";
+import { CLOUDINARY_IMAGES } from "@/config/cloudinaryImages";
 
 const destinations = [
   {
     id: 1,
     name: "Pawna Lake",
     location: "Maharashtra, India",
-    image: pawnaLake,
+    image: CLOUDINARY_IMAGES.DESTINATIONS.PAWNA_LAKE,
     properties: 25,
     description: "Serene lakeside camping with mountain views",
   },
@@ -14,7 +13,7 @@ const destinations = [
     id: 2,
     name: "Lonavala",
     location: "Maharashtra, India",
-    image: lonavala,
+    image: CLOUDINARY_IMAGES.DESTINATIONS.LONAVALA,
     properties: 30,
     description: "Hillside villas and premium cottages",
   },

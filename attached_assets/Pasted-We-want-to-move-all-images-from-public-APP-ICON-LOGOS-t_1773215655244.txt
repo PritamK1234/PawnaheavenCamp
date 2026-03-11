@@ -1,0 +1,231 @@
+We want to **move all images from `public/APP ICON LOGOS` to Cloudinary CDN** and use the returned **Cloudinary URLs** in the web application so images load faster globally.
+
+---
+
+# Step 1 — Upload Images to Cloudinary
+
+Upload all images inside:
+
+```
+public/APP ICON LOGOS/
+```
+
+to **Cloudinary**.
+
+Use a folder name in Cloudinary:
+
+```
+pawnahaven
+```
+
+Upload these files:
+
+```
+hero-resort.jpg
+lonavala.jpg
+pawna-lake.jpg
+website_icon.png
+
+Admin_dashboard_app-icon.png
+owners_dashboard_icon.png
+public_site_icon.png
+referral_dashboard_icon.png
+```
+
+Return the **secure_url** for each image.
+
+---
+
+# Step 2 — Create Image Config File
+
+Create a new file:
+
+```
+src/config/cloudinaryImages.ts
+```
+
+Example structure:
+
+```ts
+export const CLOUDINARY_IMAGES = {
+  HERO_RESORT: "CLOUDINARY_URL_HERE",
+
+  DESTINATIONS: {
+    LONAVALA: "CLOUDINARY_URL_HERE",
+    PAWNA_LAKE: "CLOUDINARY_URL_HERE"
+  },
+
+  WEBSITE_LOGO: "CLOUDINARY_URL_HERE",
+
+  PWA_ICONS: {
+    ADMIN_DASHBOARD: "CLOUDINARY_URL_HERE",
+    OWNER_DASHBOARD: "CLOUDINARY_URL_HERE",
+    PUBLIC_SITE: "CLOUDINARY_URL_HERE",
+    REFERRAL_DASHBOARD: "CLOUDINARY_URL_HERE"
+  }
+};
+```
+
+This allows centralized image management.
+
+---
+
+# Step 3 — Replace Local Images With Cloudinary URLs
+
+Replace usage of images in the webapp.
+
+### 1 Hero Section
+
+Replace:
+
+```
+public/APP ICON LOGOS/hero-resort.jpg
+```
+
+with
+
+```
+CLOUDINARY_IMAGES.HERO_RESORT
+```
+
+---
+
+### 2 Destinations Section
+
+Lonavala card:
+
+```
+CLOUDINARY_IMAGES.DESTINATIONS.LONAVALA
+```
+
+Pawna Lake card:
+
+```
+CLOUDINARY_IMAGES.DESTINATIONS.PAWNA_LAKE
+```
+
+---
+
+### 3 Website Logo
+
+Use:
+
+```
+CLOUDINARY_IMAGES.WEBSITE_LOGO
+```
+
+for:
+
+• Header logo
+• Footer logo
+
+---
+
+# Step 4 — Configure PWA Icons
+
+Update **manifest.json** for each domain.
+
+---
+
+## pawnahavencamp.cloud (Admin Dashboard)
+
+Icon:
+
+```
+Admin_dashboard_app-icon.png
+```
+
+---
+
+## pawnahavencamp.shop (Owner Dashboard)
+
+Icon:
+
+```
+owners_dashboard_icon.png
+```
+
+---
+
+## pawnahavencamp.com (Public Website)
+
+Icon:
+
+```
+public_site_icon.png
+```
+
+---
+
+## referraldashboard.shop (Referral Dashboard)
+
+Icon:
+
+```
+referral_dashboard_icon.png
+```
+
+Example manifest:
+
+```json
+{
+  "icons": [
+    {
+      "src": "CLOUDINARY_ICON_URL",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "CLOUDINARY_ICON_URL",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+---
+
+# Step 5 — Enable Fast Loading
+
+When using Cloudinary images apply:
+
+```
+f_auto,q_auto
+```
+
+Example optimized URL:
+
+```
+https://res.cloudinary.com/<cloud>/image/upload/f_auto,q_auto/pawnahaven/hero-resort.jpg
+```
+
+This ensures:
+
+• automatic format (webp/avif)
+• optimized compression
+• fastest CDN delivery.
+
+---
+
+# Step 6 — Remove Local Images
+
+After migration remove:
+
+```
+public/APP ICON LOGOS
+```
+
+so the app loads only from CDN.
+
+---
+
+# Expected Result
+
+✔ Images load from **Cloudinary CDN**
+✔ Faster page load globally
+✔ Proper **PWA icons for each domain**
+✔ Centralized image config file
+✔ No local image dependency
+
+---

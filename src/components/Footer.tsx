@@ -6,6 +6,7 @@ import {
   Facebook,
   Youtube,
 } from "lucide-react";
+import { CLOUDINARY_IMAGES } from "@/config/cloudinaryImages";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -35,7 +36,7 @@ const Footer = () => {
                 }}
               >
                 <img
-                  src="/assets/logo.png"
+                  src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
                   alt="Pawna Haven Camp"
                   className="w-10 h-10 object-contain"
                 />

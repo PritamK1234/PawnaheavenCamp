@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin, Star, Play } from "lucide-react";
 import { propertyAPI } from "@/lib/api";
-import heroImage from "@/assets/hero-resort.jpg";
+import { CLOUDINARY_IMAGES } from "@/config/cloudinaryImages";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -30,7 +30,7 @@ const Hero = () => {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src={heroImage}
+          src={CLOUDINARY_IMAGES.HERO_RESORT}
           alt="Luxury camping experience"
           className="w-full h-full object-cover"
           loading="eager"

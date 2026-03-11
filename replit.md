@@ -18,7 +18,9 @@
 - `VITE_API_BASE_URL=/api` — used for client-side API calls (proxied by Vite)
 - `OTP_TEST_MODE=true` — enables OTP bypass for testing
 - `PAYTM_CHANNEL_ID=WEB`
-- Cloudinary, WhatsApp and Paytm keys need to be added as secrets for full functionality
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — configured; all site images served from Cloudinary CDN (`pawnahaven` folder) with `f_auto,q_auto`
+- Cloudinary image config centralized in `src/config/cloudinaryImages.ts`
+- WhatsApp and Paytm keys need to be added as secrets for full functionality
 - `RAZORPAY_KEY_ID` — RazorpayX API Key ID (for payouts/withdrawals)
 - `RAZORPAY_KEY_SECRET` — RazorpayX API Key Secret
 - `RAZORPAY_ACCOUNT_NUMBER` — RazorpayX Virtual Account Number (from RazorpayX dashboard)

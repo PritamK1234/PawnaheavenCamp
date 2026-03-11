@@ -3,7 +3,7 @@ import { Menu, X, Phone, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { PWAInstallButton } from "./PWAInstallButton";
-import logoImage from "/assets/logo.png";
+import { CLOUDINARY_IMAGES } from "@/config/cloudinaryImages";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ const Header = () => {
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-shimmer-3d pointer-events-none"></div>
                 <img
-                  src={logoImage}
+                  src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
                   alt="Pawna Haven Camp"
                   className="w-12 h-12 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
                 />

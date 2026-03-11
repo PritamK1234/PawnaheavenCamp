@@ -1,4 +1,5 @@
 import React from 'react';
+import { CLOUDINARY_IMAGES } from "@/config/cloudinaryImages";
 
 const LogoLoader = () => {
   return (
@@ -12,14 +13,9 @@ const LogoLoader = () => {
         <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] shadow-[0_0_50px_rgba(212,175,55,0.3)] border-2 border-primary/50 group">
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent animate-shimmer-3d pointer-events-none" />
           <img 
-            src="/assets/logo_lite.png" 
+            src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
             alt="Pawna Haven Camp" 
             className="w-24 h-24 md:w-32 md:h-32 object-contain animate-pulse"
-            onError={(e) => {
-              console.error("Logo failed to load in loader");
-              // Fallback to the other known logo if this one fails
-              (e.target as HTMLImageElement).src = "/assets/logo.png";
-            }}
           />
         </div>
       </div>

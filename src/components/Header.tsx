@@ -68,7 +68,7 @@ const Header = () => {
                 <img
                   src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
                   alt="Pawna Haven Camp"
-                  className="w-12 h-12 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
+                  className="w-full h-full object-cover rounded-full drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
                 />
               </div>
               {/* Glow effect */}

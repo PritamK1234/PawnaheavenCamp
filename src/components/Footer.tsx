@@ -38,7 +38,7 @@ const Footer = () => {
                 <img
                   src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
                   alt="Pawna Haven Camp"
-                  className="w-10 h-10 object-contain"
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
               <span className="font-display text-2xl font-bold text-foreground">

@@ -237,11 +237,14 @@ const GenerateCodePage = () => {
                 </Label>
                 <Input
                   id="otp"
-                  placeholder="000000"
+                  placeholder="Enter OTP"
+                  inputMode="numeric"
                   maxLength={6}
-                  className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-center text-2xl tracking-[0.5em] font-bold"
+                  className="h-14 bg-secondary/50 rounded-2xl border-border/50 focus:border-primary transition-all text-center text-lg tracking-[0.3em] font-normal placeholder:font-normal"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) =>
+                    setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
                 />
               </div>
 

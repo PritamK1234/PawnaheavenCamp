@@ -1435,7 +1435,7 @@ const AdminDashboard = () => {
               </TabsList>
             </Tabs>
 
-            {referralSubTab === "all" && (
+            {(["all", "owners", "b2b", "public", "owners_b2b"].includes(referralSubTab)) && (
               <>
                 <div className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

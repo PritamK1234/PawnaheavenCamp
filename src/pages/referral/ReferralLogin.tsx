@@ -171,13 +171,13 @@ const ReferralLogin = () => {
                 <div className="space-y-2">
                   <Label>OTP Code</Label>
                   <Input
-                    placeholder="000000"
+                    placeholder="Enter OTP"
                     value={otp}
                     onChange={(e) =>
                       setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
                     }
                     onKeyDown={(e) => e.key === "Enter" && handleVerifyOTP()}
-                    className="h-12 bg-secondary/50 rounded-xl text-center text-2xl tracking-[0.5em] font-bold"
+                    className="h-12 bg-secondary/50 rounded-xl text-center text-2xl tracking-[0.5em] font-normal"
                     maxLength={6}
                     inputMode="numeric"
                   />

@@ -428,12 +428,12 @@ const CheckEarningPage = () => {
               <div className="space-y-2">
                 <Label>OTP Code</Label>
                 <Input
-                  placeholder="000000"
+                  placeholder="Enter OTP"
                   value={formData.otp}
                   onChange={(e) =>
                     setFormData({ ...formData, otp: e.target.value })
                   }
-                  className="h-12 bg-secondary/50 rounded-xl text-center text-2xl tracking-[0.5em] font-bold"
+                  className="h-12 bg-secondary/50 rounded-xl text-center text-2xl tracking-[0.5em] font-normal"
                   maxLength={6}
                 />
               </div>

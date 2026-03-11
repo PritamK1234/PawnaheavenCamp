@@ -55,15 +55,11 @@ router.get('/revenue-summary', authMiddleware, async (req, res) => {
     );
 
     const referralResult = await pool.query(
-      `SELECT COALESCE(SUM(referrer_commission), 0) AS total
-       FROM bookings
-       WHERE payment_status = 'SUCCESS'
-         AND commission_paid = false
-         AND referrer_commission IS NOT NULL
-         AND referrer_commission > 0
-         AND EXTRACT(MONTH FROM created_at) = $1
-         AND EXTRACT(YEAR FROM created_at) = $2`,
-      [month, year]
+      `SELECT COALESCE(
+         (SELECT COALESCE(SUM(amount), 0) FROM referral_transactions WHERE type = 'earning'    AND status = 'available') -
+         (SELECT COALESCE(SUM(amount), 0) FROM referral_transactions WHERE type = 'withdrawal' AND status = 'completed'),
+         0
+       ) AS total`
     );
 
     const inProcessResult = await pool.query(

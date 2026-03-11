@@ -2650,7 +2650,7 @@ const AdminDashboard = () => {
                           <div className="flex justify-between text-sm items-center">
                             <span className="text-white/60">Guest</span>
                             <span className="text-white font-medium">{selectedTx.customer_name || "-"}</span>
-                          </div>
+                          </div>cl
 
                           <div className="flex justify-between text-sm items-center">
                             <span className="text-white/60">Guest Mobile</span>

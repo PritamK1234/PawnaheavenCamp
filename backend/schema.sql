@@ -165,7 +165,8 @@ CREATE TABLE IF NOT EXISTS referral_users (
   property_id VARCHAR(50),
   parent_referral_id INTEGER REFERENCES referral_users(id),
   owner_id INTEGER,
-  visible_to_owner BOOLEAN DEFAULT true
+  visible_to_owner BOOLEAN DEFAULT true,
+  saved_upi_id VARCHAR(256)
 );
 
 -- Create referral_transactions table
@@ -178,6 +179,8 @@ CREATE TABLE IF NOT EXISTS referral_transactions (
   status VARCHAR(20) DEFAULT 'completed',
   source VARCHAR(50),
   upi_id VARCHAR(255),
+  payout_id VARCHAR(100),
+  payout_status VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -309,3 +312,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS uix_rt_booking_active_earning
 INSERT INTO admins (email, password_hash)
 VALUES ('admin@looncamp.shop', '$2b$10$8k31lpb.NzzVqV0Pq5iJKuauiTJY2Bdnb4APYKM2MvLPsRYtV9WEu')
 ON CONFLICT (email) DO NOTHING;
+
+-- ============================================================
+-- MIGRATIONS: Run these on existing databases (safe, idempotent)
+-- ============================================================
+
+-- Mar 2026: Add payout tracking to referral_transactions
+ALTER TABLE referral_transactions ADD COLUMN IF NOT EXISTS payout_id VARCHAR(100);
+ALTER TABLE referral_transactions ADD COLUMN IF NOT EXISTS payout_status VARCHAR(50);
+
+-- Mar 2026: Add saved UPI ID to referral_users
+ALTER TABLE referral_users ADD COLUMN IF NOT EXISTS saved_upi_id VARCHAR(256);

@@ -508,11 +508,14 @@ const processConfirmedBooking = async (req, res) => {
     const frontendUrl = getFrontendUrl(req);
     const ticketUrl = `${frontendUrl}/ticket?booking_id=${booking_id}`;
 
-    const customerMessage = `🎉 Booking Confirmed!\n\nYour booking has been confirmed.\n\nBooking ID: ${booking_id}\nProperty: ${booking.property_name}\n\nView your e-ticket:\n${ticketUrl}`;
+    const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
+    const _checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+    const _checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+
+    const customerMessage = `🎉 Booking Confirmed!\n\nBooking ID: ${booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${_checkinStr}\nCheck-out: ${_checkoutStr}\nAdvance Paid: ₹${booking.advance_amount}\nDue at Property: ₹${dueAmount}\n\nView your e-ticket:\n${ticketUrl}`;
     await whatsapp.sendTextMessage(booking.guest_phone, customerMessage);
 
-    const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
-    const adminMessage = `✅ Booking Confirmed & Ticket Generated\n\nBooking ID: ${booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nOwner: ${booking.owner_phone}\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\n\nE-ticket: ${ticketUrl}`;
+    const adminMessage = `✅ Booking Confirmed & Ticket Generated\n\nBooking ID: ${booking_id}\nProperty: ${booking.property_name}\nGuest: ${booking.guest_name} (${booking.guest_phone})\nOwner: ${booking.owner_phone}\nCheck-in: ${_checkinStr}\nCheck-out: ${_checkoutStr}\nAdvance: ₹${booking.advance_amount}\nDue: ₹${dueAmount}\n\nE-ticket: ${ticketUrl}`;
     await whatsapp.sendTextMessage(booking.admin_phone, adminMessage);
 
     console.log('E-ticket activated for booking:', booking_id);
@@ -1078,17 +1081,24 @@ const handleOwnerAction = async (req, res) => {
       }
 
       const ownerName = booking.owner_name || 'The owner';
+      const _cancelCheckinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+      const _cancelCheckoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 
       if (booking.payment_status === 'SUCCESS') {
         await whatsapp.sendTextMessage(
           booking.guest_phone,
-          `Extremely sorry for the inconvenience, but your booking has been cancelled due to unavoidable circumstances. You will get your refund in next 24 hours.`
+          `❌ Booking Cancelled\n\nWe are extremely sorry for the inconvenience. Your booking has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${_cancelCheckinStr}\nCheck-out: ${_cancelCheckoutStr}\n\nYour refund of ₹${booking.advance_amount} will be credited within 24 hours.`
+        );
+      } else {
+        await whatsapp.sendTextMessage(
+          booking.guest_phone,
+          `❌ Booking Cancelled\n\nWe are sorry, your booking has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${_cancelCheckinStr}\nCheck-out: ${_cancelCheckoutStr}`
         );
       }
 
       await whatsapp.sendInteractiveButtons(
         booking.admin_phone,
-        `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\n${ownerName} owner cancelled booking of ${booking.guest_name} customer. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
+        `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${_cancelCheckinStr}\nCheck-out: ${_cancelCheckoutStr}\n${ownerName} cancelled booking of ${booking.guest_name}. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
         [
           { id: `call_owner_${booking.booking_id}`.substring(0, 20), title: 'Call Owner' },
           { id: `call_cust_${booking.booking_id}`.substring(0, 20), title: 'Call Customer' },
@@ -1313,19 +1323,27 @@ const handleWhatsAppWebhook = async (req, res) => {
               await cancelInProcessCommission(booking.id);
 
               const ownerName = booking.owner_name || 'The owner';
+              const _waCancelCheckinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+              const _waCancelCheckoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 
               try {
                 const messageIds = {};
                 if (booking.payment_status === 'SUCCESS') {
                   const guestResult = await whatsapp.sendTextMessage(
                     booking.guest_phone,
-                    `Extremely sorry for the inconvenience, but your booking has been cancelled due to unavoidable circumstances. You will get your refund in next 24 hours.`
+                    `❌ Booking Cancelled\n\nWe are extremely sorry for the inconvenience. Your booking has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${_waCancelCheckinStr}\nCheck-out: ${_waCancelCheckoutStr}\n\nYour refund of ₹${booking.advance_amount} will be credited within 24 hours.`
+                  );
+                  messageIds.guest_cancel = guestResult.messageId;
+                } else {
+                  const guestResult = await whatsapp.sendTextMessage(
+                    booking.guest_phone,
+                    `❌ Booking Cancelled\n\nWe are sorry, your booking has been cancelled by the property owner.\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${_waCancelCheckinStr}\nCheck-out: ${_waCancelCheckoutStr}`
                   );
                   messageIds.guest_cancel = guestResult.messageId;
                 }
                 const adminResult = await whatsapp.sendInteractiveButtons(
                   booking.admin_phone,
-                  `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\n${ownerName} owner cancelled booking of ${booking.guest_name} customer. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
+                  `❌ Booking Cancelled by Owner\n\nBooking ID: ${booking.booking_id}\nProperty: ${booking.property_name}\nCheck-in: ${_waCancelCheckinStr}\nCheck-out: ${_waCancelCheckoutStr}\n${ownerName} cancelled booking of ${booking.guest_name}. Please contact the owner.\n\nOwner: ${booking.owner_phone}\nCustomer: ${booking.guest_phone}`,
                   [
                     { id: `call_owner_${booking.booking_id}`, title: '📞 Call Owner' },
                     { id: `call_customer_${booking.booking_id}`, title: '📞 Call Customer' },
@@ -1803,10 +1821,10 @@ const handleAdminCancel = async (req, res) => {
 
       const whatsapp = new WhatsAppService();
       const checkinStr = booking.checkin_datetime
-        ? new Date(booking.checkin_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+        ? new Date(booking.checkin_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
         : 'N/A';
       const checkoutStr = booking.checkout_datetime
-        ? new Date(booking.checkout_datetime).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+        ? new Date(booking.checkout_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
         : 'N/A';
       const propertyName = booking.property_name || 'the property';
 

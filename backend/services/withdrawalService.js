@@ -50,12 +50,21 @@ const WithdrawalService = {
       user.referral_otp_number
     );
 
+    const saveUpi = async () => {
+      try {
+        await query('UPDATE referral_users SET saved_upi_id = $1 WHERE id = $2', [upiId, userId]);
+      } catch (_) {}
+    };
+
     if (payoutResult.success) {
       const finalStatus = payoutResult.mapped_status || 'processing';
-      await query(
-        'UPDATE referral_transactions SET status = $1, payout_id = $2, payout_status = $3, updated_at = NOW() WHERE id = $4',
-        [finalStatus, payoutResult.payout_id, payoutResult.payout_status, txn.id]
-      );
+      await Promise.all([
+        query(
+          'UPDATE referral_transactions SET status = $1, payout_id = $2, payout_status = $3, updated_at = NOW() WHERE id = $4',
+          [finalStatus, payoutResult.payout_id, payoutResult.payout_status, txn.id]
+        ),
+        saveUpi(),
+      ]);
 
       if (finalStatus === 'completed') {
         try {
@@ -78,10 +87,10 @@ const WithdrawalService = {
       };
     } else if (payoutResult.skipped) {
       // RazorpayX not configured — keep as 'pending' for admin to process manually
-      await query(
-        "UPDATE referral_transactions SET status = 'pending', updated_at = NOW() WHERE id = $1",
-        [txn.id]
-      );
+      await Promise.all([
+        query("UPDATE referral_transactions SET status = 'pending', updated_at = NOW() WHERE id = $1", [txn.id]),
+        saveUpi(),
+      ]);
       return {
         ...txn,
         status: 'pending',

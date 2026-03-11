@@ -141,8 +141,35 @@ async function triggerRazorpayXPayout(withdrawalId, amount, upiId, username, mob
   }
 }
 
+async function validateUpiVpa(upiId) {
+  const auth = getRazorpayAuth();
+  if (!auth) {
+    console.warn('[RazorpayUPI] Credentials not configured — skipping VPA validation');
+    return { skipped: true };
+  }
+  try {
+    const response = await axios.post(
+      `${RAZORPAY_BASE_URL}/payments/validate/vpa`,
+      { value: upiId },
+      { auth }
+    );
+    const data = response.data;
+    const customerName = data.customer_name || data.name || null;
+    return { valid: true, name: customerName };
+  } catch (err) {
+    const status = err.response?.status;
+    const errData = err.response?.data;
+    if (status === 400 || errData?.error?.code === 'BAD_REQUEST_ERROR') {
+      return { valid: false };
+    }
+    console.error('[RazorpayUPI] VPA validation error:', errData || err.message);
+    return { skipped: true, reason: err.message };
+  }
+}
+
 module.exports = {
   triggerRazorpayXPayout,
   getPayoutStatus,
   verifyRazorpayWebhookSignature,
+  validateUpiVpa,
 };

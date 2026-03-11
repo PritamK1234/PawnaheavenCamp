@@ -34,7 +34,7 @@ const UserService = {
   },
 
   async getDashboard(userId) {
-    const userResult = await require('../db').query('SELECT username, referral_code, status, referral_type, linked_property_id, linked_property_slug FROM referral_users WHERE id = $1', [userId]);
+    const userResult = await require('../db').query('SELECT username, referral_code, status, referral_type, linked_property_id, linked_property_slug, saved_upi_id FROM referral_users WHERE id = $1', [userId]);
     const userDetails = userResult.rows[0];
 
     if (!userDetails || userDetails.status === 'blocked') {
@@ -64,7 +64,8 @@ const UserService = {
       total_withdrawals: withdrawals,
       available_balance: Math.max(0, earnings - withdrawals - pending),
       pending_withdrawal_amount: pending,
-      total_referrals: parseInt(stats.total_referrals)
+      total_referrals: parseInt(stats.total_referrals),
+      saved_upi_id: userDetails.saved_upi_id || null
     };
   }
 };

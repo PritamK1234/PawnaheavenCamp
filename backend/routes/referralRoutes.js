@@ -26,6 +26,8 @@ router.get('/share', authenticateReferralUser, ReferralController.getShareInfo);
 router.get('/in-process', authenticateReferralUser, ReferralController.getInProcess);
 router.get('/history', authenticateReferralUser, ReferralController.getReferralHistory);
 router.post('/withdraw', authenticateReferralUser, WithdrawalController.withdraw);
+router.post('/validate-upi', authenticateReferralUser, WithdrawalController.validateUpi);
+router.delete('/saved-upi', authenticateReferralUser, WithdrawalController.removeSavedUpi);
 
 // Owner dashboard - lookup referral by mobile or property
 router.get('/owner-lookup/:mobile', ReferralController.ownerLookup);

@@ -44,7 +44,8 @@ const OtpController = {
       }
 
       if (purpose === "referral_login" || purpose === "referral_register") {
-        const cleanMobile = mobile.replace(/\s+/g, "").replace(/^(\+91|91)/, "");
+        const raw = mobile.replace(/\s+/g, "").replace(/^\+/, "");
+        const cleanMobile = (raw.length === 12 && raw.startsWith("91")) ? raw.slice(2) : raw;
         const user = await ReferralRepository.findByMobile(cleanMobile);
 
         const payload = {

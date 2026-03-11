@@ -1804,12 +1804,20 @@ const getAllTransactions = async (req, res) => {
       query(`
         SELECT
           b.booking_id AS id, 'cancelled' AS _type,
-          b.booking_id, b.guest_name AS customer_name, b.property_name,
-          b.owner_name, b.referral_code, b.advance_amount AS amount,
+          b.booking_id, b.guest_name AS customer_name, b.guest_phone,
+          b.property_name, b.owner_name, b.owner_phone,
+          b.referral_code, b.advance_amount AS amount,
+          b.total_amount, b.payment_method, b.transaction_id,
           b.booking_status AS status, b.payment_status,
           b.checkin_datetime AS check_in, b.checkout_datetime AS check_out,
           b.updated_at AS date, b.refund_status, b.refund_amount,
           b.referrer_commission, b.admin_commission, b.unit_id, b.property_id,
+          b.referral_type,
+          CASE
+            WHEN b.booking_status = 'CANCELLED_BY_OWNER' THEN 'Owner'
+            WHEN b.booking_status IN ('CANCELLED','CANCELLED_NO_REFUND','OWNER_CANCELLED','REFUND_INITIATED') THEN 'Admin'
+            ELSE 'System'
+          END AS refund_initiated_by,
           ru.username AS referrer_name
         FROM bookings b
         LEFT JOIN referral_users ru ON ru.referral_code = b.referral_code

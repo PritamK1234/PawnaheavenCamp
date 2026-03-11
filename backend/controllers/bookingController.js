@@ -1009,8 +1009,8 @@ const handleOwnerAction = async (req, res) => {
 
     if (action === 'CONFIRM') {
       const ticketToken = generateTicketToken();
-      const checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-      const checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+      const checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+      const checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
       const dueAmount = (parseFloat(booking.total_amount) || 0) - parseFloat(booking.advance_amount);
 
       await query(
@@ -1252,8 +1252,8 @@ const handleWhatsAppWebhook = async (req, res) => {
               }
 
               const ticketUrl = `${frontendUrl}/ticket?token=${ticketToken}`;
-              const checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-              const checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+              const checkinStr = new Date(booking.checkin_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+              const checkoutStr = new Date(booking.checkout_datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
               const dueAmount = (parseFloat(booking.total_amount) || 0) - parseFloat(booking.advance_amount);
 
               try {

@@ -722,11 +722,11 @@ const paytmWebhook = async (req, res) => {
 
       const checkinDate = new Date(booking.checkin_datetime).toLocaleString(
         "en-IN",
-        { dateStyle: "medium", timeStyle: "short" },
+        { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" },
       );
       const checkoutDate = new Date(booking.checkout_datetime).toLocaleString(
         "en-IN",
-        { dateStyle: "medium", timeStyle: "short" },
+        { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" },
       );
       const dueAmount = (booking.total_amount || 0) - booking.advance_amount;
       const publicDomain =

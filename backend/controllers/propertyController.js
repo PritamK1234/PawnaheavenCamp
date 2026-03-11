@@ -161,7 +161,8 @@ const getPublicProperties = async (req, res) => {
             'weekend_price', pu.weekend_price,
             'images', pu.images,
             'special_price', p.price,
-            'special_dates', p.special_dates
+            'special_dates', p.special_dates,
+            'location', pu.location
           )) 
          FROM property_units pu WHERE pu.property_id = p.id) as units,
         (

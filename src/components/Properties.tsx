@@ -87,6 +87,7 @@ const Properties = () => {
           _isUnitCard: true,
           price: String(unit.weekday_price || p.price || 'Price on Selection'),
           images: unitImages.length > 0 ? unitImages : p.images,
+          location: unit.location || p.location,
         };
       });
     }

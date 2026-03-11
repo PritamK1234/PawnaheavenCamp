@@ -66,9 +66,17 @@ router.get('/revenue-summary', authMiddleware, async (req, res) => {
       [month, year]
     );
 
+    const inProcessResult = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM referral_transactions
+       WHERE type = 'earning'
+         AND status = 'in_process'`
+    );
+
     const grossRevenue = Math.round(parseFloat(grossResult.rows[0].total));
     const refundPayable = Math.round(parseFloat(refundResult.rows[0].total));
     const referralPayable = Math.round(parseFloat(referralResult.rows[0].total));
+    const inProcessReferral = Math.round(parseFloat(inProcessResult.rows[0].total));
 
     return res.json({
       success: true,
@@ -77,6 +85,7 @@ router.get('/revenue-summary', authMiddleware, async (req, res) => {
       grossRevenue,
       refundPayable,
       referralPayable,
+      inProcessReferral,
     });
   } catch (err) {
     console.error('[Revenue Summary] Error:', err);

@@ -9,6 +9,7 @@ import {
   Handshake,
   CircleDot,
   Users,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface RevenueData {
   grossRevenue: number;
   refundPayable: number;
   referralPayable: number;
+  inProcessReferral: number;
 }
 
 const AdminRevenuePage = () => {
@@ -37,6 +39,7 @@ const AdminRevenuePage = () => {
     grossRevenue: 0,
     refundPayable: 0,
     referralPayable: 0,
+    inProcessReferral: 0,
   });
 
   useEffect(() => {
@@ -65,6 +68,7 @@ const AdminRevenuePage = () => {
             grossRevenue: data.grossRevenue ?? 0,
             refundPayable: data.refundPayable ?? 0,
             referralPayable: data.referralPayable ?? 0,
+            inProcessReferral: data.inProcessReferral ?? 0,
           });
         }
       } catch (err) {
@@ -77,7 +81,7 @@ const AdminRevenuePage = () => {
     fetchRevenue();
   }, [selectedMonth, selectedYear]);
 
-  const { grossRevenue, refundPayable, referralPayable } = revenueData;
+  const { grossRevenue, refundPayable, referralPayable, inProcessReferral } = revenueData;
   const netRevenue = grossRevenue - refundPayable - referralPayable;
   const adminAPercent = 70;
   const adminBPercent = 30;
@@ -202,6 +206,19 @@ const AdminRevenuePage = () => {
               </div>
             </div>
             {loading ? <SmallShimmer /> : <p className="text-base font-bold text-amber-400">{formatCurrency(referralPayable)}</p>}
+          </Card>
+
+          <Card className="bg-white/[0.03] p-4 rounded-2xl border border-amber-500/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/5 flex items-center justify-center border border-amber-500/10">
+                <Clock className="w-4 h-4 text-amber-300/70" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-white/50 uppercase tracking-wider">Referral In-Process</p>
+                <p className="text-[9px] text-white/25 font-medium mt-0.5">Pending checkout — not yet released</p>
+              </div>
+            </div>
+            {loading ? <SmallShimmer /> : <p className="text-base font-bold text-amber-300/70">{formatCurrency(inProcessReferral)}</p>}
           </Card>
         </div>
 

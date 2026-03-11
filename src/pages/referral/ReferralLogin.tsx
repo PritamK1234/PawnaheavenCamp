@@ -146,7 +146,7 @@ const ReferralLogin = () => {
                 {/* NEW BUTTON */}
                 <div className="text-center pt-2">
                   <Link
-                    to="/generate-code"
+                    to="/referral/generate"
                     className="text-sm text-amber-400 hover:text-amber-300 underline transition"
                   >
                     Not created referral code yet? Create one

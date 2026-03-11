@@ -158,16 +158,14 @@ const OwnerUnits = () => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    const remaining = 20 - unitForm.images.length;
+    const remaining = 30 - unitForm.images.length;
     if (remaining <= 0) {
-      toast.error("Maximum 20 images allowed per unit");
+      toast.error("Maximum 30 images can be uploaded");
       return;
     }
     const filesToUpload = files.slice(0, remaining);
     if (files.length > remaining) {
-      toast.error(
-        `Only uploading ${remaining} image(s) to stay within the 20 limit`,
-      );
+      toast.error("Maximum 30 images can be uploaded");
     }
 
     setIsUploading(true);
@@ -658,7 +656,7 @@ const OwnerUnits = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-gray-400 text-xs capitalize font-bold">
-                    Unit Image Gallery ({unitForm.images.length}/20)
+                    Unit Image Gallery ({unitForm.images.length}/30)
                   </Label>
                   <input
                     type="file"
@@ -675,7 +673,7 @@ const OwnerUnits = () => {
                     onClick={() =>
                       document.getElementById("unit-img-owner")?.click()
                     }
-                    disabled={isUploading || unitForm.images.length >= 20}
+                    disabled={isUploading || unitForm.images.length >= 30}
                     className="border-gold/30 text-gold h-9"
                   >
                     {isUploading ? (

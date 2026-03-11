@@ -53,7 +53,7 @@ const Header = () => {
               <img
                 src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
                 alt="Pawna Haven Camp"
-                className="w-14 h-14 object-contain transition-all duration-500 group-hover:rotate-y-12 group-hover:scale-110 drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
+                className="w-[67px] h-[67px] object-contain transition-all duration-500 group-hover:rotate-y-12 group-hover:scale-110 drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
                 style={{ transformStyle: "preserve-3d" }}
               />
               {/* Glow effect */}

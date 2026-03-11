@@ -29,7 +29,7 @@ const Footer = () => {
               <img
                 src={CLOUDINARY_IMAGES.WEBSITE_LOGO}
                 alt="Pawna Haven Camp"
-                className="w-12 h-12 object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+                className="w-[58px] h-[58px] object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
               />
               <span className="font-display text-2xl font-bold text-foreground">
                 PawnaHavenCamp
